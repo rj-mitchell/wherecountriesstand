@@ -34,11 +34,24 @@ Checked on 24 October 2026. "Licence" means the terms for republishing, not just
 
 ### Keeping current
 
-- **General Debate:** the corpus is updated each year. Load each new release.
-- **Security Council, 2024 onwards:** our own loader for the verbatim records (`S/PV.nnnn`, English
-  PDF) from the UN Digital Library. Check it against the corpus on the overlapping years
-  (2020–2023) before trusting it.
-- **Votes:** reload the CSV regularly.
+`wcs update` (scheduled twice a day; see [`OPERATIONS.md`](OPERATIONS.md)):
+
+- **Security Council, 2024 onwards:** the UN's own verbatim records (`S/PV.nnnn`, English PDF), found through the
+  Digital Library's catalogue and by probing ODS for the following meeting numbers, downloaded from either, and parsed
+  by `wcs.sources.verbatim`. Checked against the corpus on meetings both cover: median speaker order 1.00, wording
+  0.98, all the text (see [`VALIDATION.md`](VALIDATION.md)). Closed meetings, which have only a communiqué, are
+  recorded as such. Provisional records are fetched again once corrected.
+- **Votes:** the voting data record's file list is read on each run, and a new file is downloaded and converted.
+- **General Debate:** the corpus is updated by its authors each year; load each new release by hand (it needs a
+  guestbook entry). Reading new sessions straight from the General Assembly's records is the next step.
+
+What the UN's services do, as found on 24 October 2026:
+
+| Service | Use | Behaviour |
+|---|---|---|
+| Digital Library search, `digitallibrary.un.org/search?p=191__a:S/PV.102*&of=xm&rg=200` | Discovery and metadata | MARC XML. Field 191 the symbol; 992 the meeting date; 091 `PRO` while provisional; 245 the title ("Official communiqué ..." for a closed meeting); 991 agenda items; 856 a link to each language's PDF; 005 last modified. |
+| ODS symbol service, `documents.un.org/api/symbol/access?s=S/PV.10235&l=en&t=pdf` | Discovery by probing, and download | Redirects to the PDF (`/pro/` provisional, `/gen/` final). A missing symbol redirects to an HTML error page with status 200. |
+| `undocs.org/en/<symbol>` | Links for readers | Redirects to a viewer page on docs.un.org. |
 
 ### Licence of briefings
 
@@ -54,6 +67,7 @@ credited to the UN, with the document symbol and page.
 | General Assembly plenary verbatim records (`A/…/PV.…`) | The rest of the Assembly's debates, including explanations of vote | The same loader as for the Security Council. From 1992. |
 | UNFCCC COP high-level segment statements | The climate equivalent of the General Debate | PDFs on unfccc.int |
 | ICJ written and oral statements | Countries' formal legal positions. The climate change advisory opinion drew 91 written statements. | PDFs on icj-cij.org |
+| General Assembly plenary records (`A/…/PV.…`), including new General Debate sessions | The same parser, so new sessions arrive without waiting for the corpus | Heads of State are introduced by the President rather than named with their country |
 | UPR recommendations and responses ([UPR Info](https://upr-info-database.uwazi.io/)) | 79,000–90,000+ recommendations since 2008, with whether each was accepted or only "noted" | Bulk export to be confirmed |
 | Treaty status, reservations and declarations (UN Treaty Collection) | Formal commitments, and exactly what countries won't accept | No bulk download: needs scraping |
 | Climate pledges (NDCs) and laws ([Climate Policy Radar](https://github.com/climatepolicyradar/open-data)) | Climate commitments, full text | CC BY 4.0 |

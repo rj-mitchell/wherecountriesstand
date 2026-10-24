@@ -12,6 +12,7 @@ dependencies = [
     "lancedb>=0.17",
     "numpy>=1.26",
     "openpyxl>=3.1",
+    "pdfminer.six>=20240706",
     "pyarrow>=17",
     "pydantic>=2.8",
     "typer>=0.12",

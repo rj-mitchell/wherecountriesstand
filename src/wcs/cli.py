@@ -4,6 +4,7 @@
     wcs ingest-gd                          # General Debate (download by hand first: docs/DATA.md)
     wcs fetch-votes && wcs ingest-votes    # General Assembly votes
     wcs index && wcs embed                 # keyword index, then meaning search (slow; resumable)
+    wcs update                             # new votes and Security Council records since the corpus (scheduled)
     wcs search "climate finance" --group sids
     wcs ask "How have small island States spoken about climate change since 2015?"
 """
@@ -48,14 +49,49 @@ def fetch_sc(force: bool = False) -> None:
 
 @app.command("ingest-sc")
 def ingest_sc(years: str = typer.Option(None, help="e.g. 2015 or 2010-2015")) -> None:
-    """Load Security Council speeches into the Parquet store."""
+    """Load Security Council speeches from the corpus into the Parquet store (the years before [live] sc_from;
+    later years come from `wcs update`)."""
     from wcs.reference.countries import countries
     from wcs.sources import unsc
     from wcs.store.parquet import write_by_year
+    from wcs.update import live_from
 
     s = load_settings()
-    counts = write_by_year(s.parquet_dir, "sc", unsc.iter_records(s, countries(), _years(years)))
+    start = live_from(s)
+    counts = write_by_year(s.parquet_dir, "sc", (r for r in unsc.iter_records(s, countries(), _years(years))
+                                                 if r["date"] < start))
     typer.echo(f"{sum(counts.values())} speeches in {len(counts)} years")
+
+
+@app.command()
+def update(votes: bool = typer.Option(True, help="check the voting data"),
+           sc: bool = typer.Option(True, help="check for new Security Council records"),
+           index: bool = typer.Option(True, help="re-index the years that changed"),
+           embed_seconds: float = typer.Option(600, help="embed new passages for up to this long (0: none)"),
+           max_new: int = typer.Option(None, help="process at most this many records (for a first, partial run)"),
+           as_json: bool = typer.Option(False, "--json")) -> None:
+    """Bring the data up to date: new votes, new and corrected Security Council records, the index. For a
+    scheduled job: exits 1 when something needs attention (see the report in data/logs/)."""
+    from wcs.update import run
+
+    report = run(load_settings(), do_votes=votes, do_sc=sc, do_index=index, embed_seconds=embed_seconds or None,
+                 max_new=max_new)
+    if as_json:
+        typer.echo(json.dumps(report.to_dict(), default=str, indent=1))
+    else:
+        typer.echo(f"new records: {len(report.fetched)}; corrected: {len(report.refetched)}; reparsed: "
+                   f"{report.reparsed}; communiqués: {len(report.communiques)}; not yet available: "
+                   f"{len(report.missing)}; failed: {len(report.failed)}")
+        typer.echo(f"latest meeting: {report.latest_meeting}; years written: {report.years_written}; "
+                   f"passages indexed: {report.indexed}; embedded: {report.embedded}")
+        if report.votes:
+            typer.echo(f"votes: {report.votes}")
+        for w in report.warnings:
+            typer.echo(f"warning: {w}")
+        for e in report.errors:
+            typer.echo(f"error: {e}")
+    if not report.ok:
+        raise typer.Exit(1)
 
 
 @app.command("ingest-gd")

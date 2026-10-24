@@ -39,7 +39,7 @@ FAR_FUTURE = date(9999, 12, 31)
 def norm(label: str | None) -> str:
     """Lower-case ASCII words only, without "the": for matching labels written in different ways."""
     s = unicodedata.normalize("NFKD", label or "").encode("ascii", "ignore").decode().lower()
-    s = s.replace("&", " and ")
+    s = s.replace("&", " and ").replace("'", "")  # "People’s" and "People's" alike (the curly one is gone by now)
     s = re.sub(r"\bthe\b", " ", s)
     return " ".join(re.sub(r"[^a-z0-9]+", " ", s).split())
 

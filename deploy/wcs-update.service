@@ -1,0 +1,16 @@
+# Bring Where Countries Stand's data up to date: new General Assembly votes, new and corrected Security Council
+# records, the search index. Installed with wcs-update.timer (see docs/OPERATIONS.md).
+[Unit]
+Description=Where Countries Stand: update data
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=wcs
+WorkingDirectory=/opt/wherecountriesstand
+Environment=WCS_DATA_DIR=/opt/wherecountriesstand/data
+# Exits 1 when something needs attention; the report is in data/logs/update-*.json.
+ExecStart=/opt/wherecountriesstand/.venv/bin/wcs update --embed-seconds 1800
+Nice=10
+TimeoutStartSec=3h
