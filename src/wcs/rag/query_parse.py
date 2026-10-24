@@ -163,7 +163,11 @@ def parse_offline(question: str, countries: Countries, today: date | None = None
     ql = question.lower()
     date_from, date_to = dates_in(question, today)
     sources = []
-    if "security council" in ql:
+    # "Security Council reform" (or its veto, membership, working methods) is a subject debated everywhere, not a
+    # request for the Council's own debates
+    council_topic = re.search(r"security council(?:'s)?\s+(?:reform|veto|membership|expansion|enlargement|seats?|"
+                              r"working methods|composition)", ql)
+    if "security council" in ql and not council_topic:
         sources.append("sc")
     if "general debate" in ql or "general assembly" in ql:
         sources.append("gd")

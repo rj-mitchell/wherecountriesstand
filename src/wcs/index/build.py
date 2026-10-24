@@ -111,8 +111,9 @@ def passage_rows(records: list[dict[str, Any]], countries: Countries, max_words:
                 "symbol": r.get("symbol"),
                 "heading": heading,
                 "text": chunk,
-                # the country's name is searchable too, so "what has Chile said" finds Chile's speeches by keyword
-                "search_text": f"{heading}\n{who}\n{chunk}",
+                # the agenda item and the country's name are searchable too ("what has Chile said about Haiti"); the
+                # body and meeting are not, since they are in every passage and filters already cover them
+                "search_text": f"{r.get('agenda') or ''}\n{who}\n{chunk}",
             })
     return out
 

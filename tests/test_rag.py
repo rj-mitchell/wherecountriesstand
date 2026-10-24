@@ -27,6 +27,9 @@ def test_offline_plan():
     p = parse_offline("How did EU members vote on Ukraine between 2022 and 2024?", countries(), TODAY)
     assert p.filters.groups == ["eu"] and p.wants_votes
     assert p.filters.date_from == date(2022, 1, 1) and p.filters.date_to == date(2024, 12, 31)
+    p = parse_offline("What have African States said about Security Council reform since 2015?", countries(), TODAY)
+    assert p.filters.sources == [] and p.filters.groups == ["region:africa"]
+    assert "security council reform" in p.search_text
     p = parse_offline("What has been said about peacekeeping?", countries(), TODAY)
     assert p.filters.date_from == date(2016, 1, 1)   # the last ten years by default
 
