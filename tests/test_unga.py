@@ -68,8 +68,17 @@ def ga_lines(symbol="A/81/PV.8", d="Tuesday, 22 September 2026, 3 p.m.", debate_
         ln(1, 700, "The Acting President: Several representatives have asked to speak in exercise", x=141,
            bold="The Acting President", box=20),
         ln(1, 688, "of the right of reply. I remind members that statements are limited to ten minutes.", box=20),
-        ln(1, 670, "Mr. Hilale (Morocco) (spoke in French): I exercise my right of reply.", x=141,
+        ln(1, 670, "Mr. Hilale (Morocco) (spoke in French): I exercise my right of reply to the statement made", x=141,
            bold="Mr. Hilale", box=21),
+        ln(1, 658, "this morning by a neighbouring delegation, which contained claims that my delegation rejects in", box=21),
+        ln(1, 646, "their entirety, and I ask that this reply be recorded in full by the Assembly.", box=21),
+        # a point of order is not a reply
+        ln(1, 640, "The Acting President: I give the floor to the representative of Algeria on a point of order.",
+           x=141, bold="The Acting President", box=24),
+        ln(1, 636, "Mr. Bendjama (Algeria) (spoke in French): May I ask the representative of Morocco to address the", x=141,
+           bold="Mr. Bendjama", box=25),
+        ln(1, 634, "President and not my delegation, as the rules of procedure require of every delegation taking the", box=25),
+        ln(1, 632, "floor in this Hall during the exercise of the right of reply by any delegation?", box=25),
     ]
     if last:
         rows += [ln(1, 650, "The Acting President: We have heard the last speaker in the general debate.", x=141,
@@ -93,8 +102,10 @@ def test_general_debate_statements(settings):
     pavel = next(sp for sp in m.speeches if sp.speaker == "President Pavel")
     assert pavel.heading == "Address by Mr. Petr Pavel, President of the Czech Republic"
     recs = unga.records_for(m, {}, countries(), settings)
-    assert [r["record_id"] for r in recs] == ["gd:81:CZE", "gd:81:NER", "gd:81:EU"]
-    cze, ner, eu = recs
+    assert [r["record_id"] for r in recs] == ["gd:81:CZE", "gd:81:NER", "gd:81:EU", "gd:81:MAR:reply:8.009"]
+    cze, ner, eu, mar = recs
+    assert mar["agenda"] == unga.REPLY_AGENDA and mar["speaker_name"] == "Mr. Hilale" and unga.is_reply(mar)
+    assert mar["text"].startswith("I exercise my right of reply") and mar["country_code"] == "MAR"
     assert cze["speaker_name"] == "Petr Pavel" and cze["speaker_post"] == "President of the Czech Republic"
     assert cze["speaker_role"] == "head" and cze["entity_kind"] == "member_state"
     assert cze["text"] == "The Czech Republic stands by the Charter of the United Nations and its principles."
@@ -109,10 +120,10 @@ def test_general_debate_statements(settings):
 def test_unheaded_meeting_uses_catalogue_or_president(settings):
     m = parse(ga_lines(debate_heading=False, last=True), "A/81/PV.9")
     assert unga.concludes_debate(m)  # and the President's words make it the debate
-    assert len(unga.records_for(m, {}, countries(), settings)) == 3
+    assert len(unga.records_for(m, {}, countries(), settings)) == 4
     m2 = parse(ga_lines(debate_heading=False), "A/81/PV.9")
     assert unga.records_for(m2, {}, countries(), settings) == []
-    assert len(unga.records_for(m2, {"agenda": ["General debate"]}, countries(), settings)) == 3
+    assert len(unga.records_for(m2, {"agenda": ["General debate"]}, countries(), settings)) == 4
 
 
 def test_country_in_posts():
@@ -143,7 +154,7 @@ class FakeDocs:
 
 @pytest.fixture
 def ga(settings, monkeypatch):
-    settings.raw["live"] = {"sc_from": "2024-01-01", "gd_from_session": 81}
+    settings.raw["live"] = {"sc_from": "2024-01-01", "gd_from_session": 81, "gd_website": False}
 
     def lines_for(path):
         symbol = path.read_bytes()[9:].decode()
@@ -163,9 +174,10 @@ def test_update_general_debate(ga):
     assert changed == {2026} and report.fetched == ["A/81/PV.8"] and not report.failed
     assert "A/81/PV.1" not in docs.calls             # catalogued on other business: not fetched
     assert "A/81/PV.30" in docs.calls                # numbers not yet published are looked for on ODS
-    assert report.gd[81] == {"meetings": 1, "statements": 3, "concluded": False, "awaiting": 28}
-    assert sorted(r["record_id"] for r in read_year(ga.parquet_dir, "gd", 2026)) == ["gd:81:CZE", "gd:81:EU",
-                                                                                     "gd:81:NER"]
+    assert report.gd[81] == {"meetings": 1, "statements": 3, "replies": 1, "concluded": False, "awaiting": 28,
+                             "website": 0}
+    assert sorted(r["record_id"] for r in read_year(ga.parquet_dir, "gd", 2026)) == [
+        "gd:81:CZE", "gd:81:EU", "gd:81:MAR:reply:8.009", "gd:81:NER"]
 
     # a week later, the rest of the debate is out; the record that ends it stops the search
     man = undocs.Manifest.load(ga, "ga")
@@ -177,7 +189,7 @@ def test_update_general_debate(ga):
     report2 = Report(started="now")
     update_general_debate(ga, countries(), docs2, report2, today=date(2026, 10, 31))
     assert report2.fetched == ["A/81/PV.9"] and report2.gd[81]["concluded"]
-    assert len(read_year(ga.parquet_dir, "gd", 2026)) == 6
+    assert len(read_year(ga.parquet_dir, "gd", 2026)) == 8
     assert "gd:81:CZE:2" in {r["record_id"] for r in read_year(ga.parquet_dir, "gd", 2026)}
 
     # once concluded, nothing is fetched again
@@ -205,3 +217,20 @@ def test_health_flags_overdue_debate():
     assert not r.warnings
     health(r, today=date(2028, 1, 15))
     assert any("81th session" in w or "81st session" in w for w in r.warnings)
+
+
+def test_backfilled_replies_sit_beside_the_corpus(ga):
+    """Before gd_from_session the corpus has the statements: only replies are stored, and a corpus reload keeps them."""
+    from wcs.store.parquet import write_by_year
+    from wcs.update import Report, update_general_debate
+
+    corpus = {"record_id": "gd:79:CZE", "source": "gd", "body": "General Assembly", "date": date(2024, 9, 1),
+              "date_precision": "session", "year": 2024, "session": 79, "text": "The corpus statement."}
+    write_by_year(ga.parquet_dir, "gd", [corpus])
+    catalogue = [{"symbol": "A/79/PV.8", "verbatim": True, "agenda": ["General debate"], "date": "2024-09-24"}]
+    report = Report(started="now")
+    update_general_debate(ga, countries(), FakeDocs(catalogue, {"A/79/PV.8"}), report, sessions=range(79, 80))
+    ids = sorted(r["record_id"] for r in read_year(ga.parquet_dir, "gd", 2024))
+    assert ids == ["gd:79:CZE", "gd:79:MAR:reply:8.009"] and report.gd[79]["replies"] == 1
+    write_by_year(ga.parquet_dir, "gd", [corpus], keep=unga.is_reply)   # `wcs ingest-gd` again
+    assert len(read_year(ga.parquet_dir, "gd", 2024)) == 2

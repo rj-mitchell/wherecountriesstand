@@ -8,8 +8,13 @@ What makes a statement. The President introduces each speaker in the debate, eit
 Petr Pavel, President of the Czech Republic") or with an invitation ("I now give the floor to His Excellency Mr.
 Bassam Sabbagh, Minister for Foreign Affairs and Expatriates of the Syrian Arab Republic."). The speech that follows an
 introduction is the country's statement; the introduction gives the speaker's full name and post, and the post gives
-the country when the speech's own attribution does not ("President Pavel:"). Rights of reply and points of order are
-left out, as the corpus leaves them out, so the series reads the same across the two sources.
+the country when the speech's own attribution does not ("President Pavel:").
+
+Rights of reply. At the end of most meetings the President calls those who have asked to speak "in exercise of the
+right of reply". These are kept as records of their own (agenda "General debate: right of reply"), never mixed with
+the statements: from the President's call until the next speaker is introduced, or wherever a speech opens by saying
+it is a reply. Points of order are left out. The corpus has no replies, so for sessions before ``gd_from_session``
+they are added from the records on their own (``wcs backfill-replies``).
 
 When the records appear. A session's General Debate is held in late September, but its records are typically
 published around a year later, and not in order (in October 2026 the 80th session's meetings 1 to 4 and 18 were
@@ -33,6 +38,7 @@ from wcs.sources.unsc import symbol_url
 from wcs.sources.verbatim import CHAIR_SPEAKER, Meeting
 
 GD_WINDOW = 30            # the debate falls within a session's first 30 plenary meetings (4-17 in 2023 and 2024)
+GD_CATALOGUE_WINDOW = 45  # meetings the catalogue says are the debate are taken up to this number (4-29 in 1995)
 CHECK_EVERY_DAYS = 7      # how often numbers not yet published are looked for again
 GIVE_UP_DAYS = 3 * 365    # and for how long
 
@@ -154,9 +160,37 @@ def in_debate(agenda: str | None, debate: bool) -> bool:
     return is_general_debate(agenda) or (agenda is None and debate)
 
 
+REPLY_AGENDA = "General debate: right of reply"
+REPLY_CALL = re.compile(r"right of reply", re.I)
+REPLY_OPENING = re.compile(r"right of (?:reply|appeal)|exercis\w* (?:my|our|its|the) right", re.I)
+POINT_OF_ORDER = re.compile(r"point of order", re.I)
+MIN_REPLY_WORDS = 30  # shorter interventions are exchanges with the chair ("I shall conclude here.")
+
+
+def replies(meeting: Meeting, intros: dict[int, tuple[str, str]], debate: bool) -> list[int]:
+    """Indexes of the speeches in the debate made in exercise of the right of reply."""
+    out: list[int] = []
+    calling = point_of_order = False
+    for i, sp in enumerate(meeting.speeches):
+        if CHAIR_SPEAKER.match(sp.speaker):
+            text = " ".join(sp.text.split())
+            calling = calling or bool(REPLY_CALL.search(text))
+            point_of_order = bool(POINT_OF_ORDER.search(text[-300:]))
+            continue
+        if i in intros:
+            calling = False  # the debate has resumed
+            continue
+        opening = " ".join(sp.text.split())[:400]
+        if in_debate(sp.agenda, debate) and not point_of_order and (calling or REPLY_OPENING.search(opening)) and \
+                len(sp.text.split()) >= MIN_REPLY_WORDS:
+            out.append(i)
+        point_of_order = False
+    return out
+
+
 def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, settings: Settings) -> list[dict[str, Any]]:
-    """Stored records (``store.parquet.RECORD_SCHEMA``, source "gd") for the General Debate statements in one
-    plenary meeting; none for a meeting on other business."""
+    """Stored records (``store.parquet.RECORD_SCHEMA``, source "gd") for the General Debate statements and rights of
+    reply in one plenary meeting; none for a meeting on other business."""
     symbol = meeting.symbol
     session = session_of(symbol)
     d = meeting.meeting_date or (date.fromisoformat(meta["date"]) if re.fullmatch(r"\d{4}-\d{2}-\d{2}",
@@ -166,7 +200,8 @@ def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, se
     undocs = settings.sources.get("undocs", "https://undocs.org/en/")
     out: list[dict[str, Any]] = []
     debate = debate_meeting(meeting, meta)
-    for i, (name, post) in sorted(introductions(meeting).items()):
+    intros = introductions(meeting)
+    for i, (name, post) in sorted(intros.items()):
         sp = meeting.speeches[i]
         if not in_debate(sp.agenda, debate):
             continue
@@ -192,8 +227,31 @@ def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, se
             "country_label": label, "entity_kind": kind,
             "on_behalf_of": None if countries.resolve(behalf or "") else behalf,
             "language": language(sp.attribution), "ocr": False, "text": text, "url": symbol_url(undocs, symbol),
+            "text_source": "record",
+        })
+    number = meeting_number(symbol)
+    for i in replies(meeting, intros, debate):
+        sp = meeting.speeches[i]
+        code = countries.resolve(sp.label)
+        label = countries.name_on(code, d) if code else ORGANISATION_LABELS.get(sp.label or "", sp.label)
+        key = code or ORGANISATION_KEYS.get(label or "") or re.sub(r"[^A-Za-z]+", "-", label or sp.speaker).strip(
+            "-").upper()[:24]
+        text = normalise_text(STAGE.sub("", sp.text))
+        out.append({
+            "record_id": f"gd:{session}:{key}:reply:{number}.{i + 1:03d}", "source": "gd", "body": "General Assembly",
+            "date": d, "date_precision": "day", "year": d.year, "session": session,
+            "meeting": f"General Debate, {_ordinal(session)} session", "symbol": symbol, "speech_number": i + 1,
+            "agenda": REPLY_AGENDA, "agenda_area": None, "speaker_name": sp.speaker, "speaker_post": None,
+            "speaker_role": "", "participant": "", "country_code": code, "country_label": label,
+            "entity_kind": countries.kind(code) if code else "organisation", "on_behalf_of": None,
+            "language": language(sp.attribution), "ocr": False, "text": text, "url": symbol_url(undocs, symbol),
+            "text_source": "record",
         })
     return out
+
+
+def is_reply(record: dict[str, Any]) -> bool:
+    return ":reply:" in record["record_id"]
 
 
 def check(meeting: Meeting, records: list[dict[str, Any]], meta: dict[str, Any] | None = None) -> list[str]:
@@ -206,8 +264,8 @@ def check(meeting: Meeting, records: list[dict[str, Any]], meta: dict[str, Any] 
               and not CHAIR_SPEAKER.match(sp.speaker)]
     if debate and not records:
         problems.append("General Debate speeches found but no statements introduced")
-    unplaced = sorted({r["speaker_post"] or r["speaker_name"] for r in records
-                       if r["country_code"] is None and r["country_label"] not in ORGANISATION_KEYS})
+    unplaced = sorted({r["speaker_post"] or r["speaker_name"] for r in records if not is_reply(r)
+                       and r["country_code"] is None and r["country_label"] not in ORGANISATION_KEYS})
     if unplaced:
         problems.append("statements not matched to a country: " + "; ".join(unplaced[:5]))
     return problems

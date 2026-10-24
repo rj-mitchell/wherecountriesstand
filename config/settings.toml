@@ -26,6 +26,9 @@ sc_after_meeting = 9524
 # parsed by wcs.sources.unga; the corpus (to the 80th session, 2025) keeps the sessions before. The records appear
 # about a year after the debate.
 gd_from_session = 81
+# Until a session's official records are out, take its statements from the UN's General Debate website
+# (gadebate.un.org; wcs.sources.gadebate), labelled as not yet the official record (docs/DECISIONS.md, 12).
+gd_website = true
 
 [sources]
 # Harvard Dataverse file ids (CC0). The General Debate corpus asks for a guestbook entry, so it is downloaded by

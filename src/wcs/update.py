@@ -32,7 +32,7 @@ import duckdb
 
 from wcs.config import Settings
 from wcs.reference.countries import Countries, countries
-from wcs.sources import undocs, unga
+from wcs.sources import gadebate, undocs, unga
 from wcs.sources import votes as vote_source
 from wcs.sources.verbatim import PARSER_VERSION
 from wcs.store.parquet import record_path, write_year, years
@@ -238,13 +238,16 @@ def update_security_council(settings: Settings, ref: Countries, docs: undocs.UND
 
 
 def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDocs, report: Report,
-                          max_new: int | None = None, today: date | None = None) -> set[int]:
+                          max_new: int | None = None, today: date | None = None,
+                          sessions: range | None = None, website: gadebate.Website | None = None) -> set[int]:
     """Fetch, parse and store the General Debate meetings of each session from ``gd_from_session``; returns the years
-    that changed."""
+    that changed. ``sessions``: earlier sessions too (``wcs backfill-replies``), for which only the rights of reply
+    are stored, beside the corpus's statements."""
     manifest = undocs.Manifest.load(settings, "ga")
     first, last = gd_from_session(settings), unga.current_session(today)
+    sessions = sessions or range(first, last + 1)
     todo: list[tuple[dict[str, Any], bool]] = []
-    for session in range(first, last + 1):
+    for session in sessions:
         entries = {s: e for s, e in manifest.entries.items() if unga.session_of(s) == session}
         concluded = any(e.get("concludes_debate") for e in entries.values())
         catalogue: dict[str, dict[str, Any]] = {}
@@ -252,13 +255,16 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
             try:
                 for meta in docs.search(f"191__a:A/{session}/PV.*"):
                     n = unga.meeting_number(meta["symbol"])
-                    if n and n <= unga.GD_WINDOW and unga.session_of(meta["symbol"]) == session:
+                    if n and n <= unga.GD_CATALOGUE_WINDOW and unga.session_of(meta["symbol"]) == session:
                         catalogue[meta["symbol"]] = meta
             except Exception as exc:
                 report.warnings.append(f"Digital Library search failed for the General Assembly ({exc}); trying ODS")
-        for n in range(1, unga.GD_WINDOW + 1):
+        numbers = set(range(1, unga.GD_WINDOW + 1)) | {unga.meeting_number(s) or 0 for s in catalogue}
+        for n in sorted(numbers):
             symbol = f"A/{session}/PV.{n}"
             meta, entry = catalogue.get(symbol), manifest.entries.get(symbol)
+            if session < first and not catalogue and (entry or {}).get("status") is None:
+                continue  # a past session the catalogue cannot list: not probed number by number
             if entry is not None and undocs.due_for_refetch(entry, meta):
                 todo.append((meta or {"symbol": symbol, "verbatim": True}, True))
                 continue
@@ -304,29 +310,65 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
             changed.update(r["year"] for r in records)
             report.reparsed += 1
     changed |= {1945 + s for sym, e in manifest.entries.items() if e.get("status") == "parsed" and
-                e.get("stored") is False and (s := unga.session_of(sym))}
+                e.get("stored") is False and (s := unga.session_of(sym)) and s in sessions}
 
-    # store each changed session's statements (a session's debate falls in one year: September)
+    # until a session's official records are complete, statements from the UN's General Debate website fill in
+    def official(session: int) -> list[dict[str, Any]]:
+        return [r for sym, e in manifest.entries.items() if e.get("status") == "parsed" and
+                unga.session_of(sym) == session for r in undocs.load_parsed(settings, sym)]
+
+    live = {s for s in sessions if s >= first and not any(
+        e.get("concludes_debate") for sym, e in manifest.entries.items() if unga.session_of(sym) == s)}
+    if live and settings.section("live").get("gd_website", True):
+        try:
+            got, problems = gadebate.update(settings, ref, live, site=website,
+                                            skip={r["record_id"] for s in live for r in official(s)})
+            changed |= {1945 + s for s in got}
+            if problems:
+                report.problems["gadebate.un.org"] = problems
+        except gadebate.Blocked as exc:
+            report.warnings.append(f"the General Debate website refused access ({exc}): statements will come from "
+                                   "the official records, about a year after the debate")
+        except Exception as exc:
+            log.exception("General Debate website")
+            report.warnings.append(f"General Debate website: {type(exc).__name__}: {exc}")
+
+    # store each changed session's records (a session's debate falls in one year: September). Before
+    # gd_from_session the corpus has the statements, so only the replies are stored, beside them.
     for year in sorted(changed):
-        rows, symbols, seen = [], [], set()
+        session = year - 1945
+        rows, symbols, seen, from_website = [], [], set(), 0
         for symbol, entry in sorted(manifest.entries.items(), key=lambda kv: unga.meeting_number(kv[0]) or 0):
-            if entry.get("status") == "parsed" and unga.session_of(symbol) == year - 1945:
+            if entry.get("status") == "parsed" and unga.session_of(symbol) == session:
                 for r in undocs.load_parsed(settings, symbol):
+                    if session < first and not unga.is_reply(r):
+                        continue
                     rid, k = r["record_id"], 2
                     while r["record_id"] in seen:  # a country introduced twice keeps both statements
                         r["record_id"], k = f"{rid}:{k}", k + 1
                     seen.add(r["record_id"])
                     rows.append(r)
                 symbols.append(symbol)
-        write_year(settings.parquet_dir, "gd", year, rows)
+        if session < first:
+            write_year(settings.parquet_dir, "gd", year, rows, keep=lambda r: not unga.is_reply(r))
+        else:
+            # the official record replaces the website's text, statement by statement
+            for r in gadebate.load_records(settings, session):
+                if r["record_id"] not in seen:
+                    rows.append(r)
+                    from_website += 1
+            write_year(settings.parquet_dir, "gd", year, rows)
+        report.gd.setdefault(session, {})["website"] = from_website
         for symbol in symbols:
             manifest.entries[symbol]["stored"] = True
         report.years_written[year] = report.years_written.get(year, 0) + len(rows)
     manifest.save()
-    for session in range(first, last + 1):
+    for session in sessions:
         es = [e for s, e in manifest.entries.items() if unga.session_of(s) == session]
-        report.gd[session] = {"meetings": sum(e.get("status") == "parsed" for e in es),
-                              "statements": sum(e.get("speeches", 0) for e in es if e.get("status") == "parsed"),
+        report.gd[session] = {**report.gd.get(session, {}), "meetings": sum(e.get("status") == "parsed" for e in es),
+                              "statements": sum(e.get("statements", e.get("speeches", 0)) for e in es
+                                                if e.get("status") == "parsed"),
+                              "replies": sum(e.get("replies", 0) for e in es if e.get("status") == "parsed"),
                               "concluded": any(e.get("concludes_debate") for e in es),
                               "awaiting": sum(e.get("status") == "missing" for e in es)}
     return changed

@@ -215,6 +215,7 @@ class Engine:
                                        "symbol", "agenda", "speaker_name", "speaker_post", "speaker_role",
                                        "participant", "country_code", "country_label", "entity_kind",
                                        "on_behalf_of", "language", "ocr", "text", "url")},
+                "text_source": rec.get("text_source"),
                 "date": rec["date"].isoformat(),
                 "year": rec["date"].year,
                 "country_name": self.countries.name_on(code, rec["date"]) if code else rec.get("country_label"),

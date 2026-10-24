@@ -89,9 +89,9 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
         if report.votes:
             typer.echo(f"votes: {report.votes}")
         for session, info in report.gd.items():
-            typer.echo(f"General Debate, session {session}: {info['statements']} statements from {info['meetings']} "
-                       f"meetings{' (complete)' if info['concluded'] else ''}; {info['awaiting']} meetings not yet "
-                       f"published")
+            typer.echo(f"General Debate, session {session}: {info['statements']} statements and {info['replies']} "
+                       f"rights of reply from {info['meetings']} meetings{' (complete)' if info['concluded'] else ''}; "
+                       f"{info['awaiting']} meetings not yet published")
         for w in report.warnings:
             typer.echo(f"warning: {w}")
         for e in report.errors:
@@ -100,19 +100,42 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
         raise typer.Exit(1)
 
 
+@app.command("backfill-replies")
+def backfill_replies(since: int = typer.Option(..., help="first session, e.g. 55 (2000)"),
+                     until: int = typer.Option(None, help="last session (default: the one before [live] "
+                                                          "gd_from_session)")) -> None:
+    """Add the General Debate's rights of reply for past sessions, from the UN's records (the corpus has only the
+    statements). Resumable; records without a text layer (scanned, before the late 1990s) are skipped."""
+    from wcs.reference.countries import countries
+    from wcs.sources import undocs
+    from wcs.update import Report, gd_from_session, update_general_debate
+
+    s = load_settings()
+    last = until or gd_from_session(s) - 1
+    report = Report(started="backfill")
+    changed = update_general_debate(s, countries(), undocs.UNDocs(s), report, sessions=range(since, last + 1))
+    for session, info in report.gd.items():
+        typer.echo(f"session {session}: {info['replies']} rights of reply from {info['meetings']} meetings")
+    typer.echo(f"years written: {sorted(changed)}; run `wcs index --source gd` to index them")
+    if report.failed:
+        typer.echo(f"could not parse: {', '.join(report.failed)}")
+
+
 @app.command("ingest-gd")
 def ingest_gd(years: str = typer.Option(None)) -> None:
     """Load General Debate statements (from data/raw/ungd/) into the Parquet store (the sessions before [live]
     gd_from_session; later sessions come from `wcs update`)."""
     from wcs.reference.countries import countries
     from wcs.sources import ungd
+    from wcs.sources.unga import is_reply
     from wcs.store.parquet import write_by_year
     from wcs.update import gd_from_session
 
     s = load_settings()
     first = gd_from_session(s)
+    # rights of reply, added from the UN's records (`wcs backfill-replies`), are kept
     counts = write_by_year(s.parquet_dir, "gd", (r for r in ungd.iter_records(s, countries(), _years(years))
-                                                 if r["session"] < first))
+                                                 if r["session"] < first), keep=is_reply)
     typer.echo(f"{sum(counts.values())} statements in {len(counts)} years")
 
 

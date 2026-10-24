@@ -44,8 +44,10 @@ Checked on 24 October 2026. "Licence" means the terms for republishing, not just
 - **Votes:** the voting data record's file list is read on each run, and a new file is downloaded and converted.
 - **General Debate, 81st session (2026) onwards:** the General Assembly's own verbatim records (`A/<session>/PV.<n>`),
   parsed by the same parser (`wcs.sources.unga`); each statement is the speech the President introduces, with the
-  speaker's name and post from the introduction. The records are published about a year after the debate, so each
-  September's debate arrives the following autumn. Checked on the 79th session (2024): all 11 debate meetings, 192
+  speaker's name and post from the introduction. The records are published about a year after the debate; until
+  then each statement comes from the UN's General Debate website (the delegation's English text, or an AI transcript
+  of the English interpretation), labelled as not yet the official record and replaced by it when it is published
+  (decision 12). Rights of reply are kept as records of their own, from 2000 (decision 13). Checked on the 79th session (2024): all 11 debate meetings, 192
   statements, every Member State that spoke (see [`OPERATIONS.md`](OPERATIONS.md#the-general-debate)). Sessions
   before the 81st come from the corpus, loaded by hand (it needs a guestbook entry).
 
@@ -57,7 +59,8 @@ What the UN's services do, as found on 24 October 2026:
 | ODS symbol service, `documents.un.org/api/symbol/access?s=S/PV.10235&l=en&t=pdf` | Discovery by probing, and download | Redirects to the PDF (`/pro/` provisional, `/gen/` final). A missing symbol redirects to an HTML error page with status 200. |
 | `undocs.org/en/<symbol>` | Links for readers | Redirects to a viewer page on docs.un.org. |
 | The same two services for `A/<session>/PV.<n>` | General Assembly plenary records | Catalogued with agenda items ("General debate"). Published about a year late and out of order: on 24 October 2026, `A/80/PV.1`–`4` and `PV.18` were out, the 80th session's debate (`PV.5` onwards) was not. |
-| `gadebate.un.org`, `press.un.org` | Not used | The UN's General Debate site (each statement as delivered, a PDF in the original language and an AI transcript of the English interpretation, within days) and its press summaries. Both put automated visitors through a browser check (AWS WAF, a JavaScript challenge), so the update job does not use them. |
+| `gadebate.un.org` | The General Debate before its records are out | A page per statement (`/en/<session>/<country>`), listed with a last-modified date in `/sitemap.xml` (sessions 64 to 81). Each has the speaker's name, post and date, the delegation's text as a PDF (English for most; others in their language), and an AI transcript of the English interpretation (`/en/node/<id>/transcript/en/prepare-download`, POST, returns a link to a text file). Behind an AWS WAF browser check: a non-browser user agent gets "Human Verification" (405); a browser's is let through. robots.txt does not disallow the statement pages. |
+| `press.un.org` | Not used | Same-day summaries of each meeting. A JavaScript challenge, which a plain client cannot pass. |
 
 ### Licence of briefings
 
@@ -82,13 +85,11 @@ credited to the UN, with the document symbol and page.
 
 ## Open questions
 
-- **A sooner General Debate.** The official records arrive about a year after the debate. The UN's General Debate
-  website has every statement within days but blocks automated access. Ask the UN (the General Assembly's web team,
-  or the Dag Hammarskjöld Library) whether it would allow access or offer a feed; until then, the debate arrives a
-  year late.
-- **Rights of reply in the General Debate.** Left out for now, as the corpus leaves them out, so the series reads the
-  same before and after 2026. They are often where disputes between countries are aired, and could be added as a
-  separate kind of record.
+- **The General Debate website's browser check.** The update gets past it by presenting itself as a browser
+  (decision 12). If the UN tightens it, the debate falls back to arriving a year late. Asking the UN for access or a
+  feed would put this on a firmer footing.
+- **Rights of reply before 2000.** The 1990s General Assembly records are printed in two columns that come out of the
+  PDF in the wrong order (and before 1996 are scans without text), so their replies are not read yet.
 
 - **Group memberships on a date.** The Correlates of War organisation-membership data is believed
   to stop in 2014. Memberships since then (BRICS expansion, EU candidates, African Union

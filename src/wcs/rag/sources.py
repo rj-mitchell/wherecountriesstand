@@ -110,12 +110,21 @@ def when_label(r: dict[str, Any]) -> str:
     return f"{r['body']}, {r['meeting']}, {fmt_date(r['date'])}"
 
 
+# Texts published before the official record (the General Debate's records come about a year later).
+TEXT_SOURCE_NOTES = {
+    "delegation": "text issued by the delegation, as prepared for delivery; not yet the official record",
+    "transcript": "AI transcript of the UN's English interpretation, not yet the official record; may contain errors",
+}
+
+
 def record_source(n: int, r: dict[str, Any], group_by: str = "region") -> Source:
     notes = []
     if r.get("language"):
         notes.append(f"English text is the UN's translation from {r['language']}")
     if r.get("ocr"):
         notes.append("text recognised from a scanned record and may contain errors")
+    if r.get("text_source") in TEXT_SOURCE_NOTES:
+        notes.append(TEXT_SOURCE_NOTES[r["text_source"]])
     ref = r.get("symbol")
     title = " — ".join(x for x in (speaker_label(r), when_label(r), ref, r.get("agenda"),
                                    "; ".join(notes) if notes else None) if x)
@@ -136,6 +145,7 @@ def record_source(n: int, r: dict[str, Any], group_by: str = "region") -> Source
         "on_behalf_of": r.get("on_behalf_of"),
         "language": r.get("language"),
         "ocr": r.get("ocr"),
+        "text_source": r.get("text_source"),
         "group": GROUP_LABELS.get(group, "Other"),
         "text": r["text"],
         "ranking": r.get("ranking"),

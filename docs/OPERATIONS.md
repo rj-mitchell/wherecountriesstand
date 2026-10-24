@@ -79,6 +79,8 @@ Or with cron, twice a day:
 | `no Security Council record newer than ...` | Records not appearing, or discovery broken | Check https://digitallibrary.un.org for recent `S/PV` records; if they are there, discovery needs fixing. |
 | `no General Debate records yet for the Nth session` | Over 15 months since the debate with no records found | Check the Digital Library for `A/<session>/PV` records. If the debate's records are there, look at the manifest entries in `manifest-ga.json`. |
 | `statements not matched to a country` | A post written in a way the reference data lacks ("President of the Togolese Republic") | Add the country's form to `data_static/aliases.csv`. |
+| `the General Debate website refused access` | The site's browser check now turns this client away | Nothing breaks: statements arrive with the official records. To restore the faster route, see whether a newer browser identity (`BROWSER_USER_AGENT` in `wcs.sources.gadebate`) is accepted, or ask the UN for access. |
+| `website statement not matched to a country` | The site names a country in a new way ("Naoero" for Nauru) | Add it to `data_static/aliases.csv`. |
 | `General Debate speeches found but no statements introduced` | The President's introductions are worded in a new way | Look at the record; adjust `INVITATION` or `ADDRESS` in `wcs.sources.unga`. |
 
 ## The General Debate
@@ -99,16 +101,27 @@ records (`A/<session>/PV.<n>`), with the parser used for the Security Council (`
   President of the Czech Republic") or an invitation ("I now give the floor to His Excellency Mr. Bassam Sabbagh,
   Minister for Foreign Affairs and Expatriates of the Syrian Arab Republic."). The speech that follows is the
   country's statement. The introduction gives the speaker's name and post, and the post gives the country when the
-  attribution does not ("President Pavel:"). Rights of reply and points of order are left out, as the corpus leaves
-  them out.
+  attribution does not ("President Pavel:").
+* **Rights of reply** are records of their own (agenda "General debate: right of reply"): the speeches after the
+  President calls those who asked to reply, or that open by saying they are a reply. Points of order are left out.
+  For sessions before the 81st, where the corpus has the statements but no replies, `wcs backfill-replies --since 55`
+  adds them from the records (from 2000: the 1990s records are laid out in two columns that come out of the PDF in
+  the wrong order, and are not read yet). Reloading the corpus keeps them.
 * **Dates.** Each statement has its day, where the corpus has only the session.
 
 **When the records appear.** About a year after the debate, and not in order: on 24 October 2026 the 80th session's
-debate (September 2025) was not yet published, and the 79th's (September 2024) was. So each September's debate
-reaches the site about a year later. Two sources publish sooner, the UN's General Debate website (statements as
-delivered, with an AI transcript of the English interpretation) and its press releases (summaries), but both put
-automated visitors through a browser check, so they are not used. Asking the UN for permission or a feed would close
-the gap; see the open questions in `docs/DATA.md`.
+debate (September 2025) was not yet published, and the 79th's (September 2024) was.
+
+**Until then, the General Debate website** (`wcs.sources.gadebate`, decision 12). The UN's website has a page for
+each statement within days, listed in its sitemap: the speaker's name, post and date, the statement as the
+delegation issued it (a PDF, in English for most), and an AI transcript of the UN's English interpretation. The
+update reads the sitemap at most once a day and fetches new or changed pages. It takes the delegation's English text
+if there is one, else the transcript, and labels the record with where its text came from (`text_source`
+"delegation" or "transcript"); briefings say the text is not yet the official record. When the official record of a
+statement is published it replaces the website's, statement by statement. The site's browser check turns away
+automated clients, so this client presents itself as a browser and keeps to what robots.txt allows. If the site
+blocks it anyway, the report warns (`the General Debate website refused access`) and the official records still
+arrive in time. `[live] gd_website = false` turns it off. Raw files and state are in `data/raw/gadebate/`.
 
 **Checked on the 79th session (2024).** Run end to end on its records: all 11 debate meetings found and parsed,
 192 statements, one for each Member State that spoke, plus the State of Palestine, the Holy See and the European

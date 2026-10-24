@@ -8,7 +8,7 @@ Speeches are stored at ``parquet/records/<source>/<year>.parquet`` and replaced 
 from __future__ import annotations
 
 import os
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
@@ -43,6 +43,10 @@ RECORD_SCHEMA = pa.schema([
     ("ocr", pa.bool_()),                # text from a scanned document (may contain recognition errors)
     ("text", pa.string()),
     ("url", pa.string()),
+    # where the text comes from, when not the official record or corpus: "delegation" (the text a delegation issued,
+    # before the record is published), "transcript" (an AI transcript of the English interpretation). Null or
+    # "record" otherwise. Added in 2026: files written before have no such column.
+    ("text_source", pa.string()),
 ])
 
 VOTE_SCHEMA = pa.schema([
@@ -79,21 +83,28 @@ def record_path(root: Path, source: str, year: int) -> Path:
     return Path(root) / "records" / source / f"{year}.parquet"
 
 
-def write_year(root: Path, source: str, year: int, rows: Iterable[dict[str, Any]]) -> Path:
-    """Replace one source's records for one year."""
+def write_year(root: Path, source: str, year: int, rows: Iterable[dict[str, Any]],
+               keep: Callable[[dict[str, Any]], bool] | None = None) -> Path:
+    """Replace one source's records for one year. ``keep``: records already stored that it accepts are kept (two
+    loaders sharing a year: the General Debate corpus's statements and the rights of reply from the records)."""
+    rows = list(rows)
+    if keep is not None:
+        rows += [r for r in read_year(root, source, year) if keep(r)]
     rows = sorted(rows, key=lambda r: (r["date"], r["record_id"]))
     path = record_path(root, source, year)
     _atomic_write(pa.Table.from_pylist(rows, schema=RECORD_SCHEMA), path)
     return path
 
 
-def write_by_year(root: Path, source: str, rows: Iterable[dict[str, Any]]) -> dict[int, int]:
-    """Group rows by year and replace each year's file; returns rows written per year."""
+def write_by_year(root: Path, source: str, rows: Iterable[dict[str, Any]],
+                  keep: Callable[[dict[str, Any]], bool] | None = None) -> dict[int, int]:
+    """Group rows by year and replace each year's file (keeping stored records ``keep`` accepts); returns rows
+    written per year."""
     by_year: dict[int, list[dict[str, Any]]] = {}
     for r in rows:
         by_year.setdefault(r["year"], []).append(r)
     for year, items in by_year.items():
-        write_year(root, source, year, items)
+        write_year(root, source, year, items, keep=keep)
     return {y: len(v) for y, v in sorted(by_year.items())}
 
 

@@ -374,6 +374,9 @@ def parse_cached(settings: Settings, countries: Countries, manifest: Manifest, s
     pdf_path = cache_dir(settings) / "pdf" / f"{safe_name(symbol)}.pdf"
     try:
         lines = read_lines(pdf_path)
+        if body == "ga" and len(lines) < 20:  # a scanned record without a text layer (before the late 1990s)
+            entry.update({"status": "no_text", "parser_version": PARSER_VERSION})
+            return []
         if body == "sc" and is_communique(lines):
             entry.update({"status": "communique", "parser_version": PARSER_VERSION})
             return []
@@ -389,6 +392,8 @@ def parse_cached(settings: Settings, countries: Countries, manifest: Manifest, s
         debate = unga.debate_meeting(meeting, meta or entry)
         status = "parsed" if records else ("failed" if debate or not meeting.speeches else "other")
         entry["concludes_debate"] = unga.concludes_debate(meeting)
+        entry["replies"] = sum(unga.is_reply(r) for r in records)
+        entry["statements"] = len(records) - entry["replies"]
     else:
         records = records_for(meeting, meta or entry, countries, settings)
         problems = check(meeting, records)
