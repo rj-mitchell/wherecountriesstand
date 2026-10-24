@@ -1,0 +1,12 @@
+code,name,kind,valid_from,valid_to,successor,note
+SUN,Union of Soviet Socialist Republics,former_member_state,1945-10-24,1991-12-24,RUS,The Russian Federation continued the USSR's membership of the United Nations and its Security Council seat from 24 December 1991.
+YUG,Yugoslavia,former_member_state,1945-10-24,2003-02-04,SCG,The Socialist Federal Republic of Yugoslavia until 1992; the Federal Republic of Yugoslavia (admitted in 2000) until it became Serbia and Montenegro in 2003.
+SCG,Serbia and Montenegro,former_member_state,2003-02-04,2006-06-03,SRB,Serbia continued the membership from 3 June 2006; Montenegro was admitted separately.
+CSK,Czechoslovakia,former_member_state,1945-10-24,1992-12-31,CZE;SVK,
+DDR,German Democratic Republic,former_member_state,1973-09-18,1990-10-03,DEU,
+YMD,Democratic Yemen,former_member_state,1967-12-14,1990-05-22,YEM,
+EAT,Tanganyika,former_member_state,1961-12-14,1964-04-26,TZA,
+EAZ,Zanzibar,former_member_state,1963-12-16,1964-04-26,TZA,
+PSE,State of Palestine,observer_state,,,,A non-member observer State of the United Nations since 29 November 2012.
+VAT,Holy See,observer_state,,,,A non-member observer State of the United Nations.
+XKX,Kosovo,other_state,,,,Not a member of the United Nations. Named as in the records.

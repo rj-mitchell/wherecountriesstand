@@ -1,0 +1,15 @@
+group,label,basis
+region:africa,African States (geographic),UN M49 region
+region:americas,The Americas (geographic),UN M49 region
+region:asia,Asian States (geographic),UN M49 region
+region:europe,European States (geographic),UN M49 region
+region:oceania,Oceania (geographic),UN M49 region
+p5,Permanent members of the Security Council,Charter of the United Nations; the Russian Federation from 24 December 1991
+council_elected,Elected members of the Security Council,Members listed in the meeting record who are not permanent members
+council_guest,Non-members of the Security Council invited to speak,Invited under rules 37 and 39 of the Council's provisional rules of procedure
+eu,European Union member States,Dated membership (the European Communities before 1993); data_static/memberships.csv
+nato,NATO members,Dated membership; data_static/memberships.csv
+au,African Union member States,UN member States in Africa; Morocco from 30 January 2017 (the Organization of African Unity before 2002)
+ldc,Least developed countries,UN M49 (current list)
+lldc,Landlocked developing countries,UN M49 (current list)
+sids,Small island developing States,UN M49 (current list)
