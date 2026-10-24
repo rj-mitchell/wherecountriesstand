@@ -16,8 +16,10 @@ when it reports a problem.
      at most monthly, so corrected versions replace them;
    * parses every cached PDF again when the parser changes (no downloads);
    * stores each year that changed.
-3. **Index.** Re-indexes the years that changed, then embeds new passages for up to `--embed-seconds`.
-4. **Report.** Writes `data/logs/update-<time>.json` and prints a summary. Exits 1 if something needs attention.
+3. **General Debate** (from `[live] gd_from_session`, the 81st session of 2026; the corpus covers the sessions
+   before): see [The General Debate](#the-general-debate) below.
+4. **Index.** Re-indexes the years that changed, then embeds new passages for up to `--embed-seconds`.
+5. **Report.** Writes `data/logs/update-<time>.json` and prints a summary. Exits 1 if something needs attention.
 
 A first run after loading the corpus backfills everything since the corpus ended (S/PV.9525 onwards: about 300
 meetings a year). It takes about 10 seconds a meeting, mostly reading the PDF, and saves its progress after every
@@ -39,6 +41,8 @@ meeting, so it can be stopped and started. `--max-new 50` limits a run to 50 rec
 | A record will not parse | Reported, tried up to 5 times, then left alone. The rest of the run carries on. |
 | A run is interrupted | The manifest is saved after every meeting, and years with parsed but unstored meetings are stored on the next run. |
 | No new meetings for weeks | The report warns after 21 days without a newer record. |
+| A record prints a speaker's name without bold type | Accepted by its wording if it comes straight after the President and names a country or body in brackets. |
+| Body text runs into the page's footer area | Only short lines there are taken as the footer; a line of more than six words is kept as text. |
 | The parser drifts from the corpus | `scripts/validate_undocs.py` compares the parser with the corpus on meetings both cover (results in `docs/VALIDATION.md`). Re-run it after changing the parser. |
 
 Everything fetched is kept in `data/raw/undocs/`: `pdf/` (the records), `parsed/` (the speeches parsed from each),
@@ -73,12 +77,41 @@ Or with cron, twice a day:
 | `records could not be parsed` | An unusual record | The manifest entry has the error. Usually one record; the rest are unaffected. |
 | `labels that look like countries but matched none` | A country written in a new way | Add it to `data_static/aliases.csv`. |
 | `no Security Council record newer than ...` | Records not appearing, or discovery broken | Check https://digitallibrary.un.org for recent `S/PV` records; if they are there, discovery needs fixing. |
+| `no General Debate records yet for the Nth session` | Over 15 months since the debate with no records found | Check the Digital Library for `A/<session>/PV` records. If the debate's records are there, look at the manifest entries in `manifest-ga.json`. |
+| `statements not matched to a country` | A post written in a way the reference data lacks ("President of the Togolese Republic") | Add the country's form to `data_static/aliases.csv`. |
+| `General Debate speeches found but no statements introduced` | The President's introductions are worded in a new way | Look at the record; adjust `INVITATION` or `ADDRESS` in `wcs.sources.unga`. |
 
 ## The General Debate
 
-The General Debate corpus is updated by its authors once a year, but its download asks for a guestbook entry, so it
-cannot be fetched automatically. When a new release appears, download it by hand into `data/raw/ungd/` and run
-`wcs ingest-gd`. The next step is to read new sessions straight from the UN's General Assembly records (`A/<session>/PV.<n>`)
-with the same parser. The records share the layout, but heads of state are introduced by the President rather than
-named with their country ("President Macron (spoke in French):"), so the country has to be read from the President's
-introduction.
+**Before the 81st session (2025 and earlier)** the General Debate comes from the corpus, which its authors update once
+a year. Its download asks for a guestbook entry, so a new release is fetched by hand into `data/raw/ungd/` and loaded
+with `wcs ingest-gd`, which loads only the sessions before `[live] gd_from_session`.
+
+**From the 81st session (September 2026)** `wcs update` reads the debate from the General Assembly's own verbatim
+records (`A/<session>/PV.<n>`), with the parser used for the Security Council (`wcs.sources.unga`):
+
+* **Finding the meetings.** The debate falls within each session's first 30 plenary meetings (4 to 17 in 2023 and
+  2024). The Digital Library's catalogue names each meeting's agenda items, so meetings on other business are not
+  fetched; numbers it has not catalogued are looked for on ODS. Numbers not yet published are looked for again
+  every week, for up to three years, until a record says the debate has ended ("We have heard the last speaker in
+  the general debate").
+* **What counts as a statement.** The President introduces each speaker, with a heading ("Address by Mr. Petr Pavel,
+  President of the Czech Republic") or an invitation ("I now give the floor to His Excellency Mr. Bassam Sabbagh,
+  Minister for Foreign Affairs and Expatriates of the Syrian Arab Republic."). The speech that follows is the
+  country's statement. The introduction gives the speaker's name and post, and the post gives the country when the
+  attribution does not ("President Pavel:"). Rights of reply and points of order are left out, as the corpus leaves
+  them out.
+* **Dates.** Each statement has its day, where the corpus has only the session.
+
+**When the records appear.** About a year after the debate, and not in order: on 24 October 2026 the 80th session's
+debate (September 2025) was not yet published, and the 79th's (September 2024) was. So each September's debate
+reaches the site about a year later. Two sources publish sooner, the UN's General Debate website (statements as
+delivered, with an AI transcript of the English interpretation) and its press releases (summaries), but both put
+automated visitors through a browser check, so they are not used. Asking the UN for permission or a feed would close
+the gap; see the open questions in `docs/DATA.md`.
+
+**Checked on the 79th session (2024).** Run end to end on its records: all 11 debate meetings found and parsed,
+192 statements, one for each Member State that spoke, plus the State of Palestine, the Holy See and the European
+Union. The four Member States without a statement (Afghanistan, Brunei Darussalam, Myanmar and the Democratic
+People's Republic of Korea, which spoke only in reply) have no introduction anywhere in the records. 116 statements
+by heads of State or Government, 68 by ministers, 6 by heads of delegation.

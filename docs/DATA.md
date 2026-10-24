@@ -42,8 +42,12 @@ Checked on 24 October 2026. "Licence" means the terms for republishing, not just
   0.98, all the text (see [`VALIDATION.md`](VALIDATION.md)). Closed meetings, which have only a communiqué, are
   recorded as such. Provisional records are fetched again once corrected.
 - **Votes:** the voting data record's file list is read on each run, and a new file is downloaded and converted.
-- **General Debate:** the corpus is updated by its authors each year; load each new release by hand (it needs a
-  guestbook entry). Reading new sessions straight from the General Assembly's records is the next step.
+- **General Debate, 81st session (2026) onwards:** the General Assembly's own verbatim records (`A/<session>/PV.<n>`),
+  parsed by the same parser (`wcs.sources.unga`); each statement is the speech the President introduces, with the
+  speaker's name and post from the introduction. The records are published about a year after the debate, so each
+  September's debate arrives the following autumn. Checked on the 79th session (2024): all 11 debate meetings, 192
+  statements, every Member State that spoke (see [`OPERATIONS.md`](OPERATIONS.md#the-general-debate)). Sessions
+  before the 81st come from the corpus, loaded by hand (it needs a guestbook entry).
 
 What the UN's services do, as found on 24 October 2026:
 
@@ -52,6 +56,8 @@ What the UN's services do, as found on 24 October 2026:
 | Digital Library search, `digitallibrary.un.org/search?p=191__a:S/PV.102*&of=xm&rg=200` | Discovery and metadata | MARC XML. Field 191 the symbol; 992 the meeting date; 091 `PRO` while provisional; 245 the title ("Official communiqué ..." for a closed meeting); 991 agenda items; 856 a link to each language's PDF; 005 last modified. |
 | ODS symbol service, `documents.un.org/api/symbol/access?s=S/PV.10235&l=en&t=pdf` | Discovery by probing, and download | Redirects to the PDF (`/pro/` provisional, `/gen/` final). A missing symbol redirects to an HTML error page with status 200. |
 | `undocs.org/en/<symbol>` | Links for readers | Redirects to a viewer page on docs.un.org. |
+| The same two services for `A/<session>/PV.<n>` | General Assembly plenary records | Catalogued with agenda items ("General debate"). Published about a year late and out of order: on 24 October 2026, `A/80/PV.1`–`4` and `PV.18` were out, the 80th session's debate (`PV.5` onwards) was not. |
+| `gadebate.un.org`, `press.un.org` | Not used | The UN's General Debate site (each statement as delivered, a PDF in the original language and an AI transcript of the English interpretation, within days) and its press summaries. Both put automated visitors through a browser check (AWS WAF, a JavaScript challenge), so the update job does not use them. |
 
 ### Licence of briefings
 
@@ -67,7 +73,6 @@ credited to the UN, with the document symbol and page.
 | General Assembly plenary verbatim records (`A/…/PV.…`) | The rest of the Assembly's debates, including explanations of vote | The same loader as for the Security Council. From 1992. |
 | UNFCCC COP high-level segment statements | The climate equivalent of the General Debate | PDFs on unfccc.int |
 | ICJ written and oral statements | Countries' formal legal positions. The climate change advisory opinion drew 91 written statements. | PDFs on icj-cij.org |
-| General Assembly plenary records (`A/…/PV.…`), including new General Debate sessions | The same parser, so new sessions arrive without waiting for the corpus | Heads of State are introduced by the President rather than named with their country |
 | UPR recommendations and responses ([UPR Info](https://upr-info-database.uwazi.io/)) | 79,000–90,000+ recommendations since 2008, with whether each was accepted or only "noted" | Bulk export to be confirmed |
 | Treaty status, reservations and declarations (UN Treaty Collection) | Formal commitments, and exactly what countries won't accept | No bulk download: needs scraping |
 | Climate pledges (NDCs) and laws ([Climate Policy Radar](https://github.com/climatepolicyradar/open-data)) | Climate commitments, full text | CC BY 4.0 |
@@ -76,6 +81,14 @@ credited to the UN, with the document symbol and page.
 | Earth Negotiations Bulletin (IISD) | Who argued what in environmental negotiations since 1992 | Reuse terms unknown: ask IISD |
 
 ## Open questions
+
+- **A sooner General Debate.** The official records arrive about a year after the debate. The UN's General Debate
+  website has every statement within days but blocks automated access. Ask the UN (the General Assembly's web team,
+  or the Dag Hammarskjöld Library) whether it would allow access or offer a feed; until then, the debate arrives a
+  year late.
+- **Rights of reply in the General Debate.** Left out for now, as the corpus leaves them out, so the series reads the
+  same before and after 2026. They are often where disputes between countries are aired, and could be added as a
+  separate kind of record.
 
 - **Group memberships on a date.** The Correlates of War organisation-membership data is believed
   to stop in 2014. Memberships since then (BRICS expansion, EU candidates, African Union

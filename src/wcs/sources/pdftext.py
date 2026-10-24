@@ -13,10 +13,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-# Running headers sit above 90.5% of the page height and footers below 10.5% (S/PV records 1995-2026 and A/PV
-# records); the parser also drops header-like lines by their wording, in case a layout moves.
+# Running headers sit above 90.5% of the page height and footers below 6% (S/PV records 1995-2026 and A/PV
+# records). Body text can reach lower still on a full page, so a line there of more than six words is body text, not
+# footer. The parser also drops header and footer lines by their wording, in case a layout moves.
 HEADER_ZONE = 0.905
-FOOTER_ZONE = 0.105
+FOOTER_ZONE = 0.06
+FOOTER_MAX_WORDS = 6
 
 
 @dataclass
@@ -66,8 +68,8 @@ def read_lines(path: Path) -> list[Line]:
                     if not b:
                         break
                     prefix.append(c.get_text())
-                zone = "header" if line.y0 > height * HEADER_ZONE else ("footer" if line.y1 < height * FOOTER_ZONE
-                                                                        else "body")
+                zone = "header" if line.y0 > height * HEADER_ZONE else (
+                    "footer" if line.y1 < height * FOOTER_ZONE and len(text.split()) <= FOOTER_MAX_WORDS else "body")
                 out.append(Line(page_no, float(line.x0), float(line.y0), float(line.y1),
                                 max(float(c.size) for c in chars), text, " ".join("".join(prefix).split()),
                                 sum(i for _, i in flags) / len(flags), sum(b for b, _ in flags) / len(flags),

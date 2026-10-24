@@ -10,7 +10,9 @@ Works on positioned lines (``pdftext.Line``), so it can be tested without PDFs. 
    and the result says so (``Meeting.detection``), so the update job can report it.
 
 Running headers and footers are dropped by their position and their wording; headings inside the record (agenda
-items) are kept as the current agenda item, not as speech text.
+items) are kept as the current agenda item, not as speech text. General Assembly records number their items
+("Agenda item 8 (continued)", then "General debate") and give heads of State a heading of their own ("Address by Mr.
+Petr Pavel, President of the Czech Republic"), which is kept with the speech it introduces (``Speech.heading``).
 
 ``PARSER_VERSION`` is stored with every parsed record: when the parser changes, cached PDFs are parsed again.
 """
@@ -24,7 +26,7 @@ from typing import Any
 
 from wcs.sources.pdftext import Line
 
-PARSER_VERSION = 1
+PARSER_VERSION = 2
 
 MONTHS = {m: i for i, m in enumerate(["January", "February", "March", "April", "May", "June", "July", "August",
                                       "September", "October", "November", "December"], 1)}
@@ -58,6 +60,7 @@ class Speech:
     language_note: str | None
     text: str
     agenda: str | None = None
+    heading: str | None = None  # "Address by Mr. Petr Pavel, President of the Czech Republic"
 
 
 @dataclass
@@ -154,8 +157,10 @@ class Para:
 
     @property
     def heading(self) -> bool:
-        """A heading inside the record (an agenda item): all bold, short, no attribution colon."""
-        return all(ln.bold > 0.9 for ln in self.lines) and ":" not in self.text and len(self.text) < 300
+        """A heading inside the record (an agenda item): bold (a "(continued)" may be in italics), short, no
+        attribution colon."""
+        return all(ln.bold > 0.9 or (ln.bold >= 0.5 and ln.bold + ln.italic >= 0.9) for ln in self.lines) and \
+            ":" not in self.text and len(self.text) < 300
 
 
 def body_lines(lines: list[Line]) -> list[Line]:
@@ -247,6 +252,29 @@ def split_attr(attr: str) -> tuple[str, str | None, str | None]:
     return name, label, note
 
 
+SUBHEADING = re.compile(r"^(?:Address|Statement) by\b")
+AGENDA_ITEM = re.compile(r"^Agenda items?\s+\d+(?:\s*(?:,|and)\s*\d+)*(?:\s*\(continued\))?\s*", re.I)
+HEADING_OPENER = re.compile(r"^(?:Agenda items?\s+\d|Address by\b|Statement by\b)")
+CONNECTOR = re.compile(r"(?:\b(?:of|the|and|for|to|on|in|by|at)|[,\-\u2013\u2014])$")
+CHAIR_SPEAKER = re.compile(r"^The (?:Acting |Temporary )?President\b")
+
+
+def join_headings(texts: list[str]) -> list[str]:
+    """Consecutive heading paragraphs as headings: a line that continues the one before (a wrapped "Address by ..."
+    heading, a lower-case start, a line ending in "of" or "the") joins it."""
+    out: list[str] = []
+    # headings printed one after another can come back as one paragraph ("General debate Address by Mr. ...")
+    texts = [part for t in texts for part in re.split(r"\s+(?=Agenda items?\s+\d|Address by\b|Statement by\b)", t)]
+    for t in texts:
+        t = " ".join(t.split())
+        if out and not HEADING_OPENER.match(t) and not AGENDA_ITEM.fullmatch(out[-1]) and (
+                t[:1].islower() or CONNECTOR.search(out[-1]) or SUBHEADING.match(out[-1])):
+            out[-1] = f"{out[-1]} {t}"
+        else:
+            out.append(t)
+    return out
+
+
 def speeches(lines: list[Line], m: Meeting) -> None:
     paras = paragraphs(body_lines(lines))
     any_bold = any(p.bold_prefix for p in paras)
@@ -254,15 +282,39 @@ def speeches(lines: list[Line], m: Meeting) -> None:
     m.detection = "bold" if any_bold else "wording"
     agenda = m.agenda[0] if m.agenda else None
     current: Speech | None = None
+    pending: list[str] = []      # heading paragraphs not yet read
+    subheading: str | None = None  # an "Address by ..." heading, for the next speech that is not the chair's
+
+    def read_headings() -> None:
+        nonlocal agenda, subheading
+        for h in join_headings(pending):
+            if SUBHEADING.match(h):
+                subheading = h
+            elif AGENDA_ITEM.match(h):
+                title = AGENDA_ITEM.sub("", h).strip()
+                if title:  # "Agenda item 8 (continued)" alone: the title is the next heading
+                    agenda = _match_agenda(title, m.agenda) or agenda
+            else:
+                agenda = _match_agenda(h, m.agenda) or agenda
+        pending.clear()
+
     for p in paras:
         found = detect(p)
+        # an attribution the record forgot to print in bold, straight after the President ("Prime Minister Schoof
+        # (Kingdom of the Netherlands):"): accepted by its wording when it names a country or body in brackets
+        if found is None and any_bold and current is not None and CHAIR_SPEAKER.match(current.speaker) and \
+                (w := attribution_by_wording(p)) and "(" in w[0] and not CHAIR_SPEAKER.match(w[0]):
+            found = w
         if found is None and p.heading:
-            agenda = _match_agenda(p.text, m.agenda) or agenda
+            pending.append(p.text)
             continue
+        read_headings()
         if found is not None:
             attr, rest = found
             name, label, note = split_attr(attr)
             current = Speech(attr, name, label, note, rest, agenda)
+            if subheading and not CHAIR_SPEAKER.match(name):
+                current.heading, subheading = subheading, None
             m.speeches.append(current)
         elif current is not None:
             current.text += "\n\n" + p.text

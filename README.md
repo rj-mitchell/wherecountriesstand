@@ -17,8 +17,9 @@ and Wales. The engine is adapted from Where They Stand's (same licence, same aut
 ## Status
 
 The research engine works from the command line on the real record: the Security Council from 1992 (the corpus to
-2023, then the UN's own verbatim records, kept current by `wcs update`) and the General Assembly voting data (1946 to
-September 2026). There is no web app yet: the design is a static prototype.
+2023, then the UN's own verbatim records, kept current by `wcs update`: 753 meetings and 21,000 speeches from January
+2024 to 19 October 2026), the General Assembly voting data (1946 to September 2026), and the General Debate (the
+corpus to 2025, then the General Assembly's own records, which arrive about a year after each debate). There is no web app yet: the design is a static prototype.
 
 | File | What it is |
 |---|---|
@@ -34,7 +35,9 @@ September 2026). There is no web app yet: the design is a static prototype.
 ```
  Security Council debates (CC0), to 2023 ──┐
  UN verbatim records (S/PV), from 2024 ────┤  (wcs update: Digital Library + ODS, parsed from PDF)
- General Debate corpus (CC0) ──────────────┼─► loaders ─► Parquet (zstd, by source and year) ─► DuckDB
+ General Debate corpus (CC0), to 2025 ─────┤
+ UN verbatim records (A/PV), from 2026 ────┤  (wcs update: the General Debate meetings of each session)
+                                           ├─► loaders ─► Parquet (zstd, by source and year) ─► DuckDB
  General Assembly votes (UN) ──────────────┘      │
                                           ▼
  UN M49 + data_static/ ─► countries: UN names on the date, groups on the date (region, P5, EU, NATO, AU, LDC,
@@ -74,7 +77,8 @@ Needs Python 3.12+ and [uv](https://docs.astral.sh/uv/).
 uv sync --all-extras
 uv run wcs fetch-sc && uv run wcs ingest-sc          # Security Council debates (about 510 MB download)
 uv run wcs fetch-votes && uv run wcs ingest-votes    # General Assembly votes (about 370 MB)
-uv run wcs update --no-index                           # Security Council records since 2024 (first run: about 10 s a meeting)
+uv run wcs update --no-index                           # Security Council records since 2024 (first run: about 10 s a
+                                                       # meeting) and General Debate records from 2026
 uv run wcs index                                      # keyword index (about 40 seconds)
 uv run wcs embed --max-seconds 3600                    # meaning search, newest years first (resumable; see below)
 uv run wcs search "use of the veto" --since 2015
@@ -108,6 +112,9 @@ uv run ruff check src tests scripts
 * **Security Council records since January 2024** come from the UN's own verbatim records (`wcs update`), parsed
   from the PDFs. Checked against the corpus on 35 meetings, they match closely ([`docs/VALIDATION.md`](docs/VALIDATION.md)),
   but a briefer is now and then classed as an organisation rather than a UN official, or the reverse.
+* **The General Debate arrives about a year late** from 2026: the UN publishes the debate's verbatim records about
+  a year after it, and its faster General Debate website blocks automated access (see the open questions in
+  [`docs/DATA.md`](docs/DATA.md)).
 * **Group memberships** cover the regions, the permanent five, the EU, NATO, the African Union and the UN's lists of
   least developed, landlocked developing and small island developing States. The Group of 77, the Non-Aligned Movement
   and the Organisation of Islamic Cooperation are still to add.

@@ -8,8 +8,11 @@ Each run:
    probing ODS for the following numbers), downloads and parses them, looks again for numbers still missing, fetches
    provisional records again when corrected versions may be out, and parses cached records again if the parser has
    changed. Records are stored for the years from ``[live] sc_from`` (the corpus keeps the years before).
-3. **Index.** Re-indexes the years that changed, then embeds new passages for as long as allowed.
-4. **Report.** Writes data/logs/update-<time>.json, and returns problems so a scheduler can alert on them.
+3. **General Debate.** For each session from ``[live] gd_from_session``, looks for the session's first plenary
+   meetings (the Digital Library's catalogue, then ODS) until a record says the debate has ended, and stores the
+   statements (``wcs.sources.unga``). The records appear about a year after the debate.
+4. **Index.** Re-indexes the years that changed, then embeds new passages for as long as allowed.
+5. **Report.** Writes data/logs/update-<time>.json, and returns problems so a scheduler can alert on them.
 
 Nothing here depends on one website staying the same: discovery and download each have two routes, every parsed
 meeting is checked, and a run that cannot reach the UN at all fails loudly rather than reporting "no new records".
@@ -29,7 +32,7 @@ import duckdb
 
 from wcs.config import Settings
 from wcs.reference.countries import Countries, countries
-from wcs.sources import undocs
+from wcs.sources import undocs, unga
 from wcs.sources import votes as vote_source
 from wcs.sources.verbatim import PARSER_VERSION
 from wcs.store.parquet import record_path, write_year, years
@@ -57,6 +60,7 @@ class Report:
     indexed: int = 0
     embedded: int = 0
     latest_meeting: str | None = None
+    gd: dict[int, dict[str, Any]] = field(default_factory=dict)  # session -> meetings, statements, concluded
     warnings: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
@@ -70,6 +74,10 @@ class Report:
 
 def live_from(settings: Settings) -> date:
     return date.fromisoformat(settings.section("live").get("sc_from", "2024-01-01"))
+
+
+def gd_from_session(settings: Settings) -> int:
+    return int(settings.section("live").get("gd_from_session", 81))
 
 
 def corpus_last_meeting(settings: Settings) -> int:
@@ -229,8 +237,111 @@ def update_security_council(settings: Settings, ref: Countries, docs: undocs.UND
     return {y for y in changed if y >= start.year}
 
 
+def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDocs, report: Report,
+                          max_new: int | None = None, today: date | None = None) -> set[int]:
+    """Fetch, parse and store the General Debate meetings of each session from ``gd_from_session``; returns the years
+    that changed."""
+    manifest = undocs.Manifest.load(settings, "ga")
+    first, last = gd_from_session(settings), unga.current_session(today)
+    todo: list[tuple[dict[str, Any], bool]] = []
+    for session in range(first, last + 1):
+        entries = {s: e for s, e in manifest.entries.items() if unga.session_of(s) == session}
+        concluded = any(e.get("concludes_debate") for e in entries.values())
+        catalogue: dict[str, dict[str, Any]] = {}
+        if not concluded:
+            try:
+                for meta in docs.search(f"191__a:A/{session}/PV.*"):
+                    n = unga.meeting_number(meta["symbol"])
+                    if n and n <= unga.GD_WINDOW and unga.session_of(meta["symbol"]) == session:
+                        catalogue[meta["symbol"]] = meta
+            except Exception as exc:
+                report.warnings.append(f"Digital Library search failed for the General Assembly ({exc}); trying ODS")
+        for n in range(1, unga.GD_WINDOW + 1):
+            symbol = f"A/{session}/PV.{n}"
+            meta, entry = catalogue.get(symbol), manifest.entries.get(symbol)
+            if entry is not None and undocs.due_for_refetch(entry, meta):
+                todo.append((meta or {"symbol": symbol, "verbatim": True}, True))
+                continue
+            if concluded:
+                continue
+            if meta and meta.get("agenda") and not any("general debate" in a.lower() for a in meta["agenda"]):
+                if entry is None:  # catalogued, on other business: not fetched
+                    manifest.entries[symbol] = {"first_seen": undocs._now(), "status": "other", "agenda": meta["agenda"]}
+                continue
+            status = (entry or {}).get("status")
+            if entry is None or status is None or \
+                    (status == "missing" and undocs._days_since(entry.get("checked_at")) >= unga.CHECK_EVERY_DAYS and
+                     undocs._days_since(entry.get("missing_since")) < unga.GIVE_UP_DAYS) or \
+                    (status == "failed" and entry.get("attempts", 0) < undocs.MAX_ATTEMPTS):
+                todo.append((meta or {"symbol": symbol, "verbatim": True}, False))
+    if max_new is not None:
+        todo = todo[:max_new]
+
+    changed: set[int] = set()
+    for meta, refetch in todo:
+        symbol = meta["symbol"]
+        try:
+            records = undocs.process(settings, ref, manifest, docs, meta, force=refetch, body="ga")
+        except Exception as exc:
+            log.exception("failed on %s", symbol)
+            manifest.entries.setdefault(symbol, {})["status"] = "failed"
+            manifest.entries[symbol]["error"] = f"{type(exc).__name__}: {exc}"
+            records = []
+        entry = manifest.entries[symbol]
+        entry["checked_at"] = undocs._now()
+        if entry.get("status") == "parsed":
+            (report.refetched if refetch else report.fetched).append(symbol)
+            changed.update(r["year"] for r in records)
+        elif entry.get("status") == "failed":
+            report.failed.append(symbol)
+        if entry.get("problems"):
+            report.problems[symbol] = entry["problems"]
+        manifest.save()
+
+    for symbol, entry in manifest.entries.items():
+        if entry.get("status") == "parsed" and entry.get("parser_version", 0) < PARSER_VERSION:
+            records = undocs.parse_cached(settings, ref, manifest, symbol, body="ga")
+            changed.update(r["year"] for r in records)
+            report.reparsed += 1
+    changed |= {1945 + s for sym, e in manifest.entries.items() if e.get("status") == "parsed" and
+                e.get("stored") is False and (s := unga.session_of(sym))}
+
+    # store each changed session's statements (a session's debate falls in one year: September)
+    for year in sorted(changed):
+        rows, symbols, seen = [], [], set()
+        for symbol, entry in sorted(manifest.entries.items(), key=lambda kv: unga.meeting_number(kv[0]) or 0):
+            if entry.get("status") == "parsed" and unga.session_of(symbol) == year - 1945:
+                for r in undocs.load_parsed(settings, symbol):
+                    rid, k = r["record_id"], 2
+                    while r["record_id"] in seen:  # a country introduced twice keeps both statements
+                        r["record_id"], k = f"{rid}:{k}", k + 1
+                    seen.add(r["record_id"])
+                    rows.append(r)
+                symbols.append(symbol)
+        write_year(settings.parquet_dir, "gd", year, rows)
+        for symbol in symbols:
+            manifest.entries[symbol]["stored"] = True
+        report.years_written[year] = report.years_written.get(year, 0) + len(rows)
+    manifest.save()
+    for session in range(first, last + 1):
+        es = [e for s, e in manifest.entries.items() if unga.session_of(s) == session]
+        report.gd[session] = {"meetings": sum(e.get("status") == "parsed" for e in es),
+                              "statements": sum(e.get("speeches", 0) for e in es if e.get("status") == "parsed"),
+                              "concluded": any(e.get("concludes_debate") for e in es),
+                              "awaiting": sum(e.get("status") == "missing" for e in es)}
+    return changed
+
+
+GD_OVERDUE_DAYS = 456  # the records are usually out within about a year of the debate
+
+
 def health(report: Report, today: date | None = None) -> None:
     today = today or date.today()
+    for session, info in report.gd.items():
+        held = date(1945 + session, 9, 30)
+        if not info["statements"] and (today - held).days > GD_OVERDUE_DAYS:
+            report.warnings.append(f"no General Debate records yet for the {session}th session (September "
+                                   f"{held.year}): check https://digitallibrary.un.org for A/{session}/PV records")
     if report.latest_meeting:
         age = (today - date.fromisoformat(report.latest_meeting)).days
         if age > STALE_DAYS:
@@ -242,12 +353,12 @@ def health(report: Report, today: date | None = None) -> None:
         report.errors.append(f"{len(report.failed)} records could not be parsed: {', '.join(report.failed[:5])}")
 
 
-def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_index: bool = True,
+def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd: bool = True, do_index: bool = True,
         embed_seconds: float | None = None, max_new: int | None = None, docs: undocs.UNDocs | None = None,
         reference: Countries | None = None) -> Report:
     report = Report(started=datetime.now(UTC).isoformat(timespec="seconds"))
     ref = reference or countries()
-    changed: set[int] = set()
+    changed: dict[str, set[int]] = {"sc": set(), "gd": set()}
     if do_votes:
         try:
             update_votes(settings, report)
@@ -256,16 +367,25 @@ def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_ind
             report.errors.append(f"voting data: {type(exc).__name__}: {exc}")
     if do_sc:
         try:
-            changed = update_security_council(settings, ref, docs or undocs.UNDocs(settings), report, max_new)
+            docs = docs or undocs.UNDocs(settings)
+            changed["sc"] = update_security_council(settings, ref, docs, report, max_new)
         except Exception as exc:
             log.exception("Security Council update failed")
             report.errors.append(f"Security Council: {type(exc).__name__}: {exc}")
-    if do_index and changed:
+    if do_gd:
+        try:
+            docs = docs or undocs.UNDocs(settings)
+            changed["gd"] = update_general_debate(settings, ref, docs, report, max_new)
+        except Exception as exc:
+            log.exception("General Debate update failed")
+            report.errors.append(f"General Debate: {type(exc).__name__}: {exc}")
+    if do_index and any(changed.values()):
         from wcs.index.build import Indexer
 
         idx = Indexer(settings, ref)
-        for year in sorted(changed):
-            report.indexed += idx.index_year("sc", year)
+        for source, ys in changed.items():
+            for year in sorted(ys):
+                report.indexed += idx.index_year(source, year)
         idx.index.build_indices()
         if embed_seconds:
             from wcs.embed.base import get_embedder

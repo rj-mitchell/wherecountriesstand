@@ -4,7 +4,7 @@
     wcs ingest-gd                          # General Debate (download by hand first: docs/DATA.md)
     wcs fetch-votes && wcs ingest-votes    # General Assembly votes
     wcs index && wcs embed                 # keyword index, then meaning search (slow; resumable)
-    wcs update                             # new votes and Security Council records since the corpus (scheduled)
+    wcs update                             # new votes, Security Council and General Debate records (scheduled)
     wcs search "climate finance" --group sids
     wcs ask "How have small island States spoken about climate change since 2015?"
 """
@@ -66,15 +66,17 @@ def ingest_sc(years: str = typer.Option(None, help="e.g. 2015 or 2010-2015")) ->
 @app.command()
 def update(votes: bool = typer.Option(True, help="check the voting data"),
            sc: bool = typer.Option(True, help="check for new Security Council records"),
+           gd: bool = typer.Option(True, help="check for new General Debate records"),
            index: bool = typer.Option(True, help="re-index the years that changed"),
            embed_seconds: float = typer.Option(600, help="embed new passages for up to this long (0: none)"),
            max_new: int = typer.Option(None, help="process at most this many records (for a first, partial run)"),
            as_json: bool = typer.Option(False, "--json")) -> None:
-    """Bring the data up to date: new votes, new and corrected Security Council records, the index. For a
+    """Bring the data up to date: new votes, new and corrected Security Council and General Debate records, the
+    index. For a
     scheduled job: exits 1 when something needs attention (see the report in data/logs/)."""
     from wcs.update import run
 
-    report = run(load_settings(), do_votes=votes, do_sc=sc, do_index=index, embed_seconds=embed_seconds or None,
+    report = run(load_settings(), do_votes=votes, do_sc=sc, do_gd=gd, do_index=index, embed_seconds=embed_seconds or None,
                  max_new=max_new)
     if as_json:
         typer.echo(json.dumps(report.to_dict(), default=str, indent=1))
@@ -86,6 +88,10 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
                    f"passages indexed: {report.indexed}; embedded: {report.embedded}")
         if report.votes:
             typer.echo(f"votes: {report.votes}")
+        for session, info in report.gd.items():
+            typer.echo(f"General Debate, session {session}: {info['statements']} statements from {info['meetings']} "
+                       f"meetings{' (complete)' if info['concluded'] else ''}; {info['awaiting']} meetings not yet "
+                       f"published")
         for w in report.warnings:
             typer.echo(f"warning: {w}")
         for e in report.errors:
@@ -96,13 +102,17 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
 
 @app.command("ingest-gd")
 def ingest_gd(years: str = typer.Option(None)) -> None:
-    """Load General Debate statements (from data/raw/ungd/) into the Parquet store."""
+    """Load General Debate statements (from data/raw/ungd/) into the Parquet store (the sessions before [live]
+    gd_from_session; later sessions come from `wcs update`)."""
     from wcs.reference.countries import countries
     from wcs.sources import ungd
     from wcs.store.parquet import write_by_year
+    from wcs.update import gd_from_session
 
     s = load_settings()
-    counts = write_by_year(s.parquet_dir, "gd", ungd.iter_records(s, countries(), _years(years)))
+    first = gd_from_session(s)
+    counts = write_by_year(s.parquet_dir, "gd", (r for r in ungd.iter_records(s, countries(), _years(years))
+                                                 if r["session"] < first))
     typer.echo(f"{sum(counts.values())} statements in {len(counts)} years")
 
 

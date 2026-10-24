@@ -19,7 +19,8 @@ meetings come from the UN itself (docs/DECISIONS.md, 4). Built to keep working a
   by the update job (``wcs.update``) rather than passing silently into the index.
 
 Records are stored as source "sc" for the years from ``[live] sc_from`` on, alongside the corpus's earlier years,
-with the same record format.
+with the same record format. General Assembly records (the General Debate, ``wcs.sources.unga``) go through the same
+client, cache and parser, with a manifest of their own.
 """
 
 from __future__ import annotations
@@ -125,8 +126,9 @@ class Manifest:
     entries: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     @classmethod
-    def load(cls, settings: Settings) -> Manifest:
-        path = cache_dir(settings) / "manifest.json"
+    def load(cls, settings: Settings, body: str = "sc") -> Manifest:
+        """The Security Council's manifest (manifest.json) or the General Assembly's (manifest-ga.json)."""
+        path = cache_dir(settings) / ("manifest.json" if body == "sc" else f"manifest-{body}.json")
         return cls(path, json.loads(path.read_text()) if path.exists() else {})
 
     def save(self) -> None:
@@ -337,7 +339,7 @@ def check(meeting: Meeting, records: list[dict[str, Any]]) -> list[str]:
 # ---- one meeting, end to end ---------------------------------------------------------------------------------------
 
 def process(settings: Settings, countries: Countries, manifest: Manifest, docs: UNDocs, meta: dict[str, Any],
-            force: bool = False) -> list[dict[str, Any]]:
+            force: bool = False, body: str = "sc") -> list[dict[str, Any]]:
     """Fetch (if needed), parse and store one meeting record; returns its records."""
     symbol = meta["symbol"]
     entry = manifest.entries.setdefault(symbol, {"first_seen": _now()})
@@ -359,16 +361,20 @@ def process(settings: Settings, countries: Countries, manifest: Manifest, docs: 
         entry.update({"sha256": hashlib.sha256(content).hexdigest(), "url": url, "fetched_at": _now(),
                       "provisional": meta.get("provisional", "/pro/" in url)})
         entry.pop("missing_since", None)
-    return parse_cached(settings, countries, manifest, symbol, meta)
+    return parse_cached(settings, countries, manifest, symbol, meta, body)
 
 
 def parse_cached(settings: Settings, countries: Countries, manifest: Manifest, symbol: str,
-                 meta: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+                 meta: dict[str, Any] | None = None, body: str = "sc") -> list[dict[str, Any]]:
+    """Parse a cached record into stored records. ``body`` "ga": a General Assembly plenary meeting, of which only
+    the General Debate statements are kept (a meeting on other business is recorded as "other", not a failure)."""
+    from wcs.sources import unga
+
     entry = manifest.entries.setdefault(symbol, {"first_seen": _now()})
     pdf_path = cache_dir(settings) / "pdf" / f"{safe_name(symbol)}.pdf"
     try:
         lines = read_lines(pdf_path)
-        if is_communique(lines):
+        if body == "sc" and is_communique(lines):
             entry.update({"status": "communique", "parser_version": PARSER_VERSION})
             return []
         meeting = parse(lines, symbol)
@@ -377,11 +383,19 @@ def parse_cached(settings: Settings, countries: Countries, manifest: Manifest, s
         entry.update({"status": "failed", "error": f"{type(exc).__name__}: {exc}", "parser_version": PARSER_VERSION,
                       "attempts": entry.get("attempts", 0) + 1})
         return []
-    records = records_for(meeting, meta or entry, countries, settings)
-    problems = check(meeting, records)
-    if not records:
+    if body == "ga":
+        records = unga.records_for(meeting, meta or entry, countries, settings)
+        problems = unga.check(meeting, records, meta or entry)
+        debate = unga.debate_meeting(meeting, meta or entry)
+        status = "parsed" if records else ("failed" if debate or not meeting.speeches else "other")
+        entry["concludes_debate"] = unga.concludes_debate(meeting)
+    else:
+        records = records_for(meeting, meta or entry, countries, settings)
+        problems = check(meeting, records)
+        status = "parsed" if records else "failed"
+    if status == "failed":
         entry["attempts"] = entry.get("attempts", 0) + 1
-    entry.update({"status": "parsed" if records else "failed", "parser_version": PARSER_VERSION, "stored": False,
+    entry.update({"status": status, "parser_version": PARSER_VERSION, "stored": False,
                   "date": meeting.meeting_date.isoformat() if meeting.meeting_date else entry.get("date"),
                   "speeches": len(records), "problems": problems, "parsed": summary(meeting)})
     out = cache_dir(settings) / "parsed" / f"{safe_name(symbol)}.json"

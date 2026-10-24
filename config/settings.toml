@@ -22,6 +22,10 @@ sc_from = "2024-01-01"
 # The last meeting before sc_from (S/PV.9524, December 2023): where discovery starts when neither the corpus nor any
 # fetched record says otherwise.
 sc_after_meeting = 9524
+# From this session on, the General Debate comes from the General Assembly's verbatim records (A/<session>/PV.<n>),
+# parsed by wcs.sources.unga; the corpus (to the 80th session, 2025) keeps the sessions before. The records appear
+# about a year after the debate.
+gd_from_session = 81
 
 [sources]
 # Harvard Dataverse file ids (CC0). The General Debate corpus asks for a guestbook entry, so it is downloaded by
