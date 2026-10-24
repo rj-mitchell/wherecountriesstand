@@ -197,6 +197,14 @@ def test_update_general_debate(ga):
     update_general_debate(ga, countries(), docs3, Report(started="now"), today=date(2026, 11, 7))
     assert docs3.calls == []
 
+    # but a record that failed is tried again, from the cache
+    man = undocs.Manifest.load(ga, "ga")
+    man.entries["A/81/PV.8"].update({"status": "failed", "attempts": 1})
+    man.save()
+    report4 = Report(started="now")
+    update_general_debate(ga, countries(), FakeDocs(catalogue, docs2.pdfs), report4, today=date(2026, 11, 7))
+    assert report4.fetched == ["A/81/PV.8"]
+
 
 def test_missing_numbers_are_checked_weekly(ga):
     from wcs.update import Report, update_general_debate

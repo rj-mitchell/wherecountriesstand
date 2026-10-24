@@ -270,7 +270,10 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
             if entry is not None and undocs.due_for_refetch(entry, meta):
                 todo.append((meta or {"symbol": symbol, "verbatim": True}, True))
                 continue
-            if concluded:
+            if concluded:  # the debate is complete: only records that failed are tried again (from the cache)
+                if entry is not None and entry.get("status") == "failed" and \
+                        entry.get("attempts", 0) < undocs.MAX_ATTEMPTS:
+                    todo.append((meta or {"symbol": symbol, "verbatim": True, "agenda": entry.get("agenda")}, False))
                 continue
             if meta and meta.get("agenda") and not any("general debate" in a.lower() for a in meta["agenda"]):
                 if entry is None:  # catalogued, on other business: not fetched
