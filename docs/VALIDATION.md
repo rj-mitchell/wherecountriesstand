@@ -6,7 +6,10 @@ sample of meetings spread through a year, parses it, and compares it speech by s
 
     uv run python scripts/validate_undocs.py --year 2023 --sample 25
 
-Run on 24 October 2026, parser version 1.
+Run on 24 October 2026, parser version 2. Version 2 keeps body text that version 1 took for the page footer (about
+1.4% of the words, in a sample of 25 records of 2024-26: 5,009 words recovered, 5 lost) and reads attributions the
+record forgot to print in bold. The medians below are unchanged from version 1: the recovered text sat in a few
+meetings rather than in the typical one.
 
 **Summary.** Every sampled meeting parsed. The parser recovers all the text (median word count 1.00 of the
 corpus's) and the same speakers in the same order (median 1.00), with near-identical wording (median 0.98 for 2023,
@@ -23,7 +26,7 @@ corpus's) and the same speakers in the same order (median 1.00), with near-ident
 
 ## 2023
 
-The UN-record parser (`wcs.sources.undocs`, parser version 1) compared with the Security Council corpus on 25 meetings of 2023, chosen evenly through the year.
+The UN-record parser (`wcs.sources.undocs`, parser version 2) compared with the Security Council corpus on 25 meetings of 2023, chosen evenly through the year.
 
 * **Speakers**: speeches after merging consecutive speeches by the same speaker, ours / the corpus's.
 * **Order**: how closely the sequence of speakers matches (1.00 = identical).
@@ -62,7 +65,7 @@ Parsed: 25 of 25. Median order 1.00, median text 0.98, median words 1.00.
 
 ## 2016
 
-The UN-record parser (`wcs.sources.undocs`, parser version 1) compared with the Security Council corpus on 10 meetings of 2016, chosen evenly through the year.
+The UN-record parser (`wcs.sources.undocs`, parser version 2) compared with the Security Council corpus on 10 meetings of 2016, chosen evenly through the year.
 
 * **Speakers**: speeches after merging consecutive speeches by the same speaker, ours / the corpus's.
 * **Order**: how closely the sequence of speakers matches (1.00 = identical).
@@ -83,3 +86,21 @@ Parsed: 10 of 10. Median order 1.00, median text 0.96, median words 1.00.
 | S/PV.7781 | 7 / 7 | 1.00 | 0.96 | 0.99 |  |
 | S/PV.7806 | 19 / 19 | 0.95 | 0.99 | 1.00 | first differences: organisation≠un |
 | S/PV.7827 | 9 / 9 | 1.00 | 0.96 | 1.00 |  |
+
+## The General Debate (General Assembly records)
+
+The same parser reads the General Assembly's records for the General Debate (`wcs.sources.unga`). There is no corpus
+of its rights of reply to compare against, and the corpus's statements are the delegations' texts rather than the
+records, so these are checks of coverage and of samples:
+
+* **Statements, 79th session (2024).** All 11 debate meetings found through the catalogue and parsed: 192
+  statements, one for every Member State that spoke, plus the State of Palestine, the Holy See and the European
+  Union. The four Member States without one (Afghanistan, Brunei Darussalam, Myanmar, and the Democratic People's
+  Republic of Korea, which spoke only in reply) are introduced nowhere in the records. 116 statements by heads of
+  State or Government, 68 by ministers, 6 by heads of delegation.
+* **Rights of reply, 2000-2024 (sessions 55-79).** 466 replies from 355 debate meetings, 8 to 29 a session. Twelve
+  drawn at random were all replies, each opening by saying so or answering a named delegation. Points of order and
+  one-line exchanges with the chair are left out.
+* **Older records.** Records from before 2000 are not read: before 1996 they are scans without text, and in the late
+  1990s their two columns come out of the PDF in the wrong order.
+
