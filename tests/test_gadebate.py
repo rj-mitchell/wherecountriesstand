@@ -127,6 +127,7 @@ def test_website_fills_in_until_the_record(site_settings):
 
 def test_official_record_replaces_website_text(site_settings, monkeypatch):
     from test_unga import FakeDocs, ga_lines
+
     from wcs.update import Report, update_general_debate
 
     monkeypatch.setattr(undocs, "read_lines", lambda path: ga_lines(path.read_bytes()[9:].decode()))
