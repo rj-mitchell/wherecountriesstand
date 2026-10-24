@@ -210,11 +210,13 @@ def update_security_council(settings: Settings, ref: Countries, docs: undocs.UND
         manifest.save()  # after every meeting, so an interrupted run loses nothing
 
     # 3. records parsed by an older parser are parsed again from the cached PDFs (no downloads)
-    for symbol, entry in manifest.entries.items():
+    for symbol, entry in list(manifest.entries.items()):
         if entry.get("status") == "parsed" and entry.get("parser_version", 0) < PARSER_VERSION:
             records = undocs.parse_cached(settings, ref, manifest, symbol)
             changed.update(r["year"] for r in records)
             report.reparsed += 1
+            if report.reparsed % 25 == 0:
+                manifest.save()  # an interrupted run resumes here; its years are stored on the next run
     manifest.save()
 
     # 4. store each changed year (from sc_from on) from every meeting parsed for it; a year with meetings parsed but
@@ -304,7 +306,7 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
             report.problems[symbol] = entry["problems"]
         manifest.save()
 
-    for symbol, entry in manifest.entries.items():
+    for symbol, entry in list(manifest.entries.items()):
         if entry.get("status") == "parsed" and entry.get("parser_version", 0) < PARSER_VERSION:
             records = undocs.parse_cached(settings, ref, manifest, symbol, body="ga")
             changed.update(r["year"] for r in records)
