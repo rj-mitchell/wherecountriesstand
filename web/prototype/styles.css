@@ -207,10 +207,8 @@ ol.agenda li::marker { font-weight: 700; }
 
 /* ---- Layout ---- */
 
-.two-up { display: grid; gap: 0 3rem; }
-@media (min-width: 56rem) {
-  .two-up { grid-template-columns: 3fr 2fr; }
-}
+/* One column throughout, at a comfortable reading width. */
+.two-up, .columns, .summary, .ask, h1, .chips { max-inline-size: 46rem; }
 
 /* ---- Briefing ---- */
 
@@ -223,16 +221,9 @@ ol.agenda li::marker { font-weight: 700; }
 }
 .summary strong { color: var(--ink); font-weight: 500; }
 
-/* The briefing is set in two justified columns, like the record. */
-.columns {
-  margin-block: 1.25rem;
-  hyphens: auto;
-}
-@media (min-width: 56rem) {
-  .columns { columns: 2; column-gap: 2.5rem; column-rule: 1px solid var(--rule-faint); text-align: justify; }
-}
+/* The briefing: a single column, ragged right. */
+.columns { margin-block: 1.25rem; }
 .columns p { margin-block: 0 0.8rem; }
-.columns p.group-lead { break-after: avoid; }
 
 /* Bold first words of a group, like a speaker's name in the record. */
 .group-name { font-weight: 700; }
@@ -271,7 +262,7 @@ ol.agenda li::marker { font-weight: 700; }
 .source__speaker { margin: 0 0 0.3rem; }
 .source__speaker b { font-weight: 700; }
 .source__speaker i { font-style: italic; }
-.source blockquote { margin: 0; text-align: justify; hyphens: auto; }
+.source blockquote { margin: 0; }
 .source__links { font-family: var(--sans); font-size: var(--step--1); margin: 0.5rem 0 0; }
 .translated {
   font-family: var(--sans);

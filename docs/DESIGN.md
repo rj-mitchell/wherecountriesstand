@@ -35,7 +35,7 @@ Based on S/PV.7565 (20 November 2015):
 
 | In the record | In the site |
 |---|---|
-| Set in **Times New Roman**, two justified columns | Body in **Tinos**, which is metrically identical to Times New Roman (Apache 2.0). Briefings are set in two justified columns on wide screens, one on phones. |
+| Set in **Times New Roman**, two justified columns | Body in **Tinos**, which is metrically identical to Times New Roman (Apache 2.0). Everything is a **single column**, ragged right, at a comfortable reading width (about 46rem). The record's two columns are not copied. |
 | Masthead: body name large and bold, session line in italic beneath, status ("Provisional") in italic on the right | Site name large and bold, a description in italic beneath, "Independent. Not affiliated with the United Nations." in italic on the right |
 | Running header between rules: symbol · agenda item in italic · date | "Briefing" · topic in italic · date |
 | Speakers as **Mr. Delattre** (France) *(spoke in French)*: | Exactly the same in every source. The italic language note doubles as the translation flag. |

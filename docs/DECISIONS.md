@@ -15,4 +15,4 @@ here once they're made.
 | 8 | Licence | Code AGPL-3.0, as Where They Stand. Briefing text **CC BY-NC 4.0**, because of the UN's non-commercial terms. |
 | 9 | Hosting and budget | Start on the existing Where They Stand server if there's room; otherwise a second server of about £40–70 a month. A separate AI spending cap, about $50 a month to start. |
 | 10 | Testing | A test set of about 50 questions from the start, including sparse ones where "No records found" is the right answer. |
-| 11 | Look | The look of the UN's printed Official Records, with the UN's web palette and typeface for controls, and no UN name, emblem or wordmark. See [`DESIGN.md`](DESIGN.md). |
+| 11 | Look | The look of the UN's printed Official Records, in a **single column** (not the records' two columns), with the UN's web palette and typeface for controls, and no UN name, emblem or wordmark. See [`DESIGN.md`](DESIGN.md). |
