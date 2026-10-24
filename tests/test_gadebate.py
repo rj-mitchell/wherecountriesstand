@@ -117,6 +117,7 @@ def test_website_fills_in_until_the_record(site_settings):
     assert ken["url"] == f"{SITE}/en/81/kenya" and ken["date"] == date(2026, 9, 23)
     assert cmr["text_source"] == "transcript" and cmr["language"] == "French"
     assert cmr["text"].startswith("Madam President") and "wish to thank" not in cmr["text"]
+    assert gadebate.load_state(site_settings).get("unstored") == []   # stored, so not returned again
 
     # within the day, the sitemap is not read again
     site2 = FakeSite()

@@ -360,6 +360,7 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
                     rows.append(r)
                     from_website += 1
             write_year(settings.parquet_dir, "gd", year, rows)
+            gadebate.mark_stored(settings, {session})
         report.gd.setdefault(session, {})["website"] = from_website
         for symbol in symbols:
             manifest.entries[symbol]["stored"] = True

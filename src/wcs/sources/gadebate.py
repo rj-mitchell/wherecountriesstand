@@ -240,8 +240,10 @@ def update(settings: Settings, countries: Countries, sessions: set[int], site: W
     from pdfminer.high_level import extract_text
 
     state = load_state(settings)
+    # sessions with records saved but not yet stored (an interrupted run) are returned again until stored
+    unstored = {int(s) for s in state.get("unstored", [])} & sessions
     if _hours_since(state.get("sitemap_checked")) < SITEMAP_EVERY_HOURS:
-        return set(), []
+        return unstored, []
     site = site or Website()
     problems: list[str] = []
     pages: dict[str, str] = {}
@@ -292,11 +294,24 @@ def update(settings: Settings, countries: Countries, sessions: set[int], site: W
                 problems.append(f"website statement not matched to a country: {info.get('label')}")
             by_session[rec["session"]][rec["record_id"]] = rec
             changed.add(rec["session"])
+            save_records(settings, rec["session"], by_session[rec["session"]].values())  # each page, so a stop
+            state["unstored"] = sorted(set(state.get("unstored", [])) | {rec["session"]})  # loses nothing
         save_state(settings, state)
-    for s in changed:
-        path = records_path(settings, s)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(sorted(by_session[s].values(), key=lambda r: r["record_id"]), default=str))
     state["sitemap_checked"] = _now()
     save_state(settings, state)
-    return changed, problems
+    return changed | unstored, problems
+
+
+def save_records(settings: Settings, session: int, records) -> None:
+    path = records_path(settings, session)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(sorted(records, key=lambda r: r["record_id"]), default=str))
+    tmp.replace(path)
+
+
+def mark_stored(settings: Settings, sessions: set[int]) -> None:
+    state = load_state(settings)
+    if state.get("unstored"):
+        state["unstored"] = [s for s in state["unstored"] if s not in sessions]
+        save_state(settings, state)
