@@ -94,6 +94,9 @@ def test_parse_page_and_cleaning():
                                                      "Cameroon calls for a reformed Security Council.")
     assert gadebate.clean_statement("REPUBLIC OF KENYA\n\nCheck against delivery\n\nMr President,\n\nKenya speaks."
                                     "\n\n2\n") == "Mr President,\n\nKenya speaks."
+    assert gadebate.clean_statement("Mr President,\n\nWe stand ready.\n\nThank you.\n\nLast review: 24 September 2026"
+                                    ) == "Mr President,\n\nWe stand ready.\n\nThank you."
+    assert not gadebate.readable("(cid:3)(cid:2)5 " * 400) and gadebate.readable("the record of the house " * 80)
     urls = gadebate.sitemap_statements(SITEMAP, {81})
     assert sorted(urls) == [f"{SITE}/en/81/cameroon", f"{SITE}/en/81/kenya"]
 

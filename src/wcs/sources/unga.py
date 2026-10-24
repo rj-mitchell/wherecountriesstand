@@ -38,7 +38,8 @@ from wcs.sources.unsc import symbol_url
 from wcs.sources.verbatim import CHAIR_SPEAKER, Meeting
 
 GD_WINDOW = 30            # the debate falls within a session's first 30 plenary meetings (4-17 in 2023 and 2024)
-GD_CATALOGUE_WINDOW = 45  # meetings the catalogue says are the debate are taken up to this number (4-29 in 1995)
+GD_CATALOGUE_WINDOW = 70  # meetings the catalogue says are the debate are taken up to this number (4-29 in 1995;
+                          # in 2001 the debate was postponed to November, after 9/11)
 CHECK_EVERY_DAYS = 7      # how often numbers not yet published are looked for again
 GIVE_UP_DAYS = 3 * 365    # and for how long
 
@@ -155,9 +156,17 @@ def debate_meeting(meeting: Meeting, meta: dict[str, Any]) -> bool:
         for sp in meeting.speeches)
 
 
+# The Assembly takes up the Secretary-General's annual report as the debate opens, and some opening-day records print
+# only its heading (A/72/PV.3, A/76/PV.3): in a meeting that is the debate, speeches under it are the debate's.
+OPENING_ITEM = re.compile(r"^Report of the Secretary-General on the work of the Organization", re.I)
+# introduced, but not a country's statement: the Secretary-General presenting the report
+NOT_A_STATEMENT = re.compile(r"Secretary-General", re.I)
+
+
 def in_debate(agenda: str | None, debate: bool) -> bool:
-    """A speech is in the debate under its heading, or with no heading in a meeting that is the debate."""
-    return is_general_debate(agenda) or (agenda is None and debate)
+    """A speech is in the debate under its heading, or with no heading (or the opening item's) in a meeting that is
+    the debate."""
+    return is_general_debate(agenda) or (debate and (agenda is None or bool(OPENING_ITEM.match(agenda))))
 
 
 REPLY_AGENDA = "General debate: right of reply"
@@ -203,9 +212,10 @@ def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, se
     intros = introductions(meeting)
     for i, (name, post) in sorted(intros.items()):
         sp = meeting.speeches[i]
-        if not in_debate(sp.agenda, debate):
+        if not in_debate(sp.agenda, debate) or NOT_A_STATEMENT.search(f"{sp.speaker} {name} {post}"):
             continue
-        code = countries.resolve(sp.label) or country_in(post, countries)
+        # "Address by His Serene Highness Prince Albert II of Monaco": no post, the country is in the name
+        code = countries.resolve(sp.label) or country_in(post, countries) or country_in(name, countries)
         if code:
             kind, label = countries.kind(code), countries.name_on(code, d)
         else:

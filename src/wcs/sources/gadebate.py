@@ -39,7 +39,7 @@ log = logging.getLogger(__name__)
 SITE = "https://gadebate.un.org"
 BROWSER_USER_AGENT = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 "
                       "Safari/537.36")
-CLEANER_VERSION = 2         # raise when clean_statement or clean_transcript change: cached files are cleaned again
+CLEANER_VERSION = 3         # raise when clean_statement or clean_transcript change: cached files are cleaned again
 PAUSE = 2.0                 # seconds between requests
 SITEMAP_EVERY_HOURS = 20    # the sitemap (about 5 MB) is read at most this often
 RETRY_NO_TEXT_DAYS = 30     # a page without an English text or transcript yet is looked at again for this long
@@ -60,6 +60,21 @@ THANKS = re.compile(r"\s*On behalf of the (?:General )?Assembly,? I (?:wish to |
 PDF_FURNITURE = re.compile(r"https?://\S+|www\.\S+|\d{1,3}\s*/\s*\d{1,3}|©.*|All content is available under.*|"
                            r"Check against delivery\.?|Please check against delivery\.?", re.I)
 MIN_STATEMENT_WORDS = 300   # a delegation's PDF shorter than this (scanned, or mostly images): use the transcript
+COMMON = {"the", "and", "of", "to", "in", "a", "is", "that", "for", "we", "our", "on", "with", "as", "are", "it"}
+# where a web page's own furniture begins after a speech printed from it
+WEB_TAIL = re.compile(r"^(?:Press contacts?|Media contacts?|Visit the meeting page|For more information|Related links?|"
+                      r"Share this page)\b", re.I | re.M)
+# the speech's last words; anything short after them is the web page or document it was printed from
+CLOSING = re.compile(r"\b(?:Thank you(?: very much)?(?: indeed)?|I thank you(?: for your attention)?|"
+                     r"Long live [^.!\n]{2,60})[.!]?", re.I)
+MAX_TAIL_WORDS = 120
+
+
+def readable(text: str) -> bool:
+    """English a reader can use: PDFs with unmapped fonts come out as "(cid:12)" codes or shifted letters, in
+    which the commonest English words are missing."""
+    words = re.findall(r"[A-Za-z']+", text.lower())
+    return len(words) >= MIN_STATEMENT_WORDS and sum(w in COMMON for w in words) / len(words) > 0.08
 # speakers on the website that are not States or the EU: the corpus and the records leave them out too
 NOT_A_SPEAKER = re.compile(r"President of the General Assembly|Secretary-General", re.I)
 ORGANISATION_KEYS = {"European Union": "EU"}
@@ -141,6 +156,12 @@ def clean_statement(text: str) -> str:
     start = next((i for i, ln in enumerate(lines[: max(60, len(lines) // 3)]) if SALUTATION.match(ln)), 0)
     body = "\n".join(lines[start:])
     body = re.sub(r"\n\s*\n+", "\n\n", body)
+    tail = [m for m in WEB_TAIL.finditer(body) if m.start() > len(body) * 0.8]
+    if tail:
+        body = body[:tail[0].start()]
+    closings = list(CLOSING.finditer(body))
+    if closings and len(body[closings[-1].end():].split()) <= MAX_TAIL_WORDS:
+        body = body[:closings[-1].end()]
     return normalise_text(body)
 
 
@@ -261,7 +282,7 @@ def text_from_cache(settings: Settings, info: dict[str, Any]) -> tuple[str, str]
     pdf, txt = folder / f"{info['slug']}.pdf", folder / f"{info['slug']}.txt"
     if pdf.exists():
         text = clean_statement(extract_text(str(pdf)))
-        if len(text.split()) >= MIN_STATEMENT_WORDS:
+        if readable(text):
             return text, "delegation"
     if txt.exists():
         return clean_transcript(txt.read_text()), "transcript"
@@ -274,7 +295,8 @@ def reclean(settings: Settings, countries: Countries, state: dict[str, Any],
     changed: set[int] = set()
     for url, seen in state["pages"].items():
         info = seen.get("info")
-        if not info or seen.get("cleaner_version", 0) >= CLEANER_VERSION or info.get("session") not in by_session:
+        if not info or seen.get("cleaner_version", 0) >= CLEANER_VERSION or info.get("session") not in by_session \
+                or NOT_A_SPEAKER.search(info.get("label") or ""):
             continue
         text, source = text_from_cache(settings, info)
         rec = record_for(info, text, source, countries) if text else None
@@ -284,6 +306,8 @@ def reclean(settings: Settings, countries: Countries, state: dict[str, Any],
             by_session[info["session"]][rec["record_id"]] = rec
         seen.update({"cleaner_version": CLEANER_VERSION, "text_source": source or None,
                      "status": "ok" if rec else seen.get("status")})
+        if rec is None:
+            seen["lastmod"] = None  # the cache is not enough (a transcript never fetched): fetch it on the next run
         changed.add(info["session"])
     for s in changed:
         save_records(settings, s, by_session[s].values())
