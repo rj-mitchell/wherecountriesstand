@@ -78,7 +78,9 @@ def site_settings(settings, monkeypatch):
     import pdfminer.high_level
     monkeypatch.setattr(pdfminer.high_level, "extract_text", lambda path: (
         "REPUBLIC OF KENYA\n\nNATIONAL STATEMENT\n\nCheck against delivery\n\n23 SEPTEMBER 2026\n\n"
-        "Mr President of the General Assembly,\n\nKenya stands for a fair\nglobal financial system.\n\n2\n"))
+        "Mr President of the General Assembly,\n\nKenya stands for a fair\nglobal financial system.\n\n"
+        + "Kenya will work with every partner for reform of the international financial architecture.\n\n" * 30
+        + "2\n\nhttps://www.example.org/statement\n"))
     return settings
 
 
@@ -114,6 +116,7 @@ def test_website_fills_in_until_the_record(site_settings):
     ken, cmr = rows["gd:81:KEN"], rows["gd:81:CMR"]
     assert ken["text_source"] == "delegation" and ken["text"].startswith("Mr President of the General Assembly")
     assert "Check against delivery" not in ken["text"] and ken["speaker_role"] == "head"
+    assert not ken["text"].rstrip().endswith(("2", "statement"))   # page number and URL dropped
     assert ken["url"] == f"{SITE}/en/81/kenya" and ken["date"] == date(2026, 9, 23)
     assert cmr["text_source"] == "transcript" and cmr["language"] == "French"
     assert cmr["text"].startswith("Madam President") and "wish to thank" not in cmr["text"]

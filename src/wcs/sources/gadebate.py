@@ -39,6 +39,7 @@ log = logging.getLogger(__name__)
 SITE = "https://gadebate.un.org"
 BROWSER_USER_AGENT = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 "
                       "Safari/537.36")
+CLEANER_VERSION = 2         # raise when clean_statement or clean_transcript change: cached files are cleaned again
 PAUSE = 2.0                 # seconds between requests
 SITEMAP_EVERY_HOURS = 20    # the sitemap (about 5 MB) is read at most this often
 RETRY_NO_TEXT_DAYS = 30     # a page without an English text or transcript yet is looked at again for this long
@@ -53,6 +54,15 @@ INTRO = re.compile(r"Assembly will (?:now )?hear|request protocol|escort|give th
                    r"have the honou?r to welcome|^\w+\.$", re.I)
 OUTRO = re.compile(r"^(?:On behalf of the General Assembly, I (?:wish to )?thank|I thank the|The Assembly will|"
                    r"I (?:now )?(?:give the floor|call|invite))", re.I)
+# the President's thanks, run on into the speaker's last line in a transcript
+THANKS = re.compile(r"\s*On behalf of the (?:General )?Assembly,? I (?:wish to |would like to )?thank\b.*$", re.I | re.S)
+# lines a delegation's PDF repeats or prints for the web page it came from
+PDF_FURNITURE = re.compile(r"https?://\S+|www\.\S+|\d{1,3}\s*/\s*\d{1,3}|©.*|All content is available under.*|"
+                           r"Check against delivery\.?|Please check against delivery\.?", re.I)
+MIN_STATEMENT_WORDS = 300   # a delegation's PDF shorter than this (scanned, or mostly images): use the transcript
+# speakers on the website that are not States or the EU: the corpus and the records leave them out too
+NOT_A_SPEAKER = re.compile(r"President of the General Assembly|Secretary-General", re.I)
+ORGANISATION_KEYS = {"European Union": "EU"}
 
 
 class Blocked(Exception):
@@ -122,7 +132,12 @@ def clean_statement(text: str) -> str:
     """A delegation's PDF as text: the cover page (letterhead, title, "Check against delivery") and page numbers
     dropped."""
     lines = [ln.strip() for ln in text.replace("\x0c", "\n").splitlines()]
-    lines = [ln for ln in lines if not re.fullmatch(r"\d{1,3}|-\s*\d{1,3}\s*-|Page \d+( of \d+)?", ln)]
+    counts: dict[str, int] = {}
+    for ln in lines:
+        if ln and len(ln.split()) <= 12:
+            counts[ln] = counts.get(ln, 0) + 1
+    lines = [ln for ln in lines if not re.fullmatch(r"\d{1,3}|-\s*\d{1,3}\s*-|Page \d+( of \d+)?", ln)
+             and not PDF_FURNITURE.fullmatch(ln) and counts.get(ln, 0) < 3]  # running headers and footers
     start = next((i for i, ln in enumerate(lines[: max(60, len(lines) // 3)]) if SALUTATION.match(ln)), 0)
     body = "\n".join(lines[start:])
     body = re.sub(r"\n\s*\n+", "\n\n", body)
@@ -143,19 +158,24 @@ def clean_transcript(text: str) -> str:
     tail = next((i for i in range(len(lines) - 1, max(len(lines) - 12, 0), -1) if OUTRO.match(lines[i])), None)
     if tail is not None:
         lines = lines[:tail]
-    return "\n\n".join(" ".join(lines[i:i + 6]) for i in range(0, len(lines), 6))
+    text = "\n\n".join(" ".join(lines[i:i + 6]) for i in range(0, len(lines), 6))
+    tail = THANKS.search(text, max(0, len(text) - 600))
+    return text[:tail.start()].rstrip() if tail else text
 
 
 def record_for(info: dict[str, Any], text: str, text_source: str, countries: Countries) -> dict[str, Any] | None:
     session = info["session"]
     if not info.get("date") or not session or not text.strip():
         return None
+    if NOT_A_SPEAKER.search(info.get("label") or ""):
+        return None
     d = date.fromisoformat(info["date"])
     code = countries.resolve(info.get("label"))
     original = next((LANGUAGES.get(k) for k in info.get("files", {}) if LANGUAGES.get(k)), None)
     post = info.get("post") or ""
     return {
-        "record_id": f"gd:{session}:{code or (info.get('slug') or '').upper()}", "source": "gd",
+        "record_id": f"gd:{session}:{code or ORGANISATION_KEYS.get(info.get('label') or '') or (info.get('slug') or '').upper()}",
+        "source": "gd",
         "body": "General Assembly", "date": d, "date_precision": "day", "year": d.year, "session": session,
         "meeting": f"General Debate, {_ordinal(session)} session", "symbol": None, "speech_number": None,
         "agenda": "General debate", "agenda_area": None, "speaker_name": info.get("name"),
@@ -233,13 +253,54 @@ def load_records(settings: Settings, session: int) -> list[dict[str, Any]]:
     return rows
 
 
+def text_from_cache(settings: Settings, info: dict[str, Any]) -> tuple[str, str]:
+    """The best text for a page from its cached files: the delegation's PDF, else the transcript."""
+    from pdfminer.high_level import extract_text
+
+    folder = cache_dir(settings) / str(info["session"])
+    pdf, txt = folder / f"{info['slug']}.pdf", folder / f"{info['slug']}.txt"
+    if pdf.exists():
+        text = clean_statement(extract_text(str(pdf)))
+        if len(text.split()) >= MIN_STATEMENT_WORDS:
+            return text, "delegation"
+    if txt.exists():
+        return clean_transcript(txt.read_text()), "transcript"
+    return "", ""
+
+
+def reclean(settings: Settings, countries: Countries, state: dict[str, Any],
+            by_session: dict[int, dict[str, dict[str, Any]]]) -> set[int]:
+    """Records cleaned by an older CLEANER_VERSION, made again from the cached files (no downloads)."""
+    changed: set[int] = set()
+    for url, seen in state["pages"].items():
+        info = seen.get("info")
+        if not info or seen.get("cleaner_version", 0) >= CLEANER_VERSION or info.get("session") not in by_session:
+            continue
+        text, source = text_from_cache(settings, info)
+        rec = record_for(info, text, source, countries) if text else None
+        for rid in [k for k, r in by_session[info["session"]].items() if r.get("url") == url]:
+            del by_session[info["session"]][rid]
+        if rec:
+            by_session[info["session"]][rec["record_id"]] = rec
+        seen.update({"cleaner_version": CLEANER_VERSION, "text_source": source or None,
+                     "status": "ok" if rec else seen.get("status")})
+        changed.add(info["session"])
+    for s in changed:
+        save_records(settings, s, by_session[s].values())
+    return changed
+
+
 def update(settings: Settings, countries: Countries, sessions: set[int], site: Website | None = None,
            skip: set[str] | None = None) -> tuple[set[int], list[str]]:
     """Fetch new and changed statement pages of the given sessions. ``skip``: record ids the official record already
     has. Returns the sessions whose records changed, and problems to report."""
-    from pdfminer.high_level import extract_text
-
     state = load_state(settings)
+    by_session: dict[int, dict[str, dict[str, Any]]] = {
+        s: {r["record_id"]: r for r in load_records(settings, s)} for s in sessions}
+    recleaned = reclean(settings, countries, state, by_session)
+    if recleaned:
+        state["unstored"] = sorted(set(state.get("unstored", [])) | recleaned)
+        save_state(settings, state)
     # sessions with records saved but not yet stored (an interrupted run) are returned again until stored
     unstored = {int(s) for s in state.get("unstored", [])} & sessions
     if _hours_since(state.get("sitemap_checked")) < SITEMAP_EVERY_HOURS:
@@ -251,8 +312,6 @@ def update(settings: Settings, countries: Countries, sessions: set[int], site: W
     for sub in sitemap_pages(index) or [f"{SITE}/sitemap.xml"]:
         pages.update(sitemap_statements(site.get(sub).text if sub != f"{SITE}/sitemap.xml" else index, sessions))
     changed: set[int] = set()
-    by_session: dict[int, dict[str, dict[str, Any]]] = {
-        s: {r["record_id"]: r for r in load_records(settings, s)} for s in sessions}
     for url, mod in sorted(pages.items()):
         seen = state["pages"].get(url, {})
         retry = seen.get("status") == "no_text" and _hours_since(seen.get("first_seen")) < RETRY_NO_TEXT_DAYS * 24
@@ -264,21 +323,19 @@ def update(settings: Settings, countries: Countries, sessions: set[int], site: W
                             (countries.resolve(info.get("label")) or "") for rid in skip):
                 state["pages"][url] = {**seen, "lastmod": mod, "status": "official"}
                 continue
-            text, source = "", ""
-            if "english" in info["files"]:
+            folder = cache_dir(settings) / str(info["session"])
+            folder.mkdir(parents=True, exist_ok=True)
+            cached = (folder / f"{info['slug']}.pdf").exists()
+            if "english" in info["files"] and (seen or not cached):  # a changed page may have a new PDF
                 pdf = site.get(info["files"]["english"]).content
                 if pdf[:5] == b"%PDF-":
-                    raw = cache_dir(settings) / str(info["session"]) / f"{info['slug']}.pdf"
-                    raw.parent.mkdir(parents=True, exist_ok=True)
-                    raw.write_bytes(pdf)
-                    text, source = clean_statement(extract_text(str(raw))), "delegation"
-            if not text and info.get("transcript"):
+                    (folder / f"{info['slug']}.pdf").write_bytes(pdf)
+            text, source = text_from_cache(settings, info)
+            if source != "delegation" and info.get("transcript") and (seen or not (folder / f"{info['slug']}.txt").exists()):
                 got = site.transcript(info["transcript"])
                 if got:
-                    raw = cache_dir(settings) / str(info["session"]) / f"{info['slug']}.txt"
-                    raw.parent.mkdir(parents=True, exist_ok=True)
-                    raw.write_text(got)
-                    text, source = clean_transcript(got), "transcript"
+                    (folder / f"{info['slug']}.txt").write_text(got)
+                    text, source = text_from_cache(settings, info)
             rec = record_for(info, text, source, countries) if text else None
         except Blocked:
             raise
@@ -286,11 +343,12 @@ def update(settings: Settings, countries: Countries, sessions: set[int], site: W
             log.exception("could not read %s", url)
             problems.append(f"{url}: {type(exc).__name__}: {exc}")
             continue
-        status = "ok" if rec else "no_text"
+        status = "ok" if rec else ("not_a_state" if NOT_A_SPEAKER.search(info.get("label") or "") else "no_text")
         state["pages"][url] = {"lastmod": mod, "status": status, "fetched_at": _now(),
-                               "first_seen": seen.get("first_seen") or _now(), "text_source": source or None}
+                               "first_seen": seen.get("first_seen") or _now(), "text_source": source or None,
+                               "info": info, "cleaner_version": CLEANER_VERSION}
         if rec:
-            if rec["country_code"] is None:
+            if rec["country_code"] is None and rec["record_id"].split(":")[2] not in ORGANISATION_KEYS.values():
                 problems.append(f"website statement not matched to a country: {info.get('label')}")
             by_session[rec["session"]][rec["record_id"]] = rec
             changed.add(rec["session"])
