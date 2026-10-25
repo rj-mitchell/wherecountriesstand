@@ -13,6 +13,6 @@ au,African Union member States,UN member States in Africa; Morocco from 30 Janua
 ldc,Least developed countries,UN M49 (current list)
 lldc,Landlocked developing countries,UN M49 (current list)
 sids,Small island developing States,UN M49 (current list)
-g77,Group of 77 and China,"The Group's own list of members (g77.org), which includes China; dates of joining and leaving in data_static/memberships.csv (approximate where the Group gives none)"
+g77,Group of 77 members,"The Group's own list of members (g77.org), less China, which says it is not a member (docs/DECISIONS.md, 15); dates of joining and leaving in data_static/memberships.csv (approximate where the Group gives none)"
 nam,Non-Aligned Movement members,"Dated membership; data_static/memberships.csv"
 oic,Organisation of Islamic Cooperation member States,"Dated membership, with suspensions (Egypt 1979-84, Afghanistan 1980-89, Syria 2012-25); data_static/memberships.csv"

@@ -275,7 +275,7 @@ Rules:
   country itself said.
 - groups: only when the question restricts speakers to a group: p5 (permanent members of the Security Council),
   council_elected (elected members), council_guest (invited non-members), eu, nato, au (African Union), g77 (Group of
-  77 and China), nam (Non-Aligned Movement), oic (Organisation of Islamic Cooperation), ldc (least developed countries), lldc (landlocked developing countries), sids (small island developing States), or a region:
+  77), nam (Non-Aligned Movement), oic (Organisation of Islamic Cooperation), ldc (least developed countries), lldc (landlocked developing countries), sids (small island developing States), or a region:
   region:africa, region:americas, region:asia, region:europe, region:oceania. When the question compares groups
   ("how do African and European States differ"), leave groups empty and set group_by.
 - group_by: "council" when the question is about positions within the Security Council (permanent vs elected

@@ -39,7 +39,7 @@ GROUP_LABELS = {
     "au": "African Union member States",
     "oic": "Organisation of Islamic Cooperation member States",
     "nam": "Non-Aligned Movement members",
-    "g77": "Group of 77 and China",
+    "g77": "Group of 77 members",
     "sids": "Small island developing States",
     "ldc": "Least developed countries",
     "group_statement": "Statements on behalf of groups",

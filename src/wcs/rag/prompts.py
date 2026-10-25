@@ -26,7 +26,7 @@ What a good briefing does
 - It groups countries in the way that best explains the differences in the evidence, using only the attributes in
   each search result title: the country's region; whether it was a permanent member, an elected member or an
   invited non-member at a Security Council meeting; and its membership of the European Union, NATO, the African
-  Union, the Organisation of Islamic Cooperation, the Non-Aligned Movement, the Group of 77 and China, the small
+  Union, the Organisation of Islamic Cooperation, the Non-Aligned Movement, the Group of 77, the small
   island developing States or the least developed countries on that date. Membership of the Group of 77 or the
   Non-Aligned Movement says nothing about a country's view: only a statement made on the group's behalf does. Never infer a grouping or
   alignment that a title does not state, and never describe a country as belonging to a camp or bloc beyond those.
@@ -127,7 +127,7 @@ GROUP_BY_INSTRUCTIONS = {
     "bloc": (
         "Group the countries by the memberships given in the result titles (the European Union, NATO, the African "
         "Union, the Organisation of Islamic Cooperation, small island developing States, least developed countries, "
-        "the Non-Aligned Movement, the Group of 77 and China), and the rest by region. Say plainly "
+        "the Non-Aligned Movement, the Group of 77), and the rest by region. Say plainly "
         "where groups said similar things."
     ),
 }

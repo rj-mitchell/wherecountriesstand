@@ -75,10 +75,12 @@ def test_roles():
 def test_g77_nam_and_oic_on_the_date():
     c = countries()
     on = date(2026, 10, 25)
-    assert (len(c.members_of("g77", on)), len(c.members_of("nam", on)), len(c.members_of("oic", on))) == (134, 121, 57)
+    assert (len(c.members_of("g77", on)), len(c.members_of("nam", on)), len(c.members_of("oic", on))) == (133, 121, 57)
     assert "nam" in c.groups_on("MLT", date(2003, 6, 1)) and "nam" not in c.groups_on("MLT", date(2005, 6, 1))
     assert "oic" not in c.groups_on("SYR", date(2015, 1, 1)) and "oic" in c.groups_on("SYR", date(2025, 6, 1))
     assert "g77" not in c.groups_on("AZE", date(2018, 1, 1)) and "g77" in c.groups_on("AZE", date(2020, 1, 1))
     assert "g77" in c.groups_on("MEX", date(1990, 1, 1)) and "g77" not in c.groups_on("MEX", date(2000, 1, 1))
-    assert "g77" in c.groups_on("CHN", on) and "nam" in c.groups_on("PSE", on)
-    assert c.label("g77") == "Group of 77 and China"
+    assert "nam" in c.groups_on("PSE", on) and "g77" in c.groups_on("PSE", on)
+    # China says it is not a member (docs/DECISIONS.md, 15), on any date
+    assert not any("g77" in c.groups_on("CHN", date(y, 1, 1)) for y in (1965, 1980, 2000, 2026))
+    assert c.label("g77") == "Group of 77 members"

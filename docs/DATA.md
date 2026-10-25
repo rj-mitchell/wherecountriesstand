@@ -101,9 +101,10 @@ credited to the UN, with the document symbol and page.
     Uzbekistan 1995 or 1996); the formal dates are used, and the other noted in the file. Departures and suspensions
     are dated: Argentina (left 1991), Yugoslavia (suspended 1992), Cyprus and Malta (left on joining the EU in 2004)
     from the NAM; Egypt (1979-84), Afghanistan (1980-89) and Syria (August 2012 to March 2025) suspended from the OIC.
-  * **Group of 77**: members as the Group itself lists them (g77.org, 134, which includes China and the State of
-    Palestine; China does not regard itself as a member, so the group is labelled "the Group of 77 and China", as it
-    speaks). The Group publishes no dates of joining. Founders date from 15 June 1964; the later joiners that matter
+  * **Group of 77**: members as the Group itself lists them (g77.org, 134, including the State of Palestine), less
+    China (133). The Group lists China, but China says it is not a member, only a supporter, so it is left out
+    (decision 15); the Group's joint statements, made "on behalf of the Group of 77 and China", are attributed to
+    the Group as always. The Group publishes no dates of joining. Founders date from 15 June 1964; the later joiners that matter
     for the record since 1992 are dated from reports (Azerbaijan 27 September 2019, South Sudan by October 2014);
     Kiribati and Nauru are approximate (2014); the rest are dated from their first recorded UN vote. Former members:
     Mexico (to 1994) and the Republic of Korea (to 1996), which left on joining the OECD; Cyprus, Malta and Romania,
