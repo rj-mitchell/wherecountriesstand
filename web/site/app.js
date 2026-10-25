@@ -178,7 +178,7 @@ function renderAnswer(answer) {
     const cites = pieces.some((x) => x.cite);
     if (!plain && !cites) { para = null; list = null; continue; }            // a blank line
     if (!cites && (/^#+\s/.test(plain) || /^\*\*[^*]+\*\*:?$/.test(plain))) { // a heading
-      box.append(el("h3", {}, plain.replace(/^#+\s*/, "").replace(/^\*\*|\*\*:?$/g, "")));
+      box.append(el("h2", { class: "briefing-head" }, plain.replace(/^#+\s*/, "").replace(/^\*\*|\*\*:?$/g, "")));
       para = null; list = null;
       continue;
     }
@@ -212,6 +212,7 @@ async function ask(question, mode, sourcesOnly) {
   if (controller) controller.abort();
   controller = new AbortController();
   $("home").hidden = true;
+  $("lede").hidden = true;
   $("result").hidden = false;
   $("question").textContent = question;
   $("interpretation").textContent = "";
@@ -280,7 +281,7 @@ async function ask(question, mode, sourcesOnly) {
 function fromUrl() {
   const params = new URLSearchParams(location.search);
   const q = params.get("q");
-  if (!q) { $("home").hidden = false; $("result").hidden = true; return; }
+  if (!q) { $("home").hidden = false; $("lede").hidden = false; $("result").hidden = true; return; }
   $("q").value = q;
   const mode = params.get("mode") === "comprehensive" ? "comprehensive" : "summary";
   document.querySelector(`input[name=mode][value=${mode}]`).checked = true;

@@ -67,6 +67,13 @@ one, the site shows the sources only).
 * **Backups:** the data can all be rebuilt with `wcs bootstrap`, so a backup is a convenience, not a necessity. The
   part that can't be rebuilt is the spend record (`/data/state.db`); copy it off now and then if you want the
   history. The cached UN PDFs (`/data/raw/undocs/`) save a day of downloading if the server is lost.
+* **The privacy notice** (`web/site/privacy.html`) says what the site keeps: no requests logged (`wcs serve` turns
+  the access log off, and Caddy keeps none), briefings cached for seven days (`answer_cache_hours`), notes of failed
+  briefings for 90 days, and a daily visitor code in place of IP addresses. Keep it true when changing any of these,
+  or the hosting; putting the site behind Cloudflare means adding Cloudflare to it, as Where MPs Stand's does.
+* **Search engines and link previews:** `/robots.txt`, `/sitemap.xml` and the pages' link-preview tags use
+  `https://` and `DOMAIN` from `.env` (or `WCS_SITE_URL`, or `[site] url` in `config/settings.toml`). Crawlers are
+  kept out of `/api/`, so one that runs the page's script cannot ask for briefings.
 * **Behind Cloudflare:** Caddy then sees Cloudflare's addresses, not visitors', and every visitor would share one
   rate limit. Either leave the site unproxied (DNS only), or add Cloudflare's ranges as trusted proxies in the
   Caddyfile and use `{client_ip}` in place of `{remote_host}` (as Where MPs Stand's `deploy/Caddyfile` does).

@@ -105,3 +105,6 @@ price_cache_read_per_mtok = 0.01
 [site]
 # The site's pages (default: web/site in the repository).
 dir = ""
+# The site's public address, for robots.txt, the sitemap and link previews (default: WCS_SITE_URL, or https://
+# and DOMAIN, or the address it was reached at).
+url = ""

@@ -94,3 +94,33 @@ def test_visitor_codes_change_daily(tmp_path):
 def test_question_length_is_checked(indexed):  # noqa: F811
     api, _ = make(indexed, FakeClient())
     assert api.post("/api/ask", json={"question": "x" * 501}).status_code == 422
+
+
+def test_pages_robots_sitemap_and_link_previews(indexed, monkeypatch):  # noqa: F811
+    monkeypatch.setenv("WCS_SITE_URL", "https://countries.example")
+    api, _ = make(indexed, FakeClient())
+    robots = api.get("/robots.txt").text
+    assert "Disallow: /api/" in robots and "Sitemap: https://countries.example/sitemap.xml" in robots
+    sitemap = api.get("/sitemap.xml").text
+    for loc in ("https://countries.example/</loc>", "/privacy.html</loc>", "/accessibility.html</loc>"):
+        assert loc in sitemap
+    home = api.get("/").text
+    assert '<meta property="og:image" content="https://countries.example/og-image.png">' in home
+    assert "__SITE__" not in home and "noindex" not in home
+    shared = api.get("/", params={"q": 'What has Chad said about the "Sahel"?'}).text
+    assert '<meta property="og:title" content="What has Chad said about the &quot;Sahel&quot;?">' in shared
+    assert "<title>What has Chad said" in shared and 'content="noindex"' in shared
+    assert 'href="https://countries.example/?q=' in shared
+    assert api.get("/privacy.html").status_code == 200 and api.get("/nope.html").status_code == 404
+    assert api.get("/styles.css").status_code == 200
+
+
+def test_failures_are_kept_for_90_days(tmp_path):
+    from wcs.api.usage import record_failure
+    state = StateDB(tmp_path / "s.db")
+    with state.connect() as con:
+        con.execute("INSERT INTO failures (at, kind, question, error) VALUES ('2020-01-01T00:00:00+00:00', 'x', "
+                    "'old', 'e')")
+    record_failure(state, "briefing", "new", "e")
+    with state.connect() as con:
+        assert [r[0] for r in con.execute("SELECT question FROM failures")] == ["new"]

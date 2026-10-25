@@ -12,6 +12,8 @@ Endpoints:
 * ``GET /api/meta``: what the record covers, and whether briefings are being written.
 * ``GET /api/countries``, ``GET /api/groups``: for the filters.
 * ``GET /api/health``.
+* ``GET /robots.txt``, ``GET /sitemap.xml``, and the pages, with the site's address filled in for link previews
+  (``[site] url``, or ``WCS_SITE_URL``, or ``https://`` and ``DOMAIN``).
 
 Spending is capped per day and per month (``[usage]``), each visitor has a daily limit and a per-minute rate limit,
 and identical questions are answered from a cache until the data changes (``wcs.api.usage``).
@@ -19,9 +21,12 @@ and identical questions are answered from a cache until the data changes (``wcs.
 
 from __future__ import annotations
 
+import html
 import logging
 import mimetypes
+import os
 import queue
+import re
 import threading
 import time
 from collections.abc import Callable, Iterator
@@ -29,7 +34,13 @@ from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    Response,
+    StreamingResponse,
+)
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -54,6 +65,10 @@ SITE_DIR = REPO_ROOT / "web" / "site"
 KEEP_ALIVE_SECONDS = 15
 # Raise when the briefing instructions change, so cached briefings are written again.
 INSTRUCTIONS_VERSION = 1
+# Pages carry this in place of the site's address (in canonical links and link previews); it is filled in as they
+# are served.
+SITE_MARK = "__SITE__"
+PAGE_NAME = re.compile(r"[a-z0-9-]{1,40}")
 
 
 class Turn(BaseModel):
@@ -134,6 +149,26 @@ def coverage(settings: Settings) -> dict[str, Any]:
                                      f"read_parquet('{votes_path(settings.parquet_dir)}')").fetchone()
         out["votes"] = {"from": first, "to": last, "resolutions": n}
     return out
+
+
+def site_url(settings: Settings, request: Request) -> str:
+    """The site's public address, without a trailing slash."""
+    url = settings.section("site").get("url") or os.environ.get("WCS_SITE_URL")
+    if not url and os.environ.get("DOMAIN"):
+        url = f"https://{os.environ['DOMAIN']}"
+    return (url or str(request.base_url)).rstrip("/")
+
+
+def question_page(page: str, question: str, base: str, query: str) -> str:
+    """The home page for a shared question (``/?q=...``): its title and link preview name the question. The
+    briefing itself is written in the browser, so the page is not for search engines to index."""
+    q = html.escape(question.strip()[:500], quote=True)
+    page = re.sub(r"<title>.*?</title>", f"<title>{q} · Where Countries Stand</title>", page, count=1, flags=re.S)
+    page = page.replace('<meta property="og:title" content="Where Countries Stand">',
+                        f'<meta property="og:title" content="{q}">', 1)
+    page = page.replace(f'content="{SITE_MARK}/"', f'content="{SITE_MARK}/?{html.escape(query, quote=True)}"')
+    page = page.replace(f'href="{SITE_MARK}/"', f'href="{SITE_MARK}/?{html.escape(query, quote=True)}"')
+    return page.replace("</head>", '  <meta name="robots" content="noindex">\n</head>', 1).replace(SITE_MARK, base)
 
 
 def create_app(settings: Settings | None = None, pipeline: Pipeline | None = None, state: StateDB | None = None,
@@ -282,6 +317,43 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     site = Path(settings.section("site").get("dir") or SITE_DIR)
+
+    def pages() -> list[str]:
+        return sorted(p.stem for p in site.glob("*.html") if PAGE_NAME.fullmatch(p.stem) and p.stem != "404")
+
+    @app.get("/robots.txt", include_in_schema=False)
+    def robots(request: Request):
+        # /api/ is closed to crawlers: a crawler that runs the page's script would otherwise ask for briefings
+        return PlainTextResponse(f"User-agent: *\nAllow: /\nDisallow: /api/\n\n"
+                                 f"Sitemap: {site_url(settings, request)}/sitemap.xml\n")
+
+    @app.get("/sitemap.xml", include_in_schema=False)
+    def sitemap(request: Request):
+        base = site_url(settings, request)
+        urls = "".join(f"  <url><loc>{base}/{'' if name == 'index' else name + '.html'}</loc></url>\n"
+                       for name in pages())
+        return Response('<?xml version="1.0" encoding="UTF-8"?>\n'
+                        f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}</urlset>\n',
+                        media_type="application/xml")
+
+    def page(request: Request, name: str) -> HTMLResponse:
+        path = site / f"{name}.html"
+        if not PAGE_NAME.fullmatch(name) or not path.is_file():
+            raise HTTPException(404, "Not found")
+        text, base = path.read_text(encoding="utf-8"), site_url(settings, request)
+        q = request.query_params.get("q", "") if name == "index" else ""
+        if len(q.strip()) >= 3:
+            return HTMLResponse(question_page(text, q, base, request.url.query))
+        return HTMLResponse(text.replace(SITE_MARK, base))
+
+    @app.get("/", include_in_schema=False)
+    def home(request: Request):
+        return page(request, "index")
+
+    @app.get("/{name}.html", include_in_schema=False)
+    def named_page(request: Request, name: str):
+        return page(request, name)
+
     if site.exists():
         app.mount("/", StaticFiles(directory=site, html=True), name="site")
     return app

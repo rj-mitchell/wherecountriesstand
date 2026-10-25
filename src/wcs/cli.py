@@ -46,7 +46,8 @@ def serve(host: str = "127.0.0.1", port: int = 8000,
 
     from wcs.api.app import create_app
 
-    uvicorn.run(create_app(load_settings(), behind_proxy=behind_proxy), host=host, port=port,
+    # requests are not logged: the privacy notice (web/site/privacy.html) says so
+    uvicorn.run(create_app(load_settings(), behind_proxy=behind_proxy), host=host, port=port, access_log=False,
                 proxy_headers=behind_proxy, forwarded_allow_ips="*" if behind_proxy else None)
 
 

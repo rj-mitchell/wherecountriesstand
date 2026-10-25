@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS answer_cache (key TEXT PRIMARY KEY, created_at TEXT, 
 CREATE TABLE IF NOT EXISTS failures (id INTEGER PRIMARY KEY, at TEXT, kind TEXT, question TEXT, error TEXT);
 """
 
+FAILURE_DAYS = 90  # how long notes of failed briefings are kept
+
 
 def utcnow() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
@@ -179,4 +181,6 @@ def record_failure(state: StateDB, kind: str, question: str | None, error: str) 
     with state.connect() as con:
         con.execute("INSERT INTO failures (at, kind, question, error) VALUES (?, ?, ?, ?)",
                     (utcnow(), kind, (question or "")[:500], error[:500]))
-        con.execute("DELETE FROM failures WHERE id NOT IN (SELECT id FROM failures ORDER BY id DESC LIMIT 500)")
+        # the privacy notice (web/site/privacy.html) says these are deleted after 90 days
+        con.execute("DELETE FROM failures WHERE at < ? OR id NOT IN (SELECT id FROM failures ORDER BY id DESC "
+                    "LIMIT 500)", ((datetime.now(UTC) - timedelta(days=FAILURE_DAYS)).isoformat(timespec="seconds"),))
