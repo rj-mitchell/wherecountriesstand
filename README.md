@@ -21,7 +21,8 @@ The research engine works from the command line on the real record: the Security
 2023, then the UN's own verbatim records, kept current by `wcs update`: 753 meetings and 21,000 speeches from January
 2024 to 19 October 2026), the General Assembly voting data (1946 to September 2026), and the General Debate (the
 corpus to 2025, then the General Assembly's own records; until those are out, about a year after each debate, the
-UN's General Debate website), with rights of reply from 2000. There is no web app yet: the design is a static prototype.
+UN's General Debate website), with rights of reply from 2000. `wcs serve` runs the site (`web/site/`) and its API, with spending caps and rate limits; see
+[`docs/DEPLOY.md`](docs/DEPLOY.md) to put it on a server.
 
 | File | What it is |
 |---|---|

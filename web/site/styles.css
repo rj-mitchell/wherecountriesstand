@@ -1,0 +1,340 @@
+/* Where Countries Stand.
+   The look of the UN's printed Official Records (verbatim records of meetings), with the UN's
+   web palette and typeface for the controls. No UN emblem, name or wordmark: see docs/DESIGN.md. */
+
+:root {
+  color-scheme: light dark;
+
+  /* Colour tokens: light, dark. */
+  --paper: light-dark(oklch(0.995 0.002 240), oklch(0.19 0.012 255));
+  --paper-raised: light-dark(oklch(0.975 0.004 240), oklch(0.23 0.014 255));
+  --ink: light-dark(oklch(0.18 0.01 255), oklch(0.93 0.006 240));
+  --ink-muted: light-dark(oklch(0.45 0.012 255), oklch(0.72 0.01 245));
+  --rule: light-dark(oklch(0.18 0.01 255), oklch(0.62 0.01 245));
+  --rule-faint: light-dark(oklch(0.86 0.006 245), oklch(0.34 0.012 255));
+
+  /* UN Blue (#009EDB, Pantone 2925) for links, focus and the General Assembly. */
+  --un-blue: light-dark(oklch(0.56 0.13 237), oklch(0.74 0.12 236));
+  --un-blue-soft: light-dark(oklch(0.95 0.025 237), oklch(0.29 0.05 240));
+  /* Council navy for the Security Council. */
+  --council: light-dark(oklch(0.31 0.06 262), oklch(0.74 0.06 262));
+  --council-soft: light-dark(oklch(0.95 0.012 262), oklch(0.27 0.03 262));
+  --warning: light-dark(oklch(0.5 0.13 60), oklch(0.8 0.12 75));
+
+  /* Type: Tinos is metrically identical to Times New Roman, the face of the UN's records.
+     Roboto is the UN's own web typeface, used here for controls only. */
+  --serif: "Tinos", "Times New Roman", Times, serif;
+  --sans: "Roboto", system-ui, sans-serif;
+
+  /* One fluid type scale. */
+  --step--1: clamp(0.82rem, 0.8rem + 0.1vw, 0.88rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.12rem);
+  --step-1: clamp(1.2rem, 1.1rem + 0.45vw, 1.45rem);
+  --step-2: clamp(1.45rem, 1.25rem + 0.9vw, 2rem);
+  --step-3: clamp(1.8rem, 1.45rem + 1.6vw, 2.8rem);
+
+  --gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem);
+  --measure: 72rem;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: var(--step-0);
+  line-height: 1.45;
+  text-rendering: optimizeLegibility;
+}
+
+.page {
+  max-inline-size: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  padding-block-end: 4rem;
+}
+
+a { color: var(--un-blue); text-underline-offset: 0.15em; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible {
+  outline: 3px solid var(--un-blue);
+  outline-offset: 2px;
+}
+
+/* ---- Masthead: laid out like the first page of a verbatim record ---- */
+
+.masthead {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: end;
+  gap: 0 1rem;
+  padding-block: 1.25rem 0.5rem;
+  border-block-end: 1px solid var(--rule);
+}
+
+.masthead__mark { inline-size: 3.2rem; block-size: 3.2rem; align-self: center; }
+
+.masthead__name {
+  margin: 0;
+  font-size: var(--step-2);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+.masthead__name a { color: inherit; text-decoration: none; }
+
+.masthead__sub { margin: 0.15rem 0 0; font-style: italic; color: var(--ink-muted); font-size: var(--step--1); }
+
+.masthead__status {
+  font-style: italic;
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+  text-align: end;
+}
+
+nav.sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  padding-block: 0.5rem;
+  border-block-end: 3px double var(--rule);
+  font-family: var(--sans);
+  font-size: var(--step--1);
+}
+nav.sections a { color: var(--ink); text-decoration: none; }
+nav.sections a[aria-current="page"] { color: var(--un-blue); font-weight: 500; }
+nav.sections a:hover { text-decoration: underline; }
+
+/* ---- Running header, as at the top of each record page ---- */
+
+.running-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  padding-block: 0.4rem;
+  border-block-end: 1px solid var(--rule);
+  font-size: var(--step--1);
+}
+.running-head > :nth-child(2) { text-align: center; font-style: italic; }
+.running-head b { font-weight: 700; }
+
+/* ---- Headings ---- */
+
+h1 {
+  font-size: var(--step-3);
+  line-height: 1.1;
+  margin-block: 1.5rem 0.75rem;
+  text-wrap: balance;
+}
+
+h2 {
+  font-size: var(--step-1);
+  margin-block: 2rem 0.5rem;
+}
+
+/* Small headings in the record's "Agenda" style. */
+.label {
+  font-weight: 700;
+  font-size: var(--step-0);
+  margin-block: 2rem 0.5rem;
+}
+
+/* ---- The question form ---- */
+
+.ask {
+  margin-block: 1.75rem;
+  padding: 1rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-faint);
+}
+.ask label { display: block; font-weight: 700; margin-block-end: 0.4rem; }
+.ask__row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.ask input[type="search"] {
+  flex: 1 1 20rem;
+  min-inline-size: 0;
+  font: inherit;
+  padding: 0.6rem 0.7rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 0;
+}
+
+button, .button {
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 0.65rem 1.1rem;
+  color: white;
+  background: var(--un-blue);
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+button:active { transform: translateY(1px); }
+
+/* Filter chips: the editable plan, as in Where They Stand. */
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-block: 0.75rem 0; padding: 0; list-style: none; }
+.chip {
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--rule-faint);
+  background: var(--paper);
+}
+.chip--ga { border-inline-start: 4px solid var(--un-blue); }
+.chip--sc { border-inline-start: 4px solid var(--council); }
+
+/* ---- Numbered example questions, like agenda items ---- */
+
+ol.agenda { padding-inline-start: 2rem; margin: 0; }
+ol.agenda li { padding-block: 0.3rem; border-block-end: 1px solid var(--rule-faint); }
+ol.agenda li::marker { font-weight: 700; }
+
+/* ---- Dotted leaders, as in the record's list of members ---- */
+
+.leaders { margin: 0; padding: 0; list-style: none; }
+.leaders li { display: flex; align-items: baseline; gap: 0.4rem; padding-block: 0.1rem; }
+.leaders li > :first-child,
+.leaders li > :last-child { flex: 0 1 auto; min-inline-size: 0; overflow-wrap: anywhere; }
+.leaders .dots { flex: 1 0 1.5rem; border-block-end: 2px dotted var(--ink-muted); transform: translateY(-0.3em); }
+.leaders li > :last-child { text-align: end; }
+.leaders i { color: var(--ink-muted); }
+
+/* ---- Layout ---- */
+
+/* One column throughout, at a comfortable reading width. */
+.two-up, .columns, .summary, .ask, h1, .chips { max-inline-size: 46rem; }
+
+/* ---- Briefing ---- */
+
+.summary {
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+  padding-block: 0.5rem;
+  border-block: 1px solid var(--rule-faint);
+}
+.summary strong { color: var(--ink); font-weight: 500; }
+
+/* The briefing: a single column, ragged right. */
+.columns { margin-block: 1.25rem; }
+.columns p { margin-block: 0 0.8rem; }
+
+/* Bold first words of a group, like a speaker's name in the record. */
+.group-name { font-weight: 700; }
+
+.cite {
+  font-family: var(--sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  vertical-align: 0.35em;
+  line-height: 0;
+  text-decoration: none;
+  padding-inline: 0.1em;
+}
+
+/* Procedural notes are italic in the record ("A vote was taken by show of hands."). */
+.procedural { font-style: italic; }
+
+/* ---- Sources ---- */
+
+.sources { list-style: none; padding: 0; margin: 0; counter-reset: source; }
+.source {
+  counter-increment: source;
+  margin-block: 0 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--paper-raised);
+  border-inline-start: 4px solid var(--council);
+}
+.source--ga { border-inline-start-color: var(--un-blue); }
+.source__meta {
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+  margin: 0 0 0.4rem;
+}
+.source__meta::before { content: "Source " counter(source) " · "; font-weight: 500; color: var(--ink); }
+.source__speaker { margin: 0 0 0.3rem; }
+.source__speaker b { font-weight: 700; }
+.source__speaker i { font-style: italic; }
+.source blockquote { margin: 0; }
+.source__links { font-family: var(--sans); font-size: var(--step--1); margin: 0.5rem 0 0; }
+.translated {
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  color: var(--ink-muted);
+}
+
+/* ---- Votes: neutral marks, no green-good / red-bad ---- */
+
+.vote { margin-block: 1rem; }
+.vote dt { font-style: italic; margin-block-start: 0.5rem; }
+.vote dd { margin-inline-start: 1.5rem; }
+.tally { font-family: var(--sans); font-size: var(--step--1); display: flex; gap: 1rem; margin-block: 0.5rem; }
+.tally span::before { content: ""; display: inline-block; inline-size: 0.8em; block-size: 0.8em; margin-inline-end: 0.35em; vertical-align: -0.05em; border: 1.5px solid var(--ink); }
+.tally .yes::before { background: var(--ink); }
+.tally .abstain::before { background: repeating-linear-gradient(45deg, var(--ink) 0 1.5px, transparent 1.5px 4px); }
+
+/* ---- Notice box, like the boxed note at the foot of a record's first page ---- */
+
+.notice {
+  margin-block: 3rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--rule);
+  font-size: var(--step--1);
+  max-inline-size: 44rem;
+}
+.notice p { margin: 0 0 0.4rem; }
+.notice p:last-child { margin: 0; }
+
+.prototype-banner {
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  background: var(--un-blue-soft);
+  color: var(--ink);
+  padding: 0.5rem var(--gutter);
+  text-align: center;
+}
+
+details summary { cursor: pointer; font-weight: 700; }
+
+@media (prefers-reduced-motion: no-preference) {
+  button { transition: background-color 120ms ease; }
+}
+@media (hover: hover) {
+  button:hover { background: var(--council); }
+}
+
+@media (max-width: 40rem) {
+  .masthead { grid-template-columns: auto 1fr; }
+  .masthead__status { grid-column: 1 / -1; text-align: start; }
+  .running-head { grid-template-columns: 1fr auto; }
+  .running-head > :nth-child(2) { display: none; }
+}
+
+
+/* ---- the live site ------------------------------------------------------------------------- */
+
+.ask__options { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 0.6rem; font-family: var(--sans);
+  font-size: var(--step--1); color: var(--ink-muted); }
+.ask__options label { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 400; margin: 0; }
+.status { font-family: var(--sans); font-size: var(--step--1); color: var(--ink-muted); margin: 1rem 0; }
+.status[hidden] { display: none; }
+.note { border: 1px solid var(--rule-faint); background: var(--paper-raised); padding: 0.8rem 1rem; margin: 1rem 0;
+  font-family: var(--sans); font-size: var(--step--1); }
+.note--error { border-color: var(--warning); }
+.drafting { white-space: pre-wrap; color: var(--ink-muted); }
+.columns h3 { font-size: var(--step-0); margin: 1.2rem 0 0.3rem; }
+.unsupported { color: var(--ink-muted); }
+.loaded { text-decoration: underline dotted var(--warning); text-underline-offset: 0.2em; }
+.misquote { text-decoration: underline wavy var(--warning); text-underline-offset: 0.2em; }
+.marks { font-family: var(--sans); font-size: var(--step--1); color: var(--ink-muted); }
+.source__more summary { font-family: var(--sans); font-size: var(--step--1); color: var(--un-blue); cursor: pointer; }
+.source__more p { white-space: pre-line; }
+.source--vote .source__meta::before { content: none; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

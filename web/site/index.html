@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Where Countries Stand</title>
+  <meta name="description" content="Sourced, impartial briefings on what countries have said, and how they have voted, at the United Nations.">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <img class="masthead__mark" src="icon.svg" alt="">
+      <div>
+        <p class="masthead__name"><a href="./">Where Countries Stand</a></p>
+        <p class="masthead__sub">What countries have said, and how they have voted, at the United Nations</p>
+      </div>
+      <p class="masthead__status">Independent. Not affiliated with the United Nations.</p>
+    </header>
+    <nav class="sections" aria-label="Sections">
+      <a href="./" aria-current="page">Ask</a>
+      <a href="about.html">About</a>
+    </nav>
+
+    <form class="ask" id="ask">
+      <label for="q">Ask a question</label>
+      <div class="ask__row">
+        <input id="q" name="q" type="search" required minlength="3" maxlength="500"
+               placeholder="How have small island states spoken about climate change since 2015?">
+        <button type="submit" id="go">Prepare briefing</button>
+      </div>
+      <div class="ask__options">
+        <label><input type="radio" name="mode" value="summary" checked> Summary</label>
+        <label><input type="radio" name="mode" value="comprehensive"> Comprehensive</label>
+        <label><input type="checkbox" name="sources_only"> Sources only (no written briefing)</label>
+      </div>
+    </form>
+
+    <main id="result" hidden>
+      <div class="running-head">
+        <b>Briefing</b>
+        <span id="interpretation"></span>
+        <span id="today"></span>
+      </div>
+      <h1 id="question"></h1>
+      <ul class="chips" id="chips" aria-label="Filters used"></ul>
+      <p class="summary" id="summary" hidden></p>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <div class="columns" id="briefing"></div>
+      <p class="marks" id="marks" hidden></p>
+      <div id="notes"></div>
+      <section id="sources-section" hidden>
+        <h2>Sources</h2>
+        <ol class="sources" id="sources"></ol>
+      </section>
+    </main>
+
+    <div id="home">
+      <section>
+        <p class="label">Example questions</p>
+        <ol class="agenda" id="examples">
+          <li><a href="?q=How+have+African+Union+members+spoken+about+Security+Council+reform+since+2015%3F">How have African Union members spoken about Security Council reform since 2015?</a></li>
+          <li><a href="?q=How+have+small+island+developing+States+described+climate+change+as+a+security+threat%3F">How have small island developing States described climate change as a security threat?</a></li>
+          <li><a href="?q=What+have+the+permanent+members+said+about+the+use+of+the+veto%3F">What have the permanent members said about the use of the veto?</a></li>
+          <li><a href="?q=How+has+the+humanitarian+situation+in+Gaza+been+described+in+the+Security+Council+since+2023%3F">How has the humanitarian situation in Gaza been described in the Security Council since 2023?</a></li>
+          <li><a href="?q=What+did+countries+say+about+artificial+intelligence+in+the+2024+General+Debate%3F">What did countries say about artificial intelligence in the 2024 General Debate?</a></li>
+        </ol>
+      </section>
+      <section>
+        <p class="label">The record</p>
+        <ul class="leaders" id="coverage">
+          <li><span>General Debate</span><span class="dots"></span><span><i>loading</i></span></li>
+          <li><span>Security Council debates</span><span class="dots"></span><span><i>loading</i></span></li>
+          <li><span>General Assembly votes</span><span class="dots"></span><span><i>loading</i></span></li>
+        </ul>
+        <p class="label">Every briefing</p>
+        <ul class="leaders">
+          <li><span>quotes the verbatim UN record</span><span class="dots"></span><span>with its document symbol</span></li>
+          <li><span>groups countries</span><span class="dots"></span><span>by membership on the date</span></li>
+          <li><span>marks translated speeches</span><span class="dots"></span><span><i>(spoke in French)</i></span></li>
+          <li><span>says when nothing is found</span><span class="dots"></span><span>“No records found.”</span></li>
+        </ul>
+      </section>
+    </div>
+
+    <aside class="notice">
+      <p>Where Countries Stand is an independent project of the charity Where They Stand. It is not
+        affiliated with, or endorsed by, the United Nations, and does not use the UN’s name or emblem.</p>
+      <p>English texts of speeches delivered in other languages are the UN’s translations, as printed in
+        the English verbatim records. Briefings are written by an AI model from the sources shown, and every
+        claim links to its source.</p>
+    </aside>
+  </div>
+</body>
+</html>

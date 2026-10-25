@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About · Where Countries Stand</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <img class="masthead__mark" src="icon.svg" alt="">
+      <div>
+        <p class="masthead__name"><a href="./">Where Countries Stand</a></p>
+        <p class="masthead__sub">What countries have said, and how they have voted, at the United Nations</p>
+      </div>
+      <p class="masthead__status">Independent. Not affiliated with the United Nations.</p>
+    </header>
+    <nav class="sections" aria-label="Sections">
+      <a href="./">Ask</a>
+      <a href="about.html" aria-current="page">About</a>
+    </nav>
+
+    <main class="columns">
+      <h1>About Where Countries Stand</h1>
+
+      <p>Where Countries Stand prepares short, balanced briefings on what countries have said at the United
+        Nations, and how they have voted. Every point quotes the UN’s own verbatim record and links to it.
+        If the record holds nothing relevant, it says “No records found” rather than guessing.</p>
+
+      <h2>The record</h2>
+      <p><strong>The Security Council.</strong> Its debates from 1992, from the UN Security Council Debates corpus
+        (Schoenfeld and others, CC0) to the end of 2023, and from the UN’s verbatim records (<i>S/PV</i>) since,
+        checked for new meetings twice a day.</p>
+      <p><strong>The General Assembly’s General Debate.</strong> Every country’s annual statement, from the UN
+        General Debate Corpus (Jankin, Baturo and Dasandi, CC0) and, for recent sessions, the General Assembly’s
+        verbatim records (<i>A/…/PV</i>). Until a session’s record is published, about a year after the debate,
+        statements come from the UN’s General Debate website, and are marked as not yet the official record.
+        Rights of reply are included as records of their own.</p>
+      <p><strong>General Assembly votes.</strong> Every recorded vote since 1946, from the UN Digital Library.</p>
+
+      <h2>How a briefing is made</h2>
+      <p>The question is read for its subject, dates, countries and groups, shown as filters above each briefing.
+        The record is searched by keyword and by meaning; statements by heads of State or Government and ministers
+        carry a little more weight, and recent statements more than old ones. Countries are grouped by their
+        memberships on the date. An AI model then writes the briefing from those sources only, and every sentence
+        is checked against them: unsourced connecting sentences are shown in grey, quotations not found word for
+        word are marked, and judgemental words in the model’s own voice are underlined.</p>
+
+      <h2>Impartiality</h2>
+      <p>Briefings describe positions; they do not take them. The site’s own voice does not use labels such as
+        “regime” or “rogue state”. Statements made on behalf of a group are attributed to the group. Countries are
+        named as the UN names them.</p>
+
+      <h2>Licences</h2>
+      <p>The code is open source (AGPL-3.0). Briefing text is licensed CC BY-NC 4.0, because the UN’s own terms
+        for its documents are non-commercial, with attribution. The two corpora are CC0.</p>
+    </main>
+
+    <aside class="notice">
+      <p>Where Countries Stand is an independent project of the charity Where They Stand. It is not
+        affiliated with, or endorsed by, the United Nations, and does not use the UN’s name or emblem.</p>
+      <p>English texts of speeches delivered in other languages are the UN’s translations, as printed in
+        the English verbatim records.</p>
+    </aside>
+  </div>
+</body>
+</html>
