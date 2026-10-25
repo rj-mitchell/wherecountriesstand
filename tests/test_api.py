@@ -124,3 +124,22 @@ def test_failures_are_kept_for_90_days(tmp_path):
     record_failure(state, "briefing", "new", "e")
     with state.connect() as con:
         assert [r[0] for r in con.execute("SELECT question FROM failures")] == ["new"]
+
+
+def test_usage_report_warns_near_a_cap(tmp_path):
+    from datetime import UTC, datetime
+
+    from wcs.api.usage import record_failure, record_usage, summary, warnings
+    state = StateDB(tmp_path / "s.db")
+    limits = {"daily_spend_cap_usd": 1.0, "monthly_spend_cap_usd": 50.0, "price_input_per_mtok": 2.0,
+              "price_output_per_mtok": 10.0}
+    record_usage(state, "answer", "m", {"input_tokens": 300_000, "output_tokens": 10_000}, limits, "v1")  # $0.70
+    report = summary(state, limits, datetime.now(UTC))
+    assert report["today"]["briefings"] == 1 and report["today"]["spent_usd"] == 0.7 and warnings(report) == []
+    record_usage(state, "answer", "m", {"input_tokens": 50_000}, limits, "v2")                             # $0.80
+    assert warnings(summary(state, limits)) == ["spending: today's cap of $1.00 80% used ($0.80 spent)"]
+    record_usage(state, "answer", "m", {"input_tokens": 100_000}, limits, "v2")
+    record_failure(state, "briefing", "q", "APIError: overloaded")
+    alerts = warnings(summary(state, limits))
+    assert "reached: new briefings are paused" in alerts[0] and "APIError: overloaded" in alerts[1]
+    assert summary(state, limits)["today"]["visitors"] == 2

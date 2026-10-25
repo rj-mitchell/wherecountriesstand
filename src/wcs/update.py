@@ -401,6 +401,20 @@ def health(report: Report, today: date | None = None) -> None:
         report.errors.append(f"{len(report.failed)} records could not be parsed: {', '.join(report.failed[:5])}")
 
 
+def spending(settings: Settings, report: Report) -> None:
+    """The site's spending and failed briefings, from its own database (the site and the updater share the data
+    folder), so the update report is the one place to look."""
+    path = settings.data_dir / "state.db"
+    if not path.exists():
+        return
+    from wcs.api import usage
+
+    try:
+        report.warnings += usage.warnings(usage.summary(usage.StateDB(path), settings.usage, days=1))
+    except Exception as exc:  # the report itself matters more
+        report.warnings.append(f"spending: could not read {path} ({type(exc).__name__}: {exc})")
+
+
 def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd: bool = True, do_index: bool = True,
         embed_seconds: float | None = None, max_new: int | None = None, docs: undocs.UNDocs | None = None,
         reference: Countries | None = None) -> Report:
@@ -449,6 +463,7 @@ def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd:
             except Exception as exc:  # keyword search still works; embedding resumes next run
                 report.warnings.append(f"embedding: {type(exc).__name__}: {exc}")
     health(report)
+    spending(settings, report)
     report.finished = datetime.now(UTC).isoformat(timespec="seconds")
     write_report(settings, report)
     return report

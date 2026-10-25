@@ -184,3 +184,47 @@ def record_failure(state: StateDB, kind: str, question: str | None, error: str) 
         # the privacy notice (web/site/privacy.html) says these are deleted after 90 days
         con.execute("DELETE FROM failures WHERE at < ? OR id NOT IN (SELECT id FROM failures ORDER BY id DESC "
                     "LIMIT 500)", ((datetime.now(UTC) - timedelta(days=FAILURE_DAYS)).isoformat(timespec="seconds"),))
+
+
+# ---- reports --------------------------------------------------------------------------------------------------
+
+WARN_AT = 0.8  # spending at this share of a cap is worth knowing about before it stops new briefings
+
+
+def summary(state: StateDB, limits: dict[str, Any], now: datetime | None = None, days: int = 7) -> dict[str, Any]:
+    """Spend today and this month against the caps, briefings written, and recent failures (``wcs usage``)."""
+    now = now or datetime.now(UTC)
+    day, month = now.strftime("%Y-%m-%d"), now.strftime("%Y-%m")
+    since = (now - timedelta(days=days)).isoformat(timespec="seconds")
+    out: dict[str, Any] = {"at": now.isoformat(timespec="seconds")}
+    with state.connect() as con:
+        for name, start, cap in (("today", day, "daily_spend_cap_usd"), ("month", month, "monthly_spend_cap_usd")):
+            cost, briefings, visitors = con.execute(
+                "SELECT coalesce(sum(cost_usd), 0), count(*) FILTER (WHERE kind = 'answer'), count(DISTINCT visitor) "
+                "FROM usage WHERE at >= ?", (start,)).fetchone()
+            out[name] = {"spent_usd": round(cost, 4), "cap_usd": float(limits.get(cap, 0) or 0),
+                         "briefings": briefings, "visitors": visitors}
+        out["by_day"] = [{"day": d, "spent_usd": round(c, 4), "briefings": n} for d, c, n in con.execute(
+            "SELECT substr(at, 1, 10), sum(cost_usd), count(*) FILTER (WHERE kind = 'answer') FROM usage "
+            "WHERE at >= ? GROUP BY 1 ORDER BY 1", (since,))]
+        out["failures"] = [{"at": a, "kind": k, "question": q, "error": e} for a, k, q, e in con.execute(
+            "SELECT at, kind, question, error FROM failures WHERE at >= ? ORDER BY id DESC", (since,))]
+    out["days"] = days
+    return out
+
+
+def warnings(report: dict[str, Any], hours: float = 24) -> list[str]:
+    """Plain-English warnings for the update report: spending near or at a cap, and recent failed briefings."""
+    out = []
+    for name, label in (("today", "today's"), ("month", "this month's")):
+        r = report[name]
+        if r["cap_usd"] and r["spent_usd"] >= WARN_AT * r["cap_usd"]:
+            state = "reached: new briefings are paused" if r["spent_usd"] >= r["cap_usd"] else \
+                f"{r['spent_usd'] / r['cap_usd']:.0%} used"
+            out.append(f"spending: {label} cap of ${r['cap_usd']:.2f} {state} (${r['spent_usd']:.2f} spent)")
+    since = (datetime.fromisoformat(report["at"]) - timedelta(hours=hours)).isoformat(timespec="seconds")
+    recent = [f for f in report["failures"] if f["at"] >= since]
+    if recent:
+        out.append(f"{len(recent)} briefing(s) failed in the last {hours:g} hours; the latest: {recent[0]['error']} "
+                   "(wcs usage lists them)")
+    return out

@@ -70,6 +70,9 @@ Or with cron, twice a day:
 
 ## When a run reports a problem
 
+The report also covers the site: spending against the caps and briefings that failed, from `data/state.db`
+(`wcs usage` shows the same, with spend by day, and exits 1 when something needs a look).
+
 | Report says | Likely cause | What to do |
 |---|---|---|
 | `could not reach the Digital Library or ODS` | Network or UN outage | Nothing, if it clears on the next run; check the server's network if it persists. |
@@ -83,6 +86,9 @@ Or with cron, twice a day:
 | `the General Debate website refused access` | The site's browser check now turns this client away | Nothing breaks: statements arrive with the official records. To restore the faster route, see whether a newer browser identity (`BROWSER_USER_AGENT` in `wcs.sources.gadebate`) is accepted, or ask the UN for access. |
 | `website statement not matched to a country` | The site names a country in a new way ("Naoero" for Nauru) | Add it to `data_static/aliases.csv`. |
 | `General Debate speeches found but no statements introduced` | The President's introductions are worded in a new way | Look at the record; adjust `INVITATION` or `ADDRESS` in `wcs.sources.unga`. |
+| `spending: today's cap ... 80% used` (or this month's) | Many briefings asked for | Nothing, if it is a busy day: at the cap the site shows sources only until midnight UTC. `wcs usage` shows spend by day; raise `daily_spend_cap_usd` or `monthly_spend_cap_usd` in `config/settings.toml` if the budget allows. |
+| `spending: ... cap reached: new briefings are paused` | The cap is spent | As above. Visitors still get the sources, and briefings already written still load. |
+| `briefing(s) failed in the last 24 hours` | The model API refused or timed out, or a bug | `wcs usage` lists each failure with its question and error. An API outage clears itself; the same error again and again is a bug. |
 
 ## The General Debate
 

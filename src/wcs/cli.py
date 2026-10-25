@@ -181,6 +181,40 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
         raise typer.Exit(1)
 
 
+@app.command()
+def usage(days: int = typer.Option(7, help="list daily spend and failures for this many days"),
+          as_json: bool = typer.Option(False, "--json")) -> None:
+    """Spending on briefings today and this month against the caps, and briefings that failed (from data/state.db).
+    Exits 1 when spending is at 80% of a cap or more, or a briefing failed in the last day."""
+    from wcs.api.usage import StateDB, summary, warnings
+
+    s = load_settings()
+    path = s.data_dir / "state.db"
+    if not path.exists():
+        typer.echo(f"no spending recorded yet ({path} does not exist)")
+        return
+    report = summary(StateDB(path), s.usage, days=days)
+    alerts = warnings(report)
+    if as_json:
+        typer.echo(json.dumps({**report, "warnings": alerts}, indent=1))
+    else:
+        for name, label in (("today", "Today (UTC)"), ("month", "This month")):
+            r = report[name]
+            share = f" ({r['spent_usd'] / r['cap_usd']:.0%})" if r["cap_usd"] else ""
+            typer.echo(f"{label}: ${r['spent_usd']:.2f} of ${r['cap_usd']:.2f}{share}; briefings written: "
+                       f"{r['briefings']}; visitors who asked: {r['visitors']}")
+        typer.echo(f"\nLast {days} days:")
+        for d in report["by_day"]:
+            typer.echo(f"  {d['day']}  ${d['spent_usd']:.2f}  briefings: {d['briefings']}")
+        typer.echo(f"\nFailures in the last {days} days: {len(report['failures'])}")
+        for f in report["failures"][:20]:
+            typer.echo(f"  {f['at']}  {f['kind']}: {f['error']}\n      question: {f['question']}")
+        for w in alerts:
+            typer.echo(f"warning: {w}")
+    if alerts:
+        raise typer.Exit(1)
+
+
 @app.command("backfill-replies")
 def backfill_replies(since: int = typer.Option(..., help="first session, e.g. 55 (2000)"),
                      until: int = typer.Option(None, help="last session (default: the one before [live] "
