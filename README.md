@@ -8,8 +8,9 @@ balanced briefing that groups the positions taken. Every point cites the verbati
 and speeches given in other languages are marked as UN translations. If the record holds nothing relevant, the site
 says "No records found."
 
-It is a project of the Where They Stand Foundation, a charitable incorporated organisation being registered in England
-and Wales. The engine is adapted from Where They Stand's (same licence, same author).
+It is a project of Where They Stand, a charitable incorporated organisation being registered in England and Wales.
+The engine is adapted from Where MPs Stand's, the charity's Parliament site (now live as Where They Stand; same
+licence, same author).
 
 > Where Countries Stand is independent. It is not affiliated with or endorsed by the United Nations, and it does not
 > use the UN's name or emblem.

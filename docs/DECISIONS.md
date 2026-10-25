@@ -5,7 +5,7 @@ here once they're made.
 
 | # | Topic | Decision |
 |---|---|---|
-| 1 | Name and address | **Where Countries Stand**, a separate website with its own domain (not a section or subdomain of Where They Stand). A project of the Where They Stand Foundation. |
+| 1 | Name and address | **Where Countries Stand**, a separate website with its own domain (not a section or subdomain of the Parliament site, Where MPs Stand). A project of the charity Where They Stand, on its international shelf with Where Lives Stand. |
 | 2 | Code | A new repo. Copy the Where They Stand engine and adapt it. Pull out shared code into a common package later, once both sites work and the shared parts are obvious. |
 | 3 | First version | General Debate, Security Council debates, General Assembly votes and group memberships, all from **1992**. General Debate and votes back to 1946 as an archive. Briefings default to the **last 10 years**, with an obvious control to widen the range. |
 | 4 | Keeping current | The academic corpora for the back catalogue. Our own loader for UN verbatim records from 2024, checked against the corpora on overlapping years. |
