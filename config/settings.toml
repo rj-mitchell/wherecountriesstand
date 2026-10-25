@@ -84,5 +84,24 @@ passage_words = 250
 batch_size = 8
 
 [usage]
+# The site is public; each new model-written briefing costs money (docs/DECISIONS.md, 9). When a cap is reached the
+# sources are still shown, which costs nothing.
 daily_spend_cap_usd = 3.0
 monthly_spend_cap_usd = 50.0
+per_visitor_daily_questions = 40   # anonymous visitors, keyed by a daily-salted hash of their IP address
+requests_per_minute = 20           # questions and searches per visitor
+answer_cache_hours = 168           # identical questions are not re-run until the data changes (or a week)
+# USD per million tokens, for spend tracking only (as Where MPs Stand's settings).
+price_input_per_mtok = 2.0
+price_output_per_mtok = 10.0
+price_cache_read_per_mtok = 0.2
+cache_write_multiplier = 1.25
+
+[usage.models."claude-haiku-5-5"]
+price_input_per_mtok = 0.1
+price_output_per_mtok = 0.5
+price_cache_read_per_mtok = 0.01
+
+[site]
+# The site's pages (default: web/site in the repository).
+dir = ""

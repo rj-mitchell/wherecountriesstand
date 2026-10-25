@@ -38,6 +38,18 @@ def main(verbose: bool = typer.Option(False, "--verbose", "-v")) -> None:
     logging.basicConfig(level=logging.INFO if verbose else logging.WARNING, format="%(levelname)s %(message)s")
 
 
+@app.command()
+def serve(host: str = "127.0.0.1", port: int = 8000,
+          behind_proxy: bool = typer.Option(False, help="trust X-Forwarded-For (behind Caddy or another proxy)")) -> None:
+    """Run the site and its API."""
+    import uvicorn
+
+    from wcs.api.app import create_app
+
+    uvicorn.run(create_app(load_settings(), behind_proxy=behind_proxy), host=host, port=port,
+                proxy_headers=behind_proxy, forwarded_allow_ips="*" if behind_proxy else None)
+
+
 @app.command("fetch-sc")
 def fetch_sc(force: bool = False) -> None:
     """Download the Security Council debates corpus (about 510 MB)."""
