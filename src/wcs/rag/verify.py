@@ -138,7 +138,8 @@ _LABEL = re.compile(r"^\s*(#+ .*|\*\*[^*]+\*\*:?)\s*$")
 # statements about the evidence itself (what was or was not retrieved), not about what anyone said
 _EVIDENCE_NOTE = re.compile(
     r"\b(records? (retrieved|supplied|shown)|(retrieved|supplied) (records|results|sources)|in the records|"
-    r"no (division|voting) records|evidence (base|is|set)|gaps?\b|caveats?\b|cannot be (reported|attributed)|"
+    r"no (division|voting) records|no (recorded[- ]vote|vote|voting) (data|records|tables)|"
+    r"(votes?|data) (were|was) (not )?supplied|\b(are|were|is|was) (not )?(supplied|retrieved)\b|evidence (base|is|set)|gaps?\b|caveats?\b|cannot be (reported|attributed)|"
     r"(were|was) not relevant|been excluded|the records (are|were|contain|include|cover)|little (was|is) (found|said)|"
     r"nothing (was|is) found|no stated position|written questions only|"
     r"decides? (many|most|some)? ?(of )?(these |the |such )?(subjects|matters|areas|policies) for ((its|their) own "

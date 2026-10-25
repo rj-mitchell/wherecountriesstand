@@ -43,13 +43,17 @@ class VoteFinder:
     def available(self) -> bool:
         return self.path.exists()
 
-    def find(self, text: str, filters: Filters, limit: int = 3) -> list[dict[str, Any]]:
+    def find(self, text: str, filters: Filters, limit: int = 3, every_word: bool = False) -> list[dict[str, Any]]:
+        """Resolutions whose title, agenda item or subjects contain the words of ``text`` (whole words, or their
+        start: "sanction" finds "sanctions"; found in real briefings: "rise" was matching "enterprises").
+        ``every_word``: all of them, for a vote shown alongside statements when the question did not ask about
+        votes."""
         words = terms(text)
         if not words or not self.available():
             return []
-        need = len(words) if len(words) <= 2 else max(2, (len(words) + 1) // 2)
-        hits = " + ".join(f"(CASE WHEN haystack LIKE '%{w.replace(chr(39), chr(39) * 2)}%' THEN 1 ELSE 0 END)"
-                          for w in words)
+        need = len(words) if every_word or len(words) <= 2 else max(2, (len(words) + 1) // 2)
+        hits = " + ".join(f"(CASE WHEN regexp_matches(haystack, '\\b{re.escape(w).replace(chr(39), chr(39) * 2)}') "
+                          f"THEN 1 ELSE 0 END)" for w in words)
         clauses, params = [], []
         if filters.date_from:
             clauses.append("date >= ?")

@@ -104,3 +104,26 @@ records, so these are checks of coverage and of samples:
 * **Older records.** Records from before 2000 are not read: before 1996 they are scans without text, and in the late
   1990s their two columns come out of the PDF in the wrong order.
 
+* **Virtual sessions.** In 2020 (and partly 2021) statements were shown as recorded videos: the record holds only a
+  delegate's few words introducing each one, and prints the statement itself in an annex at the end of the
+  document, which is not read yet. Those introductions are left out rather than stored as statements (about 120 in
+  2020; some carried the wrong speaker's name). The update report warns if a session's records print statements in
+  annexes. The corpus, not these records, supplies the statements for 2020 and 2021.
+
+## Real briefings (October 2026)
+
+Twenty-six briefings written by the model on the real record (eight in a first round, eighteen in a second),
+across the test set's categories (topics, countries, groups, the General Debate, votes, Comprehensive length), cost
+about $3.70 in all, from $0.04 to $0.33 each. None had an
+invalid citation or an unverified quotation that mattered; the grey "unsupported" sentences were mostly paraphrase
+running on past a citation. What they found, and what was changed:
+
+| Found | Changed |
+|---|---|
+| Questions about votes got no voting data: resolution titles were matched on the model's search words, ten of them ("territorial integrity, sovereignty ...") needing five hits, so "Aggression against Ukraine" never qualified | Titles are matched on the question's own subject words first, as whole words (substrings let "rise" match "enterprises"); up to six resolutions when votes are asked about, and a vote shown unasked must contain every subject word |
+| A country's vote misread from a list of 140 names (Nigeria said not to support ES-11/2; it voted in favour) | Each vote source also lists how the countries quoted in the briefing voted |
+| "How has the Holy See voted?" answered only "No records found" | Source titles give an observer State's UN status, and that it does not vote (decision 6) |
+| Recorded-video introductions from 2020 stored as statements, one under the wrong country | Left out, with a warning (above) |
+| Source titles now name the Group of 77, the Non-Aligned Movement and the OIC, but the instructions forbade groupings beyond the original list | The instructions list them, and say that membership of the G77 or the NAM shows no view: only a statement on the group's behalf does |
+| "No recorded-vote data were supplied" and "No statements from permanent members are supplied" greyed as claims | Read as notes about the evidence |
+| A Comprehensive briefing ran to about 1,550 words against a target of 700-1,300 | Not changed: it used its length well; watch it |

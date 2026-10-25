@@ -18,6 +18,8 @@ from wcs.reference.roles import ROLE_LABEL
 _SENTENCE = re.compile(r"(?<=[.!?])\s+(?=[A-Z\"“(])")
 BLOCK_WORDS = 70
 TITLE_GROUPS = ("p5", "council_elected", "council_guest", "eu", "nato", "au", "oic", "nam", "g77", "sids", "ldc")
+STATUS_LABEL = {"observer_state": "a non-member observer State of the United Nations (it does not vote in the "
+                                  "General Assembly)"}
 VOTE_LABEL = {"Y": "In favour", "N": "Against", "A": "Abstaining", "X": "Not voting"}
 
 
@@ -99,6 +101,8 @@ def speaker_label(r: dict[str, Any]) -> str:
     if r.get("on_behalf_of"):
         label += f", speaking on behalf of the {r['on_behalf_of']}"
     groups = groups_label(r)
+    if kind in STATUS_LABEL:  # the UN's own status (docs/DECISIONS.md, 6): an observer State does not vote
+        groups = "; ".join(x for x in (STATUS_LABEL[kind], groups) if x)
     if groups and kind not in ("organisation", "un"):
         label += f"; {country}: {groups}"
     return label
@@ -153,8 +157,13 @@ def record_source(n: int, r: dict[str, Any], group_by: str = "region") -> Source
     return Source(n, "record", title, r["url"], blocks_for(r["text"]), meta)
 
 
-def vote_source(n: int, v: dict[str, Any]) -> Source:
-    """A General Assembly recorded vote: what was voted on, the totals, and how each country voted."""
+VOTE_WORDS = {"Y": "in favour", "N": "against", "A": "abstained", "X": "did not vote"}
+
+
+def vote_source(n: int, v: dict[str, Any], speakers: list[str] | None = None) -> Source:
+    """A General Assembly recorded vote: what was voted on, the totals, and how each country voted. ``speakers``:
+    the countries whose statements are among the sources, whose votes are also listed on their own (found in
+    real briefings: picking one country out of a list of 140 names goes wrong)."""
     totals = f"{v['total_yes']} in favour, {v['total_no']} against, {v['total_abstentions']} abstaining"
     title = (f"General Assembly recorded vote on resolution {v['resolution']} — {fmt_date(v['date'])} — "
              f"{v['title']}")
@@ -166,6 +175,10 @@ def vote_source(n: int, v: dict[str, Any]) -> Source:
         names = v["votes"].get(code) or []
         if names:
             blocks.append(f"{VOTE_LABEL[code]} ({len(names)}): {', '.join(names)}.")
+    if speakers:
+        how = {name: VOTE_WORDS[code] for code, names in v["votes"].items() for name in names if code in VOTE_WORDS}
+        listed = [f"{name}: {how.get(name, 'not recorded (not a Member State then, or absent)')}" for name in speakers]
+        blocks.append(f"How the countries whose statements are among the sources voted: {'; '.join(listed)}.")
     meta = {"resolution": v["resolution"], "date": v["date"], "title": v["title"], "meeting": v.get("meeting"),
             "totals": {"yes": v["total_yes"], "no": v["total_no"], "abstain": v["total_abstentions"],
                        "non_voting": v.get("total_non_voting")},
@@ -176,5 +189,7 @@ def vote_source(n: int, v: dict[str, Any]) -> Source:
 def build_sources(records: list[dict[str, Any]], votes: list[dict[str, Any]] | None = None,
                   group_by: str = "region") -> list[Source]:
     out = [record_source(i, r, group_by) for i, r in enumerate(records, 1)]
-    out += [vote_source(len(out) + i, v) for i, v in enumerate(votes or [], 1)]
+    speakers = list(dict.fromkeys(r["country_name"] for r in records if r.get("country_code") and r.get("country_name")
+                                  and not r.get("on_behalf_of")))
+    out += [vote_source(len(out) + i, v, speakers) for i, v in enumerate(votes or [], 1)]
     return out

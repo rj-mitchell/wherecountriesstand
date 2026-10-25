@@ -128,6 +128,8 @@ def test_votes(settings):
     assert found[0]["votes"]["N"] == ["Russian Federation"]
     src = build_sources([], found)[0]
     assert src.kind == "vote" and any(b.startswith("Against (1): Russian Federation") for b in src.blocks)
+    mixed = build_sources([rec(country_code="RUS", country_name="Russian Federation")], found)[-1]
+    assert "Russian Federation: against." in mixed.blocks[-1] and mixed.blocks[-1].startswith("How the countries")
     assert VoteFinder(settings).find("aggression against Ukraine", Filters(date_to=date(2000, 1, 1))) == []
     assert terms("How did countries vote on nuclear disarmament?") == ["nuclear", "disarmament"]
 
@@ -162,3 +164,9 @@ def test_new_blocs_are_read_from_questions():
     assert parse_offline("What has been said about the OIC?", c, TODAY).filters.groups == []
     p = parse_offline("How have members of the Organisation of Islamic Cooperation spoken about Gaza?", c, TODAY)
     assert p.filters.groups == ["oic"]
+
+
+def test_observer_states_are_named_as_such():
+    t = speaker_label(rec(country_code="VAT", country_name="Holy See", entity_kind="observer_state", language=None,
+                          groups=["region:europe"]))
+    assert "Holy See: a non-member observer State of the United Nations (it does not vote" in t

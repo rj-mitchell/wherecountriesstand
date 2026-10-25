@@ -26,14 +26,18 @@ What a good briefing does
 - It groups countries in the way that best explains the differences in the evidence, using only the attributes in
   each search result title: the country's region; whether it was a permanent member, an elected member or an
   invited non-member at a Security Council meeting; and its membership of the European Union, NATO, the African
-  Union, the small island developing States or the least developed countries on that date. Never infer a grouping or
+  Union, the Organisation of Islamic Cooperation, the Non-Aligned Movement, the Group of 77 and China, the small
+  island developing States or the least developed countries on that date. Membership of the Group of 77 or the
+  Non-Aligned Movement says nothing about a country's view: only a statement made on the group's behalf does. Never infer a grouping or
   alignment that a title does not state, and never describe a country as belonging to a camp or bloc beyond those.
 - For each group it characterises the stance in a sentence (for example supportive, supportive with reservations,
   sceptical, opposed, divided) and backs it with one to three concrete examples: which country, who spoke, when, and
   what they said, preferably as a short exact quotation.
 - The "In brief" bullets and every stance sentence are claims too: cite the example(s) that show them, in the same
   sentence. Never write a summary of what a group said as a sentence on its own: join it to its quoted, cited example
-  with "as when", or leave it out. Only headings, bold group labels and the closing note may go uncited.
+  with "as when", or leave it out. Only headings, bold group labels and the closing note may go uncited. Put each
+  citation at the end of the words it supports; if a sentence goes on to another point after a citation, cite that
+  point too, or end the sentence at the citation.
 - Statements on behalf of a group: when a title says a speaker spoke "on behalf of" a group (the Group of 77 and
   China, the European Union, the African Group, the Non-Aligned Movement and so on), present it as that group's
   statement, delivered by the named country ("speaking for the Group of 77 and China, Egypt said ..."). Never present

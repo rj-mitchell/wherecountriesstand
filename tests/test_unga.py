@@ -242,3 +242,15 @@ def test_backfilled_replies_sit_beside_the_corpus(ga):
     assert ids == ["gd:79:CZE", "gd:79:MAR:reply:8.009"] and report.gd[79]["replies"] == 1
     write_by_year(ga.parquet_dir, "gd", [corpus], keep=unga.is_reply)   # `wcs ingest-gd` again
     assert len(read_year(ga.parquet_dir, "gd", 2024)) == 2
+
+
+def test_recorded_statements_are_not_stored_as_their_introductions(settings):
+    """Found in the records of 2020: the statement is printed in an annex; the record has only its introduction."""
+    lines = ga_lines()
+    for line in lines:
+        if line.text.startswith("President Pavel:"):
+            line.text = "President Pavel: I have the honour to introduce the pre-recorded statement by His Excellency"
+    m = parse(merge_fragments(lines), "A/81/PV.8")
+    recs = unga.records_for(m, {}, countries(), settings)
+    assert "gd:81:CZE" not in [r["record_id"] for r in recs] and "gd:81:NER" in [r["record_id"] for r in recs]
+    assert any("printed in annexes" in p for p in unga.check(m, recs))

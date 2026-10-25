@@ -53,6 +53,9 @@ def plan_note(plan: QueryPlan, engine: Engine) -> str:
     return "; ".join(bits)
 
 
+VOTES_ASKED = 6  # resolutions shown when a question asks about votes
+
+
 class Pipeline:
     def __init__(self, settings: Settings, engine: Engine | None = None, client=None, today: date | None = None):
         self.settings = settings
@@ -105,7 +108,14 @@ class Pipeline:
                                     diversify=True, group_by=plan.group_by)
         votes = []
         if not plan.filters.sources or "gd" in plan.filters.sources:
-            votes = self.votes.find(plan.search_text, plan.filters, limit=3 if plan.wants_votes else 1)
+            # resolution titles are matched on the question's own subject words first: the model's search words add
+            # debate vocabulary ("territorial integrity, sovereignty") that titles such as "Aggression against
+            # Ukraine" lack
+            n = VOTES_ASKED if plan.wants_votes else 1
+            own = parse_offline(req.question, self.engine.countries, self.today or date.today()).search_text
+            strict = not plan.wants_votes
+            votes = self.votes.find(own, plan.filters, n, strict) or \
+                self.votes.find(plan.search_text, plan.filters, n, strict)
         return result, votes, build_sources(result.records, votes, plan.group_by)
 
     def run(self, req: AskRequest) -> Iterator[dict[str, Any]]:

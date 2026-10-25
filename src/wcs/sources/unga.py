@@ -197,6 +197,13 @@ def replies(meeting: Meeting, intros: dict[int, tuple[str, str]], debate: bool) 
     return out
 
 
+# In the virtual session of 2020 (and partly 2021) statements were shown as recorded videos: the record holds only a
+# delegate's introduction ("I have the honour to introduce the pre-recorded statement by ...") and prints the
+# statement itself in an annex at the end. Annexes are not read yet; such introductions are not stored as statements.
+RECORDED_INTRO = re.compile(r"\bintroduce\b.{0,120}?\b(?:pre-?recorded|recorded|video)\b", re.I | re.S)
+RECORDED_INTRO_WORDS = 150
+
+
 def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, settings: Settings) -> list[dict[str, Any]]:
     """Stored records (``store.parquet.RECORD_SCHEMA``, source "gd") for the General Debate statements and rights of
     reply in one plenary meeting; none for a meeting on other business."""
@@ -210,6 +217,7 @@ def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, se
     out: list[dict[str, Any]] = []
     debate = debate_meeting(meeting, meta)
     intros = introductions(meeting)
+    recorded = 0
     for i, (name, post) in sorted(intros.items()):
         sp = meeting.speeches[i]
         if not in_debate(sp.agenda, debate) or NOT_A_STATEMENT.search(f"{sp.speaker} {name} {post}"):
@@ -226,6 +234,9 @@ def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, se
         text = normalise_text(STAGE.sub("", sp.text))
         if not text.strip():
             continue
+        if len(text.split()) <= RECORDED_INTRO_WORDS and RECORDED_INTRO.search(text):
+            recorded += 1  # the statement itself is printed in an annex, which is not read yet
+            continue
         behalf = on_behalf_of(text)
         key = code or ORGANISATION_KEYS.get(label or "") or re.sub(r"[^A-Za-z]+", "-", label or name).strip("-").upper()[:24]
         out.append({
@@ -239,6 +250,9 @@ def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, se
             "language": language(sp.attribution), "ocr": False, "text": text, "url": symbol_url(undocs, symbol),
             "text_source": "record",
         })
+    if recorded:
+        meeting.warnings.append(f"{recorded} statements shown as recorded videos and printed in annexes, which are "
+                                f"not read yet: only their introductions are in the record, so they are left out")
     number = meeting_number(symbol)
     for i in replies(meeting, intros, debate):
         sp = meeting.speeches[i]
