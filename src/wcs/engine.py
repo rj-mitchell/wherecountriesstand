@@ -198,10 +198,15 @@ class Engine:
         lap("rank")
         no_records = not scored
         if diversify and scored:
+            per_country, per_speaker = int(r.get("max_per_country", 2)), int(r.get("max_per_speaker", 2))
+            if f.countries:
+                # the question names its countries: the cap that keeps a comparison across many countries balanced
+                # would leave it two sources each (found in the first-load rehearsal: France on Mali, 2 of 152)
+                per_country = max(per_country, -(-limit // len(f.countries)))
+                per_speaker = max(per_speaker, -(-per_country // 2))
             top = select_evidence(scored[:max(limit * 8, 150)], limit,
                                   group_by=group_by if group_by in GROUP_BY else "region",
-                                  max_per_speaker=int(r.get("max_per_speaker", 2)),
-                                  max_per_country=int(r.get("max_per_country", 2)),
+                                  max_per_speaker=per_speaker, max_per_country=per_country,
                                   min_relevance_ratio=float(r.get("min_relevance_ratio", 0.25)))
         else:
             top = scored[:limit]

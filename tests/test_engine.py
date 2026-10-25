@@ -109,3 +109,11 @@ def test_regroup_updates_groups_in_place(engine, settings):
     assert index.vectors().count_rows() == vectors_before
     assert regroup(settings, countries(), index) == {PASSAGES: 0, VECTORS: 0}
     assert ids(engine.search("climate finance", Filters(groups=["g77"])))
+
+
+def test_a_named_country_is_not_capped_at_two(engine):
+    """Found in the first-load rehearsal: two sources per country starved one-country questions."""
+    res = engine.search("climate finance", Filters(countries=["FRA"]), limit=12)
+    assert len([r for r in res.records if r["country_code"] == "FRA"]) == 4   # all of France's
+    assert len([r for r in engine.search("climate finance", Filters(), limit=12).records
+                if r["country_code"] == "FRA"]) == 2                                   # balanced otherwise

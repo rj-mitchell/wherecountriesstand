@@ -170,3 +170,8 @@ def test_observer_states_are_named_as_such():
     t = speaker_label(rec(country_code="VAT", country_name="Holy See", entity_kind="observer_state", language=None,
                           groups=["region:europe"]))
     assert "Holy See: a non-member observer State of the United Nations (it does not vote" in t
+
+
+def test_bodies_named_as_filters_are_not_search_words():
+    p = parse_offline("What did France say about Mali in the Security Council?", countries(), TODAY)
+    assert p.filters.sources == ["sc"] and "security council" not in p.search_text and "mali" in p.search_text

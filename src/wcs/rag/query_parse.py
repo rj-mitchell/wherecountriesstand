@@ -216,6 +216,9 @@ def parse_offline(question: str, countries: Countries, today: date | None = None
     group_by = "council" if sources == ["sc"] and re.search(r"\bmembers\b", ql) and not groups else \
         ("bloc" if sum(1 for g, _ in groups if not g.startswith("region:")) >= 2 else "region")
     strip = [w for _, w in named] + [w for _, w in groups]
+    # a body named as a filter is not a search word: "security council" is in every Council speech
+    strip += (["security council"] if "sc" in sources else []) + (["general debate", "general assembly"]
+                                                                  if "gd" in sources else [])
     text = norm(question)
     for w in sorted(strip, key=len, reverse=True):
         text = re.sub(rf"\b{re.escape(w)}\b", " ", text)

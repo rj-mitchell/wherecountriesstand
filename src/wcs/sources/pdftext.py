@@ -10,8 +10,12 @@ Uses pdfminer.six (pure Python), which keeps the reading order of two-column pag
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
+
+# pdfminer warns about every font that lacks a bounding box (common in the UN's PDFs, and harmless)
+logging.getLogger("pdfminer").setLevel(logging.ERROR)
 
 # Running headers sit above 90.5% of the page height and footers below 6% (S/PV records 1995-2026 and A/PV
 # records). Body text can reach lower still on a full page, so a line there of more than six words is body text, not

@@ -16,12 +16,16 @@ a filter on the passages themselves.
 from __future__ import annotations
 
 import logging
+import os
 import re
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
-import lancedb
+# LanceDB's own warnings (while the vector index is small, one per cluster it trains) would fill the update logs
+os.environ.setdefault("LANCEDB_LOG", "error")
+
+import lancedb  # noqa: E402
 import numpy as np
 import pyarrow as pa
 from lancedb.index import FTS, Bitmap, BTree
