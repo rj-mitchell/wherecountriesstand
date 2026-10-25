@@ -139,3 +139,16 @@ def test_pipeline_without_a_model_shows_the_evidence(settings, monkeypatch):
     out = answer_once(Pipeline(settings, today=TODAY), AskRequest("What has been said about peacekeeping?"))
     assert out["plan"]["plan"]["parser"] == "offline"
     assert out["final"]["answer"]["no_records"]   # nothing is indexed in an empty data folder
+
+
+def test_lead_ins_in_pieces_are_not_claims():
+    """Found in real briefings: the model writes a lead-in in pieces, and an honorific's full stop ends no sentence."""
+    from wcs.rag.sources import Source
+
+    src = [Source(1, "record", "t", "u", ["The use of force is not justified at this time."])]
+    blocks = [{"text": "- Members differed, as when France's Mr. "}, {"text": "Galouzeau De Villepin said "},
+              {"text": '"The use of force is not justified at this time."',
+               "citations": [{"search_result_index": 0, "cited_text": "The use of force is not justified at this time."}]},
+              {"text": " The United States then voted against every resolution on the subject since 1992. "}]
+    statuses = [s.status for s in verify(blocks, src).segments]
+    assert statuses == ["connective", "connective", "cited", "unsupported"]

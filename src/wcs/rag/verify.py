@@ -124,6 +124,16 @@ def recheck_flags(answer: dict[str, Any] | None) -> dict[str, Any] | None:
             "grounded_ratio": round(1.0 if not cited + unsupported else cited / (cited + unsupported), 3)}
 
 
+_HONORIFIC_DOT = re.compile(r"\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St)\.")
+
+
+def _is_lead_in_piece(text: str) -> bool:
+    """A short piece of a lead-in ("Delattre said "): no sentence ends in it."""
+    t = _HONORIFIC_DOT.sub(lambda m: m.group(1), text).strip()
+    return bool(t) and len(t) <= 80 and "\n" not in t and not re.search(r"[.!?][\"')\]]*$", t) and \
+        not _SENTENCE_END.search(t)
+
+
 _LABEL = re.compile(r"^\s*(#+ .*|\*\*[^*]+\*\*:?)\s*$")
 # statements about the evidence itself (what was or was not retrieved), not about what anyone said
 _EVIDENCE_NOTE = re.compile(
@@ -152,23 +162,28 @@ def _classify_uncited(text: str, next_is_cited: bool) -> list[Segment]:
     * notes about the evidence itself ("No division records were supplied") are ``connective``;
     * anything else (a claim with no citation) is ``unsupported``.
     """
+    # an honorific's full stop ("Mr. Delattre") ends no sentence: the checks read a copy with it masked (the same
+    # length, so positions carry over), and the text kept is the original
+    masked = _HONORIFIC_DOT.sub(lambda m: m.group(1) + "\u2024", text)
     lines = text.splitlines(keepends=True)
+    mlines = masked.splitlines(keepends=True)
     claims: set[int] = set()  # whole sentences split off a lead-in: never a mere transition, however short
     if next_is_cited and lines:
         # "Some answers said the data was not held. Stephen Kinnock said on 24 March that " + quotation: the
         # last sentence leads in to the citation that follows; only the sentence before it is a claim
-        ends = list(_SENTENCE_END.finditer(lines[-1]))
+        ends = list(_SENTENCE_END.finditer(mlines[-1]))
         if ends:
             cut = ends[-1].end() - 1
-            tail = lines[-1][cut:]
+            tail = mlines[-1][cut:]
             if len(tail.strip()) <= _ATTRIBUTION_MAX and not tail.rstrip().endswith("."):
-                lines[-1:] = [lines[-1][:cut], tail]
+                lines[-1:] = [lines[-1][:cut], lines[-1][cut:]]
+                mlines[-1:] = [mlines[-1][:cut], tail]
                 if re.search(r"\w", lines[-2]):  # a bare full stop closing the citation before is no claim
                     claims.add(len(lines) - 2)
     out: list[Segment] = []
     for i, line in enumerate(lines):
         last = i == len(lines) - 1
-        body = re.sub(r"^[\s\-*•\d.)]+", "", line).strip()
+        body = re.sub(r"^[\s\-*•\d.)]+", "", mlines[i]).strip()
         lead_in = (last and next_is_cited and len(body) <= _ATTRIBUTION_MAX
                    and not _SENTENCE_END.search(body.rstrip()) and not body.endswith("."))
         if ((_is_connective(line) and i not in claims) or _LABEL.match(line) or lead_in
@@ -211,7 +226,12 @@ def verify(blocks: list[dict[str, Any]], sources: list[Source]) -> Verification:
         text = b.get("text") or ""
         cites = b.get("citations") or []
         if not cites:
-            next_is_cited = i + 1 < len(blocks) and bool(blocks[i + 1].get("citations"))
+            # a lead-in can come in pieces ("..., as when France's Mr. " + "Delattre said " + the quotation): short
+            # uncited pieces in between do not stop it leading in to the citation after them
+            j = i + 1
+            while j < len(blocks) and not blocks[j].get("citations") and _is_lead_in_piece(blocks[j].get("text") or ""):
+                j += 1
+            next_is_cited = j < len(blocks) and bool(blocks[j].get("citations"))
             segments.extend(_classify_uncited(text, next_is_cited))
             continue
         nums, kept = [], []

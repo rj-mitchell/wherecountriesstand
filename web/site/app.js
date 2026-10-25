@@ -61,7 +61,9 @@ function chips(plan) {
   for (const s of f.sources || []) out.push(el("li", { class: `chip chip--${s === "sc" ? "sc" : "ga"}` }, BODY[s] || s));
   if (!(f.sources || []).length) out.push(el("li", { class: "chip" }, "Security Council and General Assembly"));
   if (f.date_from || f.date_to) {
-    out.push(el("li", { class: "chip" }, `${f.date_from ? f.date_from.slice(0, 4) : "1946"}–${f.date_to ? f.date_to.slice(0, 4) : "today"}`));
+    const from = f.date_from ? f.date_from.slice(0, 4) : "1946";
+    const to = f.date_to ? f.date_to.slice(0, 4) : "today";
+    out.push(el("li", { class: "chip" }, from === to ? from : `${from}–${to}`));
   }
   for (const c of f.countries || []) out.push(el("li", { class: "chip" }, names.countries[c] || c));
   for (const g of f.groups || []) out.push(el("li", { class: "chip" }, names.groups[g] || g));
@@ -136,31 +138,60 @@ function inline(text) {
   return out;
 }
 
+// The briefing as lines: each line a list of pieces (text with its marks, and citation links where a cited span
+// ends). Lines are then laid out: a bold label alone on a line or "# ..." is a heading, "- ..." a list item, and
+// other lines run together into paragraphs, broken at blank lines.
+function briefingLines(answer) {
+  const lines = [[]];
+  for (const seg of answer.segments || []) {
+    const cls = [seg.status === "unsupported" ? "unsupported" : "", (seg.loaded || []).length ? "loaded" : "",
+                 (seg.misquotes || []).length ? "misquote" : ""].filter(Boolean).join(" ");
+    seg.text.split("\n").forEach((piece, i) => {
+      if (i > 0) lines.push([]);
+      if (piece) lines[lines.length - 1].push({ text: piece, cls });
+    });
+    for (const n of seg.sources || []) lines[lines.length - 1].push({ cite: n });
+  }
+  return lines;
+}
+
+function renderPieces(pieces) {
+  const out = [];
+  pieces.forEach((x, i) => {
+    if (x.cite) {
+      out.push("⁠", el("a", { class: "cite", href: `#s${x.cite}`, "aria-label": `Source ${x.cite}` }, `[${x.cite}]`));
+      return;
+    }
+    const text = i === 0 ? x.text.replace(/^\s*(?:[-*•]|#+)\s+/, "") : x.text;
+    out.push(x.cls ? el("span", { class: x.cls }, inline(text)) : el("span", {}, inline(text)));
+  });
+  return out;
+}
+
 function renderAnswer(answer) {
   const box = $("briefing");
   box.replaceChildren();
-  let p = el("p");
-  box.append(p);
-  for (const seg of answer.segments || []) {
-    const pieces = seg.text.split(/\n\s*\n/);
-    pieces.forEach((piece, i) => {
-      if (i > 0) { p = el("p"); box.append(p); }
-      const heading = piece.match(/^\s*#+\s*(.+)$/m);
-      if (heading && piece.trim().startsWith("#")) {
-        const h = el("h3", {}, heading[1]);
-        box.insertBefore(h, p);
-        piece = piece.replace(/^\s*#+\s*.+$/m, "").trimStart();
-      }
-      if (!piece) return;
-      const cls = [seg.status === "unsupported" ? "unsupported" : "", (seg.loaded || []).length ? "loaded" : "",
-                   (seg.misquotes || []).length ? "misquote" : ""].filter(Boolean).join(" ");
-      p.append(cls ? el("span", { class: cls }, inline(piece)) : el("span", {}, inline(piece)));
-    });
-    for (const n of seg.sources || []) {
-      p.append("⁠", el("a", { class: "cite", href: `#s${n}`, "aria-label": `Source ${n}` }, `[${n}]`));
+  let para = null;
+  let list = null;
+  for (const pieces of briefingLines(answer)) {
+    const plain = pieces.map((x) => x.text || "").join("").trim();
+    const cites = pieces.some((x) => x.cite);
+    if (!plain && !cites) { para = null; list = null; continue; }            // a blank line
+    if (!cites && (/^#+\s/.test(plain) || /^\*\*[^*]+\*\*:?$/.test(plain))) { // a heading
+      box.append(el("h3", {}, plain.replace(/^#+\s*/, "").replace(/^\*\*|\*\*:?$/g, "")));
+      para = null; list = null;
+      continue;
     }
+    if (/^[-*•]\s/.test(plain)) {                                            // a list item
+      if (!list) { list = el("ul"); box.append(list); }
+      list.append(el("li", {}, renderPieces(pieces)));
+      para = null;
+      continue;
+    }
+    list = null;
+    if (!para) { para = el("p"); box.append(para); } else para.append(" ");
+    para.append(...renderPieces(pieces));
   }
-  for (const node of [...box.children]) if (!node.textContent.trim()) node.remove();
   const marks = [];
   if (answer.unsupported_segments) marks.push("Sentences in grey have no source and are the model's own connecting words.");
   if (answer.loaded_words) marks.push("Words underlined with dots are judgemental terms in the model's voice.");

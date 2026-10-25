@@ -254,6 +254,9 @@ Rules:
 - Only set a filter when the question clearly asks for it. Never invent constraints.
 - search_text: the topic, in the vocabulary used in UN debates (e.g. "climate finance, adaptation, loss and damage";
   "use of force, self-defence, Article 51"). Leave out words that only express filters (dates, country names, groups).
+  Add only terms that mean the same thing in UN usage, never broader or general words ("sport", "policy", "history")
+  that would match unrelated speeches. If the topic is not one the UN would discuss, keep just the question's words:
+  "No records found" is then the right answer.
 - date_from/date_to: ISO dates for explicit or clearly implied periods ("between 2015 and 2020" -> 2015-01-01 to
   2020-12-31; "since 2022" -> 2022-01-01). When the question gives no period, set date_from to
   {today.year - default_years}-01-01 (the last {default_years} years) and date_to to null.

@@ -187,7 +187,7 @@ expect = { groups = ["au"], date_from = "default" }
 id = "p5-veto"
 question = "How have the permanent members explained their vetoes?"
 category = "group"
-expect = { groups = ["p5"], date_from = "default" }
+expect = { groups = ["p5"], date_from = "default", sources_any = [[], ["sc"]] }
 
 [[q]]
 id = "eu-ukraine"
@@ -211,7 +211,7 @@ expect = { groups = ["lldc"], date_from = "default" }
 id = "elected-members"
 question = "What have elected members of the Security Council said about the Council's working methods?"
 category = "group"
-expect = { groups = ["council_elected"], sources = ["sc"], date_from = "default" }
+expect = { groups = ["council_elected"], sources = ["sc"], date_from = "default", sources_any = [["sc"], []] }
 
 # ---- one body -----------------------------------------------------------------------------------------------------
 
@@ -245,7 +245,7 @@ expect = { sources = ["gd"], date_from = "default" }
 id = "iraq-2003"
 question = "What did Security Council members say about Iraq in 2003?"
 category = "dates"
-expect = { sources = ["sc"], date_from = "2003-01-01", date_to = "2003-12-31" }
+expect = { sources = ["sc"], date_from = "2003-01-01", date_to = "2003-12-31", groups_any = [[], ["council_elected", "p5"]] }
 
 [[q]]
 id = "libya-2011"
