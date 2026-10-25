@@ -91,10 +91,26 @@ credited to the UN, with the document symbol and page.
 - **Rights of reply before 2000.** The 1990s General Assembly records are printed in two columns that come out of the
   PDF in the wrong order (and before 1996 are scans without text), so their replies are not read yet.
 
-- **Group memberships on a date.** The Correlates of War organisation-membership data is believed
-  to stop in 2014. Memberships since then (BRICS expansion, EU candidates, African Union
-  suspensions) may need adding by hand from official sources. Needed: UN regional groups, EU, AU,
-  NAM, G77, OIC, NATO, permanent and elected Council members, World Bank income groups by year.
+- **Group memberships on a date.** In `data_static/memberships.csv` (EU, NATO, and since October 2026 the Group of
+  77, the Non-Aligned Movement and the OIC), with the regions, African Union and the UN's LDC, LLDC and SIDS lists
+  worked out in `wcs.reference.countries`. Still not covered: UN regional groups as used for elections, African
+  Union suspensions, World Bank income groups by year.
+  * **Non-Aligned Movement** (121 members) and **OIC** (57): dates of admission from worldstatesmen.org's lists of
+    international organisations, checked against Wikipedia; every member agrees. The OIC's founding-era dates differ
+    for seven members between the two (formal admission on 29 February 1972 against attendance from 1970, and
+    Uzbekistan 1995 or 1996); the formal dates are used, and the other noted in the file. Departures and suspensions
+    are dated: Argentina (left 1991), Yugoslavia (suspended 1992), Cyprus and Malta (left on joining the EU in 2004)
+    from the NAM; Egypt (1979-84), Afghanistan (1980-89) and Syria (August 2012 to March 2025) suspended from the OIC.
+  * **Group of 77**: members as the Group itself lists them (g77.org, 134, which includes China and the State of
+    Palestine; China does not regard itself as a member, so the group is labelled "the Group of 77 and China", as it
+    speaks). The Group publishes no dates of joining. Founders date from 15 June 1964; the later joiners that matter
+    for the record since 1992 are dated from reports (Azerbaijan 27 September 2019, South Sudan by October 2014);
+    Kiribati and Nauru are approximate (2014); the rest are dated from their first recorded UN vote. Former members:
+    Mexico (to 1994) and the Republic of Korea (to 1996), which left on joining the OECD; Cyprus, Malta and Romania,
+    which left on joining the EU; Yugoslavia; Palau (2002-04); Bosnia and Herzegovina (removed February 2020).
+    Mexico's return was approved in 2023 but it is not yet on the Group's list, so it is not counted.
+  * After changing the file, `wcs regroup` updates the groups carried by every indexed passage in place (about a
+    minute; nothing is re-embedded).
 - **Bulk access to UN verbatim records.** Check whether the UN Digital Library allows harvesting
   (for example through an OAI-PMH interface or search exports), or whether documents must be
   fetched one at a time. Fetch politely in either case.

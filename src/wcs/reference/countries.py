@@ -147,7 +147,8 @@ class Countries:
         return c.kind if c else "organisation"
 
     def groups_on(self, code: str | None, on: date) -> list[str]:
-        """Groups a country belonged to on a date (region, the permanent five, EU, NATO, AU, LDC, LLDC, SIDS).
+        """Groups a country belonged to on a date (region, the permanent five, EU, NATO, AU, the Group of 77, the
+        Non-Aligned Movement, the OIC, LDC, LLDC, SIDS).
         Security Council membership comes from each meeting record instead (``participant``)."""
         c = self.by_code.get(code or "")
         if c is None or (c.valid_from and on < c.valid_from) or (c.valid_to and on >= c.valid_to):

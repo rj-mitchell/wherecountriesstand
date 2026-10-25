@@ -121,6 +121,22 @@ class SearchIndex:
         if rows:
             tbl.add(pa.Table.from_pylist(rows, schema=PASSAGE_SCHEMA))
 
+    def group_rows(self, name: str) -> list[dict[str, Any]]:
+        """What decides each passage's groups (``speaker_groups``), with the groups it now carries."""
+        if name not in self._names():
+            return []
+        cols = ["passage_id", "country_code", "date", "source", "participant", "groups"]
+        return self.db.open_table(name).search().select(cols).limit(None).to_list()
+
+    def set_groups(self, name: str, changes: list[dict[str, Any]], chunk: int = 20_000) -> None:
+        """Rewrite the groups of the given passages only (``passage_id``, ``groups``), keeping everything else,
+        vectors included."""
+        schema = pa.schema([("passage_id", pa.string()), ("groups", pa.list_(pa.string()))])
+        tbl = self.db.open_table(name)
+        for i in range(0, len(changes), chunk):
+            part = pa.Table.from_pylist(changes[i:i + chunk], schema=schema)
+            tbl.merge_insert("passage_id").when_matched_update_all().execute(part)
+
     def delete_copies(self, pairs: list[tuple[str, str]], chunk: int = 500) -> int:
         """Delete the passages and vectors of specific (record_id, source_key) copies of records."""
         names = self._names()

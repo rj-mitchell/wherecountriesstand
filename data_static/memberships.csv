@@ -1,67 +1,396 @@
-group,code,valid_from,valid_to
-p5,CHN,1945-10-24,
-p5,FRA,1945-10-24,
-p5,GBR,1945-10-24,
-p5,USA,1945-10-24,
-p5,SUN,1945-10-24,1991-12-24
-p5,RUS,1991-12-24,
-eu,BEL,1958-01-01,
-eu,FRA,1958-01-01,
-eu,DEU,1958-01-01,
-eu,ITA,1958-01-01,
-eu,LUX,1958-01-01,
-eu,NLD,1958-01-01,
-eu,DNK,1973-01-01,
-eu,IRL,1973-01-01,
-eu,GBR,1973-01-01,2020-01-31
-eu,GRC,1981-01-01,
-eu,ESP,1986-01-01,
-eu,PRT,1986-01-01,
-eu,AUT,1995-01-01,
-eu,FIN,1995-01-01,
-eu,SWE,1995-01-01,
-eu,CYP,2004-05-01,
-eu,CZE,2004-05-01,
-eu,EST,2004-05-01,
-eu,HUN,2004-05-01,
-eu,LVA,2004-05-01,
-eu,LTU,2004-05-01,
-eu,MLT,2004-05-01,
-eu,POL,2004-05-01,
-eu,SVK,2004-05-01,
-eu,SVN,2004-05-01,
-eu,BGR,2007-01-01,
-eu,ROU,2007-01-01,
-eu,HRV,2013-07-01,
-nato,BEL,1949-08-24,
-nato,CAN,1949-08-24,
-nato,DNK,1949-08-24,
-nato,FRA,1949-08-24,
-nato,ISL,1949-08-24,
-nato,ITA,1949-08-24,
-nato,LUX,1949-08-24,
-nato,NLD,1949-08-24,
-nato,NOR,1949-08-24,
-nato,PRT,1949-08-24,
-nato,GBR,1949-08-24,
-nato,USA,1949-08-24,
-nato,GRC,1952-02-18,
-nato,TUR,1952-02-18,
-nato,DEU,1955-05-06,
-nato,ESP,1982-05-30,
-nato,CZE,1999-03-12,
-nato,HUN,1999-03-12,
-nato,POL,1999-03-12,
-nato,BGR,2004-03-29,
-nato,EST,2004-03-29,
-nato,LVA,2004-03-29,
-nato,LTU,2004-03-29,
-nato,ROU,2004-03-29,
-nato,SVK,2004-03-29,
-nato,SVN,2004-03-29,
-nato,ALB,2009-04-01,
-nato,HRV,2009-04-01,
-nato,MNE,2017-06-05,
-nato,MKD,2020-03-27,
-nato,FIN,2023-04-04,
-nato,SWE,2024-03-07,
+group,code,valid_from,valid_to,note
+p5,CHN,1945-10-24,,
+p5,FRA,1945-10-24,,
+p5,GBR,1945-10-24,,
+p5,USA,1945-10-24,,
+p5,SUN,1945-10-24,1991-12-24,
+p5,RUS,1991-12-24,,
+eu,BEL,1958-01-01,,
+eu,FRA,1958-01-01,,
+eu,DEU,1958-01-01,,
+eu,ITA,1958-01-01,,
+eu,LUX,1958-01-01,,
+eu,NLD,1958-01-01,,
+eu,DNK,1973-01-01,,
+eu,IRL,1973-01-01,,
+eu,GBR,1973-01-01,2020-01-31,
+eu,GRC,1981-01-01,,
+eu,ESP,1986-01-01,,
+eu,PRT,1986-01-01,,
+eu,AUT,1995-01-01,,
+eu,FIN,1995-01-01,,
+eu,SWE,1995-01-01,,
+eu,CYP,2004-05-01,,
+eu,CZE,2004-05-01,,
+eu,EST,2004-05-01,,
+eu,HUN,2004-05-01,,
+eu,LVA,2004-05-01,,
+eu,LTU,2004-05-01,,
+eu,MLT,2004-05-01,,
+eu,POL,2004-05-01,,
+eu,SVK,2004-05-01,,
+eu,SVN,2004-05-01,,
+eu,BGR,2007-01-01,,
+eu,ROU,2007-01-01,,
+eu,HRV,2013-07-01,,
+nato,BEL,1949-08-24,,
+nato,CAN,1949-08-24,,
+nato,DNK,1949-08-24,,
+nato,FRA,1949-08-24,,
+nato,ISL,1949-08-24,,
+nato,ITA,1949-08-24,,
+nato,LUX,1949-08-24,,
+nato,NLD,1949-08-24,,
+nato,NOR,1949-08-24,,
+nato,PRT,1949-08-24,,
+nato,GBR,1949-08-24,,
+nato,USA,1949-08-24,,
+nato,GRC,1952-02-18,,
+nato,TUR,1952-02-18,,
+nato,DEU,1955-05-06,,
+nato,ESP,1982-05-30,,
+nato,CZE,1999-03-12,,
+nato,HUN,1999-03-12,,
+nato,POL,1999-03-12,,
+nato,BGR,2004-03-29,,
+nato,EST,2004-03-29,,
+nato,LVA,2004-03-29,,
+nato,LTU,2004-03-29,,
+nato,ROU,2004-03-29,,
+nato,SVK,2004-03-29,,
+nato,SVN,2004-03-29,,
+nato,ALB,2009-04-01,,
+nato,HRV,2009-04-01,,
+nato,MNE,2017-06-05,,
+nato,MKD,2020-03-27,,
+nato,FIN,2023-04-04,,
+nato,SWE,2024-03-07,,
+nam,AFG,1961-09-01,,
+nam,DZA,1961-09-01,,
+nam,MMR,1961-09-01,,
+nam,KHM,1961-09-01,,
+nam,LKA,1961-09-01,,
+nam,COD,1961-09-01,,
+nam,CUB,1961-09-01,,
+nam,CYP,1961-09-01,2004-05-01,
+nam,EGY,1961-09-01,,
+nam,ETH,1961-09-01,,
+nam,GHA,1961-09-01,,
+nam,GIN,1961-09-01,,
+nam,IND,1961-09-01,,
+nam,IDN,1961-09-01,,
+nam,IRQ,1961-09-01,,
+nam,LBN,1961-09-01,,
+nam,MLI,1961-09-01,,
+nam,MAR,1961-09-01,,
+nam,NPL,1961-09-01,,
+nam,SAU,1961-09-01,,
+nam,SOM,1961-09-01,,
+nam,SDN,1961-09-01,,
+nam,TUN,1961-09-01,,
+nam,YEM,1961-09-01,,
+nam,YUG,1961-09-01,1992-09-30,
+nam,AGO,1964-10-05,,
+nam,BDI,1964-10-05,,
+nam,CMR,1964-10-05,,
+nam,CAF,1964-10-05,,
+nam,TCD,1964-10-05,,
+nam,COG,1964-10-05,,
+nam,BEN,1964-10-05,,
+nam,JOR,1964-10-05,,
+nam,KEN,1964-10-05,,
+nam,KWT,1964-10-05,,
+nam,LAO,1964-10-05,,
+nam,LBR,1964-10-05,,
+nam,LBY,1964-10-05,,
+nam,MWI,1964-10-05,,
+nam,MRT,1964-10-05,,
+nam,NGA,1964-10-05,,
+nam,SEN,1964-10-05,,
+nam,SLE,1964-10-05,,
+nam,SYR,1964-10-05,,
+nam,TZA,1964-10-05,,
+nam,TGO,1964-10-05,,
+nam,UGA,1964-10-05,,
+nam,ZMB,1964-10-05,,
+nam,BWA,1970-09-08,,
+nam,GNQ,1970-09-08,,
+nam,GAB,1970-09-08,,
+nam,GUY,1970-09-08,,
+nam,JAM,1970-09-08,,
+nam,LSO,1970-09-08,,
+nam,MYS,1970-09-08,,
+nam,RWA,1970-09-08,,
+nam,SGP,1970-09-08,,
+nam,SWZ,1970-09-08,,
+nam,TTO,1970-09-08,,
+nam,ARE,1970-09-08,,
+nam,YMD,1970-09-08,1990-05-22,
+nam,ARG,1973-09-05,1991-09-19,
+nam,BHR,1973-09-05,,
+nam,BGD,1973-09-05,,
+nam,BTN,1973-09-05,,
+nam,CHL,1973-09-05,,
+nam,GMB,1973-09-05,,
+nam,CIV,1973-09-05,,
+nam,MDG,1973-09-05,,
+nam,MLT,1973-09-05,2004-05-01,
+nam,MUS,1973-09-05,,
+nam,NER,1973-09-05,,
+nam,OMN,1973-09-05,,
+nam,PER,1973-09-05,,
+nam,QAT,1973-09-05,,
+nam,BFA,1973-09-05,,
+nam,BLZ,1976-08-15,,
+nam,CPV,1976-08-15,,
+nam,COM,1976-08-15,,
+nam,GNB,1976-08-15,,
+nam,MDV,1976-08-15,,
+nam,MOZ,1976-08-15,,
+nam,PRK,1976-08-15,,
+nam,PSE,1976-08-15,,
+nam,PAN,1976-08-15,,
+nam,STP,1976-08-15,,
+nam,SYC,1976-08-15,,
+nam,VNM,1976-08-15,,
+nam,BOL,1979-09-03,,
+nam,GRD,1979-09-03,,
+nam,IRN,1979-09-03,,
+nam,NAM,1979-09-03,,
+nam,NIC,1979-09-03,,
+nam,PAK,1979-09-03,,
+nam,ZWE,1979-09-03,,
+nam,BHS,1983-03-07,,
+nam,BRB,1983-03-07,,
+nam,COL,1983-03-07,,
+nam,DJI,1983-03-07,,
+nam,ECU,1983-03-07,,
+nam,LCA,1983-03-07,,
+nam,SUR,1983-03-07,,
+nam,VUT,1983-03-07,,
+nam,VEN,1989-09-04,,
+nam,MNG,1991-09-02,,
+nam,BRN,1992-09-01,,
+nam,GTM,1992-09-01,,
+nam,PNG,1992-09-01,,
+nam,PHL,1992-09-01,,
+nam,UZB,1992-09-01,,
+nam,ERI,1993-10-04,,
+nam,HND,1993-10-04,,
+nam,THA,1993-10-04,,
+nam,ZAF,1994-05-31,,
+nam,TKM,1995-10-18,,
+nam,BLR,1998-09-02,,
+nam,DOM,2000-04-08,,
+nam,VCT,2003-02-20,,
+nam,TLS,2003-02-20,,
+nam,ATG,2006-05-29,,
+nam,DMA,2006-05-29,,
+nam,HTI,2006-09-16,,
+nam,KNA,2006-09-16,,
+nam,AZE,2011-05-25,,
+nam,FJI,2011-05-25,,
+nam,SSD,2024-01-17,,
+oic,AFG,1969-09-22,1980-01-28,
+oic,AFG,1989-03-13,,suspended 1980-01-28 to 1989-03-13
+oic,DZA,1969-09-22,,
+oic,TCD,1969-09-22,,
+oic,EGY,1969-09-22,1979-05-09,
+oic,EGY,1984-01-30,,suspended 1979-05-09 to 1984-01-30
+oic,GIN,1969-09-22,,
+oic,IDN,1969-09-22,,
+oic,IRN,1969-09-22,,
+oic,JOR,1969-09-22,,
+oic,KWT,1969-09-22,,
+oic,LBN,1969-09-22,,
+oic,LBY,1969-09-22,,
+oic,MYS,1969-09-22,,
+oic,MLI,1969-09-22,,
+oic,MRT,1969-09-22,,
+oic,MAR,1969-09-22,,
+oic,NER,1969-09-22,,
+oic,PAK,1969-09-22,,
+oic,SAU,1969-09-22,,
+oic,SEN,1969-09-22,,
+oic,SOM,1969-09-22,,
+oic,SDN,1969-09-22,,
+oic,TUN,1969-09-22,,
+oic,TUR,1969-09-22,,
+oic,YMD,1969-09-22,1990-05-22,
+oic,YEM,1969-09-22,,
+oic,BHR,1972-02-29,,formal admission; Wikipedia gives 1970
+oic,OMN,1972-02-29,,formal admission; Wikipedia gives 1970
+oic,QAT,1972-02-29,,formal admission; Wikipedia gives 1970
+oic,SLE,1972-02-29,,
+oic,SYR,1972-02-29,2012-08-16,formal admission; Wikipedia gives 1970
+oic,SYR,2025-03-07,,suspended 2012-08-16 to 2025-03-07
+oic,ARE,1972-02-29,,formal admission; Wikipedia gives 1971
+oic,BGD,1974-02-23,,
+oic,GAB,1974-02-23,,
+oic,GMB,1974-02-23,,
+oic,GNB,1974-02-23,,
+oic,PSE,1974-02-23,,formal admission; Wikipedia gives 1969
+oic,UGA,1974-02-23,,
+oic,BFA,1975-01-01,,year of admission; day not known
+oic,CMR,1975-01-01,,year of admission; day not known
+oic,COM,1976-05-01,,month of admission; day not known
+oic,IRQ,1976-05-01,,month of admission; day not known
+oic,MDV,1976-05-01,,month of admission; day not known
+oic,DJI,1978-04-01,,month of admission; day not known
+oic,BEN,1982-08-01,,month of admission; day not known
+oic,BRN,1984-01-15,,
+oic,NGA,1986-01-09,,
+oic,AZE,1991-12-08,,
+oic,TKM,1992-06-01,,month of admission; day not known
+oic,ALB,1992-12-01,,month of admission; day not known
+oic,KGZ,1992-12-01,,month of admission; day not known
+oic,TJK,1992-12-01,,month of admission; day not known
+oic,MOZ,1994-12-10,,
+oic,KAZ,1995-12-12,,
+oic,UZB,1996-10-02,,formal admission; Wikipedia gives 1995
+oic,SUR,1996-12-09,,
+oic,TGO,1997-10-02,,
+oic,GUY,1998-10-01,,month of admission; day not known
+oic,CIV,2001-06-27,,
+g77,AFG,1964-06-15,,founder
+g77,DZA,1964-06-15,,founder
+g77,ARG,1964-06-15,,founder
+g77,BGD,1964-06-15,,founder
+g77,BEN,1964-06-15,,founder
+g77,BOL,1964-06-15,,founder
+g77,BRA,1964-06-15,,founder
+g77,BFA,1964-06-15,,founder
+g77,BDI,1964-06-15,,founder
+g77,KHM,1964-06-15,,founder
+g77,CMR,1964-06-15,,founder
+g77,CAF,1964-06-15,,founder
+g77,TCD,1964-06-15,,founder
+g77,CHL,1964-06-15,,founder
+g77,COL,1964-06-15,,founder
+g77,COG,1964-06-15,,founder
+g77,COD,1964-06-15,,founder
+g77,CRI,1964-06-15,,founder
+g77,DOM,1964-06-15,,founder
+g77,ECU,1964-06-15,,founder
+g77,EGY,1964-06-15,,founder
+g77,SLV,1964-06-15,,founder
+g77,ETH,1964-06-15,,founder
+g77,GAB,1964-06-15,,founder
+g77,GHA,1964-06-15,,founder
+g77,GTM,1964-06-15,,founder
+g77,GIN,1964-06-15,,founder
+g77,HTI,1964-06-15,,founder
+g77,HND,1964-06-15,,founder
+g77,IND,1964-06-15,,founder
+g77,IDN,1964-06-15,,founder
+g77,IRN,1964-06-15,,founder
+g77,IRQ,1964-06-15,,founder
+g77,JAM,1964-06-15,,founder
+g77,JOR,1964-06-15,,founder
+g77,KEN,1964-06-15,,founder
+g77,KWT,1964-06-15,,founder
+g77,LAO,1964-06-15,,founder
+g77,LBN,1964-06-15,,founder
+g77,LBR,1964-06-15,,founder
+g77,LBY,1964-06-15,,founder
+g77,MDG,1964-06-15,,founder
+g77,MYS,1964-06-15,,founder
+g77,MLI,1964-06-15,,founder
+g77,MRT,1964-06-15,,founder
+g77,MAR,1964-06-15,,founder
+g77,MMR,1964-06-15,,founder
+g77,NPL,1964-06-15,,founder
+g77,NIC,1964-06-15,,founder
+g77,NER,1964-06-15,,founder
+g77,NGA,1964-06-15,,founder
+g77,PAK,1964-06-15,,founder
+g77,PAN,1964-06-15,,founder
+g77,PRY,1964-06-15,,founder
+g77,PER,1964-06-15,,founder
+g77,PHL,1964-06-15,,founder
+g77,RWA,1964-06-15,,founder
+g77,SAU,1964-06-15,,founder
+g77,SEN,1964-06-15,,founder
+g77,SLE,1964-06-15,,founder
+g77,SOM,1964-06-15,,founder
+g77,LKA,1964-06-15,,founder
+g77,SDN,1964-06-15,,founder
+g77,SYR,1964-06-15,,founder
+g77,TZA,1964-06-15,,founder
+g77,THA,1964-06-15,,founder
+g77,TGO,1964-06-15,,founder
+g77,TTO,1964-06-15,,founder
+g77,TUN,1964-06-15,,founder
+g77,UGA,1964-06-15,,founder
+g77,URY,1964-06-15,,founder
+g77,VEN,1964-06-15,,founder
+g77,VNM,1964-06-15,,founder
+g77,YEM,1964-06-15,,founder
+g77,AGO,1976-12-01,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,ATG,1981-11-13,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,BHS,1973-10-26,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,BHR,1971-09-21,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,BRB,1966-12-12,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,BLZ,1981-09-25,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,BTN,1971-09-21,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,BWA,1966-10-22,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,BRN,1984-09-28,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,CPV,1975-11-10,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,COM,1975-11-18,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,CUB,1964-06-15,,joined after 1964; date not known
+g77,DJI,1977-10-28,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,DMA,1978-11-03,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,GNQ,1968-11-19,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,ERI,1993-11-01,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,SWZ,1968-11-07,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,FJI,1970-10-13,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,GMB,1965-11-05,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,GRD,1974-09-30,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,GNB,1974-09-30,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,GUY,1966-10-22,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,CIV,1964-06-15,,joined after 1964; date not known
+g77,LSO,1966-10-22,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,MWI,1965-11-05,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,MDV,1965-11-05,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,MHL,1991-10-16,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,MUS,1968-06-12,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,FSM,1991-10-16,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,MNG,1964-06-15,,joined after 1964; date not known
+g77,MOZ,1975-11-10,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,NAM,1990-11-01,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,PRK,1991-10-16,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,OMN,1971-10-07,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,PNG,1975-11-10,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,QAT,1971-10-07,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,KNA,1983-10-27,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,LCA,1979-09-21,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,VCT,1980-10-22,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,WSM,1976-12-01,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,STP,1975-11-10,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,SYC,1976-10-21,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,SGP,1965-11-05,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,SLB,1978-11-03,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,ZAF,1964-06-15,,joined after 1964; date not known
+g77,SUR,1975-12-05,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,TJK,1992-08-25,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,TLS,2002-10-16,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,TON,1999-11-09,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,TKM,1992-08-25,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,ARE,1971-10-07,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,VUT,1981-09-25,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,ZMB,1965-11-05,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,ZWE,1980-10-22,,approximate: from the first UN vote recorded for it; the Group publishes no dates of joining
+g77,MEX,1964-06-15,1994-05-18,founder; left on joining the OECD
+g77,KOR,1964-06-15,1996-12-12,founder; left on joining the OECD
+g77,YUG,1964-06-15,2003-02-04,founder; could not take part from the 1990s; removed in 2003
+g77,CYP,1964-06-15,2004-05-01,founder; left on joining the European Union
+g77,MLT,1976-01-01,2004-05-01,joined 1976 (day not known); left on joining the European Union
+g77,ROU,1976-01-01,2007-01-01,joined 1976 (day not known); left on joining the European Union
+g77,PLW,2002-01-01,2004-01-01,"joined 2002, withdrew 2004 (days not known)"
+g77,BIH,1992-05-22,2020-02-01,from UN admission (approximate); removed from the Group's list in February 2020
+g77,AZE,2019-09-27,,joined at the ministerial meeting of 27 September 2019
+g77,SSD,2014-10-03,,joined by October 2014 (reported 3 October 2014)
+g77,KIR,2014-01-01,,approximate: applied in 2013; date of joining not found
+g77,NRU,2014-01-01,,approximate: not on the Group's list of about 2010; date of joining not found
+g77,PSE,1976-01-01,,approximate: joined as the Palestine Liberation Organization in the 1970s
+g77,CHN,1964-06-15,,"listed by the Group as a member; China does not regard itself as one, and the Group speaks as 'the Group of 77 and China'"

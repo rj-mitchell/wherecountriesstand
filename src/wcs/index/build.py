@@ -173,6 +173,26 @@ class Indexer:
         return total
 
 
+def regroup(settings: Settings, countries: Countries, index: SearchIndex | None = None) -> dict[str, int]:
+    """Bring every passage's groups up to date with the reference data (data_static/memberships.csv and the rest),
+    in place: nothing is re-read or re-embedded. Returns the passages changed in each table."""
+    from wcs.index.lance import PASSAGES, VECTORS
+
+    index = index or SearchIndex(settings.index_dir, int(settings.embedding.get("dim", 384)))
+    out = {}
+    for name in (PASSAGES, VECTORS):
+        changes = []
+        for r in index.group_rows(name):
+            new = speaker_groups(r, countries)
+            if new != sorted(r["groups"] or []):
+                changes.append({"passage_id": r["passage_id"], "groups": new})
+        index.set_groups(name, changes)
+        out[name] = len(changes)
+    if any(out.values()):
+        index.build_indices()
+    return out
+
+
 def embed_pending(settings: Settings, index: SearchIndex, state: State, embedder: Embedder, *,
                   max_seconds: float | None = None, batch: int = 2000) -> int:
     """Embed the passages of indexed-but-unembedded source-years, newest first. Returns passages embedded."""

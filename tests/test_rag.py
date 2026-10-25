@@ -152,3 +152,13 @@ def test_lead_ins_in_pieces_are_not_claims():
               {"text": " The United States then voted against every resolution on the subject since 1992. "}]
     statuses = [s.status for s in verify(blocks, src).segments]
     assert statuses == ["connective", "connective", "cited", "unsupported"]
+
+
+def test_new_blocs_are_read_from_questions():
+    c = countries()
+    assert parse_offline("What has the Group of 77 said about debt relief?", c, TODAY).filters.groups == ["g77"]
+    p = parse_offline("How have Non-Aligned Movement and OIC members spoken about Palestine?", c, TODAY)
+    assert set(p.filters.groups) == {"nam", "oic"} and p.group_by == "bloc"
+    assert parse_offline("What has been said about the OIC?", c, TODAY).filters.groups == []
+    p = parse_offline("How have members of the Organisation of Islamic Cooperation spoken about Gaza?", c, TODAY)
+    assert p.filters.groups == ["oic"]

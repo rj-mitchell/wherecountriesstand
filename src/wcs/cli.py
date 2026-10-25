@@ -282,6 +282,17 @@ def index(years: str = typer.Option(None), source: list[str] = typer.Option(None
 
 
 @app.command()
+def regroup() -> None:
+    """Update each passage's groups after the reference data changes (memberships.csv, groups.csv), without
+    re-indexing or re-embedding."""
+    from wcs.index.build import regroup as run_regroup
+    from wcs.reference.countries import countries
+
+    for table, n in run_regroup(load_settings(), countries()).items():
+        typer.echo(f"{table}: {n} passages regrouped")
+
+
+@app.command()
 def embed(max_seconds: float = typer.Option(None, help="stop after about this long (resumable)")) -> None:
     """Embed indexed passages for meaning search, newest years first."""
     from wcs.embed.base import get_embedder

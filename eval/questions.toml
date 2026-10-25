@@ -9,7 +9,7 @@
 # "default" means the site's default range (the last 10 years) because the question gives no dates; `date_from` alone
 # leaves the end open. `<field>_any` lists acceptable alternatives ("General Assembly resolutions" may or may not limit
 # the statements to the General Assembly). `sources`: "sc" Security Council, "gd" General Debate (none = both). `groups` use the
-# reference keys (p5, council_elected, eu, nato, au, ldc, lldc, sids, region:africa ...).
+# reference keys (p5, council_elected, eu, nato, au, g77, nam, oic, ldc, lldc, sids, region:africa ...).
 # The questions are read as if today were 25 October 2026.
 
 today = "2026-10-25"
@@ -212,6 +212,24 @@ id = "elected-members"
 question = "What have elected members of the Security Council said about the Council's working methods?"
 category = "group"
 expect = { groups = ["council_elected"], sources = ["sc"], date_from = "default", sources_any = [["sc"], []] }
+
+[[q]]
+id = "g77-debt"
+question = "What has the Group of 77 said about sovereign debt and the international financial architecture?"
+category = "group"
+expect = { groups = ["g77"], date_from = "default" }
+
+[[q]]
+id = "oic-gaza"
+question = "How have members of the Organisation of Islamic Cooperation spoken about Gaza in the Security Council?"
+category = "group"
+expect = { groups = ["oic"], sources = ["sc"], date_from = "default" }
+
+[[q]]
+id = "nam-coercive"
+question = "What have Non-Aligned Movement members said about unilateral coercive measures?"
+category = "group"
+expect = { groups = ["nam"], date_from = "default" }
 
 # ---- one body -----------------------------------------------------------------------------------------------------
 

@@ -17,7 +17,7 @@ from wcs.reference.roles import ROLE_LABEL
 
 _SENTENCE = re.compile(r"(?<=[.!?])\s+(?=[A-Z\"“(])")
 BLOCK_WORDS = 70
-TITLE_GROUPS = ("p5", "council_elected", "council_guest", "eu", "nato", "au", "sids", "ldc")
+TITLE_GROUPS = ("p5", "council_elected", "council_guest", "eu", "nato", "au", "oic", "nam", "g77", "sids", "ldc")
 VOTE_LABEL = {"Y": "In favour", "N": "Against", "A": "Abstaining", "X": "Not voting"}
 
 

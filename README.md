@@ -45,8 +45,8 @@ UN's General Debate website), with rights of reply from 2000. `wcs serve` runs t
                                            ├─► loaders ─► Parquet (zstd, by source and year) ─► DuckDB
  General Assembly votes (UN) ──────────────┘      │
                                           ▼
- UN M49 + data_static/ ─► countries: UN names on the date, groups on the date (region, P5, EU, NATO, AU, LDC,
-                          LLDC, SIDS, place at a Council meeting)
+ UN M49 + data_static/ ─► countries: UN names on the date, groups on the date (region, P5, EU, NATO, AU, G77,
+                          NAM, OIC, LDC, LLDC, SIDS, place at a Council meeting)
                                           │
                                           ▼
                         LanceDB: BM25 passages + vectors (local model), filtered by body, date, country,
@@ -121,10 +121,10 @@ uv run ruff check src tests scripts
 * **The General Debate from 2026** comes first from the UN's General Debate website: the delegation's English
   text (as prepared, not as delivered) or an AI transcript of the interpretation, labelled as such, until the
   official record replaces it about a year later. The website's browser check could one day shut this route.
-* **Group memberships** cover the regions, the permanent five, the EU, NATO, the African Union and the UN's lists of
-  least developed, landlocked developing and small island developing States. The Group of 77, the Non-Aligned Movement
-  and the Organisation of Islamic Cooperation are still to add.
-* **The briefing step** is tested with a fake model; it has not yet been run against the real API from this repository.
+* **Group memberships** cover the regions, the permanent five, the EU, NATO, the African Union, the Group of 77,
+  the Non-Aligned Movement, the Organisation of Islamic Cooperation and the UN's lists of least developed, landlocked
+  developing and small island developing States. The Group of 77 publishes no dates of joining, so a few are
+  approximate ([`docs/DATA.md`](docs/DATA.md)).
 
 ## Licence
 

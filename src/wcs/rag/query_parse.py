@@ -21,9 +21,10 @@ from wcs.reference.countries import Countries, norm
 
 log = logging.getLogger(__name__)
 
-GROUP_KEYS = ("p5", "council_elected", "council_guest", "eu", "nato", "au", "ldc", "lldc", "sids",
+GROUP_KEYS = ("p5", "council_elected", "council_guest", "eu", "nato", "au", "g77", "nam", "oic", "ldc", "lldc", "sids",
               "region:africa", "region:americas", "region:asia", "region:europe", "region:oceania")
-GroupKey = Literal["p5", "council_elected", "council_guest", "eu", "nato", "au", "ldc", "lldc", "sids",
+GroupKey = Literal["p5", "council_elected", "council_guest", "eu", "nato", "au", "g77", "nam", "oic", "ldc", "lldc",
+                   "sids",
                    "region:africa", "region:americas", "region:asia", "region:europe", "region:oceania"]
 SourceKey = Literal["sc", "gd"]
 GroupBy = Literal["region", "council", "bloc"]
@@ -35,6 +36,11 @@ GROUP_PHRASES = {
     "european union": "eu", "eu members": "eu", "eu member states": "eu", "eu countries": "eu",
     "nato": "nato",
     "african union": "au", "au members": "au", "au member states": "au",
+    "group of 77": "g77", "group of seventy-seven": "g77", "g77": "g77", "g-77": "g77", "g 77": "g77",
+    "non-aligned movement": "nam", "non-aligned countries": "nam", "non-aligned states": "nam", "non-aligned": "nam",
+    "nam members": "nam",
+    "organisation of islamic cooperation": "oic", "organization of islamic cooperation": "oic",
+    "organisation of the islamic conference": "oic", "organization of the islamic conference": "oic", "oic": "oic",
     "small island developing states": "sids", "small island states": "sids", "small island": "sids", "sids": "sids",
     "least developed countries": "ldc", "least developed": "ldc", "ldcs": "ldc",
     "landlocked developing countries": "lldc", "landlocked": "lldc",
@@ -130,6 +136,7 @@ QUESTION_WORDS = {
 # A country named after one of these words is the subject ("about Haiti", "the war in Sudan"), not who spoke.
 TOPIC_WORDS = {"about", "on", "regarding", "concerning", "towards", "toward", "against", "over", "into", "of",
                "in", "with", "for", "between", "situation", "question", "crisis", "conflict", "war", "invasion"}
+MEMBER_WORDS = {"members", "states", "countries", "nations", "governments", "leaders"}
 # ... and so is one followed by one of these ("the United States embargo", "the South China Sea", "NATO enlargement")
 TOPIC_AFTER = {"embargo", "sanctions", "blockade", "invasion", "occupation", "war", "nuclear", "programme", "program",
                "dam", "border", "conflict", "crisis", "situation", "question", "issue", "dispute", "sea",
@@ -174,9 +181,11 @@ def groups_in(question: str) -> list[tuple[str, str]]:
         at = q.find(p)
         if at < 0:
             continue
-        before = q[:at].split()[-1:] or [""]
+        before = q[:at].split()[-2:] or [""]
         after = q[at + len(p):].split()[:1] or [""]
-        if before[0] not in TOPIC_WORDS and after[0] not in TOPIC_AFTER:
+        # "members of the OIC" names speakers, though "of" usually marks a subject
+        members_of = before[-1] == "of" and len(before) == 2 and before[0] in MEMBER_WORDS
+        if (members_of or before[-1] not in TOPIC_WORDS) and after[0] not in TOPIC_AFTER:
             out.append((GROUP_PHRASES[phrase], phrase))
         q = q.replace(p, " ")
     return out
@@ -265,12 +274,13 @@ Rules:
   A topic about a country ("the situation in Syria") is not a country filter unless the question asks what that
   country itself said.
 - groups: only when the question restricts speakers to a group: p5 (permanent members of the Security Council),
-  council_elected (elected members), council_guest (invited non-members), eu, nato, au (African Union), ldc (least
-  developed countries), lldc (landlocked developing countries), sids (small island developing States), or a region:
+  council_elected (elected members), council_guest (invited non-members), eu, nato, au (African Union), g77 (Group of
+  77 and China), nam (Non-Aligned Movement), oic (Organisation of Islamic Cooperation), ldc (least developed countries), lldc (landlocked developing countries), sids (small island developing States), or a region:
   region:africa, region:americas, region:asia, region:europe, region:oceania. When the question compares groups
   ("how do African and European States differ"), leave groups empty and set group_by.
 - group_by: "council" when the question is about positions within the Security Council (permanent vs elected
-  members); "bloc" when it compares blocs (EU, NATO, AU, SIDS, LDCs); otherwise "region".
+  members); "bloc" when it compares blocs (EU, NATO, AU, OIC,
+  Non-Aligned Movement, G77, SIDS, LDCs); otherwise "region".
 - wants_votes: true if the question is about how countries voted.
 - interpretation: one plain sentence describing the filters you chose, in British English."""
 

@@ -37,6 +37,9 @@ GROUP_LABELS = {
     "eu": "European Union member States",
     "nato": "NATO members",
     "au": "African Union member States",
+    "oic": "Organisation of Islamic Cooperation member States",
+    "nam": "Non-Aligned Movement members",
+    "g77": "Group of 77 and China",
     "sids": "Small island developing States",
     "ldc": "Least developed countries",
     "group_statement": "Statements on behalf of groups",
@@ -45,7 +48,9 @@ GROUP_LABELS = {
     "chair": "The presiding chair",
     "other": "Other",
 }
-BLOC_ORDER = ("eu", "nato", "au", "sids", "ldc")
+# the smaller and more specific blocs first: most members of the Organisation of Islamic Cooperation and nearly all
+# of the African Union are also in the Group of 77 and the Non-Aligned Movement
+BLOC_ORDER = ("eu", "nato", "au", "oic", "sids", "ldc", "nam", "g77")
 GROUP_BY = ("region", "council", "bloc")
 
 

@@ -122,7 +122,8 @@ GROUP_BY_INSTRUCTIONS = {
     ),
     "bloc": (
         "Group the countries by the memberships given in the result titles (the European Union, NATO, the African "
-        "Union, small island developing States, least developed countries), and the rest by region. Say plainly "
+        "Union, the Organisation of Islamic Cooperation, small island developing States, least developed countries, "
+        "the Non-Aligned Movement, the Group of 77 and China), and the rest by region. Say plainly "
         "where groups said similar things."
     ),
 }

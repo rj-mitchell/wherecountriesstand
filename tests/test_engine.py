@@ -93,3 +93,19 @@ def test_chunking():
     text = " ".join(f"Sentence {i} is here." for i in range(200))
     chunks = chunk_text(text, 100)
     assert len(chunks) > 1 and all(len(c.split()) <= 110 for c in chunks)
+
+
+def test_regroup_updates_groups_in_place(engine, settings):
+    from wcs.index.build import regroup
+    from wcs.index.lance import PASSAGES, VECTORS
+
+    index = engine.index
+    for name in (PASSAGES, VECTORS):   # as if indexed before the Group of 77 was added
+        index.set_groups(name, [{"passage_id": "sc:S/PV.9000:0005#0", "groups": ["region:africa"]}])
+    vectors_before = index.vectors().count_rows()
+    assert regroup(settings, countries(), index) == {PASSAGES: 1, VECTORS: 1}
+    rows = {r["passage_id"]: r["groups"] for r in index.group_rows(VECTORS)}
+    assert {"g77", "nam", "au", "council_elected"} <= set(rows["sc:S/PV.9000:0005#0"])
+    assert index.vectors().count_rows() == vectors_before
+    assert regroup(settings, countries(), index) == {PASSAGES: 0, VECTORS: 0}
+    assert ids(engine.search("climate finance", Filters(groups=["g77"])))
