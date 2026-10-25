@@ -32,8 +32,17 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from wcs.api.usage import (RateLimiter, StateDB, cache_key, cached_events, check_caps, record_failure,
-                           record_usage, store_events, visitor_key)
+from wcs.api.usage import (
+    RateLimiter,
+    StateDB,
+    cache_key,
+    cached_events,
+    check_caps,
+    record_failure,
+    record_usage,
+    store_events,
+    visitor_key,
+)
 from wcs.config import REPO_ROOT, Settings, load_settings
 from wcs.rag.pipeline import AskRequest, Pipeline
 
