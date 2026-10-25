@@ -98,6 +98,26 @@ def bootstrap(embed_hours: float = typer.Option(0, help="embed for up to this lo
     typer.echo("Done. Meaning search fills in over the next scheduled updates (`wcs update --embed-seconds`).")
 
 
+@app.command()
+def evaluate(with_model: bool = typer.Option(False, help="have the model read each question (needs an API key)"),
+             only: list[str] = typer.Option(None, help="question ids"),
+             save: bool = typer.Option(True, help="save the results under eval/runs/")) -> None:
+    """Score the site against the test set (eval/questions.toml): how each question is read, and the evidence."""
+    from wcs import evaluate as ev
+
+    results = ev.run(load_settings(), with_model, set(only) if only else None)
+    for r in results:
+        mark = "ok " if r.plan_ok and r.evidence_ok is not False else "-- "
+        typer.echo(f"{mark}{r.id:28} {r.records:3} sources {r.votes} votes  " + "; ".join(r.problems))
+    s = ev.summary(results)
+    typer.echo(f"\nquestions read right: {s['plans_right']}/{s['questions']} (filters {s['fields_right']}/"
+               f"{s['fields']}); evidence right: {s['evidence_right']}/{s['evidence_checked']}")
+    for cat, c in s["by_category"].items():
+        typer.echo(f"  {cat:10} {c['plans_right']}/{c['questions']}")
+    if save:
+        typer.echo(f"saved {ev.save(results, with_model)}")
+
+
 @app.command("fetch-sc")
 def fetch_sc(force: bool = False) -> None:
     """Download the Security Council debates corpus (about 510 MB)."""

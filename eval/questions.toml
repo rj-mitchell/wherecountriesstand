@@ -1,0 +1,364 @@
+# The test set (docs/DECISIONS.md, 10): questions with the filters a careful reader would choose, and what the
+# evidence must contain.
+#
+# Used by `wcs evaluate`, which scores (1) how each question is read: each filter compared with `expect`, and
+# (2) the evidence found: whether it is empty when it should be ("No records found" is the right answer to
+# `no_records` questions), and whether it includes the countries in `include` (at least one source from each).
+#
+# Filters not listed under `expect` are expected to be empty. Dates: `date_from` and `date_to` are compared by year;
+# "default" means the site's default range (the last 10 years) because the question gives no dates; `date_from` alone
+# leaves the end open. `<field>_any` lists acceptable alternatives ("General Assembly resolutions" may or may not limit
+# the statements to the General Assembly). `sources`: "sc" Security Council, "gd" General Debate (none = both). `groups` use the
+# reference keys (p5, council_elected, eu, nato, au, ldc, lldc, sids, region:africa ...).
+# The questions are read as if today were 25 October 2026.
+
+today = "2026-10-25"
+
+# ---- topics, no filters --------------------------------------------------------------------------------------------
+
+[[q]]
+id = "climate-security"
+question = "How have countries described climate change as a threat to peace and security?"
+category = "topic"
+expect = { date_from = "default" }
+
+[[q]]
+id = "veto"
+question = "What has been said about limiting the use of the veto?"
+category = "topic"
+expect = { date_from = "default" }
+
+[[q]]
+id = "sc-reform"
+question = "What do countries want from Security Council reform?"
+category = "topic"
+expect = { date_from = "default" }
+
+[[q]]
+id = "ai"
+question = "What have countries said about artificial intelligence and lethal autonomous weapons?"
+category = "topic"
+expect = { date_from = "default" }
+
+[[q]]
+id = "peacekeeping"
+question = "How have countries spoken about the safety of peacekeepers?"
+category = "topic"
+expect = { date_from = "default" }
+
+[[q]]
+id = "sanctions-humanitarian"
+question = "What concerns have been raised about the humanitarian effects of sanctions?"
+category = "topic"
+expect = { date_from = "default" }
+
+[[q]]
+id = "debt"
+question = "What have countries said about sovereign debt relief for developing countries?"
+category = "topic"
+expect = { date_from = "default" }
+
+[[q]]
+id = "wps"
+question = "How has the women, peace and security agenda been discussed?"
+category = "topic"
+expect = { date_from = "default" }
+
+[[q]]
+id = "cyber"
+question = "What has been said about cyberattacks on critical infrastructure?"
+category = "topic"
+expect = { date_from = "default" }
+
+[[q]]
+id = "nuclear-disarmament"
+question = "What positions have been taken on nuclear disarmament and the Treaty on the Prohibition of Nuclear Weapons?"
+category = "topic"
+expect = { date_from = "default" }
+
+# ---- one country ----------------------------------------------------------------------------------------------------
+
+[[q]]
+id = "ukraine-grain"
+question = "What has Ukraine said about the Black Sea Grain Initiative?"
+category = "country"
+expect = { countries = ["UKR"], date_from = "default" }
+include = ["UKR"]
+
+[[q]]
+id = "china-sea"
+question = "What has China said about the South China Sea?"
+category = "country"
+expect = { countries = ["CHN"], date_from = "default" }
+include = ["CHN"]
+
+[[q]]
+id = "brazil-reform"
+question = "How has Brazil argued for a permanent seat on the Security Council?"
+category = "country"
+expect = { countries = ["BRA"], date_from = "default" }
+include = ["BRA"]
+
+[[q]]
+id = "uk-falklands"
+question = "What has the United Kingdom said about the Falkland Islands?"
+category = "country"
+expect = { countries = ["GBR"], date_from = "default" }
+include = ["GBR"]
+
+[[q]]
+id = "india-terrorism"
+question = "How has India spoken about cross-border terrorism?"
+category = "country"
+expect = { countries = ["IND"], date_from = "default" }
+include = ["IND"]
+
+[[q]]
+id = "russia-nato"
+question = "What has the Russian Federation said about NATO enlargement?"
+category = "country"
+expect = { countries = ["RUS"], date_from = "default" }
+include = ["RUS"]
+
+[[q]]
+id = "iran-nuclear"
+question = "What has Iran said about its nuclear programme and the JCPOA?"
+category = "country"
+expect = { countries = ["IRN"], date_from = "default" }
+include = ["IRN"]
+
+[[q]]
+id = "south-africa-gaza"
+question = "What has South Africa said about Gaza?"
+category = "country"
+expect = { countries = ["ZAF"], date_from = "default" }
+include = ["ZAF"]
+
+[[q]]
+id = "tuvalu-sea-level"
+question = "What has Tuvalu said about sea-level rise and statehood?"
+category = "country"
+expect = { countries = ["TUV"], date_from = "default" }
+
+[[q]]
+id = "ethiopia-gerd"
+question = "What has Ethiopia said about the Grand Ethiopian Renaissance Dam?"
+category = "country"
+expect = { countries = ["ETH"], date_from = "default" }
+include = ["ETH"]
+
+# ---- several countries -------------------------------------------------------------------------------------------
+
+[[q]]
+id = "us-china-taiwan"
+question = "How do the United States and China differ on Taiwan?"
+category = "countries"
+expect = { countries = ["USA", "CHN"], date_from = "default" }
+
+[[q]]
+id = "armenia-azerbaijan"
+question = "What have Armenia and Azerbaijan said about Nagorno-Karabakh?"
+category = "countries"
+expect = { countries = ["ARM", "AZE"], date_from = "default" }
+include = ["ARM", "AZE"]
+
+[[q]]
+id = "india-pakistan-kashmir"
+question = "How have India and Pakistan spoken about Kashmir?"
+category = "countries"
+expect = { countries = ["IND", "PAK"], date_from = "default" }
+include = ["PAK"]
+
+# ---- groups -----------------------------------------------------------------------------------------------------------
+
+[[q]]
+id = "sids-climate"
+question = "How have small island developing States spoken about climate finance?"
+category = "group"
+expect = { groups = ["sids"], date_from = "default" }
+
+[[q]]
+id = "au-reform"
+question = "What have African Union members said about the Ezulwini Consensus?"
+category = "group"
+expect = { groups = ["au"], date_from = "default" }
+
+[[q]]
+id = "p5-veto"
+question = "How have the permanent members explained their vetoes?"
+category = "group"
+expect = { groups = ["p5"], date_from = "default" }
+
+[[q]]
+id = "eu-ukraine"
+question = "What have EU member states said about Russia's invasion of Ukraine?"
+category = "group"
+expect = { groups = ["eu"], date_from = "default" }
+
+[[q]]
+id = "ldc-graduation"
+question = "What have the least developed countries said about graduating from LDC status?"
+category = "group"
+expect = { groups = ["ldc"], date_from = "default" }
+
+[[q]]
+id = "landlocked-transit"
+question = "How have landlocked developing countries described their transit problems?"
+category = "group"
+expect = { groups = ["lldc"], date_from = "default" }
+
+[[q]]
+id = "elected-members"
+question = "What have elected members of the Security Council said about the Council's working methods?"
+category = "group"
+expect = { groups = ["council_elected"], sources = ["sc"], date_from = "default" }
+
+# ---- one body -----------------------------------------------------------------------------------------------------
+
+[[q]]
+id = "gd-multilateralism"
+question = "What have leaders said about multilateralism in the General Debate?"
+category = "body"
+expect = { sources = ["gd"], date_from = "default" }
+
+[[q]]
+id = "sc-sudan"
+question = "How has the Security Council discussed the war in Sudan?"
+category = "body"
+expect = { sources = ["sc"], date_from = "default" }
+
+[[q]]
+id = "sc-haiti"
+question = "What have Security Council members said about the multinational security support mission in Haiti?"
+category = "body"
+expect = { sources = ["sc"], date_from = "default" }
+
+[[q]]
+id = "gd-reply"
+question = "Which countries used their right of reply in the General Debate to respond to criticism?"
+category = "body"
+expect = { sources = ["gd"], date_from = "default" }
+
+# ---- dates ------------------------------------------------------------------------------------------------------------
+
+[[q]]
+id = "iraq-2003"
+question = "What did Security Council members say about Iraq in 2003?"
+category = "dates"
+expect = { sources = ["sc"], date_from = "2003-01-01", date_to = "2003-12-31" }
+
+[[q]]
+id = "libya-2011"
+question = "How did countries justify their positions on Libya in 2011?"
+category = "dates"
+expect = { date_from = "2011-01-01", date_to = "2011-12-31" }
+
+[[q]]
+id = "rwanda-1994"
+question = "What was said in the Security Council about Rwanda in 1994?"
+category = "dates"
+expect = { sources = ["sc"], date_from = "1994-01-01", date_to = "1994-12-31" }
+
+[[q]]
+id = "covid"
+question = "What did countries say about COVID-19 vaccine equity in 2020 and 2021?"
+category = "dates"
+expect = { date_from = "2020-01-01", date_to = "2021-12-31" }
+
+[[q]]
+id = "since-2022-ukraine"
+question = "How has the war in Ukraine been described since 2022?"
+category = "dates"
+expect = { date_from = "2022-01-01" }
+
+[[q]]
+id = "syria-2013-chemical"
+question = "What did countries say about chemical weapons in Syria in 2013?"
+category = "dates"
+expect = { date_from = "2013-01-01", date_to = "2013-12-31" }
+
+# ---- combined -----------------------------------------------------------------------------------------------------
+
+[[q]]
+id = "au-sc-since-2015"
+question = "How have African Union members spoken about Security Council reform in the General Debate since 2015?"
+category = "combined"
+expect = { groups = ["au"], sources = ["gd"], date_from = "2015-01-01" }
+
+[[q]]
+id = "p5-syria-2016"
+question = "What did the permanent members say in the Security Council about Aleppo in 2016?"
+category = "combined"
+expect = { groups = ["p5"], sources = ["sc"], date_from = "2016-01-01", date_to = "2016-12-31" }
+
+[[q]]
+id = "france-mali-sc"
+question = "What did France say in the Security Council about Mali between 2013 and 2022?"
+category = "combined"
+expect = { countries = ["FRA"], sources = ["sc"], date_from = "2013-01-01", date_to = "2022-12-31" }
+include = ["FRA"]
+
+# ---- votes ------------------------------------------------------------------------------------------------------------
+
+[[q]]
+id = "votes-cuba-embargo"
+question = "How have countries voted on ending the United States embargo against Cuba?"
+category = "votes"
+expect = { wants_votes = true, date_from = "default" }
+
+[[q]]
+id = "votes-ukraine-2022"
+question = "How did countries vote on the General Assembly resolutions on Ukraine in 2022?"
+category = "votes"
+expect = { wants_votes = true, date_from = "2022-01-01", date_to = "2022-12-31", sources_any = [[], ["gd"]] }
+
+# ---- sparse: "No records found" is the right answer ---------------------------------------------------------------
+
+[[q]]
+id = "none-tuvalu-1995"
+question = "What did Tuvalu say in the Security Council in 1995?"
+category = "sparse"
+expect = { countries = ["TUV"], sources = ["sc"], date_from = "1995-01-01", date_to = "1995-12-31" }
+no_records = true
+
+[[q]]
+id = "none-south-sudan-2005"
+question = "What did South Sudan say at the United Nations in 2005?"
+category = "sparse"
+expect = { countries = ["SSD"], date_from = "2005-01-01", date_to = "2005-12-31" }
+no_records = true
+
+[[q]]
+id = "none-sc-1985"
+question = "What was said in the Security Council about apartheid in 1985?"
+category = "sparse"
+expect = { sources = ["sc"], date_from = "1985-01-01", date_to = "1985-12-31" }
+no_records = true
+
+[[q]]
+id = "none-future"
+question = "What did countries say in the General Debate in 2030?"
+category = "sparse"
+expect = { sources = ["gd"], date_from = "2030-01-01", date_to = "2030-12-31" }
+no_records = true
+
+[[q]]
+id = "none-quidditch"
+question = "What has been said about Quidditch?"
+category = "sparse"
+expect = { date_from = "default" }
+no_records = true
+
+[[q]]
+id = "none-montenegro-1999"
+question = "What did Montenegro say in the General Debate in 1999?"
+category = "sparse"
+expect = { countries = ["MNE"], sources = ["gd"], date_from = "1999-01-01", date_to = "1999-12-31" }
+no_records = true
+
+[[q]]
+id = "vatican-vote"
+question = "How has the Holy See voted on General Assembly resolutions?"
+category = "votes"
+expect = { countries = ["VAT"], wants_votes = true, date_from = "default", sources_any = [[], ["gd"]] }
+note = "An observer State does not vote; any sources should be statements, and no votes by the Holy See."

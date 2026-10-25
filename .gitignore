@@ -6,3 +6,4 @@ __pycache__/
 .ruff_cache/
 deploy/.env
 deploy/backups/
+eval/runs/

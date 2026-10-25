@@ -95,7 +95,8 @@ _YEAR = r"((?:19|20)\d\d)"
 
 def dates_in(question: str, today: date) -> tuple[date | None, date | None]:
     q = question.lower()
-    m = re.search(rf"\bbetween {_YEAR} and {_YEAR}\b|\bfrom {_YEAR} to {_YEAR}\b|\b{_YEAR}\s*[-–]\s*{_YEAR}\b", q)
+    m = re.search(rf"\bbetween {_YEAR} and {_YEAR}\b|\bfrom {_YEAR} to {_YEAR}\b|\b{_YEAR}\s*[-–]\s*{_YEAR}\b|"
+                  rf"\bin {_YEAR} and {_YEAR}\b", q)
     if m:
         a, b = [int(x) for x in m.groups() if x]
         return date(min(a, b), 1, 1), date(max(a, b), 12, 31)
@@ -116,9 +117,24 @@ def dates_in(question: str, today: date) -> tuple[date | None, date | None]:
     return None, None
 
 
-# A country named after one of these words is the subject ("about Haiti"), not who spoke.
+# Words of the question itself, not of its subject: left out of the search words.
+QUESTION_WORDS = {
+    "what", "which", "who", "whom", "how", "why", "when", "where", "whether", "has", "have", "had", "been", "was",
+    "were", "is", "are", "be", "did", "do", "does", "said", "say", "says", "saying", "spoken", "speak", "spoke",
+    "described", "describe", "explained", "explain", "argued", "argue", "discussed", "discuss", "talked", "mentioned",
+    "stated", "raised", "taken", "made", "used", "the", "a", "an", "of", "to", "in", "on", "for", "and", "or", "their",
+    "its", "they", "them", "there", "any", "most", "often", "countries", "country", "delegations", "members", "member",
+    "states", "positions", "position", "views", "view", "un", "united", "nations", "at", "by", "about", "between",
+}
+
+# A country named after one of these words is the subject ("about Haiti", "the war in Sudan"), not who spoke.
 TOPIC_WORDS = {"about", "on", "regarding", "concerning", "towards", "toward", "against", "over", "into", "of",
-               "situation", "question", "crisis", "conflict", "war", "invasion"}
+               "in", "with", "for", "between", "situation", "question", "crisis", "conflict", "war", "invasion"}
+# ... and so is one followed by one of these ("the United States embargo", "the South China Sea", "NATO enlargement")
+TOPIC_AFTER = {"embargo", "sanctions", "blockade", "invasion", "occupation", "war", "nuclear", "programme", "program",
+               "dam", "border", "conflict", "crisis", "situation", "question", "issue", "dispute", "sea",
+               "enlargement", "expansion", "membership", "summit", "operation", "operations", "intervention",
+               "bombing", "mission", "role", "accession"}
 
 
 def countries_in(question: str, countries: Countries) -> list[tuple[str, str]]:
@@ -137,23 +153,32 @@ def countries_in(question: str, countries: Countries) -> list[tuple[str, str]]:
                     not re.search(rf"\b{re.escape(phrase.capitalize())}\b", question):
                 continue
             code = countries.resolve(phrase)
-            if code and i > 0 and words[i - 1] in TOPIC_WORDS:
+            after = words[i + size] if i + size < len(words) else ""
+            if code and ((i > 0 and words[i - 1] in TOPIC_WORDS) or after in TOPIC_AFTER):
                 used.update(range(i, i + size))
                 continue
             if code and countries.kind(code) != "territory":
-                found.append((code, phrase))
+                if code not in {c for c, _ in found}:
+                    found.append((code, phrase))
                 used.update(range(i, i + size))
     return found
 
 
 def groups_in(question: str) -> list[tuple[str, str]]:
+    """Groups named as speakers ("NATO members"); a group named as the subject ("NATO enlargement", "about the
+    African Union") is left to the search words."""
     q = " " + norm(question) + " "
     out: list[tuple[str, str]] = []
     for phrase in sorted(GROUP_PHRASES, key=len, reverse=True):
         p = " " + norm(phrase) + " "
-        if p in q:
+        at = q.find(p)
+        if at < 0:
+            continue
+        before = q[:at].split()[-1:] or [""]
+        after = q[at + len(p):].split()[:1] or [""]
+        if before[0] not in TOPIC_WORDS and after[0] not in TOPIC_AFTER:
             out.append((GROUP_PHRASES[phrase], phrase))
-            q = q.replace(p, " ")
+        q = q.replace(p, " ")
     return out
 
 
@@ -166,7 +191,8 @@ def parse_offline(question: str, countries: Countries, today: date | None = None
     # "Security Council reform" (or its veto, membership, working methods) is a subject debated everywhere, not a
     # request for the Council's own debates
     council_topic = re.search(r"security council(?:'s)?\s+(?:reform|veto|membership|expansion|enlargement|seats?|"
-                              r"working methods|composition)", ql)
+                              r"working methods|composition)|(?:seats?|reform|expansion|enlargement|membership|"
+                              r"composition)\s+(?:on|of|in)\s+the\s+security council", ql)
     if "security council" in ql and not council_topic:
         sources.append("sc")
     if "general debate" in ql or "general assembly" in ql:
@@ -185,7 +211,8 @@ def parse_offline(question: str, countries: Countries, today: date | None = None
     for w in sorted(strip, key=len, reverse=True):
         text = re.sub(rf"\b{re.escape(w)}\b", " ", text)
     text = re.sub(rf"\b(?:between|since|from|after|before|until|in|to|and)\s+{_YEAR}\b|\b{_YEAR}\b", " ", text)
-    text = " ".join(text.split()) or question
+    # the question's own wording ("what has been said about ...") would match every speech: only the subject is kept
+    text = " ".join(w for w in text.split() if w not in QUESTION_WORDS) or " ".join(text.split()) or question
     bits = []
     if named:
         bits.append("countries: " + ", ".join(countries.name_on(c, today) for c, _ in named))

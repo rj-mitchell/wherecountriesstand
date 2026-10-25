@@ -34,6 +34,25 @@ def test_offline_plan():
     assert p.filters.date_from == date(2016, 1, 1)   # the last ten years by default
 
 
+def test_subjects_are_not_speakers():
+    """Found by the test set (eval/questions.toml): countries and groups named as the subject are search words."""
+    c = countries()
+    for q in ("How has the Security Council discussed the war in Sudan?",
+              "How have countries voted on ending the United States embargo against Cuba?",
+              "What did countries say about chemical weapons in Syria in 2013?"):
+        assert parse_offline(q, c, TODAY).filters.countries == [], q
+    p = parse_offline("What has China said about the South China Sea?", c, TODAY)
+    assert p.filters.countries == ["CHN"]                       # once, as the speaker
+    p = parse_offline("What has the Russian Federation said about NATO enlargement?", c, TODAY)
+    assert p.filters.groups == [] and p.filters.countries == ["RUS"]
+    assert parse_offline("What have NATO members said about Ukraine?", c, TODAY).filters.groups == ["nato"]
+    p = parse_offline("How has Brazil argued for a permanent seat on the Security Council?", c, TODAY)
+    assert p.filters.sources == []
+    p = parse_offline("What did countries say about COVID-19 vaccine equity in 2020 and 2021?", c, TODAY)
+    assert (p.filters.date_from, p.filters.date_to) == (date(2020, 1, 1), date(2021, 12, 31))
+    assert parse_offline("What has been said about Quidditch?", c, TODAY).search_text == "quidditch"
+
+
 def test_short_country_words_need_a_capital():
     p = parse_offline("Did any country chad about reform?", countries(), TODAY)
     assert "TCD" not in p.filters.countries

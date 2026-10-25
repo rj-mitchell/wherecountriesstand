@@ -97,6 +97,15 @@ class Engine:
             self._has_vectors = self.index.stats()["vectors"] > 0
         return self._has_vectors
 
+    def mostly_embedded(self, share: float = 0.9) -> bool:
+        """Whether nearly every passage has been embedded for meaning search (checked every ten minutes): only then
+        can "nothing close in meaning" be trusted to mean nothing relevant."""
+        now = time.monotonic()
+        if getattr(self, "_embedded_checked", (None, 0.0))[1] < now - 600:
+            st = self.index.stats()
+            self._embedded_checked = (st["passages"] > 0 and st["vectors"] >= share * st["passages"], now)
+        return self._embedded_checked[0]
+
     @property
     def embedder(self) -> Embedder | None:
         if self._embedder is None:
@@ -173,6 +182,18 @@ class Engine:
             r, recency=recency, role_weight=role_weight,
             semantic_floor=r.get("semantic_floor", floor), semantic_ceiling=r.get("semantic_ceiling", ceiling),
             **({"today": self.today} if self.today else {}))
+        # An absolute test of relevance. Meaning search always returns the nearest passages, however far off (a
+        # question about Quidditch), and keyword search matches common words, so neither alone can say "nothing
+        # relevant". A passage found by meaning alone must be clearly close; and when even the closest passage is
+        # below the floor (and nearly everything has been embedded), the record holds nothing relevant.
+        if semantic and vec_hits:
+            span = params.semantic_ceiling - params.semantic_floor
+            alone_min = float(r.get("semantic_alone_min", params.semantic_floor + 0.3 * span))
+            best = max((c.cosine for c in cands.values() if c.cosine is not None), default=0.0)
+            if best < params.semantic_floor and self.mostly_embedded():
+                cands = {}
+            else:
+                cands = {k: c for k, c in cands.items() if c.bm25 is not None or (c.cosine or 0.0) >= alone_min}
         scored = rank(list(cands.values()), params)
         lap("rank")
         no_records = not scored
