@@ -16,7 +16,7 @@ when it reports a problem.
      at most monthly, so corrected versions replace them;
    * parses every cached PDF again when the parser changes (no downloads);
    * stores each year that changed.
-3. **General Debate** (from `[live] gd_from_session`, the 81st session of 2026; the corpus covers the sessions
+3. **General Debate** (from `[live] gd_from_session`, the 79th session of 2024; the corpus covers the sessions
    before): see [The General Debate](#the-general-debate) below.
 4. **Index.** Re-indexes the years that changed, then embeds new passages for up to `--embed-seconds`.
 5. **Report.** Writes `data/logs/update-<time>.json` and prints a summary. Exits 1 if something needs attention.
@@ -93,11 +93,13 @@ The report also covers the site: spending against the caps and briefings that fa
 
 ## The General Debate
 
-**Before the 81st session (2025 and earlier)** the General Debate comes from the corpus, which its authors update once
-a year. Its download asks for a guestbook entry, so a new release is fetched by hand into `data/raw/ungd/` and loaded
-with `wcs ingest-gd`, which loads only the sessions before `[live] gd_from_session`.
+**Before the 79th session (2023 and earlier)** the General Debate comes from the corpus, which its authors update
+once a year: `wcs fetch-gd` downloads a new release (making the guestbook entry Dataverse asks for) and `wcs ingest-gd`
+loads it, only the sessions before `[live] gd_from_session`. A new release changes nothing the site uses unless it
+corrects an older session, so this is occasional. The corpus's 2024 and 2025 texts are not the record (the
+delegations' texts as prepared, and AI transcripts), which is why the records take over from 2024.
 
-**From the 81st session (September 2026)** `wcs update` reads the debate from the General Assembly's own verbatim
+**From the 79th session (September 2024)** `wcs update` reads the debate from the General Assembly's own verbatim
 records (`A/<session>/PV.<n>`), with the parser used for the Security Council (`wcs.sources.unga`):
 
 * **Finding the meetings.** The debate falls within each session's first 30 plenary meetings (4 to 17 in 2023 and
@@ -112,7 +114,7 @@ records (`A/<session>/PV.<n>`), with the parser used for the Security Council (`
   attribution does not ("President Pavel:").
 * **Rights of reply** are records of their own (agenda "General debate: right of reply"): the speeches after the
   President calls those who asked to reply, or that open by saying they are a reply. Points of order are left out.
-  For sessions before the 81st, where the corpus has the statements but no replies, `wcs backfill-replies --since 55`
+  For sessions before the 79th, where the corpus has the statements but no replies, `wcs backfill-replies --since 55`
   adds them from the records (from 2000: the 1990s records are laid out in two columns that come out of the PDF in
   the wrong order, and are not read yet). Reloading the corpus keeps them.
 * **Dates.** Each statement has its day, where the corpus has only the session.

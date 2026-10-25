@@ -6,7 +6,7 @@ Checked on 24 October 2026. "Licence" means the terms for republishing, not just
 
 | Source | Coverage | Size | Licence | Access |
 |---|---|---|---|---|
-| [UN General Debate Corpus](https://doi.org/10.7910/DVN/0TJX8Y) (Jankin, Baturo, Dasandi) | 1946–2025, every country's annual statement, English | 10,000+ statements; 71 MB compressed | **CC0** | Harvard Dataverse. The download asks for a short "guestbook" form (name, email), so it is fetched by hand: put `UNGDC_1946-2025.tar.gz` and `Speakers_by_session.xlsx` in `data/raw/ungd/`, then run `wcs ingest-gd`. Version 14, released March 2026: the authors add each new session. |
+| [UN General Debate Corpus](https://doi.org/10.7910/DVN/0TJX8Y) (Jankin, Baturo, Dasandi) | 1946–2025, every country's annual statement, English | 10,000+ statements; 71 MB compressed | **CC0** | Harvard Dataverse. The download asks for a short "guestbook" form (name, email, institution, position, purpose), which `wcs fetch-gd` fills in through Dataverse's API (name and email from `WCS_GUESTBOOK_NAME` and `WCS_GUESTBOOK_EMAIL`), taking the latest version's files and checking their checksums; `wcs ingest-gd` loads them. Version 14, released March 2026: the authors add each new session. Used to the 78th session (2023): its 2024 texts are the delegations' own, as prepared, and its 2025 texts AI transcripts of the interpretation (its README says so), so those sessions come from the UN's records instead. The corpus drops "(spoke in French)"; languages are filled in from the UN's records of the same statements, from 2000 (1,387 statements). Printed paragraph numbers ("81.<tab>") are removed. Tested on the real download (October 2026): 11,141 statements, every country code recognised. |
 | [UN Security Council Debates](https://doi.org/10.7910/DVN/KGVSYH) (Schoenfeld, Eckhard, Patz, van Meegdenburg and others) | 6 January 1992 to 30 December 2023 | 106,088 speeches at 6,595 meetings (including 5,072 from the 2020–21 videoconferences); speeches 474 MB | **CC0** | Harvard Dataverse, direct download: `wcs fetch-sc`. The Dataverse metadata says 1995–2020, but the files run from 1992 to 2023. |
 | [General Assembly voting data](https://digitallibrary.un.org/record/4060887) (UN Dag Hammarskjöld Library) | 1946 to 17 September 2026 (resolution 81/1) | 954,382 rows: one country's vote on one resolution, 5,730 resolutions | © United Nations: **non-commercial use, with attribution** | CSV in the UN Digital Library, updated regularly: `wcs fetch-votes`. It excludes votes on separate paragraphs and on drafts that were not adopted. |
 | [UN M49 standard](https://unstats.un.org/unsd/methodology/m49/overview/) (UN Statistics Division) | Every country or area | 248 rows | UN | `scripts/fetch_m49.py` writes `data_static/m49.csv`: official English short names, regions, and the current lists of LDCs, LLDCs and SIDS. |
@@ -42,14 +42,14 @@ Checked on 24 October 2026. "Licence" means the terms for republishing, not just
   0.98, all the text (see [`VALIDATION.md`](VALIDATION.md)). Closed meetings, which have only a communiqué, are
   recorded as such. Provisional records are fetched again once corrected.
 - **Votes:** the voting data record's file list is read on each run, and a new file is downloaded and converted.
-- **General Debate, 81st session (2026) onwards:** the General Assembly's own verbatim records (`A/<session>/PV.<n>`),
+- **General Debate, 79th session (2024) onwards:** the General Assembly's own verbatim records (`A/<session>/PV.<n>`),
   parsed by the same parser (`wcs.sources.unga`); each statement is the speech the President introduces, with the
   speaker's name and post from the introduction. The records are published about a year after the debate; until
   then each statement comes from the UN's General Debate website (the delegation's English text, or an AI transcript
   of the English interpretation), labelled as not yet the official record and replaced by it when it is published
   (decision 12). Rights of reply are kept as records of their own, from 2000 (decision 13). Checked on the 79th session (2024): all 11 debate meetings, 192
   statements, every Member State that spoke (see [`OPERATIONS.md`](OPERATIONS.md#the-general-debate)). Sessions
-  before the 81st come from the corpus, loaded by hand (it needs a guestbook entry).
+  before the 79th come from the corpus.
 
 What the UN's services do, as found on 24 October 2026:
 

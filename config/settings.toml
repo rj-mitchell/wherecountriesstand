@@ -23,9 +23,10 @@ sc_from = "2024-01-01"
 # fetched record says otherwise.
 sc_after_meeting = 9524
 # From this session on, the General Debate comes from the General Assembly's verbatim records (A/<session>/PV.<n>),
-# parsed by wcs.sources.unga; the corpus (to the 80th session, 2025) keeps the sessions before. The records appear
-# about a year after the debate.
-gd_from_session = 81
+# parsed by wcs.sources.unga; the corpus keeps the sessions before. The records appear about a year after the debate,
+# and until then the General Debate website fills in. From the 79th session (2024): the corpus's texts for 2024 are the
+# delegations' own, as prepared, and for 2025 an AI transcript of the interpretation, not the record.
+gd_from_session = 79
 # Until a session's official records are out, take its statements from the UN's General Debate website
 # (gadebate.un.org; wcs.sources.gadebate), labelled as not yet the official record (docs/DECISIONS.md, 12).
 gd_website = true
@@ -36,6 +37,9 @@ gd_website = true
 sc_meta = "https://dataverse.harvard.edu/api/access/datafile/10809806"
 sc_speakers = "https://dataverse.harvard.edu/api/access/datafile/10809807"
 sc_speeches = "https://dataverse.harvard.edu/api/access/datafile/10809805"
+# The General Debate corpus's guestbook (wcs.sources.ungd.fetch): name and email come from the environment
+# (WCS_GUESTBOOK_NAME, WCS_GUESTBOOK_EMAIL in deploy/.env), never from this file.
+ungd_guestbook = { institution = "Where They Stand", position = "Project lead", purpose = "Research" }
 # UN Digital Library: General Assembly voting data (non-commercial use, with attribution).
 votes_record = "https://digitallibrary.un.org/record/4060887"
 # Where a document symbol resolves to the document itself.

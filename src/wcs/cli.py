@@ -74,6 +74,12 @@ def bootstrap(embed_hours: float = typer.Option(0, help="embed for up to this lo
         typer.echo("Security Council corpus: downloading (about 510 MB) and loading")
         unsc.fetch(s)
         write_by_year(s.parquet_dir, "sc", (r for r in unsc.iter_records(s, ref) if r["date"] < start))
+    if not ungd.archive_path(s):
+        try:
+            typer.echo("General Debate corpus: downloading (about 71 MB)")
+            ungd.fetch(s)
+        except Exception as exc:
+            typer.echo(f"  could not download it: {exc}")
     if ungd.archive_path(s) and not [y for y in years(s.parquet_dir, "gd") if y < 1945 + gd_from_session(s)
                                      and y < 2000]:
         typer.echo("General Debate corpus: loading")
@@ -83,7 +89,7 @@ def bootstrap(embed_hours: float = typer.Option(0, help="embed for up to this lo
         write_by_year(s.parquet_dir, "gd", (r for r in ungd.iter_records(s, ref) if r["session"] < first),
                       keep=is_reply)
     elif not ungd.archive_path(s):
-        typer.echo(f"General Debate corpus: not downloaded (put it in {ungd.raw_dir(s)}: see docs/DATA.md); "
+        typer.echo(f"General Debate corpus: not there (put it in {ungd.raw_dir(s)}: see docs/DATA.md); "
                    "carrying on without it")
     typer.echo("The UN's records since the corpora (first time: several hours, resumable)")
     report = run(s, do_votes=False, do_index=False, reference=ref)
@@ -91,6 +97,7 @@ def bootstrap(embed_hours: float = typer.Option(0, help="embed for up to this lo
     typer.echo("Rights of reply in past General Debates")
     update_general_debate(s, ref, undocs.UNDocs(s), Report(started="bootstrap"),
                           sessions=range(replies_since, gd_from_session(s)))
+    typer.echo(f"  languages of {ungd.add_languages(s, gd_from_session(s))} corpus statements, from the UN's records")
     typer.echo("Keyword index")
     n = Indexer(s, ref).index_all(SOURCES)
     typer.echo(f"  {n} passages")
@@ -220,7 +227,8 @@ def backfill_replies(since: int = typer.Option(..., help="first session, e.g. 55
                      until: int = typer.Option(None, help="last session (default: the one before [live] "
                                                           "gd_from_session)")) -> None:
     """Add the General Debate's rights of reply for past sessions, from the UN's records (the corpus has only the
-    statements). Resumable; records without a text layer (scanned, before the late 1990s) are skipped."""
+    statements), and the languages of the corpus's statements. Resumable; records without a text layer (scanned,
+    before the late 1990s) are skipped."""
     from wcs.reference.countries import countries
     from wcs.sources import undocs
     from wcs.update import Report, gd_from_session, update_general_debate
@@ -231,6 +239,9 @@ def backfill_replies(since: int = typer.Option(..., help="first session, e.g. 55
     changed = update_general_debate(s, countries(), undocs.UNDocs(s), report, sessions=range(since, last + 1))
     for session, info in report.gd.items():
         typer.echo(f"session {session}: {info['replies']} rights of reply from {info['meetings']} meetings")
+    from wcs.sources import ungd
+
+    typer.echo(f"languages of {ungd.add_languages(s, gd_from_session(s))} corpus statements, from the UN's records")
     typer.echo(f"years written: {sorted(changed)}; run `wcs index --source gd` to index them")
     if report.failed:
         typer.echo(f"could not parse: {', '.join(report.failed)}")
@@ -251,7 +262,18 @@ def ingest_gd(years: str = typer.Option(None)) -> None:
     # rights of reply, added from the UN's records (`wcs backfill-replies`), are kept
     counts = write_by_year(s.parquet_dir, "gd", (r for r in ungd.iter_records(s, countries(), _years(years))
                                                  if r["session"] < first), keep=is_reply)
-    typer.echo(f"{sum(counts.values())} statements in {len(counts)} years")
+    typer.echo(f"{sum(counts.values())} statements in {len(counts)} years; languages from the UN's records: "
+               f"{ungd.add_languages(s, first)}")
+
+
+@app.command("fetch-gd")
+def fetch_gd(force: bool = False) -> None:
+    """Download the General Debate corpus (latest version) from Harvard Dataverse, making the guestbook entry it asks
+    for (WCS_GUESTBOOK_NAME and WCS_GUESTBOOK_EMAIL)."""
+    from wcs.sources import ungd
+
+    for path in ungd.fetch(load_settings(), force=force):
+        typer.echo(f"{path} ({path.stat().st_size // 1_000_000} MB)")
 
 
 @app.command("fetch-votes")

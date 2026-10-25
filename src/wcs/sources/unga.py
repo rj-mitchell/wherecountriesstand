@@ -33,7 +33,7 @@ from typing import Any
 from wcs.config import Settings
 from wcs.reference.countries import Countries, norm
 from wcs.reference.roles import classify
-from wcs.sources.speech import language, normalise_text, on_behalf_of
+from wcs.sources.speech import general_debate_behalf, language, normalise_text
 from wcs.sources.unsc import symbol_url
 from wcs.sources.verbatim import CHAIR_SPEAKER, Meeting
 
@@ -237,7 +237,7 @@ def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, se
         if len(text.split()) <= RECORDED_INTRO_WORDS and RECORDED_INTRO.search(text):
             recorded += 1  # the statement itself is printed in an annex, which is not read yet
             continue
-        behalf = on_behalf_of(text)
+        behalf = general_debate_behalf(text)
         key = code or ORGANISATION_KEYS.get(label or "") or re.sub(r"[^A-Za-z]+", "-", label or name).strip("-").upper()[:24]
         out.append({
             "record_id": f"gd:{session}:{key}", "source": "gd", "body": "General Assembly", "date": d,

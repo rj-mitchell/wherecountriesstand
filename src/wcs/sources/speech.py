@@ -101,6 +101,25 @@ def _clean_group(g: str) -> str:
     return g
 
 
+# In the General Debate each statement is a country's own: "on behalf of" there is often a greeting ("On behalf of the
+# African Union, the United Republic of Tanzania and in my own name, I congratulate you") or the speaker's own State
+# or government ("the Council of Ministers of Bosnia and Herzegovina", "the State Union of Serbia and Montenegro").
+_OWN_NAME = re.compile(r"\b(?:in my own name|on my own behalf|(?:my|our) (?:country|Government|delegation|people),? and|"
+                       r"and (?:of |on behalf of )?(?:my|our) (?:country|Government|delegation|people))\b", re.I)
+_OWN_STATE = re.compile(r"\b(?:State Union|Council of Ministers|Presidency|Chairman|Chairperson)\b", re.I)
+
+
+def general_debate_behalf(speech: str) -> str | None:
+    """``on_behalf_of`` for a General Debate statement: a greeting, or the speaker's own State or government, is no
+    group statement."""
+    group = on_behalf_of(speech)
+    if group is None or _OWN_STATE.search(group):
+        return None
+    at = speech.find(group)
+    sentence = next((s for s in _SENTENCES.split(speech[:_OPENING]) if group in s), speech[max(0, at - 200):at + 200])
+    return None if _OWN_NAME.search(sentence) else group
+
+
 def on_behalf_of(speech: str, chair: bool = False) -> str | None:
     """The group a statement is made on behalf of, read from its opening; None for a national statement.
 

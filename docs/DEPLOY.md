@@ -35,13 +35,11 @@ one, the site shows the sources only).
    docker compose up -d --build
    ```
    The site is up at once (with no data yet, it finds nothing). Caddy gets the certificate on the first visit.
-4. **The General Debate corpus** (optional at first, needed for the General Debate before 2026). Its download asks
-   for a guestbook entry, so fetch it by hand from https://doi.org/10.7910/DVN/0TJX8Y (`UNGDC_1946-2025.tar.gz`
-   and `Speakers_by_session.xlsx`) and copy it into the data volume:
-   ```bash
-   docker compose cp UNGDC_1946-2025.tar.gz app:/data/raw/ungd/
-   docker compose cp Speakers_by_session.xlsx app:/data/raw/ungd/
-   ```
+4. **The General Debate corpus** is downloaded by the first load (next step), which fills in the guestbook form
+   Harvard Dataverse asks for with `WCS_GUESTBOOK_NAME` and `WCS_GUESTBOOK_EMAIL` from `.env`. Without them the first
+   load carries on without the corpus; add them and run `docker compose exec app wcs fetch-gd` and
+   `wcs ingest-gd` later, or download the two files by hand from https://doi.org/10.7910/DVN/0TJX8Y and
+   `docker compose cp` them into `/data/raw/ungd/`.
    (Create the folder first if needed: `docker compose exec app mkdir -p /data/raw/ungd`.)
 5. **First load.**
    ```bash

@@ -20,7 +20,7 @@ licence, same author).
 The research engine works from the command line on the real record: the Security Council from 1992 (the corpus to
 2023, then the UN's own verbatim records, kept current by `wcs update`: 753 meetings and 21,000 speeches from January
 2024 to 19 October 2026), the General Assembly voting data (1946 to September 2026), and the General Debate (the
-corpus to 2025, then the General Assembly's own records; until those are out, about a year after each debate, the
+corpus to 2023, then the General Assembly's own records; until those are out, about a year after each debate, the
 UN's General Debate website), with rights of reply from 2000. `wcs serve` runs the site (`web/site/`) and its API, with spending caps and rate limits; see
 [`docs/DEPLOY.md`](docs/DEPLOY.md) to put it on a server.
 
@@ -40,7 +40,7 @@ UN's General Debate website), with rights of reply from 2000. `wcs serve` runs t
  Security Council debates (CC0), to 2023 ──┐
  UN verbatim records (S/PV), from 2024 ────┤  (wcs update: Digital Library + ODS, parsed from PDF)
  General Debate corpus (CC0), to 2025 ─────┤
- UN verbatim records (A/PV), from 2026 ────┤  (wcs update: the General Debate meetings of each session,
+ UN verbatim records (A/PV), from 2024 ────┤  (wcs update: the General Debate meetings of each session,
  UN General Debate website, stop-gap ──────┤   and the website's statements until the records are out)
                                            ├─► loaders ─► Parquet (zstd, by source and year) ─► DuckDB
  General Assembly votes (UN) ──────────────┘      │
@@ -83,7 +83,7 @@ uv sync --all-extras
 uv run wcs fetch-sc && uv run wcs ingest-sc          # Security Council debates (about 510 MB download)
 uv run wcs fetch-votes && uv run wcs ingest-votes    # General Assembly votes (about 370 MB)
 uv run wcs update --no-index                           # Security Council records since 2024 (first run: about 10 s a
-                                                       # meeting) and General Debate records from 2026
+                                                       # meeting) and General Debate records from 2024
 uv run wcs evaluate                                    # score against the test set (eval/questions.toml)
 uv run wcs index                                      # keyword index (about 40 seconds)
 uv run wcs embed --max-seconds 3600                    # meaning search, newest years first (resumable; see below)
@@ -97,8 +97,9 @@ Embedding runs at about 26 passages a second on 4 CPU cores, so all 346,000 Secu
 search covers whatever has been embedded.
 
 `wcs ask` shows the plan and the sources without an API key, and writes the cited briefing with one
-(`WCS_ANTHROPIC_API_KEY`, or `ANTHROPIC_API_KEY`). The General Debate corpus is downloaded by hand (see
-[`docs/DATA.md`](docs/DATA.md)), then loaded with `uv run wcs ingest-gd`.
+(`WCS_ANTHROPIC_API_KEY`, or `ANTHROPIC_API_KEY`). The General Debate corpus is downloaded with `uv run wcs fetch-gd`
+(it asks for a guestbook entry: set `WCS_GUESTBOOK_NAME` and `WCS_GUESTBOOK_EMAIL`), then loaded with
+`uv run wcs ingest-gd`.
 
 ```bash
 uv run pytest        # tests (offline: the model is faked)
@@ -113,12 +114,12 @@ uv run ruff check src tests scripts
   speaks for is treated as national.
 * **Speakers' roles** (head of state, minister, representative) are rarely given in the Security Council record, so
   role weighting mostly applies to the General Debate.
-* **The General Debate loader** is tested on a sample archive built to the corpus's file naming, not yet on the real
-  download.
+* **Languages in the General Debate before 2000** are not known: the corpus leaves out "(spoke in French)", and the
+  UN's records, from which it is filled in, are read from 2000. Those speeches are not marked as translations.
 * **Security Council records since January 2024** come from the UN's own verbatim records (`wcs update`), parsed
   from the PDFs. Checked against the corpus on 35 meetings, they match closely ([`docs/VALIDATION.md`](docs/VALIDATION.md)),
   but a briefer is now and then classed as an organisation rather than a UN official, or the reverse.
-* **The General Debate from 2026** comes first from the UN's General Debate website: the delegation's English
+* **The General Debate from 2024** comes first from the UN's General Debate website: the delegation's English
   text (as prepared, not as delivered) or an AI transcript of the interpretation, labelled as such, until the
   official record replaces it about a year later. The website's browser check could one day shut this route.
 * **Group memberships** cover the regions, the permanent five, the EU, NATO, the African Union, the Group of 77,

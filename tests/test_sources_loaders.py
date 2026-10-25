@@ -132,3 +132,23 @@ def test_wrapped_lines_are_joined():
     assert normalise_text(t) == ("I wish at the outset to speak on behalf of the Pacific Islands Forum. The "
                                  "Secretary-General said\n\nNext.")
     assert on_behalf_of(normalise_text(t)) == "Pacific Islands Forum"
+
+
+def test_corpus_paragraph_numbers_are_removed():
+    from wcs.sources.speech import normalise_text
+    from wcs.sources.ungd import PARAGRAPH_NUMBER
+
+    raw = "1.\t Mr. President, I congratulate you.\r81.\tThis session matters. 139.\tWe realize that wars began in 1945.\tNo."
+    text = normalise_text(PARAGRAPH_NUMBER.sub("\n\n", raw).strip())
+    assert text == "Mr. President, I congratulate you.\n\nThis session matters.\n\nWe realize that wars began in 1945.\tNo."
+
+
+def test_general_debate_greetings_are_not_group_statements():
+    from wcs.sources.speech import general_debate_behalf
+
+    assert general_debate_behalf("On behalf of the African Union, the United Republic of Tanzania and in my own name, "
+                                 "I congratulate you, Sir.") is None
+    assert general_debate_behalf("I am honoured to address you on behalf of the Council of Ministers of Bosnia and "
+                                 "Herzegovina.") is None
+    assert general_debate_behalf("It gives me great pleasure to address the General Assembly on behalf of the Group "
+                                 "of 77 and China, currently chaired by my country.") == "Group of 77 and China"
