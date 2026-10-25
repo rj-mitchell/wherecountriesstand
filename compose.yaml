@@ -1,0 +1,18 @@
+# Run Where Countries Stand on your own computer at http://localhost:8000
+#   docker compose up -d --build
+#   docker compose exec app wcs bootstrap      # first load of the data (several hours; can be run again)
+# For a public server with a domain and HTTPS, use deploy/docker-compose.yml instead (docs/DEPLOY.md).
+name: wherecountriesstand-local
+services:
+  app:
+    build: .
+    command: ["wcs", "serve", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      WCS_ANTHROPIC_API_KEY: ${WCS_ANTHROPIC_API_KEY:-}
+    volumes:
+      - wcs-data:/data
+    ports:
+      - "127.0.0.1:8000:8000"   # only this computer can open it
+
+volumes:
+  wcs-data:

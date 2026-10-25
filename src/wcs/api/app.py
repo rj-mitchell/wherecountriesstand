@@ -20,6 +20,7 @@ and identical questions are answered from a cache until the data changes (``wcs.
 from __future__ import annotations
 
 import logging
+import mimetypes
 import queue
 import threading
 import time
@@ -47,6 +48,7 @@ from wcs.config import REPO_ROOT, Settings, load_settings
 from wcs.rag.pipeline import AskRequest, Pipeline
 
 log = logging.getLogger(__name__)
+mimetypes.add_type("font/woff2", ".woff2")  # missing from slim images' MIME lists
 
 SITE_DIR = REPO_ROOT / "web" / "site"
 KEEP_ALIVE_SECONDS = 15

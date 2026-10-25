@@ -1,0 +1,61 @@
+# Where Countries Stand on a single server: the site, a scheduled updater, and Caddy for automatic HTTPS.
+# Usage (from this directory): cp .env.example .env && edit, then
+#   docker compose up -d --build
+#   docker compose exec app wcs bootstrap      # first load of the data (docs/DEPLOY.md)
+
+# Logs are capped (three files of 10 MB per container) so they never fill the disk.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  app:
+    build:
+      context: ..
+    env_file: .env
+    logging: *logging
+    volumes:
+      - wcs-data:/data
+    restart: unless-stopped
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Twice a day: new votes, new and corrected Security Council records, the General Debate, the index, and up to an
+  # hour of meaning search for passages still waiting (docs/OPERATIONS.md). Reports go to /data/logs/.
+  updater:
+    build:
+      context: ..
+    env_file: .env
+    logging: *logging
+    volumes:
+      - wcs-data:/data
+    restart: unless-stopped
+    command: ["sh", "-c", "sleep 600; while true; do wcs update --embed-seconds 3600 || echo 'update reported a problem: see /data/logs'; sleep 43200; done"]
+
+  caddy:
+    image: caddy:2.8.4
+    logging: *logging
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  wcs-data:
+  caddy-data:
+  caddy-config:

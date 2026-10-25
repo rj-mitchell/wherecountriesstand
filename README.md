@@ -30,6 +30,7 @@ UN's General Debate website), with rights of reply from 2000. `wcs serve` runs t
 | [`docs/DATA.md`](docs/DATA.md) | Data sources: coverage, size, licence, how to get them, and what was found in them |
 | [`docs/DESIGN.md`](docs/DESIGN.md) | The look: the UN's printed Official Records, without the UN's name or emblem |
 | [`docs/OPERATIONS.md`](docs/OPERATIONS.md) | Keeping the data current: the scheduled `wcs update`, how it survives changes on the UN's side, what its warnings mean |
+| [`docs/DEPLOY.md`](docs/DEPLOY.md) | Putting the site on a server: Docker, HTTPS, the first data load |
 | [`docs/VALIDATION.md`](docs/VALIDATION.md) | How well the parser for the UN's own records matches the corpus |
 | [`web/prototype/`](web/prototype/) | Static design prototype. Screenshots are in [`docs/img/`](docs/img/). |
 

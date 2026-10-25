@@ -51,7 +51,8 @@ parser version, the speeches found and any problems).
 
 ## Scheduling
 
-With systemd (the units are in `deploy/`):
+With Docker (`docs/DEPLOY.md`), the `updater` container runs it twice a day; nothing else is needed. Without Docker,
+with systemd (the units are in `deploy/`):
 
 ```bash
 sudo cp deploy/wcs-update.service deploy/wcs-update.timer /etc/systemd/system/

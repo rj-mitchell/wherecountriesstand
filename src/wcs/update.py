@@ -427,14 +427,17 @@ def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd:
         except Exception as exc:
             log.exception("General Debate update failed")
             report.errors.append(f"General Debate: {type(exc).__name__}: {exc}")
-    if do_index and any(changed.values()):
+    if do_index and (any(changed.values()) or embed_seconds):
         from wcs.index.build import Indexer
 
         idx = Indexer(settings, ref)
         for source, ys in changed.items():
             for year in sorted(ys):
                 report.indexed += idx.index_year(source, year)
-        idx.index.build_indices()
+        if any(changed.values()):
+            idx.index.build_indices()
+        # passages still waiting for meaning search (a first load takes hours) are embedded on every run, changes
+        # or not, within the time allowed
         if embed_seconds:
             from wcs.embed.base import get_embedder
             from wcs.index.build import embed_pending

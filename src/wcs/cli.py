@@ -50,6 +50,54 @@ def serve(host: str = "127.0.0.1", port: int = 8000,
                 proxy_headers=behind_proxy, forwarded_allow_ips="*" if behind_proxy else None)
 
 
+@app.command()
+def bootstrap(embed_hours: float = typer.Option(0, help="embed for up to this long at the end (0: leave it to the "
+                                                         "scheduled updates)"),
+              replies_since: int = typer.Option(55, help="first General Debate session for rights of reply")) -> None:
+    """First load on a new server, in order, skipping whatever is already there (so it can be run again): the
+    voting data, the Security Council corpus, the General Debate corpus (if downloaded by hand), the UN's records
+    since the corpora, rights of reply, the keyword index, and meaning search."""
+    from wcs.index.build import SOURCES, Indexer
+    from wcs.reference.countries import countries
+    from wcs.sources import undocs, ungd, unsc, votes
+    from wcs.store.parquet import votes_path, write_by_year, years
+    from wcs.update import Report, gd_from_session, live_from, run, update_general_debate
+
+    s = load_settings()
+    ref = countries()
+    if not votes_path(s.parquet_dir).exists():
+        typer.echo("General Assembly votes: downloading and converting")
+        votes.ingest(s, votes.fetch(s))
+    start = live_from(s)
+    if not [y for y in years(s.parquet_dir, "sc") if y < start.year]:
+        typer.echo("Security Council corpus: downloading (about 510 MB) and loading")
+        unsc.fetch(s)
+        write_by_year(s.parquet_dir, "sc", (r for r in unsc.iter_records(s, ref) if r["date"] < start))
+    if ungd.archive_path(s) and not [y for y in years(s.parquet_dir, "gd") if y < 1945 + gd_from_session(s)
+                                     and y < 2000]:
+        typer.echo("General Debate corpus: loading")
+        from wcs.sources.unga import is_reply
+
+        first = gd_from_session(s)
+        write_by_year(s.parquet_dir, "gd", (r for r in ungd.iter_records(s, ref) if r["session"] < first),
+                      keep=is_reply)
+    elif not ungd.archive_path(s):
+        typer.echo(f"General Debate corpus: not downloaded (put it in {ungd.raw_dir(s)}: see docs/DATA.md); "
+                   "carrying on without it")
+    typer.echo("The UN's records since the corpora (first time: several hours, resumable)")
+    report = run(s, do_votes=False, do_index=False, reference=ref)
+    typer.echo(f"  {len(report.fetched)} records fetched; latest meeting {report.latest_meeting}")
+    typer.echo("Rights of reply in past General Debates")
+    update_general_debate(s, ref, undocs.UNDocs(s), Report(started="bootstrap"),
+                          sessions=range(replies_since, gd_from_session(s)))
+    typer.echo("Keyword index")
+    n = Indexer(s, ref).index_all(SOURCES)
+    typer.echo(f"  {n} passages")
+    if embed_hours:
+        run(s, do_votes=False, do_sc=False, do_gd=False, embed_seconds=embed_hours * 3600, reference=ref)
+    typer.echo("Done. Meaning search fills in over the next scheduled updates (`wcs update --embed-seconds`).")
+
+
 @app.command("fetch-sc")
 def fetch_sc(force: bool = False) -> None:
     """Download the Security Council debates corpus (about 510 MB)."""
