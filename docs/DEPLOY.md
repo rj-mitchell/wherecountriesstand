@@ -21,7 +21,10 @@ one, the site shows the sources only).
 
 ## Steps
 
-1. **DNS.** Point the domain's A (and AAAA) record, and `www`'s, at the server.
+1. **DNS.** Until launch, wherecountriesstand.com may show a "coming soon" page: the Cloudflare Worker
+   `wherecountriesstand-holding` (`deploy/holding/`). Remove its custom domain first (Workers & Pages >
+   wherecountriesstand-holding > Settings > Domains & Routes), then point the domain's A (and AAAA) record, and
+   `www`'s, at the server.
 2. **Code and settings.**
    ```bash
    git clone https://github.com/rj-mitchell/wherecountriesstand /opt/wherecountriesstand
