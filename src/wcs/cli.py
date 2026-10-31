@@ -5,6 +5,7 @@
     wcs fetch-votes && wcs ingest-votes    # General Assembly votes
     wcs index && wcs embed                 # keyword index, then meaning search (slow; resumable)
     wcs update                             # new votes, Security Council and General Debate records (scheduled)
+    wcs backup --to /backups               # copy the state database (scheduled)
     wcs search "climate finance" --group sids
     wcs ask "How have small island States spoken about climate change since 2015?"
 """
@@ -186,6 +187,18 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
             typer.echo(f"error: {e}")
     if not report.ok:
         raise typer.Exit(1)
+
+
+@app.command()
+def backup(to: str = typer.Option(..., help="folder for the backups"),
+           keep: int = typer.Option(14, help="how many to keep")) -> None:
+    """Copy the state database (spending, saved briefings, reports): the one thing that cannot be rebuilt."""
+    from pathlib import Path
+
+    from wcs.backup import make_backup
+
+    out = make_backup(load_settings().data_dir / "state.db", Path(to), keep)
+    typer.echo(f"backup: {out}" if out else "nothing to back up yet (no state database)")
 
 
 @app.command()

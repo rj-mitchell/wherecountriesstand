@@ -1,6 +1,6 @@
 # Run Where Countries Stand on your own computer at http://localhost:8000
 #   docker compose up -d --build
-#   docker compose exec app wcs bootstrap      # first load of the data (several hours; can be run again)
+#   docker compose exec app wcs bootstrap      # first load of the data (a couple of hours; can be run again)
 # For a public server with a domain and HTTPS, use deploy/docker-compose.yml instead (docs/DEPLOY.md).
 name: wherecountriesstand-local
 services:
