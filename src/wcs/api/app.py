@@ -34,6 +34,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import (
     HTMLResponse,
     JSONResponse,
@@ -259,7 +260,9 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         out: dict[str, Any] = {}
         for ev in sources_only(body, ""):
             out[ev["type"]] = ev
-        return JSONResponse({"plan": out["plan"]["plan"], **{k: v for k, v in out["sources"].items() if k != "type"}})
+        # sources carry dates (a General Assembly vote's, for one), which plain JSON cannot write
+        return JSONResponse(jsonable_encoder({"plan": out["plan"]["plan"],
+                                              **{k: v for k, v in out["sources"].items() if k != "type"}}))
 
     @app.post("/api/ask")
     def ask(body: AskBody, request: Request):
