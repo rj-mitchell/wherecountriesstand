@@ -1,7 +1,10 @@
-# Where Countries Stand on a single server: the site, a scheduled updater, and Caddy for automatic HTTPS.
-# Usage (from this directory): cp .env.example .env && edit, then
-#   docker compose up -d --build
-#   docker compose exec app wcs bootstrap      # first load of the data (docs/DEPLOY.md)
+# Where Countries Stand on the charity's shared server: the site and its API. Where MPs Stand's web server is the
+# front door (HTTPS, Cloudflare): it passes this site's visitors to the app over the shared "sites" network.
+# Updates and backups run on a timer, each in a one-off container (deploy/wcs-update.timer, deploy/wcs-backup.timer).
+# Install or update with: bash /opt/wherecountriesstand/deploy/update.sh (docs/DEPLOY.md)
+
+# Its own name: every site keeps this file in a folder called "deploy", and Compose would otherwise mix them up
+name: wherecountriesstand
 
 # Logs are capped (three files of 10 MB per container) so they never fill the disk.
 x-logging: &logging
@@ -18,44 +21,27 @@ services:
     logging: *logging
     volumes:
       - wcs-data:/data
+      # nightly copies of the database that cannot be rebuilt (/opt/wherecountriesstand/deploy/backups)
+      - ./backups:/backups
     restart: unless-stopped
+    # the server is shared with the charity's other sites: a runaway update stops itself rather than slowing them
+    mem_limit: 4g
     expose:
       - "8000"
+    networks:
+      default:
+      sites:
+        aliases:
+          - wherecountriesstand
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
       interval: 30s
       timeout: 5s
       retries: 3
 
-  # Twice a day: new votes, new and corrected Security Council records, the General Debate, the index, and up to an
-  # hour of meaning search for passages still waiting (docs/OPERATIONS.md). Reports go to /data/logs/.
-  updater:
-    build:
-      context: ..
-    env_file: .env
-    logging: *logging
-    volumes:
-      - wcs-data:/data
-    restart: unless-stopped
-    command: ["sh", "-c", "sleep 600; while true; do wcs update --embed-seconds 3600 || echo 'update reported a problem: see /data/logs'; sleep 43200; done"]
-
-  caddy:
-    image: caddy:2.8.4
-    logging: *logging
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-      - caddy-config:/config
-    depends_on:
-      - app
-    restart: unless-stopped
+networks:
+  sites:
+    external: true  # made by Where MPs Stand's update.sh (or: docker network create sites)
 
 volumes:
   wcs-data:
-  caddy-data:
-  caddy-config:

@@ -51,21 +51,13 @@ parser version, the speeches found and any problems).
 
 ## Scheduling
 
-With Docker (`docs/DEPLOY.md`), the `updater` container runs it twice a day; nothing else is needed. Without Docker,
-with systemd (the units are in `deploy/`):
+On the server (`docs/DEPLOY.md`), `wcs-update.timer` runs it twice a day, each run in a one-off container;
+`deploy/update.sh` installs it. To see it:
 
 ```bash
-sudo cp deploy/wcs-update.service deploy/wcs-update.timer /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now wcs-update.timer
 systemctl list-timers wcs-update.timer        # when it runs next
 journalctl -u wcs-update.service -n 50        # the last run's summary
-```
-
-Or with cron, twice a day:
-
-```
-41 5,17 * * * cd /opt/wherecountriesstand && WCS_DATA_DIR=/opt/wherecountriesstand/data .venv/bin/wcs update --embed-seconds 1800 >> data/logs/cron.log 2>&1
+systemctl start wcs-update.service            # run one now
 ```
 
 ## When a run reports a problem

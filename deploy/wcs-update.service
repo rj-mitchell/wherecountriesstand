@@ -1,16 +1,15 @@
 # Bring Where Countries Stand's data up to date: new General Assembly votes, new and corrected Security Council
-# records, the search index. Installed with wcs-update.timer (see docs/OPERATIONS.md).
+# records, the General Debate, the search index, and up to an hour of meaning search. Installed by deploy/update.sh
+# with wcs-update.timer (docs/OPERATIONS.md). Reports go to /data/logs/ in the data volume.
 [Unit]
 Description=Where Countries Stand: update data
-Wants=network-online.target
-After=network-online.target
+After=docker.service
+Requires=docker.service
 
 [Service]
 Type=oneshot
-User=wcs
-WorkingDirectory=/opt/wherecountriesstand
-Environment=WCS_DATA_DIR=/opt/wherecountriesstand/data
-# Exits 1 when something needs attention; the report is in data/logs/update-*.json.
-ExecStart=/opt/wherecountriesstand/.venv/bin/wcs update --embed-seconds 1800
+WorkingDirectory=/opt/wherecountriesstand/deploy
+# Exits 1 when something needs attention; the report is in /data/logs/update-*.json.
+ExecStart=/usr/bin/docker compose run --rm -T app wcs update --embed-seconds 3600
 Nice=10
 TimeoutStartSec=3h
