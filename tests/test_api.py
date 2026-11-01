@@ -50,6 +50,32 @@ def test_search_costs_nothing(indexed):  # noqa: F811
     assert client.calls == []
 
 
+def test_search_writes_sources_that_carry_dates(indexed):  # noqa: F811
+    """A General Assembly vote's source has a date object; the live site failed on every question that found one."""
+    from datetime import date
+
+    api, _ = make(indexed, FakeClient())
+    real = Pipeline.find
+
+    class Dated:
+        def __init__(self, s):
+            self.s = s
+
+        def card(self):
+            return {**self.s.card(), "voted_on": date(2024, 12, 17)}
+
+    def find(self, plan, req):
+        result, votes, sources = real(self, plan, req)
+        return result, votes, [Dated(s) for s in sources]
+
+    Pipeline.find = find
+    try:
+        r = api.post("/api/search", json=QUESTION)
+    finally:
+        Pipeline.find = real
+    assert r.status_code == 200 and r.json()["sources"][0]["voted_on"] == "2024-12-17"
+
+
 def test_ask_streams_records_spend_and_caches(indexed):  # noqa: F811
     client = FakeClient()
     api, state = make(indexed, client)
