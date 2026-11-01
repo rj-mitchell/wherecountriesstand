@@ -90,9 +90,20 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
   itself rather than slowing the other sites.
 * **Spending:** every briefing's cost is recorded in `/data/state.db` (table `usage`). When a cap is reached the
   site carries on showing sources, and says why.
-* **Backups:** everything but the state database can be rebuilt with `wcs bootstrap`. That database (spending,
-  saved briefings, reports) is copied every night (`wcs-backup.timer`) to `/opt/wherecountriesstand/deploy/backups`,
-  the last 14 kept. The cached UN PDFs (`/data/raw/undocs/`) save a day of downloading if the server is lost.
+* **Backups:** everything but the state database can be rebuilt. That database (spending, saved briefings,
+  reports) is copied every night (`wcs-backup.timer`) to `/opt/wherecountriesstand/deploy/backups`, the last 14 kept,
+  and to the charity's Backblaze B2 bucket, the last 60 kept there, beside Where MPs Stand's backups (each site's
+  have their own names, and each site deletes only its own old copies). To set up the off-site copy, once, copy the
+  bucket and key from Where MPs Stand's settings and check them:
+  ```bash
+  cd /opt/wherecountriesstand/deploy
+  for k in BUCKET KEY_ID APPLICATION_KEY; do v=$(grep "^HANSARD_B2_$k=" /opt/hansardgpt/deploy/.env | cut -d= -f2-); \
+    sed -i "/^WCS_B2_$k=/d" .env; echo "WCS_B2_$k=$v" >> .env; done
+  docker compose run --rm -T app wcs offsite                  # "ok": true
+  docker compose run --rm -T app wcs backup --to /backups     # ends "Off-site copy: stored in ..."
+  ```
+  To get a backup back from B2: download the newest `wcs-state-….sqlite.gz` from the bucket, unzip it, and copy it
+  into the data volume as `/data/state.db` with the site stopped.
 * **The privacy notice** (`web/site/privacy.html`) says what the site keeps: no requests logged (`wcs serve` turns
   the access log off, and the front door keeps none), briefings cached for seven days (`answer_cache_hours`), notes
   of failed briefings for 90 days, and a daily visitor code in place of IP addresses. It names Cloudflare, which
