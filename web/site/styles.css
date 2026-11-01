@@ -68,6 +68,27 @@ a:hover { text-decoration-thickness: 2px; }
 
 /* ---- Masthead: laid out like the first page of a verbatim record ---- */
 
+/* The alpha notice above the masthead, on every page */
+.phase {
+  margin: 0;
+  padding-block: 0.5rem;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+  border-block-end: 1px solid var(--rule-faint);
+}
+
+.phase__tag {
+  display: inline-block;
+  margin-inline-end: 0.4em;
+  padding-inline: 0.4em;
+  background: var(--un-blue);
+  color: var(--on-blue);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .masthead {
   display: grid;
   grid-template-columns: auto 1fr auto;

@@ -192,13 +192,33 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
 @app.command()
 def backup(to: str = typer.Option(..., help="folder for the backups"),
            keep: int = typer.Option(14, help="how many to keep")) -> None:
-    """Copy the state database (spending, saved briefings, reports): the one thing that cannot be rebuilt."""
+    """Copy the state database (spending, saved briefings, reports): the one thing that cannot be rebuilt. The copy
+    also goes to a Backblaze B2 bucket when one is set up (WCS_B2_* in deploy/.env)."""
     from pathlib import Path
 
     from wcs.backup import make_backup
+    from wcs.offsite import OffsiteError, send
 
     out = make_backup(load_settings().data_dir / "state.db", Path(to), keep)
-    typer.echo(f"backup: {out}" if out else "nothing to back up yet (no state database)")
+    if not out:
+        typer.echo("nothing to back up yet (no state database)")
+        return
+    typer.echo(f"backup: {out}")
+    try:
+        sent = send(out)
+    except OffsiteError as exc:
+        typer.echo(f"The off-site copy failed: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    typer.echo("Off-site copy: " + (f"stored in {sent['bucket']} ({sent['stored']} kept there)"
+                                    if sent.get("ok") else sent["offsite"]))
+
+
+@app.command()
+def offsite() -> None:
+    """Check the off-site backup bucket: whether the key works, and how many of this site's backups are there."""
+    from wcs.offsite import check
+
+    typer.echo(json.dumps(check(), indent=2))
 
 
 @app.command()
