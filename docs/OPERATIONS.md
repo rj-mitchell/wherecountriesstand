@@ -124,9 +124,9 @@ records (`A/<session>/PV.<n>`), with the parser used for the Security Council (`
   attribution does not ("President Pavel:").
 * **Rights of reply** are records of their own (agenda "General debate: right of reply"): the speeches after the
   President calls those who asked to reply, or that open by saying they are a reply. Points of order are left out.
-  For sessions before the 79th, where the corpus has the statements but no replies, `wcs backfill-replies --since 55`
-  adds them from the records (from 2000: the 1990s records are laid out in two columns that come out of the PDF in
-  the wrong order, and are not read yet). Reloading the corpus keeps them.
+  For sessions before the 79th, where the corpus has the statements but no replies, `wcs backfill-replies --since 48`
+  adds them from the records (from 1993: the records of 1991-1993 are scans that can't be read reliably). Reloading
+  the corpus keeps them.
 * **Dates.** Each statement has its day, where the corpus has only the session.
 
 **When the records appear.** About a year after the debate, and not in order: on 24 October 2026 the 80th session's

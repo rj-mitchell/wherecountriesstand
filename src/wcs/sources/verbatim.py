@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
 
-from wcs.sources.pdftext import Line
+from wcs.sources.pdftext import Line, two_column_order
 
 PARSER_VERSION = 2
 
@@ -370,6 +370,9 @@ def _match_agenda(heading: str, items: list[str]) -> str | None:
 
 
 def parse(lines: list[Line], symbol: str) -> Meeting:
+    # the General Assembly's records of the 1990s print two columns whose lines the PDF interleaves
+    if (session := re.match(r"A/(\d+)/PV\.", symbol)) and int(session.group(1)) < 55:
+        lines = two_column_order(lines)
     m = Meeting(symbol)
     front_matter(lines, m)
     speeches(lines, m)

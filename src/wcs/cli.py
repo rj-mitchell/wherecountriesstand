@@ -55,7 +55,7 @@ def serve(host: str = "127.0.0.1", port: int = 8000,
 @app.command()
 def bootstrap(embed_hours: float = typer.Option(0, help="embed for up to this long at the end (0: leave it to the "
                                                          "scheduled updates)"),
-              replies_since: int = typer.Option(55, help="first General Debate session for rights of reply")) -> None:
+              replies_since: int = typer.Option(48, help="first General Debate session for rights of reply")) -> None:
     """First load on a new server, in order, skipping whatever is already there (so it can be run again): the
     voting data, the Security Council corpus, the General Debate corpus (if downloaded by hand), the UN's records
     since the corpora, rights of reply, the keyword index, and meaning search."""
@@ -82,7 +82,7 @@ def bootstrap(embed_hours: float = typer.Option(0, help="embed for up to this lo
         except Exception as exc:
             typer.echo(f"  could not download it: {exc}")
     if ungd.archive_path(s) and not [y for y in years(s.parquet_dir, "gd") if y < 1945 + gd_from_session(s)
-                                     and y < 2000]:
+                                     and y < 1993]:
         typer.echo("General Debate corpus: loading")
         from wcs.sources.unga import is_reply
 
@@ -287,7 +287,7 @@ def withdraw(briefing_id: str, reason: str = typer.Option(..., help="shown at it
 
 
 @app.command("backfill-replies")
-def backfill_replies(since: int = typer.Option(..., help="first session, e.g. 55 (2000)"),
+def backfill_replies(since: int = typer.Option(..., help="first session, e.g. 48 (1993)"),
                      until: int = typer.Option(None, help="last session (default: the one before [live] "
                                                           "gd_from_session)")) -> None:
     """Add the General Debate's rights of reply for past sessions, from the UN's records (the corpus has only the

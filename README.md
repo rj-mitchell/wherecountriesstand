@@ -21,7 +21,7 @@ The research engine works from the command line on the real record: the Security
 2023, then the UN's own verbatim records, kept current by `wcs update`: 753 meetings and 21,000 speeches from January
 2024 to 19 October 2026), the General Assembly voting data (1946 to September 2026), and the General Debate (the
 corpus to 2023, then the General Assembly's own records; until those are out, about a year after each debate, the
-UN's General Debate website), with rights of reply from 2000. `wcs serve` runs the site (`web/site/`) and its API, with spending caps and rate limits; see
+UN's General Debate website), with rights of reply from 1993. `wcs serve` runs the site (`web/site/`) and its API, with spending caps and rate limits; see
 [`docs/DEPLOY.md`](docs/DEPLOY.md) to put it on a server.
 
 | File | What it is |
@@ -113,8 +113,9 @@ uv run ruff check src tests scripts
   States"). A statement whose opening does not say whom it speaks for is treated as national.
 * **Speakers' roles** (head of state, minister, representative) are rarely given in the Security Council record, so
   role weighting mostly applies to the General Debate.
-* **Languages in the General Debate before 2000** are not known: the corpus leaves out "(spoke in French)", and the
-  UN's records, from which it is filled in, are read from 2000. Those speeches are not marked as translations.
+* **Languages in the General Debate before 1993** are not known: the corpus leaves out "(spoke in French)", and the
+  UN's records, from which it is filled in, can be read from late 1993 (earlier ones are poor scans). Those speeches
+  are not marked as translations.
 * **Security Council records since January 2024** come from the UN's own verbatim records (`wcs update`), parsed
   from the PDFs. Checked against the corpus on 35 meetings, they match closely ([`docs/VALIDATION.md`](docs/VALIDATION.md)),
   but a briefer is now and then classed as an organisation rather than a UN official, or the reverse.
