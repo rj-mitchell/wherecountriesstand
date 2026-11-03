@@ -20,6 +20,7 @@ from wcs.index.lance import SearchIndex, date_lit, sql_list, sql_str
 from wcs.rank.composite import Candidate, RankParams, Scored, rank
 from wcs.rank.evidence import GROUP_BY, evidence_summary, select_evidence
 from wcs.reference.countries import Countries, countries
+from wcs.sources.speech import canonical_group
 from wcs.store.parquet import read_records
 
 log = logging.getLogger(__name__)
@@ -241,6 +242,7 @@ class Engine:
                                        "symbol", "agenda", "speaker_name", "speaker_post", "speaker_role",
                                        "participant", "country_code", "country_label", "entity_kind",
                                        "on_behalf_of", "language", "ocr", "text", "url")},
+                "on_behalf_of": canonical_group(rec.get("on_behalf_of")),  # stored names, read the same way
                 "text_source": rec.get("text_source"),
                 "date": rec["date"].isoformat(),
                 "year": rec["date"].year,

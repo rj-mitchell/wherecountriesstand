@@ -108,10 +108,9 @@ uv run ruff check src tests scripts
 
 ## Known limitations
 
-* **Group statements are found by their wording**, in the opening of each speech. Most are found cleanly (the EU,
-  the Non-Aligned Movement, the Nordic countries, the Arab Group, the African members of the Council), but a few names
-  are cut short ("Pacific") or run on ("Nordic countries Denmark"), and a statement whose opening does not say whom it
-  speaks for is treated as national.
+* **Group statements are found by their wording**, in the opening of each speech, and each group is given one name
+  however it is written ("Arab Group" and "Group of Arab States"; "Pacific" and "Pacific Islands Forum member
+  States"). A statement whose opening does not say whom it speaks for is treated as national.
 * **Speakers' roles** (head of state, minister, representative) are rarely given in the Security Council record, so
   role weighting mostly applies to the General Debate.
 * **Languages in the General Debate before 2000** are not known: the corpus leaves out "(spoke in French)", and the

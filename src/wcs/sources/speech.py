@@ -145,8 +145,43 @@ def on_behalf_of(speech: str, chair: bool = False) -> str | None:
             if g in _BARE:
                 return UNNAMED_GROUP
             if _GROUP_WORDS.search(g):
-                return g
+                return canonical_group(g)
     return None
+
+
+# One name for each group, whatever the wording ("Arab Group", "Group of Arab States"), with names that run on cut
+# back ("Nordic countries Denmark") and short ones completed ("Pacific"), found in the Security Council's records,
+# 1992-2026. The first pattern that matches the whole name gives it. None: not a group of States after all (a
+# government's own body, a UN official's principal).
+_CANONICAL = [(re.compile(p, re.I), name) for p, name in (
+    (r"(?:the )?(?:council of ministers|government|presidency) of [A-Z][\w ,'-]*", None),
+    (r"administrator of .*|(?:under-)?secretary-general.*|high commissioner.*", None),
+    (r"\w+ presidency of the council of the european union|european union and (?:the|its) (?:countries|states|"
+     r"member states|associated countries)\b.*|european union", "European Union"),
+    (r"(?:movement of )?non-aligned (?:movement|countries)", "Non-Aligned Movement"),
+    (r"(?:(?:states )?members of )?(?:the )?organi[sz]ation of (?:the )?islamic (?:cooperation|conference)",
+     "Organisation of Islamic Cooperation"),
+    (r"(?:(?:states )?members of )?(?:the )?(?:group of arab states|arab group(?: in the united nations)?|arab states)",
+     "Group of Arab States"),
+    (r"(?:group of african states|african group)(?! in the security council)", "Group of African States"),
+    (r"african (?:members|group)(?: of| in)?(?: the)?(?: security)?(?: council(?:'s)?)?", "African members of the Security Council"),
+    (r"nordic countries(?: of)?(?: [A-Z]\w+)*", "Nordic countries"),
+    (r"baltic (?:states|countries)", "Baltic States"),
+    (r"pacific(?: island(?:s)? forum)?(?: (?:member )?(?:states|countries|members))?(?: [A-Z][\w-]*)*(?: small island "
+     r"developing states.*)?", "Pacific Islands Forum"),
+    (r"(?:(?:states )?members of )?(?:the )?association of south-?east asian nations", "Association of Southeast Asian Nations"),
+    (r"(?:commission of the african union|african union commission)(?: .*)?", "African Union Commission"),
+)]
+
+
+def canonical_group(name: str | None) -> str | None:
+    """The one name used for a group statement's group (see _CANONICAL); other names are kept as written."""
+    if not name:
+        return name
+    for pattern, canonical in _CANONICAL:
+        if pattern.fullmatch(name.strip()):
+            return canonical
+    return name
 
 
 def in_national_capacity(speech: str) -> bool:

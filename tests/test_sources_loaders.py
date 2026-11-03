@@ -30,7 +30,7 @@ def test_group_statements():
     assert on_behalf_of("It is a privilege for me to deliver this statement on behalf of the States parties to the "
                         "Treaty on the Non-Proliferation of Nuclear Weapons (NPT) that") == \
         "States parties to the Treaty on the Non-Proliferation of Nuclear Weapons"
-    assert on_behalf_of("On behalf of the African Group, I thank you.") == "African Group"
+    assert on_behalf_of("On behalf of the African Group, I thank you.") == "Group of African States"
     # someone else's statement, mentioned
     assert on_behalf_of("We support the statement made by Ambassador Olhaye of Djibouti, which he delivered on "
                         "behalf of the Group, and") is None
@@ -152,3 +152,18 @@ def test_general_debate_greetings_are_not_group_statements():
                                  "Herzegovina.") is None
     assert general_debate_behalf("It gives me great pleasure to address the General Assembly on behalf of the Group "
                                  "of 77 and China, currently chaired by my country.") == "Group of 77 and China"
+
+
+def test_group_names_are_made_one():
+    from wcs.sources.speech import canonical_group as cg
+
+    assert cg("Movement of Non-Aligned Countries") == cg("Non-Aligned Movement") == "Non-Aligned Movement"
+    assert cg("Arab Group") == cg("States members of the Arab Group") == "Group of Arab States"
+    assert cg("Pacific") == cg("Pacific Islands Forum member countries Australia") == "Pacific Islands Forum"
+    assert cg("Nordic countries Denmark") == "Nordic countries"
+    assert cg("European Union and the countries") == cg("Italian Presidency of the Council of the European Union") \
+        == "European Union"
+    assert cg("European Union and the Group of Friends of Children and Armed Conflict").startswith("European Union and")
+    assert cg("Council of Ministers of Bosnia and Herzegovina") is None
+    assert cg("Administrator of the United Nations Development Programme") is None
+    assert cg("Group of Friends of Haiti") == "Group of Friends of Haiti"
