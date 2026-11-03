@@ -62,6 +62,9 @@ systemctl start wcs-update.service            # run one now
 
 ## When a run reports a problem
 
+The last report's time, warnings and errors are also public at `/api/status` (they are all about the UN's
+sources), so the site's freshness can be checked without logging in to the server.
+
 The report also covers the site: spending against the caps and briefings that failed, from `data/state.db`
 (`wcs usage` shows the same, with spend by day, and exits 1 when something needs a look).
 
@@ -75,7 +78,7 @@ The report also covers the site: spending against the caps and briefings that fa
 | `no Security Council record newer than ...` | Records not appearing, or discovery broken | Check https://digitallibrary.un.org for recent `S/PV` records; if they are there, discovery needs fixing. |
 | `no General Debate records yet for the Nth session` | Over 15 months since the debate with no records found | Check the Digital Library for `A/<session>/PV` records. If the debate's records are there, look at the manifest entries in `manifest-ga.json`. |
 | `statements not matched to a country` | A post written in a way the reference data lacks ("President of the Togolese Republic") | Add the country's form to `data_static/aliases.csv`. |
-| `the General Debate website refused access` | The site's browser check now turns this client away | Nothing breaks: statements arrive with the official records. To restore the faster route, see whether a newer browser identity (`BROWSER_USER_AGENT` in `wcs.sources.gadebate`) is accepted, or ask the UN for access. |
+| `the General Debate website refused access` | The site's browser check now turns this client away (likely from a data-centre address: the live server's updates had no website statements by November 2026, while the same code fetched them from elsewhere) | Nothing breaks: until the official records are out, the corpus's text fills in where it has the session (labelled "corpus"), and statements arrive with the official records. To restore the faster route, see whether a newer browser identity (`BROWSER_USER_AGENT` in `wcs.sources.gadebate`) is accepted, or ask the UN for access. |
 | `website statement not matched to a country` | The site names a country in a new way ("Naoero" for Nauru) | Add it to `data_static/aliases.csv`. |
 | `General Debate speeches found but no statements introduced` | The President's introductions are worded in a new way | Look at the record; adjust `INVITATION` or `ADDRESS` in `wcs.sources.unga`. |
 | `General Debate records print statements in annexes` | A session held virtually (as in 2020): statements shown as recorded videos and printed at the end of the record | Those statements are missing from the record until annexes are read (`wcs.sources.unga`). |
