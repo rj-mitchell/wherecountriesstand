@@ -83,6 +83,20 @@ The report also covers the site: spending against the caps and briefings that fa
 | `spending: ... cap reached: new briefings are paused` | The cap is spent | As above. Visitors still get the sources, and briefings already written still load. |
 | `briefing(s) failed in the last 24 hours` | The model API refused or timed out, or a bug | `wcs usage` lists each failure with its question and error. An API outage clears itself; the same error again and again is a bug. |
 
+## Problems, corrections and withdrawn briefings
+
+Every written briefing is saved at its own address (`/b/<id>`), shown under it with a link to report a problem with
+it. Reports sent through the corrections page (`/corrections.html`) are kept in `data/state.db`:
+
+```bash
+wcs reports                       # open reports, newest first (--all for closed ones too)
+wcs close-report 12               # dealt with: its contact address is deleted (the privacy notice says so)
+wcs withdraw AbC123xy --reason "It attributed a statement to the wrong country."
+```
+
+A withdrawn briefing's address says it was withdrawn, and why, and the corrections page lists its question and the
+reason. The same question can then be asked again. The alpha notice also gives an email address for problems.
+
 ## The General Debate
 
 **Before the 79th session (2023 and earlier)** the General Debate comes from the corpus, which its authors update

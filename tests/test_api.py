@@ -169,3 +169,39 @@ def test_usage_report_warns_near_a_cap(tmp_path):
     alerts = warnings(summary(state, limits))
     assert "reached: new briefings are paused" in alerts[0] and "APIError: overloaded" in alerts[1]
     assert summary(state, limits)["today"]["visitors"] == 2
+
+
+def test_briefings_are_saved_shared_and_withdrawn(indexed, monkeypatch):  # noqa: F811
+    from wcs.api.usage import close_report, reports, withdraw_briefing
+    monkeypatch.setenv("WCS_SITE_URL", "https://countries.example")
+    api, state = make(indexed, FakeClient())
+    final = events(api.post("/api/ask", json=QUESTION))[-1]
+    bid = final["briefing_id"]
+    saved = api.get(f"/api/briefings/{bid}").json()
+    assert saved["question"] == QUESTION["question"] and [e["type"] for e in saved["events"]][-1] == "final"
+    assert saved["events"][-1]["briefing_id"] == bid and saved["events"][-1]["usage"] is None
+    assert events(api.post("/api/ask", json=QUESTION))[-1]["briefing_id"] == bid   # the cached answer keeps it
+    page = api.get(f"/b/{bid}").text
+    assert f"<title>{QUESTION['question']} · Where Countries Stand</title>" in page
+    assert f'<link rel="canonical" href="https://countries.example/b/{bid}">' in page and "noindex" in page
+    assert api.get("/b/nosuchbriefing").status_code == 404 and api.get("/api/briefings/nope99").status_code == 404
+    assert withdraw_briefing(state, bid, "It misread a statement.")
+    gone = api.get(f"/api/briefings/{bid}")
+    assert gone.status_code == 410 and "It misread a statement." in gone.json()["detail"]
+    assert api.get("/api/corrections").json()[0]["reason"] == "It misread a statement."
+    assert api.post("/api/report", json={"message": "x"}).status_code == 422
+    r = api.post("/api/report", json={"kind": "problem", "page": f"/b/{bid}", "message": "A quotation is wrong.",
+                                      "contact": "reader@example.org"}).json()
+    assert reports(state)[0]["contact"] == "reader@example.org" and close_report(state, r["id"])
+    assert reports(state) == [] and reports(state, open_only=False)[0]["contact"] == ""
+
+
+def test_pages_use_absolute_paths(indexed):  # noqa: F811
+    """The home page is also served at /b/<id>, so its files and links must not be relative."""
+    import re
+    api, _ = make(indexed, FakeClient())
+    for name in ("/", "/about.html", "/corrections.html", "/privacy.html", "/accessibility.html"):
+        html_text = api.get(name).text
+        local = [u for u in re.findall(r'(?:href|src)="([^"]+)"', html_text)
+                 if not u.startswith(("https://", "http://", "mailto:", "#", "/"))]
+        assert local == [], (name, local)

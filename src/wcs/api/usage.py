@@ -26,6 +26,10 @@ CREATE INDEX IF NOT EXISTS usage_at ON usage (at);
 CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS answer_cache (key TEXT PRIMARY KEY, created_at TEXT, events TEXT);
 CREATE TABLE IF NOT EXISTS failures (id INTEGER PRIMARY KEY, at TEXT, kind TEXT, question TEXT, error TEXT);
+CREATE TABLE IF NOT EXISTS briefings (id TEXT PRIMARY KEY, at TEXT NOT NULL, question TEXT NOT NULL,
+    options TEXT NOT NULL, events TEXT NOT NULL, withdrawn_at TEXT, withdrawn_reason TEXT);
+CREATE TABLE IF NOT EXISTS reports (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, kind TEXT NOT NULL,
+    page TEXT, message TEXT NOT NULL, contact TEXT, closed_at TEXT);
 """
 
 FAILURE_DAYS = 90  # how long notes of failed briefings are kept
@@ -228,3 +232,64 @@ def warnings(report: dict[str, Any], hours: float = 24) -> list[str]:
         out.append(f"{len(recent)} briefing(s) failed in the last {hours:g} hours; the latest: {recent[0]['error']} "
                    "(wcs usage lists them)")
     return out
+
+
+# ---- saved briefings and problem reports (adapted from Where Councils Stand's api/state.py) --------------------
+
+def new_briefing_id() -> str:
+    return secrets.token_urlsafe(8)
+
+
+def save_briefing(state: StateDB, bid: str, question: str, options: dict[str, Any],
+                  events: list[dict[str, Any]]) -> str:
+    """A written briefing, kept at its own address (/b/<id>) while the site runs, unless withdrawn."""
+    with state.connect() as con:
+        con.execute("INSERT INTO briefings (id, at, question, options, events) VALUES (?, ?, ?, ?, ?)",
+                    (bid, utcnow(), question, json.dumps(options), json.dumps(events, default=str)))
+    return bid
+
+
+def saved_briefing(state: StateDB, bid: str) -> dict[str, Any] | None:
+    with state.connect() as con:
+        row = con.execute("SELECT id, at, question, options, events, withdrawn_at, withdrawn_reason FROM briefings "
+                          "WHERE id = ?", (bid,)).fetchone()
+    if not row:
+        return None
+    keys = ("id", "at", "question", "options", "events", "withdrawn_at", "withdrawn_reason")
+    b = dict(zip(keys, row, strict=True))
+    return {**b, "options": json.loads(b["options"]), "events": json.loads(b["events"])}
+
+
+def withdraw_briefing(state: StateDB, bid: str, reason: str) -> bool:
+    with state.connect() as con:
+        return bool(con.execute("UPDATE briefings SET withdrawn_at = ?, withdrawn_reason = ? WHERE id = ?",
+                                (utcnow(), reason, bid)).rowcount)
+
+
+def withdrawn_briefings(state: StateDB) -> list[dict[str, Any]]:
+    """For the corrections page: what was withdrawn, when and why (the question, not the briefing)."""
+    with state.connect() as con:
+        rows = con.execute("SELECT id, at, question, withdrawn_at, withdrawn_reason FROM briefings "
+                           "WHERE withdrawn_at IS NOT NULL ORDER BY withdrawn_at DESC").fetchall()
+    return [dict(zip(("id", "at", "question", "withdrawn_at", "reason"), r, strict=True)) for r in rows]
+
+
+def add_report(state: StateDB, kind: str, page: str, message: str, contact: str) -> int:
+    with state.connect() as con:
+        cur = con.execute("INSERT INTO reports (at, kind, page, message, contact) VALUES (?, ?, ?, ?, ?)",
+                          (utcnow(), kind, page, message, contact))
+        return int(cur.lastrowid)
+
+
+def reports(state: StateDB, open_only: bool = True) -> list[dict[str, Any]]:
+    with state.connect() as con:
+        rows = con.execute("SELECT id, at, kind, page, message, contact, closed_at FROM reports" +
+                           (" WHERE closed_at IS NULL" if open_only else "") + " ORDER BY id DESC").fetchall()
+    return [dict(zip(("id", "at", "kind", "page", "message", "contact", "closed_at"), r, strict=True)) for r in rows]
+
+
+def close_report(state: StateDB, report_id: int) -> bool:
+    """The contact address is used only to reply, and deleted when the report is dealt with (the privacy notice)."""
+    with state.connect() as con:
+        return bool(con.execute("UPDATE reports SET closed_at = ?, contact = '' WHERE id = ? AND closed_at IS NULL",
+                                (utcnow(), report_id)).rowcount)

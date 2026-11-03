@@ -48,13 +48,18 @@ from pydantic import BaseModel, Field
 from wcs.api.usage import (
     RateLimiter,
     StateDB,
+    add_report,
     cache_key,
     cached_events,
     check_caps,
+    new_briefing_id,
     record_failure,
     record_usage,
+    save_briefing,
+    saved_briefing,
     store_events,
     visitor_key,
+    withdrawn_briefings,
 )
 from wcs.config import REPO_ROOT, Settings, load_settings
 from wcs.rag.pipeline import AskRequest, Pipeline
@@ -85,6 +90,13 @@ class AskBody(BaseModel):
     role_weight: float | None = Field(default=None, ge=1, le=2)
     history: list[Turn] = Field(default_factory=list, max_length=4)
     sources_only: bool = False
+
+
+class ReportBody(BaseModel):
+    kind: Literal["problem", "takedown", "other"] = "problem"
+    page: str = Field(default="", max_length=300)
+    message: str = Field(min_length=5, max_length=4000)
+    contact: str = Field(default="", max_length=200)
 
 
 def sse(events: Iterator[dict[str, Any]], keep_alive: float = KEEP_ALIVE_SECONDS) -> Iterator[bytes]:
@@ -160,15 +172,17 @@ def site_url(settings: Settings, request: Request) -> str:
     return (url or str(request.base_url)).rstrip("/")
 
 
-def question_page(page: str, question: str, base: str, query: str) -> str:
-    """The home page for a shared question (``/?q=...``): its title and link preview name the question. The
-    briefing itself is written in the browser, so the page is not for search engines to index."""
+def question_page(page: str, question: str, base: str, query: str, path: str = "/") -> str:
+    """The home page for a shared question (``/?q=...``) or a saved briefing (``/b/<id>``): its title and link
+    preview name the question. The briefing itself is shown by the page's script, so the page is not for search
+    engines to index."""
     q = html.escape(question.strip()[:500], quote=True)
     page = re.sub(r"<title>.*?</title>", f"<title>{q} · Where Countries Stand</title>", page, count=1, flags=re.S)
     page = page.replace('<meta property="og:title" content="Where Countries Stand">',
                         f'<meta property="og:title" content="{q}">', 1)
-    page = page.replace(f'content="{SITE_MARK}/"', f'content="{SITE_MARK}/?{html.escape(query, quote=True)}"')
-    page = page.replace(f'href="{SITE_MARK}/"', f'href="{SITE_MARK}/?{html.escape(query, quote=True)}"')
+    here = path + (f"?{html.escape(query, quote=True)}" if query else "")
+    page = page.replace(f'content="{SITE_MARK}/"', f'content="{SITE_MARK}{here}"')
+    page = page.replace(f'href="{SITE_MARK}/"', f'href="{SITE_MARK}{here}"')
     return page.replace("</head>", '  <meta name="robots" content="noindex">\n</head>', 1).replace(SITE_MARK, base)
 
 
@@ -218,6 +232,25 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def meta():
         return {"briefings": get_pipeline().has_model(), "coverage": remembered("coverage", lambda: coverage(settings)),
                 "start_year": settings.start_date.year, "default_years": int(settings.archive.get("default_years", 10))}
+
+    @app.get("/api/briefings/{bid}")
+    def briefing(bid: str):
+        b = saved_briefing(state, bid)
+        if b is None:
+            raise HTTPException(404, "There is no briefing at this address.")
+        if b["withdrawn_at"]:
+            raise HTTPException(410, f"This briefing has been withdrawn: {b['withdrawn_reason']}")
+        return {k: b[k] for k in ("id", "at", "question", "options", "events")}
+
+    @app.get("/api/corrections")
+    def corrections():
+        return remembered("corrections", lambda: withdrawn_briefings(state), ttl=60)
+
+    @app.post("/api/report")
+    def report(body: ReportBody, request: Request):
+        visitor(request)  # the rate limit
+        return {"ok": True, "id": add_report(state, body.kind, body.page.strip(), body.message.strip(),
+                                             body.contact.strip())}
 
     @app.get("/api/countries")
     def countries_list():
@@ -299,6 +332,13 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                                          limits, who)
                     if ev["type"] == "final" and ev.get("usage"):
                         record_usage(state, "answer", ev.get("model"), ev["usage"], limits, who)
+                    if ev["type"] == "final" and ev.get("answer") and not ev["answer"].get("no_records"):
+                        # kept at its own address, /b/<id>, to share and to check complaints against
+                        ev = {**ev, "briefing_id": new_briefing_id()}
+                        saved = [e for e in kept if e["type"] in ("plan", "sources")]
+                        saved += [{"type": "text", "text": "".join(text)}, {**ev, "usage": None}]
+                        save_briefing(state, ev["briefing_id"], body.question,
+                                      body.model_dump(exclude={"question", "history"}), saved)
                     if ev["type"] == "text":
                         text.append(ev["text"])
                     elif ev["type"] != "citation":
@@ -356,6 +396,15 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     @app.get("/{name}.html", include_in_schema=False)
     def named_page(request: Request, name: str):
         return page(request, name)
+
+    @app.get("/b/{bid}", include_in_schema=False)
+    def shared_briefing(request: Request, bid: str):
+        """A saved briefing: the home page, which loads it, with the question as its title and link preview."""
+        b = saved_briefing(state, bid) if re.fullmatch(r"[A-Za-z0-9_-]{6,20}", bid) else None
+        text, base = (site / "index.html").read_text(encoding="utf-8"), site_url(settings, request)
+        if b is None:
+            return HTMLResponse(text.replace(SITE_MARK, base), status_code=404)
+        return HTMLResponse(question_page(text, b["question"], base, "", f"/b/{bid}"))
 
     if site.exists():
         app.mount("/", StaticFiles(directory=site, html=True), name="site")
