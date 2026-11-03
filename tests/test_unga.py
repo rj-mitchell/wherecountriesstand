@@ -175,7 +175,7 @@ def test_update_general_debate(ga):
     assert "A/81/PV.1" not in docs.calls             # catalogued on other business: not fetched
     assert "A/81/PV.30" in docs.calls                # numbers not yet published are looked for on ODS
     assert report.gd[81] == {"meetings": 1, "statements": 3, "replies": 1, "concluded": False, "awaiting": 28,
-                             "website": 0}
+                             "website": 0, "corpus": 0}
     assert sorted(r["record_id"] for r in read_year(ga.parquet_dir, "gd", 2026)) == [
         "gd:81:CZE", "gd:81:EU", "gd:81:MAR:reply:8.009", "gd:81:NER"]
 
@@ -292,3 +292,32 @@ def test_a_heading_for_another_country_is_not_trusted(settings):
     recs = unga.records_for(m, {}, countries(), settings)
     assert "gd:81:CZE" not in {r["record_id"] for r in recs} and "gd:81:IND" not in {r["record_id"] for r in recs}
     assert any("name another country" in w for w in m.warnings)
+
+
+def test_corpus_fills_in_until_the_record_is_out(ga):
+    """Found on the live server: the website refused the server, so a session waiting for its record had only the
+    statements the record had so far. The corpus fills in, labelled; the record wins where it has the statement."""
+    import io
+    import tarfile
+
+    from wcs.sources import ungd
+    from wcs.update import Report, update_general_debate
+
+    d = ungd.raw_dir(ga)
+    d.mkdir(parents=True)
+    with tarfile.open(d / "UNGDC_1946-2026.tar.gz", "w:gz") as tar:
+        for name, text in {"TXT/Session 81 - 2026/CZE_81_2026.txt": "The corpus's Czech text.",
+                           "TXT/Session 81 - 2026/FRA_81_2026.txt": "France calls for a ceasefire.",
+                           "TXT/Session 80 - 2025/FRA_80_2025.txt": "An older session."}.items():
+            info = tarfile.TarInfo(name)
+            info.size = len(text.encode())
+            tar.addfile(info, io.BytesIO(text.encode()))
+    docs = FakeDocs([{"symbol": "A/81/PV.8", "verbatim": True, "agenda": ["General debate"], "date": "2026-09-22"}],
+                    {"A/81/PV.8"})
+    report = Report(started="now")
+    update_general_debate(ga, countries(), docs, report, today=date(2026, 10, 24))
+    rows = {r["record_id"]: r for r in read_year(ga.parquet_dir, "gd", 2026)}
+    assert rows["gd:81:FRA"]["text_source"] == "corpus" and rows["gd:81:CZE"]["text_source"] == "record"
+    assert report.gd[81]["corpus"] == 1 and read_year(ga.parquet_dir, "gd", 2025) == []
+    again = update_general_debate(ga, countries(), FakeDocs([], set()), Report(started="later"), today=date(2026, 10, 25))
+    assert 2026 not in again and "gd:81:FRA" in {r["record_id"] for r in read_year(ga.parquet_dir, "gd", 2026)}

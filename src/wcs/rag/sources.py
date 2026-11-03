@@ -120,6 +120,8 @@ TEXT_SOURCE_NOTES = {
     "transcript": "AI transcript of the UN's English interpretation, not yet the official record; may contain errors",
     "annex": "a statement shown as a recorded video: the text is printed in an annex to the official record, as "
              "provided by the delegation",
+    "corpus": "text from the UN General Debate Corpus, not yet the official record: for recent sessions it is the "
+              "delegation's own text or a transcript of the interpretation",
 }
 
 
