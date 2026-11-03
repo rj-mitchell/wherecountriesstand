@@ -29,8 +29,8 @@ function fmtDate(iso) {
 
 async function loadNames() {
   try {
-    const [countries, groups] = await Promise.all([fetch("api/countries").then((r) => r.json()),
-                                                   fetch("api/groups").then((r) => r.json())]);
+    const [countries, groups] = await Promise.all([fetch("/api/countries").then((r) => r.json()),
+                                                   fetch("/api/groups").then((r) => r.json())]);
     for (const c of countries) names.countries[c.code] = c.name;
     for (const g of groups) names.groups[g.key] = g.label;
   } catch (e) { /* the codes are shown instead */ }
@@ -39,7 +39,7 @@ async function loadNames() {
 async function loadCoverage() {
   const list = $("coverage");
   try {
-    const meta = await fetch("api/meta").then((r) => r.json());
+    const meta = await fetch("/api/meta").then((r) => r.json());
     const c = meta.coverage || {};
     const span = (x) => (x ? `${x.from.slice(0, 4)}–${fmtDate(x.to)}` : "not loaded");
     list.replaceChildren(
@@ -209,9 +209,44 @@ function note(text, error = false) {
 
 let controller = null;
 
-async function ask(question, mode, sourcesOnly) {
-  if (controller) controller.abort();
-  controller = new AbortController();
+// One event of a briefing, as it is written (POST /api/ask) or when a saved one is opened (/b/<id>).
+function handle(ev, st) {
+  if (ev.type === "plan") {
+    $("interpretation").textContent = ev.plan.interpretation || "";
+    chips(ev.plan);
+    $("status").textContent = "Searching the record…";
+  } else if (ev.type === "sources") {
+    showSources(ev.sources || []);
+    summary(ev.evidence, ev.sources);
+    $("status").textContent = (ev.sources || []).length ? "Writing the briefing from these sources…" : "";
+  } else if (ev.type === "text") {
+    if (!st.drafting) { st.drafting = el("p", { class: "drafting" }); $("briefing").append(st.drafting); }
+    st.drafting.append(ev.text);
+  } else if (ev.type === "final") {
+    $("status").textContent = "";
+    if (ev.answer) renderAnswer(ev.answer);
+    else if (st.drafting) st.drafting.remove();
+    if (ev.note) note(ev.note);
+    if (ev.cached && !st.saved) note("This briefing was written earlier for the same question and the same data.");
+    if (ev.briefing_id) saved(ev.briefing_id, st);
+  } else if (ev.type === "error") {
+    $("status").textContent = "";
+    note(ev.message, true);
+  }
+}
+
+// A written briefing has its own address: shown in the address bar, with a link to report a problem with it.
+function saved(id, st) {
+  const path = `/b/${id}`;
+  if (!st.saved && location.pathname !== path) history.replaceState(null, "", path);
+  const address = `${location.origin}${path}`;
+  $("notes").append(el("p", { class: "note share" },
+    st.saved ? `Written on ${fmtDate(st.saved)}. ` : "", "This briefing’s address: ",
+    el("a", { href: path }, address), " · ",
+    el("a", { href: `/corrections.html?page=${encodeURIComponent(path)}` }, "Report a problem with it")));
+}
+
+function reset(question) {
   $("home").hidden = true;
   $("lede").hidden = true;
   $("result").hidden = false;
@@ -223,11 +258,38 @@ async function ask(question, mode, sourcesOnly) {
   $("summary").hidden = true;
   $("marks").hidden = true;
   $("sources-section").hidden = true;
+}
+
+async function openSaved(id) {
+  reset("");
+  $("status").textContent = "Opening the briefing…";
+  const res = await fetch(`/api/briefings/${encodeURIComponent(id)}`).catch(() => null);
+  $("status").textContent = "";
+  if (!res || !res.ok) {
+    const detail = res ? await res.json().catch(() => ({})) : {};
+    $("question").textContent = res && res.status === 410 ? "Briefing withdrawn" : "Briefing not found";
+    note(typeof detail.detail === "string" ? detail.detail : "This briefing could not be opened.", true);
+    return;
+  }
+  const b = await res.json();
+  reset(b.question);
+  $("q").value = b.question;
+  const mode = b.options && b.options.mode === "comprehensive" ? "comprehensive" : "summary";
+  document.querySelector(`input[name=mode][value=${mode}]`).checked = true;
+  $("today").textContent = fmtDate(b.at.slice(0, 10));
+  const st = { drafting: null, saved: b.at.slice(0, 10) };
+  for (const ev of b.events) handle(ev, st);
+}
+
+async function ask(question, mode, sourcesOnly) {
+  if (controller) controller.abort();
+  controller = new AbortController();
+  reset(question);
   $("status").textContent = "Reading the question…";
   $("go").disabled = true;
-  let drafting = null;
+  const st = { drafting: null };
   try {
-    const res = await fetch("api/ask", {
+    const res = await fetch("/api/ask", {
       method: "POST", headers: { "Content-Type": "application/json" }, signal: controller.signal,
       body: JSON.stringify({ question, mode, sources_only: sourcesOnly }),
     });
@@ -248,28 +310,7 @@ async function ask(question, mode, sourcesOnly) {
         buffer = buffer.slice(cut + 2);
         const data = chunk.split("\n").filter((l) => l.startsWith("data: ")).map((l) => l.slice(6)).join("\n");
         if (!data) continue;
-        const ev = JSON.parse(data);
-        if (ev.type === "plan") {
-          $("interpretation").textContent = ev.plan.interpretation || "";
-          chips(ev.plan);
-          $("status").textContent = "Searching the record…";
-        } else if (ev.type === "sources") {
-          showSources(ev.sources || []);
-          summary(ev.evidence, ev.sources);
-          $("status").textContent = (ev.sources || []).length ? "Writing the briefing from these sources…" : "";
-        } else if (ev.type === "text") {
-          if (!drafting) { drafting = el("p", { class: "drafting" }); $("briefing").append(drafting); }
-          drafting.append(ev.text);
-        } else if (ev.type === "final") {
-          $("status").textContent = "";
-          if (ev.answer) renderAnswer(ev.answer);
-          else if (drafting) drafting.remove();
-          if (ev.note) note(ev.note);
-          if (ev.cached) note("This briefing was written earlier for the same question and the same data.");
-        } else if (ev.type === "error") {
-          $("status").textContent = "";
-          note(ev.message, true);
-        }
+        handle(JSON.parse(data), st);
       }
     }
   } catch (e) {
@@ -280,6 +321,8 @@ async function ask(question, mode, sourcesOnly) {
 }
 
 function fromUrl() {
+  const shared = location.pathname.match(/^\/b\/([A-Za-z0-9_-]+)$/);
+  if (shared) { openSaved(shared[1]); return; }
   const params = new URLSearchParams(location.search);
   const q = params.get("q");
   if (!q) { $("home").hidden = false; $("lede").hidden = false; $("result").hidden = true; return; }
@@ -303,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams({ q });
     if (mode !== "summary") params.set("mode", mode);
     if (sourcesOnly) params.set("sources", "1");
-    history.pushState(null, "", `?${params}`);
+    history.pushState(null, "", `/?${params}`);
     ask(q, mode, sourcesOnly);
   });
   window.addEventListener("popstate", fromUrl);
