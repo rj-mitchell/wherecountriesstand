@@ -67,18 +67,33 @@ def read_lines(path: Path) -> list[Line]:
                 if not text or not chars:
                     continue
                 flags = [_font_flags(c.fontname) for c in chars]
-                prefix = []
+                bold_letters = 0
                 for c, (b, _) in zip(chars, flags, strict=True):
                     if not b:
                         break
-                    prefix.append(c.get_text())
+                    bold_letters += len("".join(c.get_text().split()))
                 zone = "header" if line.y0 > height * HEADER_ZONE else (
                     "footer" if line.y1 < height * FOOTER_ZONE and len(text.split()) <= FOOTER_MAX_WORDS else "body")
                 out.append(Line(page_no, float(line.x0), float(line.y0), float(line.y1),
-                                max(float(c.size) for c in chars), text, " ".join("".join(prefix).split()),
+                                max(float(c.size) for c in chars), text, bold_run(text, bold_letters),
                                 sum(i for _, i in flags) / len(flags), sum(b for b, _ in flags) / len(flags),
                                 box_no, zone, float(line.x1)))
     return merge_fragments(out)
+
+
+def bold_run(text: str, letters: int) -> str:
+    """The start of ``text`` holding its first ``letters`` letters (spaces not counted), as printed: the bold run of
+    a line. Some PDFs (the UN's of the 1990s) have no space characters between words, so the bold characters alone
+    run together ("Mr.ANSARI"); the line's text keeps the spaces."""
+    if letters <= 0:
+        return ""
+    seen = 0
+    for i, ch in enumerate(text):
+        if not ch.isspace():
+            seen += 1
+            if seen == letters:
+                return text[:i + 1]
+    return text
 
 
 def column_edges(lines: list[Line]) -> dict[int, list[int]]:
@@ -138,3 +153,26 @@ def merge_fragments(lines: list[Line]) -> list[Line]:
         replace[first] = merged
         drop.update(i for i in idx if i != first)
     return [replace.get(i, ln) for i, ln in enumerate(lines) if i not in drop]
+
+
+def two_column_order(lines: list[Line]) -> list[Line]:
+    """Lines in reading order on pages printed in two columns whose lines the PDF interleaves (the UN's records of the
+    1990s): on each page, the left column top to bottom, then the right. A line wider than a column stays with the
+    left one. Pages in one column, and the header and footer zones, keep their order."""
+    out: list[Line] = []
+    for page in sorted({ln.page for ln in lines}):
+        on_page = [ln for ln in lines if ln.page == page]
+        body = [ln for ln in on_page if ln.zone == "body"]
+        if not body:
+            out += on_page
+            continue
+        mid = (min(ln.x0 for ln in body) + max(ln.x1 for ln in body)) / 2
+        left = [ln for ln in body if ln.x0 < mid]
+        right = [ln for ln in body if ln.x0 >= mid]
+        if len(right) < 5 or len(left) < 5:
+            out += on_page
+            continue
+        key = lambda ln: (-round(ln.y1, 1), ln.x0)  # noqa: E731
+        out += [ln for ln in on_page if ln.zone == "header"] + sorted(left, key=key) + sorted(right, key=key) + \
+            [ln for ln in on_page if ln.zone == "footer"]
+    return out

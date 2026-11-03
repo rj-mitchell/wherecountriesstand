@@ -254,3 +254,19 @@ def test_recorded_statements_are_not_stored_as_their_introductions(settings):
     recs = unga.records_for(m, {}, countries(), settings)
     assert "gd:81:CZE" not in [r["record_id"] for r in recs] and "gd:81:NER" in [r["record_id"] for r in recs]
     assert any("printed in annexes" in p for p in unga.check(m, recs))
+
+
+def test_records_of_the_1990s():
+    """Found in the UN's records of 1993-1999: no space characters between words (so the bold run of a speaker's name
+    read "Mr.ANSARI"), and two columns whose lines the PDF interleaves."""
+    from wcs.sources.pdftext import bold_run, two_column_order
+
+    assert bold_run("Mr. ANSARI (India): On behalf of", len("Mr.ANSARI")) == "Mr. ANSARI"
+    assert bold_run("The President (interpretation from Spanish): In", len("ThePresident")) == "The President"
+    assert bold_run("No bold here", 0) == ""
+    left = [ln(3, 700 - 12 * i, f"left {i}", x=60) for i in range(6)]
+    right = [ln(3, 700 - 12 * i, f"right {i}", x=320) for i in range(6)]
+    mixed = [x for pair in zip(left, right, strict=True) for x in pair]
+    assert [x.text for x in two_column_order(mixed)] == [x.text for x in left + right]
+    one = [ln(4, 700 - 12 * i, f"only {i}", x=60) for i in range(8)]
+    assert two_column_order(one) == one

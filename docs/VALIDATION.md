@@ -101,8 +101,13 @@ records, so these are checks of coverage and of samples:
 * **Rights of reply, 2000-2024 (sessions 55-79).** 466 replies from 355 debate meetings, 8 to 29 a session. Twelve
   drawn at random were all replies, each opening by saying so or answering a named delegation. Points of order and
   one-line exchanges with the chair are left out.
-* **Older records.** Records from before 2000 are not read: before 1996 they are scans without text, and in the late
-  1990s their two columns come out of the PDF in the wrong order.
+* **Rights of reply, 1993-1999 (sessions 48-54).** The records of these years are printed in two columns, which
+  come out of the PDF in the wrong order and with bold names spaced out ("M r . S m i t h"); the parser puts the
+  columns back in order. 235 replies: 2 in 1993, then 17 to 71 a session. Fifty modern records read the same as
+  before, but for one character. Samples from 1998 were all replies, with the right speaker and country.
+* **Older records.** The records of 1991-1993 (sessions 46-48) are scans whose recognised text is too poor to read
+  ("Af46lW.4", "?orty-sixth sassion"): none of 1991's or 1992's debate meetings parse. About 25 meetings of 1994-1999
+  don't parse either, and are listed by the backfill.
 
 * **Virtual sessions.** In 2020 (and partly 2021) statements were shown as recorded videos: the record holds only a
   delegate's few words introducing each one, and prints the statement itself in an annex at the end of the
