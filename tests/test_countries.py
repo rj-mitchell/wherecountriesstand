@@ -84,3 +84,17 @@ def test_g77_nam_and_oic_on_the_date():
     # China says it is not a member (docs/DECISIONS.md, 15), on any date
     assert not any("g77" in c.groups_on("CHN", date(y, 1, 1)) for y in (1965, 1980, 2000, 2026))
     assert c.label("g77") == "Group of 77 members"
+
+
+def test_un_regional_groups_income_and_au_suspensions():
+    c = countries()
+    on = date(2026, 10, 25)
+    sizes = [len(c.members_of(f"ungroup:{g}", on)) for g in
+             ("african", "asia_pacific", "eastern_european", "latin_american_caribbean", "western_european_other")]
+    assert sizes == [54, 55, 23, 33, 29]            # Türkiye is in two, as the UN lists it
+    assert "ungroup:western_european_other" not in c.groups_on("ISR", date(1999, 1, 1))
+    assert "ungroup:western_european_other" in c.groups_on("ISR", date(2001, 1, 1))
+    assert "income:low" in c.groups_on("IND", date(2005, 1, 1)) and "income:lower_middle" in c.groups_on("IND", on)
+    assert "income:middle" in c.groups_on("IND", on) and "income:high" in c.groups_on("GBR", date(1995, 1, 1))
+    assert "au_suspended" in c.groups_on("MLI", date(2023, 1, 1)) and "au" in c.groups_on("MLI", date(2023, 1, 1))
+    assert "au_suspended" not in c.groups_on("EGY", date(2015, 1, 1))

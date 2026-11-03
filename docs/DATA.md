@@ -93,8 +93,12 @@ credited to the UN, with the document symbol and page.
 
 - **Group memberships on a date.** In `data_static/memberships.csv` (EU, NATO, and since October 2026 the Group of
   77, the Non-Aligned Movement and the OIC), with the regions, African Union and the UN's LDC, LLDC and SIDS lists
-  worked out in `wcs.reference.countries`. Still not covered: UN regional groups as used for elections, African
-  Union suspensions, World Bank income groups by year.
+  worked out in `wcs.reference.countries`. Since November 2026 also, built by `scripts/build_groups.py`: the UN's
+  five regional groups (as the UN lists them, with Israel in the Western European and other States from May 2000,
+  Türkiye in two groups, and the United States counted in that one for elections; dated from each member's first
+  recorded vote, as the UN publishes no dates); the World Bank's income groups for each of its fiscal years since
+  1988 (from 1 July; `data_static/sources/OGHIST_2025_07_01.xlsx`); and African Union suspensions, 2002 to now (a
+  suspended state remains a member, and source titles say it was suspended).
   * **Non-Aligned Movement** (121 members) and **OIC** (57): dates of admission from worldstatesmen.org's lists of
     international organisations, checked against Wikipedia; every member agrees. The OIC's founding-era dates differ
     for seven members between the two (formal admission on 29 February 1972 against attendance from 1970, and

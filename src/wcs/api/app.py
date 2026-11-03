@@ -65,7 +65,7 @@ mimetypes.add_type("font/woff2", ".woff2")  # missing from slim images' MIME lis
 SITE_DIR = REPO_ROOT / "web" / "site"
 KEEP_ALIVE_SECONDS = 15
 # Raise when the briefing instructions change, so cached briefings are written again.
-INSTRUCTIONS_VERSION = 2
+INSTRUCTIONS_VERSION = 3
 # Pages carry this in place of the site's address (in canonical links and link previews); it is filled in as they
 # are served.
 SITE_MARK = "__SITE__"

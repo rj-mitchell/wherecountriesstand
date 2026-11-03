@@ -122,9 +122,10 @@ uv run ruff check src tests scripts
 * **The General Debate from 2024** comes first from the UN's General Debate website: the delegation's English
   text (as prepared, not as delivered) or an AI transcript of the interpretation, labelled as such, until the
   official record replaces it about a year later. The website's browser check could one day shut this route.
-* **Group memberships** cover the regions, the permanent five, the EU, NATO, the African Union, the Group of 77,
-  the Non-Aligned Movement, the Organisation of Islamic Cooperation and the UN's lists of least developed, landlocked
-  developing and small island developing States. The Group of 77 publishes no dates of joining, so a few are
+* **Group memberships** cover the regions, the UN's regional groups, the permanent five, the EU, NATO, the African
+  Union (with its suspensions), the Group of 77, the Non-Aligned Movement, the Organisation of Islamic Cooperation,
+  the World Bank's income groups by year and the UN's lists of least developed, landlocked developing and small
+  island developing States. The Group of 77 and the UN regional groups publish no dates of joining, so some are
   approximate ([`docs/DATA.md`](docs/DATA.md)).
 
 ## Licence

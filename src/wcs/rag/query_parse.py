@@ -22,9 +22,10 @@ from wcs.reference.countries import Countries, norm
 log = logging.getLogger(__name__)
 
 GROUP_KEYS = ("p5", "council_elected", "council_guest", "eu", "nato", "au", "g77", "nam", "oic", "ldc", "lldc", "sids",
+              "ungroup:african", "ungroup:asia_pacific", "ungroup:eastern_european", "ungroup:latin_american_caribbean", "ungroup:western_european_other", "income:low", "income:lower_middle", "income:upper_middle", "income:middle", "income:high",
               "region:africa", "region:americas", "region:asia", "region:europe", "region:oceania")
 GroupKey = Literal["p5", "council_elected", "council_guest", "eu", "nato", "au", "g77", "nam", "oic", "ldc", "lldc",
-                   "sids",
+                   "sids", "ungroup:african", "ungroup:asia_pacific", "ungroup:eastern_european", "ungroup:latin_american_caribbean", "ungroup:western_european_other", "income:low", "income:lower_middle", "income:upper_middle", "income:middle", "income:high",
                    "region:africa", "region:americas", "region:asia", "region:europe", "region:oceania"]
 SourceKey = Literal["sc", "gd"]
 GroupBy = Literal["region", "council", "bloc"]
@@ -39,6 +40,17 @@ GROUP_PHRASES = {
     "group of 77": "g77", "group of seventy-seven": "g77", "g77": "g77", "g-77": "g77", "g 77": "g77",
     "non-aligned movement": "nam", "non-aligned countries": "nam", "non-aligned states": "nam", "non-aligned": "nam",
     "nam members": "nam",
+    "african group": "ungroup:african", "asia-pacific group": "ungroup:asia_pacific",
+    "asia-pacific states": "ungroup:asia_pacific", "eastern european group": "ungroup:eastern_european",
+    "eastern european states": "ungroup:eastern_european", "grulac": "ungroup:latin_american_caribbean",
+    "latin american and caribbean group": "ungroup:latin_american_caribbean",
+    "group of latin american and caribbean states": "ungroup:latin_american_caribbean",
+    "weog": "ungroup:western_european_other", "western european and other states": "ungroup:western_european_other",
+    "western european and others group": "ungroup:western_european_other",
+    "low-income countries": "income:low", "low income countries": "income:low",
+    "lower-middle-income countries": "income:lower_middle", "upper-middle-income countries": "income:upper_middle",
+    "middle-income countries": "income:middle", "middle income countries": "income:middle",
+    "high-income countries": "income:high", "high income countries": "income:high",
     "organisation of islamic cooperation": "oic", "organization of islamic cooperation": "oic",
     "organisation of the islamic conference": "oic", "organization of the islamic conference": "oic", "oic": "oic",
     "small island developing states": "sids", "small island states": "sids", "small island": "sids", "sids": "sids",
@@ -278,7 +290,10 @@ Rules:
   country itself said.
 - groups: only when the question restricts speakers to a group: p5 (permanent members of the Security Council),
   council_elected (elected members), council_guest (invited non-members), eu, nato, au (African Union), g77 (Group of
-  77), nam (Non-Aligned Movement), oic (Organisation of Islamic Cooperation), ldc (least developed countries), lldc (landlocked developing countries), sids (small island developing States), or a region:
+  77), nam (Non-Aligned Movement), oic (Organisation of Islamic Cooperation), the UN regional groups
+  (ungroup:african, ungroup:asia_pacific, ungroup:eastern_european, ungroup:latin_american_caribbean,
+  ungroup:western_european_other: for "the African Group", "GRULAC", "WEOG" ...), the World Bank income groups
+  (income:low, income:lower_middle, income:upper_middle, income:middle, income:high), ldc (least developed countries), lldc (landlocked developing countries), sids (small island developing States), or a region:
   region:africa, region:americas, region:asia, region:europe, region:oceania. When the question compares groups
   ("how do African and European States differ"), leave groups empty and set group_by.
 - group_by: "council" when the question is about positions within the Security Council (permanent vs elected
