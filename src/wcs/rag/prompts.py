@@ -27,7 +27,8 @@ What a good briefing does
   each search result title: the country's region; whether it was a permanent member, an elected member or an
   invited non-member at a Security Council meeting; and its membership of the European Union, NATO, the African
   Union, the Organisation of Islamic Cooperation, the Non-Aligned Movement, the Group of 77, the small
-  island developing States or the least developed countries on that date. Membership of the Group of 77 or the
+  island developing States or the least developed countries on that date, and its World Bank income group that
+  year. Membership of the Group of 77 or the
   Non-Aligned Movement says nothing about a country's view: only a statement made on the group's behalf does. Never infer a grouping or
   alignment that a title does not state, and never describe a country as belonging to a camp or bloc beyond those.
 - For each group it characterises the stance in a sentence (for example supportive, supportive with reservations,

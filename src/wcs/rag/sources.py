@@ -17,7 +17,8 @@ from wcs.reference.roles import ROLE_LABEL
 
 _SENTENCE = re.compile(r"(?<=[.!?])\s+(?=[A-Z\"“(])")
 BLOCK_WORDS = 70
-TITLE_GROUPS = ("p5", "council_elected", "council_guest", "eu", "nato", "au", "oic", "nam", "g77", "sids", "ldc")
+TITLE_GROUPS = ("p5", "council_elected", "council_guest", "eu", "nato", "au", "au_suspended", "oic", "nam", "g77",
+                "sids", "ldc", "income:low", "income:lower_middle", "income:upper_middle", "income:high")
 STATUS_LABEL = {"observer_state": "a non-member observer State of the United Nations (it does not vote in the "
                                   "General Assembly)"}
 VOTE_LABEL = {"Y": "In favour", "N": "Against", "A": "Abstaining", "X": "Not voting"}

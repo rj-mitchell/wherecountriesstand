@@ -175,3 +175,14 @@ def test_observer_states_are_named_as_such():
 def test_bodies_named_as_filters_are_not_search_words():
     p = parse_offline("What did France say about Mali in the Security Council?", countries(), TODAY)
     assert p.filters.sources == ["sc"] and "security council" not in p.search_text and "mali" in p.search_text
+
+
+def test_un_regional_and_income_groups_are_read():
+    c = countries()
+    assert parse_offline("What has GRULAC said about Haiti?", c, TODAY).filters.groups == ["ungroup:latin_american_caribbean"]
+    assert parse_offline("How have low-income countries spoken about debt?", c, TODAY).filters.groups == ["income:low"]
+    assert parse_offline("What have middle-income countries said about climate finance?", c,
+                         TODAY).filters.groups == ["income:middle"]
+    t = speaker_label(rec(country_code="MLI", country_name="Mali", language=None,
+                          groups=["region:africa", "au", "au_suspended", "income:low"]))
+    assert "suspended from the African Union's activities on this date" in t and "Low-income economy" in t
