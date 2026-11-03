@@ -254,3 +254,41 @@ def test_recorded_statements_are_not_stored_as_their_introductions(settings):
     recs = unga.records_for(m, {}, countries(), settings)
     assert "gd:81:CZE" not in [r["record_id"] for r in recs] and "gd:81:NER" in [r["record_id"] for r in recs]
     assert any("printed in annexes" in p for p in unga.check(m, recs))
+
+
+def test_statements_printed_in_annexes(settings):
+    """Found in the records of 2020: recorded statements are printed after the meeting, each in an annex."""
+    lines = ga_lines()
+    for line in lines:
+        if line.text.startswith("President Pavel:"):
+            line.text = "President Pavel: I have the honour to introduce the pre-recorded statement by His Excellency"
+    rose = next(ln for ln in lines if "meeting rose" in ln.text)
+    lines += [ln(2, 730, "2/9", zone="body"), ln(2, 705, "Annex I", x=60, bold="Annex I"),
+              ln(2, 685, "Address by Mr. Petr Pavel, President of the Czech", bold="Address by Mr. Petr Pavel, "
+                 "President of the Czech"),
+              ln(2, 671, "Republic", bold="Republic"),
+              ln(2, 655, "[Original: Czech; English translation provided by the", x=198),
+              ln(2, 643, "delegation]", x=198),
+              ln(2, 625, "Mr. President,", x=152), ln(2, 610, "The Czech Republic stands by the", x=152),
+              ln(2, 598, "Charter of the United Nations.", x=123), ln(2, 585, "26-12345", x=500)]
+    assert rose.page == 1
+    m = parse(merge_fragments(lines), "A/81/PV.8")
+    assert [a.number for a in m.annexes] == ["I"] and m.annexes[0].original.endswith("delegation]")
+    recs = {r["record_id"]: r for r in unga.records_for(m, {}, countries(), settings)}
+    cze = recs["gd:81:CZE"]
+    assert cze["text_source"] == "annex" and cze["speaker_name"] == "Petr Pavel" and cze["language"] == "Czech"
+    assert cze["text"] == "Mr. President,\n\nThe Czech Republic stands by the Charter of the United Nations."
+    assert not any("printed in annexes" in w for w in m.warnings)
+
+
+def test_a_heading_for_another_country_is_not_trusted(settings):
+    """Found in the records of 2020: pages out of order put India's reply under Tonga's Prime Minister's heading."""
+    lines = ga_lines()
+    for line in lines:
+        if line.text.startswith("President Pavel:"):
+            line.text = "Mr. Kumar (India): I am exercising India's right of reply to the statement made earlier."
+            line.bold_prefix = "Mr. Kumar"
+    m = parse(merge_fragments(lines), "A/81/PV.8")
+    recs = unga.records_for(m, {}, countries(), settings)
+    assert "gd:81:CZE" not in {r["record_id"] for r in recs} and "gd:81:IND" not in {r["record_id"] for r in recs}
+    assert any("name another country" in w for w in m.warnings)

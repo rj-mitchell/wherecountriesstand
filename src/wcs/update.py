@@ -396,8 +396,8 @@ def health(report: Report, today: date | None = None) -> None:
             report.warnings.append(f"no Security Council record newer than {report.latest_meeting} ({age} days)")
     annexed = [s for s, ps in report.problems.items() if any("printed in annexes" in p for p in ps)]
     if annexed:
-        report.warnings.append(f"{len(annexed)} General Debate records print statements in annexes, which are not read "
-                               f"yet ({', '.join(annexed[:3])}): those statements are missing")
+        report.warnings.append(f"statements shown as recorded videos could not be read from the annexes of "
+                               f"{len(annexed)} General Debate records ({', '.join(annexed[:3])}): those are missing")
     wording = [s for s, ps in report.problems.items() if any("typography" in p for p in ps)]
     if wording:
         report.warnings.append(f"{len(wording)} records parsed by wording, not typography: check the template")

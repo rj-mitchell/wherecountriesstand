@@ -217,13 +217,19 @@ def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, se
     out: list[dict[str, Any]] = []
     debate = debate_meeting(meeting, meta)
     intros = introductions(meeting)
-    recorded = 0
+    recorded = mismatched = 0
     for i, (name, post) in sorted(intros.items()):
         sp = meeting.speeches[i]
         if not in_debate(sp.agenda, debate) or NOT_A_STATEMENT.search(f"{sp.speaker} {name} {post}"):
             continue
+        # a heading or invitation that names another country than the speaker who follows belongs to another speech:
+        # in some records the pages come out of order (2020: India's reply under Tonga's Prime Minister's heading)
+        said, named = countries.resolve(sp.label or ""), country_in(post, countries) if post else None
+        if said and named and said != named:
+            mismatched += 1
+            continue
         # "Address by His Serene Highness Prince Albert II of Monaco": no post, the country is in the name
-        code = countries.resolve(sp.label) or country_in(post, countries) or country_in(name, countries)
+        code = said or named or country_in(name, countries)
         if code:
             kind, label = countries.kind(code), countries.name_on(code, d)
         else:
@@ -250,9 +256,21 @@ def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, se
             "language": language(sp.attribution), "ocr": False, "text": text, "url": symbol_url(undocs, symbol),
             "text_source": "record",
         })
-    if recorded:
-        meeting.warnings.append(f"{recorded} statements shown as recorded videos and printed in annexes, which are "
-                                f"not read yet: only their introductions are in the record, so they are left out")
+    taken = {r["record_id"] for r in out}
+    for annex in meeting.annexes:   # recorded statements, printed after the meeting (2020, partly 2021)
+        rec = annex_record(annex, symbol, session, d, countries, undocs)
+        if rec is None or rec["record_id"] in taken:
+            continue
+        out.append(rec)
+        taken.add(rec["record_id"])
+        recorded -= 1
+    if mismatched:
+        meeting.warnings.append(f"{mismatched} introductions name another country than the speaker who follows "
+                                f"(the record's pages come out of order?): left out")
+    if recorded > 0:
+        meeting.warnings.append(f"{recorded} statements shown as recorded videos and printed in annexes could not be "
+                                f"read from the annexes: only their introductions are in the record, so they are left "
+                                f"out")
     number = meeting_number(symbol)
     for i in replies(meeting, intros, debate):
         sp = meeting.speeches[i]
@@ -272,6 +290,43 @@ def records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries, se
             "text_source": "record",
         })
     return out
+
+
+ORIGINAL = re.compile(r"\[Original:\s*(?P<lang>[A-Za-z]+)")
+
+
+def annex_record(annex: Any, symbol: str, session: int, d: date, countries: Countries,
+                 undocs: str) -> dict[str, Any] | None:
+    """A statement printed in an annex (``verbatim.read_annexes``) as a stored record. The country comes from its
+    heading's post, or its name (the Pope speaks for the Holy See); the European Council's President speaks for the
+    European Union. None if neither gives one."""
+    m = ADDRESS.match(annex.heading or "")
+    if not m or not annex.text.strip():
+        return None
+    name, post = split_who(m.group("who"))
+    code = country_in(post, countries) or country_in(name, countries) or \
+        ("VAT" if re.search(r"\bPope\b|\bHoly See\b", f"{name} {post}") else None)
+    label = None
+    if code is None:
+        last = re.split(r"\bof\s+(?:the\s+)?", post)[-1].strip(" .,")
+        label = ORGANISATION_LABELS.get(last, last if last in ORGANISATION_KEYS else None)
+        if label is None:
+            return None
+    lang = ORIGINAL.search(annex.original or "")
+    language_spoken = lang.group("lang").capitalize() if lang and lang.group("lang").lower() != "english" else None
+    text = normalise_text(annex.text)
+    key = code or ORGANISATION_KEYS.get(label or "")
+    return {
+        "record_id": f"gd:{session}:{key}", "source": "gd", "body": "General Assembly", "date": d,
+        "date_precision": "day", "year": d.year, "session": session,
+        "meeting": f"General Debate, {_ordinal(session)} session", "symbol": symbol, "speech_number": None,
+        "agenda": "General debate", "agenda_area": None, "speaker_name": name, "speaker_post": post or None,
+        "speaker_role": classify(post), "participant": "", "country_code": code,
+        "country_label": countries.name_on(code, d) if code else label,
+        "entity_kind": countries.kind(code) if code else "organisation",
+        "on_behalf_of": general_debate_behalf(text), "language": language_spoken, "ocr": False, "text": text,
+        "url": symbol_url(undocs, symbol), "text_source": "annex",
+    }
 
 
 def is_reply(record: dict[str, Any]) -> bool:
