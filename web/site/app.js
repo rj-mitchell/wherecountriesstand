@@ -107,6 +107,7 @@ function sourceCard(s) {
   const links = [];
   if (s.language) links.push(el("span", { class: "translated" }, "English text: UN translation."), " · ");
   if (s.text_source === "delegation") links.push(el("span", { class: "translated" }, "Text issued by the delegation, as prepared; not yet the official record."), " · ");
+  if (s.text_source === "annex") links.push(el("span", { class: "translated" }, "A statement shown as a recorded video: its text is printed in an annex to the record, as provided by the delegation."), " · ");
   if (s.text_source === "transcript") links.push(el("span", { class: "translated" }, "AI transcript of the UN's English interpretation; not yet the official record."), " · ");
   if (s.text_source === "corpus") links.push(el("span", { class: "translated" }, "From the UN General Debate Corpus (the delegation's text or a transcript); not yet the official record."), " · ");
   if (s.ocr) links.push(el("span", { class: "translated" }, "Text recognised from a scanned record."), " · ");

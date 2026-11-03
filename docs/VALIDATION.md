@@ -104,11 +104,16 @@ records, so these are checks of coverage and of samples:
 * **Older records.** Records from before 2000 are not read: before 1996 they are scans without text, and in the late
   1990s their two columns come out of the PDF in the wrong order.
 
-* **Virtual sessions.** In 2020 (and partly 2021) statements were shown as recorded videos: the record holds only a
-  delegate's few words introducing each one, and prints the statement itself in an annex at the end of the
-  document, which is not read yet. Those introductions are left out rather than stored as statements (about 120 in
-  2020; some carried the wrong speaker's name). The update report warns if a session's records print statements in
-  annexes. The corpus, not these records, supplies the statements for 2020 and 2021.
+* **Virtual sessions.** In 2020 (and partly 2021) statements were shown as recorded videos: the record holds a
+  delegate's few words introducing each one, and prints the statement itself in an annex after the meeting
+  ("Annex I" or "Annex 1", a heading such as "Address by His Holiness Pope Francis", a note of the original language
+  and who translated it, then the text). Since November 2026 the annexes are read (`verbatim.read_annexes`): each
+  becomes the country's statement, its country taken from the heading's post (or the Pope's name, for the Holy See),
+  labelled as the delegation's text. Checked on 2020: 187 statements, one per country (154 from annexes), against
+  33 before. The pages of some of these records come out of order, which had put headings on the wrong speeches
+  (India's right of reply under Tonga's Prime Minister's heading): a heading that names another country than the
+  speaker who follows is no longer trusted (19 in 2020, one in 2021, none since). The corpus still supplies the
+  statements for 2020 and 2021; this matters if a future session is held virtually.
 
 ## Real briefings (October 2026)
 

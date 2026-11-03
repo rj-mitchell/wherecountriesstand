@@ -119,6 +119,8 @@ def when_label(r: dict[str, Any]) -> str:
 TEXT_SOURCE_NOTES = {
     "delegation": "text issued by the delegation, as prepared for delivery; not yet the official record",
     "transcript": "AI transcript of the UN's English interpretation, not yet the official record; may contain errors",
+    "annex": "a statement shown as a recorded video: the text is printed in an annex to the official record, as "
+             "provided by the delegation",
     "corpus": "text from the UN General Debate Corpus, not yet the official record: for recent sessions it is the "
               "delegation's own text or a transcript of the interpretation",
 }
@@ -127,7 +129,8 @@ TEXT_SOURCE_NOTES = {
 def record_source(n: int, r: dict[str, Any], group_by: str = "region") -> Source:
     notes = []
     if r.get("language"):
-        notes.append(f"English text is the UN's translation from {r['language']}")
+        notes.append(f"English translation from {r['language']} provided by the delegation"
+                     if r.get("text_source") == "annex" else f"English text is the UN's translation from {r['language']}")
     if r.get("ocr"):
         notes.append("text recognised from a scanned record and may contain errors")
     if r.get("text_source") in TEXT_SOURCE_NOTES:
