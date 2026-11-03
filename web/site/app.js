@@ -108,6 +108,7 @@ function sourceCard(s) {
   if (s.language) links.push(el("span", { class: "translated" }, "English text: UN translation."), " · ");
   if (s.text_source === "delegation") links.push(el("span", { class: "translated" }, "Text issued by the delegation, as prepared; not yet the official record."), " · ");
   if (s.text_source === "transcript") links.push(el("span", { class: "translated" }, "AI transcript of the UN's English interpretation; not yet the official record."), " · ");
+  if (s.text_source === "corpus") links.push(el("span", { class: "translated" }, "From the UN General Debate Corpus (the delegation's text or a transcript); not yet the official record."), " · ");
   if (s.ocr) links.push(el("span", { class: "translated" }, "Text recognised from a scanned record."), " · ");
   links.push(el("a", { href: s.url, rel: "noopener" }, s.symbol ? `Read ${s.symbol}` : "Read the source"));
   const card = el("li", { class: `source${s.body === "General Assembly" ? " source--ga" : ""}`, id: `s${s.n}` },

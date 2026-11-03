@@ -169,3 +169,16 @@ def test_usage_report_warns_near_a_cap(tmp_path):
     alerts = warnings(summary(state, limits))
     assert "reached: new briefings are paused" in alerts[0] and "APIError: overloaded" in alerts[1]
     assert summary(state, limits)["today"]["visitors"] == 2
+
+
+def test_status_reports_the_last_update(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient())
+    assert api.get("/api/status").json() == {"last_update": None}
+    logs = indexed.data_dir / "logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    (logs / "update-20261101T0300.json").write_text(json.dumps({"started": "2026-11-01T03:00:00+00:00", "ok": True,
+        "warnings": ["the General Debate website refused access (403)"], "errors": [], "gd": {"81": {"website": 0}}}))
+    api, _ = make(indexed, FakeClient())
+    st = api.get("/api/status").json()
+    assert st["last_update"]["warnings"] == ["the General Debate website refused access (403)"]
+    assert st["general_debate"] == {"81": {"website": 0}}

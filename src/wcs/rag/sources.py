@@ -118,6 +118,8 @@ def when_label(r: dict[str, Any]) -> str:
 TEXT_SOURCE_NOTES = {
     "delegation": "text issued by the delegation, as prepared for delivery; not yet the official record",
     "transcript": "AI transcript of the UN's English interpretation, not yet the official record; may contain errors",
+    "corpus": "text from the UN General Debate Corpus, not yet the official record: for recent sessions it is the "
+              "delegation's own text or a transcript of the interpretation",
 }
 
 

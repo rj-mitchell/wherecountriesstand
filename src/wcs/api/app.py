@@ -22,6 +22,7 @@ and identical questions are answered from a cache until the data changes (``wcs.
 from __future__ import annotations
 
 import html
+import json
 import logging
 import mimetypes
 import os
@@ -152,6 +153,15 @@ def coverage(settings: Settings) -> dict[str, Any]:
     return out
 
 
+def update_status(settings: Settings) -> dict[str, Any]:
+    reports = sorted((settings.data_dir / "logs").glob("update-*.json"))
+    if not reports:
+        return {"last_update": None}
+    r = json.loads(reports[-1].read_text())
+    return {"last_update": {k: r.get(k) for k in ("started", "finished", "ok", "latest_meeting", "warnings", "errors")},
+            "general_debate": r.get("gd"), "years_written": r.get("years_written"), "updates_kept": len(reports)}
+
+
 def site_url(settings: Settings, request: Request) -> str:
     """The site's public address, without a trailing slash."""
     url = settings.section("site").get("url") or os.environ.get("WCS_SITE_URL")
@@ -218,6 +228,12 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def meta():
         return {"briefings": get_pipeline().has_model(), "coverage": remembered("coverage", lambda: coverage(settings)),
                 "start_year": settings.start_date.year, "default_years": int(settings.archive.get("default_years", 10))}
+
+    @app.get("/api/status")
+    def status():
+        """The last data update: when, whether it needs attention, and its warnings (all about the UN's sources), so
+        the site's freshness can be checked from outside the server."""
+        return remembered("status", lambda: update_status(settings), ttl=60)
 
     @app.get("/api/countries")
     def countries_list():
