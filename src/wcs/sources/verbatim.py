@@ -64,6 +64,16 @@ class Speech:
 
 
 @dataclass
+class Annex:
+    """A statement printed in an annex after the meeting: in sessions held virtually (2020, partly 2021) the
+    statements shown as recorded videos are printed there, each under its own heading ("Address by ...")."""
+    number: str           # "IV"
+    heading: str          # "Address by His Holiness Pope Francis"
+    original: str | None  # "[Original: Spanish; English translation provided by the delegation]"
+    text: str
+
+
+@dataclass
 class Meeting:
     symbol: str
     meeting_date: date | None = None
@@ -75,6 +85,7 @@ class Meeting:
     briefers: dict[str, str] = field(default_factory=dict)  # surname -> post, from the rule 39 invitations
     detection: str = "bold"  # "bold" or "wording" (records without bold type)
     warnings: list[str] = field(default_factory=list)
+    annexes: list[Annex] = field(default_factory=list)  # statements printed after the meeting (read_annexes)
 
 
 # ---- front matter ---------------------------------------------------------------------------------------------
@@ -365,9 +376,59 @@ def parse(lines: list[Line], symbol: str) -> Meeting:
     m = Meeting(symbol)
     front_matter(lines, m)
     speeches(lines, m)
+    m.annexes = read_annexes(lines)
     if m.meeting_date is None:
         m.warnings.append("no meeting date on the first page")
     return m
+
+
+ANNEX_MARK = re.compile(r"^(?P<before>.*?)\s*\bAnnex\s+(?P<n>[IVXLC]+|\d{1,3})\s*$")
+PAGE_FURNITURE = re.compile(r"[\d/\-\s*()E]+|A/\d+/PV\.\d+")
+
+
+def read_annexes(lines: list[Line]) -> list[Annex]:
+    """The statements printed after "The meeting rose at ...": "Annex I", a bold heading, an optional
+    "[Original: ...]" note, then the text, its paragraphs marked by their indent. Page numbers and the document's
+    job number are left out. A marker run onto the end of the line before ("Thank you very much! Annex VIII") still
+    starts an annex."""
+    rose = max((i for i, ln in enumerate(lines) if "meeting rose at" in ln.text), default=None)
+    if rose is None:
+        return []
+    found: list[dict[str, Any]] = []
+    for ln in lines[rose + 1:]:
+        text = " ".join(ln.text.split())
+        if ln.zone != "body" or not text or PAGE_FURNITURE.fullmatch(text):
+            continue
+        mark = ANNEX_MARK.match(text) if ln.bold > 0 else None
+        if mark:
+            if mark.group("before") and found:
+                found[-1]["body"].append((ln.x0, mark.group("before")))
+            found.append({"n": mark.group("n"), "heading": [], "original": None, "body": []})
+            continue
+        if not found:
+            continue
+        cur = found[-1]
+        if not cur["body"] and cur["original"] is None and ln.bold >= 0.5:
+            cur["heading"].append(text)
+        elif not cur["body"] and text.startswith("[Original"):
+            cur["original"] = text
+        elif not cur["body"] and cur["original"] and not cur["original"].endswith("]"):
+            cur["original"] += " " + text   # the note runs onto a second line
+        else:
+            cur["body"].append((ln.x0, text))
+    out = []
+    for a in found:
+        if not a["body"]:
+            continue
+        left = min(x for x, _ in a["body"])
+        paras: list[str] = []
+        for x, t in a["body"]:
+            if not paras or x > left + 15:   # an indented line starts a paragraph
+                paras.append(t)
+            else:
+                paras[-1] += ("" if paras[-1].endswith("-") else " ") + t
+        out.append(Annex(a["n"], " ".join(a["heading"]), a["original"], "\n\n".join(paras)))
+    return out
 
 
 # ---- the President's statements in their national capacity ----------------------------------------------------

@@ -77,6 +77,7 @@ a:hover { text-decoration-thickness: 2px; }
   color: var(--ink-muted);
   border-block-end: 1px solid var(--rule-faint);
 }
+.phase p { margin: 0; }
 
 .phase__tag {
   display: inline-block;
@@ -394,3 +395,17 @@ details summary { cursor: pointer; font-weight: 700; }
 .foot nav a { color: var(--ink); }
 .foot nav a[aria-current="page"] { color: var(--un-blue); font-weight: 500; }
 .foot p { margin: 0; }
+
+/* ---- The problem-report form (corrections.html) ---- */
+
+.report { display: grid; gap: 0.5rem; max-inline-size: 40rem; margin-block: 1rem 1.5rem; }
+.report fieldset { border: 1px solid var(--rule-faint); padding: 0.75rem 1rem; margin: 0 0 0.5rem; }
+.report legend { font-weight: 700; padding-inline: 0.25rem; }
+.report fieldset label { display: block; margin-block: 0.25rem; }
+.report > label { font-weight: 700; margin-block-start: 0.5rem; }
+.report input[type="text"], .report input[type="email"], .report textarea {
+  font: inherit; padding: 0.5rem 0.6rem; border: 1px solid var(--rule); background: var(--paper); color: var(--ink);
+  inline-size: 100%;
+}
+.report button { justify-self: start; }
+.note.share a { overflow-wrap: anywhere; }

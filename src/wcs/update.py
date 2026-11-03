@@ -32,10 +32,10 @@ import duckdb
 
 from wcs.config import Settings
 from wcs.reference.countries import Countries, countries
-from wcs.sources import gadebate, undocs, unga
+from wcs.sources import gadebate, undocs, unga, ungd
 from wcs.sources import votes as vote_source
 from wcs.sources.verbatim import PARSER_VERSION
-from wcs.store.parquet import record_path, write_year, years
+from wcs.store.parquet import read_year, record_path, write_year, years
 
 log = logging.getLogger(__name__)
 
@@ -338,6 +338,11 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
             log.exception("General Debate website")
             report.warnings.append(f"General Debate website: {type(exc).__name__}: {exc}")
 
+    # where neither the official record nor the website has a country's statement yet (the website may refuse this
+    # client: found on the live server, October 2026), the corpus's text fills in, labelled as not the record
+    fallback, missing = corpus_fallback(settings, ref, live)
+    changed |= {1945 + s for s in missing}
+
     # store each changed session's records (a session's debate falls in one year: September). Before
     # gd_from_session the corpus has the statements, so only the replies are stored, beside them.
     for year in sorted(changed):
@@ -361,7 +366,11 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
             for r in gadebate.load_records(settings, session):
                 if r["record_id"] not in seen:
                     rows.append(r)
+                    seen.add(r["record_id"])
                     from_website += 1
+            from_corpus = [r for r in fallback.get(session, []) if r["record_id"] not in seen]
+            rows += from_corpus
+            report.gd.setdefault(session, {})["corpus"] = len(from_corpus)
             write_year(settings.parquet_dir, "gd", year, rows)
             gadebate.mark_stored(settings, {session})
         report.gd.setdefault(session, {})["website"] = from_website
@@ -380,6 +389,27 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
     return changed
 
 
+def corpus_fallback(settings: Settings, ref: Countries,
+                    sessions: set[int]) -> tuple[dict[int, list[dict[str, Any]]], set[int]]:
+    """For sessions still waiting for their official record: the corpus's statements of countries that neither the
+    record nor the website has (to be stored with the session), and the sessions where some of them are not stored
+    yet. The corpus's recent sessions are not the record either (delegations' texts, or transcripts of the
+    interpretation), so they are labelled ``text_source`` "corpus". Empty when the corpus is not downloaded."""
+    if not sessions or ungd.archive_path(settings) is None:
+        return {}, set()
+    years = {1945 + s for s in sessions}
+    stored = {y - 1945: read_year(settings.parquet_dir, "gd", y) for y in years}
+    other = {s: {r["record_id"] for r in rows if r.get("text_source") != "corpus"} for s, rows in stored.items()}
+    every = {s: {r["record_id"] for r in rows} for s, rows in stored.items()}
+    out: dict[int, list[dict[str, Any]]] = {}
+    for r in ungd.iter_records(settings, ref, years):
+        s = r["session"]
+        if s in sessions and r["record_id"] not in other.get(s, set()):
+            out.setdefault(s, []).append({**r, "text_source": "corpus"})
+    missing = {s for s, rows in out.items() if any(r["record_id"] not in every.get(s, set()) for r in rows)}
+    return out, missing
+
+
 GD_OVERDUE_DAYS = 456  # the records are usually out within about a year of the debate
 
 
@@ -396,8 +426,8 @@ def health(report: Report, today: date | None = None) -> None:
             report.warnings.append(f"no Security Council record newer than {report.latest_meeting} ({age} days)")
     annexed = [s for s, ps in report.problems.items() if any("printed in annexes" in p for p in ps)]
     if annexed:
-        report.warnings.append(f"{len(annexed)} General Debate records print statements in annexes, which are not read "
-                               f"yet ({', '.join(annexed[:3])}): those statements are missing")
+        report.warnings.append(f"statements shown as recorded videos could not be read from the annexes of "
+                               f"{len(annexed)} General Debate records ({', '.join(annexed[:3])}): those are missing")
     wording = [s for s, ps in report.problems.items() if any("typography" in p for p in ps)]
     if wording:
         report.warnings.append(f"{len(wording)} records parsed by wording, not typography: check the template")

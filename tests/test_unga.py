@@ -175,7 +175,7 @@ def test_update_general_debate(ga):
     assert "A/81/PV.1" not in docs.calls             # catalogued on other business: not fetched
     assert "A/81/PV.30" in docs.calls                # numbers not yet published are looked for on ODS
     assert report.gd[81] == {"meetings": 1, "statements": 3, "replies": 1, "concluded": False, "awaiting": 28,
-                             "website": 0}
+                             "website": 0, "corpus": 0}
     assert sorted(r["record_id"] for r in read_year(ga.parquet_dir, "gd", 2026)) == [
         "gd:81:CZE", "gd:81:EU", "gd:81:MAR:reply:8.009", "gd:81:NER"]
 
@@ -270,3 +270,70 @@ def test_records_of_the_1990s():
     assert [x.text for x in two_column_order(mixed)] == [x.text for x in left + right]
     one = [ln(4, 700 - 12 * i, f"only {i}", x=60) for i in range(8)]
     assert two_column_order(one) == one
+
+
+def test_statements_printed_in_annexes(settings):
+    """Found in the records of 2020: recorded statements are printed after the meeting, each in an annex."""
+    lines = ga_lines()
+    for line in lines:
+        if line.text.startswith("President Pavel:"):
+            line.text = "President Pavel: I have the honour to introduce the pre-recorded statement by His Excellency"
+    rose = next(ln for ln in lines if "meeting rose" in ln.text)
+    lines += [ln(2, 730, "2/9", zone="body"), ln(2, 705, "Annex I", x=60, bold="Annex I"),
+              ln(2, 685, "Address by Mr. Petr Pavel, President of the Czech", bold="Address by Mr. Petr Pavel, "
+                 "President of the Czech"),
+              ln(2, 671, "Republic", bold="Republic"),
+              ln(2, 655, "[Original: Czech; English translation provided by the", x=198),
+              ln(2, 643, "delegation]", x=198),
+              ln(2, 625, "Mr. President,", x=152), ln(2, 610, "The Czech Republic stands by the", x=152),
+              ln(2, 598, "Charter of the United Nations.", x=123), ln(2, 585, "26-12345", x=500)]
+    assert rose.page == 1
+    m = parse(merge_fragments(lines), "A/81/PV.8")
+    assert [a.number for a in m.annexes] == ["I"] and m.annexes[0].original.endswith("delegation]")
+    recs = {r["record_id"]: r for r in unga.records_for(m, {}, countries(), settings)}
+    cze = recs["gd:81:CZE"]
+    assert cze["text_source"] == "annex" and cze["speaker_name"] == "Petr Pavel" and cze["language"] == "Czech"
+    assert cze["text"] == "Mr. President,\n\nThe Czech Republic stands by the Charter of the United Nations."
+    assert not any("printed in annexes" in w for w in m.warnings)
+
+
+def test_a_heading_for_another_country_is_not_trusted(settings):
+    """Found in the records of 2020: pages out of order put India's reply under Tonga's Prime Minister's heading."""
+    lines = ga_lines()
+    for line in lines:
+        if line.text.startswith("President Pavel:"):
+            line.text = "Mr. Kumar (India): I am exercising India's right of reply to the statement made earlier."
+            line.bold_prefix = "Mr. Kumar"
+    m = parse(merge_fragments(lines), "A/81/PV.8")
+    recs = unga.records_for(m, {}, countries(), settings)
+    assert "gd:81:CZE" not in {r["record_id"] for r in recs} and "gd:81:IND" not in {r["record_id"] for r in recs}
+    assert any("name another country" in w for w in m.warnings)
+
+
+def test_corpus_fills_in_until_the_record_is_out(ga):
+    """Found on the live server: the website refused the server, so a session waiting for its record had only the
+    statements the record had so far. The corpus fills in, labelled; the record wins where it has the statement."""
+    import io
+    import tarfile
+
+    from wcs.sources import ungd
+    from wcs.update import Report, update_general_debate
+
+    d = ungd.raw_dir(ga)
+    d.mkdir(parents=True)
+    with tarfile.open(d / "UNGDC_1946-2026.tar.gz", "w:gz") as tar:
+        for name, text in {"TXT/Session 81 - 2026/CZE_81_2026.txt": "The corpus's Czech text.",
+                           "TXT/Session 81 - 2026/FRA_81_2026.txt": "France calls for a ceasefire.",
+                           "TXT/Session 80 - 2025/FRA_80_2025.txt": "An older session."}.items():
+            info = tarfile.TarInfo(name)
+            info.size = len(text.encode())
+            tar.addfile(info, io.BytesIO(text.encode()))
+    docs = FakeDocs([{"symbol": "A/81/PV.8", "verbatim": True, "agenda": ["General debate"], "date": "2026-09-22"}],
+                    {"A/81/PV.8"})
+    report = Report(started="now")
+    update_general_debate(ga, countries(), docs, report, today=date(2026, 10, 24))
+    rows = {r["record_id"]: r for r in read_year(ga.parquet_dir, "gd", 2026)}
+    assert rows["gd:81:FRA"]["text_source"] == "corpus" and rows["gd:81:CZE"]["text_source"] == "record"
+    assert report.gd[81]["corpus"] == 1 and read_year(ga.parquet_dir, "gd", 2025) == []
+    again = update_general_debate(ga, countries(), FakeDocs([], set()), Report(started="later"), today=date(2026, 10, 25))
+    assert 2026 not in again and "gd:81:FRA" in {r["record_id"] for r in read_year(ga.parquet_dir, "gd", 2026)}

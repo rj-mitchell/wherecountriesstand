@@ -255,6 +255,37 @@ def usage(days: int = typer.Option(7, help="list daily spend and failures for th
         raise typer.Exit(1)
 
 
+@app.command("reports")
+def list_reports(all_: bool = typer.Option(False, "--all", help="include reports already dealt with")) -> None:
+    """Problems and takedown requests sent through the site's form (newest first)."""
+    from wcs.api.usage import StateDB, reports
+
+    for r in reports(StateDB(load_settings().data_dir / "state.db"), open_only=not all_):
+        typer.echo(f"#{r['id']}  {r['at']}  {r['kind']}  {r['page'] or '-'}{'  (closed)' if r['closed_at'] else ''}")
+        typer.echo(f"    {r['message']}")
+        if r["contact"]:
+            typer.echo(f"    reply to: {r['contact']}")
+
+
+@app.command("close-report")
+def close_report_cmd(report_id: int) -> None:
+    """Mark a report dealt with. Its contact address is deleted (the privacy notice says so)."""
+    from wcs.api.usage import StateDB, close_report
+
+    ok = close_report(StateDB(load_settings().data_dir / "state.db"), report_id)
+    typer.echo("closed" if ok else "no open report with that number")
+
+
+@app.command()
+def withdraw(briefing_id: str, reason: str = typer.Option(..., help="shown at its address and on the corrections "
+                                                                   "page, e.g. 'It misattributed a statement.'")) -> None:
+    """Withdraw a saved briefing (/b/<id>): its address then says why, and the corrections page lists it."""
+    from wcs.api.usage import StateDB, withdraw_briefing
+
+    ok = withdraw_briefing(StateDB(load_settings().data_dir / "state.db"), briefing_id, reason)
+    typer.echo("withdrawn" if ok else "no briefing with that id")
+
+
 @app.command("backfill-replies")
 def backfill_replies(since: int = typer.Option(..., help="first session, e.g. 48 (1993)"),
                      until: int = typer.Option(None, help="last session (default: the one before [live] "
