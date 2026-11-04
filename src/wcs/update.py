@@ -325,6 +325,10 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
 
     live = {s for s in sessions if s >= first and not any(
         e.get("concludes_debate") for sym, e in manifest.entries.items() if unga.session_of(sym) == s)}
+    if live:
+        # statements read from the website elsewhere, kept in the repository for a server the website refuses
+        for session, n in gadebate.import_bundled(settings, live).items():
+            log.info("imported %d website statements of the %sth session from the repository", n, session)
     if live and settings.section("live").get("gd_website", True):
         try:
             got, problems = gadebate.update(settings, ref, live, site=website,
@@ -336,6 +340,8 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
             log.warning("General Debate website refused access: %s", exc)
         except Exception:
             log.exception("General Debate website")
+        # saved but not yet stored (imported, or an interrupted run): stored even when the website refused today
+        changed |= {1945 + s for s in gadebate.unstored(settings) & live}
         # the website is read at most every 20 hours: warn on every update until a reading succeeds
         check = gadebate.last_check(settings, live)
         report.gd_website = check

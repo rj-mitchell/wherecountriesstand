@@ -11,7 +11,7 @@ from wcs.config import load_settings
 def settings(tmp_path, monkeypatch):
     """Settings with a temporary data folder and the offline hashing embedder."""
     monkeypatch.setenv("WCS_DATA_DIR", str(tmp_path / "data"))
-    return load_settings(**{"embedding.backend": "hashing", "embedding.dim": 64})
+    return load_settings(**{"embedding.backend": "hashing", "embedding.dim": 64, "live.gd_bundled": ""})
 
 
 def speech(record_id: str, d: date, code: str | None, text: str, **kw) -> dict:

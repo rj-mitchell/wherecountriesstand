@@ -422,7 +422,38 @@ def _update(settings: Settings, countries: Countries, sessions: set[int], site: 
     return changed | unstored, problems
 
 
-def import_records(settings: Settings, sources: list[str]) -> dict[int, int]:
+def import_bundled(settings: Settings, sessions: set[int]) -> dict[int, int]:
+    """Statements of the given sessions read from the website elsewhere and kept in the repository
+    (data_static/gd_website/records-<session>.json): imported once each, the first time an update sees them, so a
+    server the website refuses still has them. Returns statements per session imported now."""
+    import hashlib
+
+    from wcs.config import STATIC_DIR
+
+    folder = settings.section("live").get("gd_bundled", "")      # config/settings.toml: "gd_website"
+    if not folder:
+        return {}
+    state = load_state(settings)
+    done = state.get("bundled", {})
+    todo = [p for p in sorted((STATIC_DIR / folder).glob("records-*.json"))
+            if int(p.stem.split("-")[1]) in sessions
+            and done.get(p.stem) != hashlib.sha1(p.read_bytes()).hexdigest()]
+    if not todo:
+        return {}
+    out = import_records(settings, [str(p) for p in todo], hold_website=False)
+    state = load_state(settings)
+    state["bundled"] = {**state.get("bundled", {}),
+                        **{p.stem: hashlib.sha1(p.read_bytes()).hexdigest() for p in todo}}
+    save_state(settings, state)
+    return out
+
+
+def unstored(settings: Settings) -> set[int]:
+    """Sessions with statements saved but not yet stored (imported, or an interrupted run)."""
+    return {int(s) for s in load_state(settings).get("unstored", [])}
+
+
+def import_records(settings: Settings, sources: list[str], hold_website: bool = True) -> dict[int, int]:
     """Statements read from the website elsewhere (records-<session>.json files, as this module saves them, from a
     path or a web address), for a server the website refuses. They are kept beside any this server read itself, and
     the next ``wcs update`` stores them without reading the website first. Returns statements per session."""
@@ -446,7 +477,8 @@ def import_records(settings: Settings, sources: list[str]) -> dict[int, int]:
         out[session] = len(rows)
     state = load_state(settings)
     state["unstored"] = sorted(set(state.get("unstored", [])) | set(out))
-    state["sitemap_checked"] = _now()       # store them at the next update, before trying the website again
+    if hold_website:
+        state["sitemap_checked"] = _now()   # store them at the next update, before trying the website again
     state.setdefault("last_check", {})["imported"] = {"at": _now(), "statements": {str(k): v for k, v in out.items()}}
     save_state(settings, state)
     return out
