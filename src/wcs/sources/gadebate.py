@@ -422,6 +422,36 @@ def _update(settings: Settings, countries: Countries, sessions: set[int], site: 
     return changed | unstored, problems
 
 
+def import_records(settings: Settings, sources: list[str]) -> dict[int, int]:
+    """Statements read from the website elsewhere (records-<session>.json files, as this module saves them, from a
+    path or a web address), for a server the website refuses. They are kept beside any this server read itself, and
+    the next ``wcs update`` stores them without reading the website first. Returns statements per session."""
+    state = load_state(settings)
+    out: dict[int, int] = {}
+    for src in sources:
+        raw = httpx.get(src, timeout=120, follow_redirects=True).raise_for_status().text \
+            if src.startswith(("http://", "https://")) else Path(src).read_text()
+        rows = json.loads(raw)
+        m = re.search(r"records-(\d+)\.json$", src)
+        sessions = {int(r["record_id"].split(":")[1]) for r in rows}
+        if not rows or len(sessions) != 1 or (m and int(m.group(1)) not in sessions) or \
+                not all(r.get("record_id", "").startswith("gd:") and r.get("text") for r in rows):
+            raise ValueError(f"{src}: not a records file of one session")
+        session = sessions.pop()
+        for r in rows:
+            r["date"] = date.fromisoformat(str(r["date"])[:10])
+        mine = {r["record_id"]: r for r in load_records(settings, session)}
+        merged = {r["record_id"]: r for r in rows} | mine     # what this server read itself wins
+        save_records(settings, session, merged.values())
+        out[session] = len(rows)
+    state = load_state(settings)
+    state["unstored"] = sorted(set(state.get("unstored", [])) | set(out))
+    state["sitemap_checked"] = _now()       # store them at the next update, before trying the website again
+    state.setdefault("last_check", {})["imported"] = {"at": _now(), "statements": {str(k): v for k, v in out.items()}}
+    save_state(settings, state)
+    return out
+
+
 def save_records(settings: Settings, session: int, records) -> None:
     path = records_path(settings, session)
     path.parent.mkdir(parents=True, exist_ok=True)

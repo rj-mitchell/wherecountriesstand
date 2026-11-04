@@ -328,6 +328,18 @@ def gd_website(now: bool = typer.Option(False, "--now", help="also let the next 
         typer.echo("the next `wcs update` will read the website")
 
 
+@app.command("import-gd-website")
+def import_gd_website(sources: list[str] = typer.Argument(..., help="records-<session>.json files: paths or web "
+                                                                    "addresses")) -> None:
+    """Load General Debate website statements read elsewhere, for a server the website refuses (docs/OPERATIONS.md).
+    Then run `wcs update --no-votes --no-sc` to store and index them."""
+    from wcs.sources import gadebate
+
+    for session, n in sorted(gadebate.import_records(load_settings(), sources).items()):
+        typer.echo(f"session {session}: {n} statements imported")
+    typer.echo("now run: wcs update --no-votes --no-sc")
+
+
 @app.command("backfill-replies")
 def backfill_replies(since: int = typer.Option(..., help="first session, e.g. 48 (1993)"),
                      until: int = typer.Option(None, help="last session (default: the one before [live] "
