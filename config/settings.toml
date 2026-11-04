@@ -30,6 +30,9 @@ gd_from_session = 79
 # Until a session's official records are out, take its statements from the UN's General Debate website
 # (gadebate.un.org; wcs.sources.gadebate), labelled as not yet the official record (docs/DECISIONS.md, 12).
 gd_website = true
+# Statements read from the website elsewhere, for a server it refuses (data_static/<this>/records-<session>.json):
+# imported by the update once each (docs/OPERATIONS.md). Empty to leave them out.
+gd_bundled = "gd_website"
 
 [sources]
 # Harvard Dataverse file ids (CC0). The General Debate corpus asks for a guestbook entry, so it is downloaded by

@@ -219,3 +219,28 @@ def test_statements_read_elsewhere_are_imported_and_stored(site_settings, tmp_pa
                           website=FakeSite(blocked=True))
     rows = {r["record_id"]: r for r in read_year(site_settings.parquet_dir, "gd", 2026)}
     assert "gd:81:KEN" in rows and rows["gd:81:KEN"]["text_source"] == "delegation"
+
+
+def test_statements_kept_in_the_repository_are_imported_by_the_update(site_settings, tmp_path):
+    """data_static/gd_website: imported once, and stored even though the website refuses this server."""
+    from wcs.update import Report, update_general_debate
+
+    gadebate.update(site_settings, countries(), {81}, site=FakeSite())
+    bundled = tmp_path / "bundled"
+    bundled.mkdir()
+    (bundled / "records-81.json").write_text(gadebate.records_path(site_settings, 81).read_text())
+    for f in gadebate.cache_dir(site_settings).glob("*.json"):
+        f.unlink()
+    site_settings.raw["live"]["gd_bundled"] = str(bundled)
+
+    class NoDocs:
+        def search(self, query, rows=200):
+            return []
+
+        def pdf(self, symbol, library_url=None):
+            return None
+
+    update_general_debate(site_settings, countries(), NoDocs(), Report(started="now"), today=date(2026, 10, 24),
+                          website=FakeSite(blocked=True))
+    assert "gd:81:KEN" in {r["record_id"] for r in read_year(site_settings.parquet_dir, "gd", 2026)}
+    assert gadebate.import_bundled(site_settings, {81}) == {}           # once only
