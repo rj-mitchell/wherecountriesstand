@@ -65,7 +65,7 @@ one, the site shows the sources only).
    |---|---|
    | Voting data, Security Council corpus (510 MB), General Debate corpus (71 MB): download and load | 1 minute |
    | The UN's own records since the corpora: 778 documents (Security Council from 2024, General Debate from 2024, and the General Debate website for sessions whose records are not out) | 1 hour 35 minutes |
-   | Rights of reply in past General Debates (2000-2023) | 32 minutes |
+   | Rights of reply in past General Debates (2000-2023; 1993-1999 were added later and take about 15 minutes more) | 32 minutes |
    | Keyword index | 1 minute |
 
    Meaning search is then left to the scheduled updates, an hour a run, so it covers everything within about a day
