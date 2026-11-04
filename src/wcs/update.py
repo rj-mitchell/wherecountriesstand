@@ -62,6 +62,7 @@ class Report:
     latest_meeting: str | None = None
     gd: dict[int, dict[str, Any]] = field(default_factory=dict)  # session -> meetings, statements, concluded
     warnings: list[str] = field(default_factory=list)
+    gd_website: dict[str, Any] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
 
     @property
@@ -332,11 +333,21 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
             if problems:
                 report.problems["gadebate.un.org"] = problems
         except gadebate.Blocked as exc:
-            report.warnings.append(f"the General Debate website refused access ({exc}): statements will come from "
-                                   "the official records, about a year after the debate")
-        except Exception as exc:
+            log.warning("General Debate website refused access: %s", exc)
+        except Exception:
             log.exception("General Debate website")
-            report.warnings.append(f"General Debate website: {type(exc).__name__}: {exc}")
+        # the website is read at most every 20 hours: warn on every update until a reading succeeds
+        check = gadebate.last_check(settings, live)
+        report.gd_website = check
+        if check.get("error"):
+            how = "refused access" if check["error"].startswith("Blocked") else "could not be read"
+            report.warnings.append(f"the General Debate website {how} ({check['error']}; at {check.get('at')}): "
+                                   "this year's statements will come from the official records, about a year "
+                                   "after the debate")
+        elif check.get("problems"):
+            report.warnings.append(f"the General Debate website, read at {check.get('at')}: "
+                                   f"{check.get('pages_failed', 0)} pages could not be read; "
+                                   + "; ".join(check["problems"][:2]))
 
     # where neither the official record nor the website has a country's statement yet (the website may refuse this
     # client: found on the live server, October 2026), the corpus's text fills in, labelled as not the record

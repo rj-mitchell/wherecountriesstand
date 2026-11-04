@@ -64,6 +64,7 @@ from wcs.api.usage import (
 )
 from wcs.config import REPO_ROOT, Settings, load_settings
 from wcs.rag.pipeline import AskRequest, Pipeline
+from wcs.sources import gadebate
 
 log = logging.getLogger(__name__)
 mimetypes.add_type("font/woff2", ".woff2")  # missing from slim images' MIME lists
@@ -171,7 +172,8 @@ def update_status(settings: Settings) -> dict[str, Any]:
         return {"last_update": None}
     r = json.loads(reports[-1].read_text())
     return {"last_update": {k: r.get(k) for k in ("started", "finished", "ok", "latest_meeting", "warnings", "errors")},
-            "general_debate": r.get("gd"), "years_written": r.get("years_written"), "updates_kept": len(reports)}
+            "general_debate": r.get("gd"), "general_debate_website": gadebate.last_check(settings),
+            "years_written": r.get("years_written"), "updates_kept": len(reports)}
 
 
 def site_url(settings: Settings, request: Request) -> str:

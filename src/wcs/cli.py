@@ -286,6 +286,48 @@ def withdraw(briefing_id: str, reason: str = typer.Option(..., help="shown at it
     typer.echo("withdrawn" if ok else "no briefing with that id")
 
 
+@app.command("gd-website")
+def gd_website(now: bool = typer.Option(False, "--now", help="also let the next `wcs update` read the website "
+                                                            "straight away, rather than after 20 hours")) -> None:
+    """Check the UN's General Debate website from here: whether it answers, and how many statements its sitemap
+    lists for the sessions whose official records aren't complete. Prints what came back if it refuses."""
+    from datetime import date
+
+    from wcs.sources import gadebate, unga
+    from wcs.update import gd_from_session
+
+    s = load_settings()
+    sessions = set(range(gd_from_session(s), unga.current_session(date.today()) + 1))
+    site = gadebate.Website(pause=1)
+    try:
+        r = site.get(f"{gadebate.SITE}/sitemap.xml")
+        typer.echo(f"sitemap: {r.status_code} {r.headers.get('content-type')}, {len(r.text)} bytes")
+        index = gadebate._sitemap(site, f"{gadebate.SITE}/sitemap.xml")
+        pages: dict[str, str] = {}
+        for sub in gadebate.sitemap_pages(index) or [f"{gadebate.SITE}/sitemap.xml"]:
+            text = gadebate._sitemap(site, sub) if sub != f"{gadebate.SITE}/sitemap.xml" else index
+            pages.update(gadebate.sitemap_statements(text, sessions))
+        for session in sorted(sessions):
+            listed = [u for u in pages if u.split("/")[4] == str(session)]
+            typer.echo(f"session {session}: {len(listed)} statements listed")
+        if pages:
+            url = sorted(pages)[-1]
+            info = gadebate.parse_page(site.get(url).text, url)
+            typer.echo(f"one page ({url}): speaker {info.get('label')!r}, English text: "
+                       f"{'yes' if 'english' in info['files'] else 'no'}, transcript: "
+                       f"{'yes' if info.get('transcript') else 'no'}")
+    except gadebate.Blocked as exc:
+        typer.echo(f"REFUSED: {exc}")
+    except Exception as exc:
+        typer.echo(f"FAILED: {type(exc).__name__}: {exc}")
+    typer.echo(f"last reading by the update: {json.dumps(gadebate.last_check(s, sessions), default=str)}")
+    if now:
+        state = gadebate.load_state(s)
+        state.pop("sitemap_checked", None)
+        gadebate.save_state(s, state)
+        typer.echo("the next `wcs update` will read the website")
+
+
 @app.command("backfill-replies")
 def backfill_replies(since: int = typer.Option(..., help="first session, e.g. 48 (1993)"),
                      until: int = typer.Option(None, help="last session (default: the one before [live] "
