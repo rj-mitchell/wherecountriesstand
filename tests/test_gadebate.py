@@ -1,5 +1,6 @@
 """The General Debate website as a stop-gap source, tested with a fake site (no network)."""
 
+import json
 from datetime import date
 
 import pytest
@@ -194,3 +195,27 @@ def test_a_good_reading_is_recorded(site_settings):
     gadebate.update(site_settings, countries(), {81}, site=FakeSite())
     check = gadebate.last_check(site_settings, {81})
     assert check["ok"] and check["pages_listed"] == {"81": 2} and check["statements_kept"]["81"] >= 1
+
+
+def test_statements_read_elsewhere_are_imported_and_stored(site_settings, tmp_path):
+    """For a server the website refuses: records read elsewhere are imported, then stored by the next update."""
+    from wcs.update import Report, update_general_debate
+
+    gadebate.update(site_settings, countries(), {81}, site=FakeSite())
+    exported = tmp_path / "records-81.json"
+    exported.write_text(gadebate.records_path(site_settings, 81).read_text())
+    for f in gadebate.cache_dir(site_settings).glob("*.json"):
+        f.unlink()                                       # a server that never read the website
+
+    class NoDocs:
+        def search(self, query, rows=200):
+            return []
+
+        def pdf(self, symbol, library_url=None):
+            return None
+
+    assert gadebate.import_records(site_settings, [str(exported)]) == {81: len(json.loads(exported.read_text()))}
+    update_general_debate(site_settings, countries(), NoDocs(), Report(started="now"), today=date(2026, 10, 24),
+                          website=FakeSite(blocked=True))
+    rows = {r["record_id"]: r for r in read_year(site_settings.parquet_dir, "gd", 2026)}
+    assert "gd:81:KEN" in rows and rows["gd:81:KEN"]["text_source"] == "delegation"
