@@ -128,6 +128,10 @@ def dates_in(question: str, today: date) -> tuple[date | None, date | None]:
     if m:
         y = int(m.group(1))
         return date(y, 1, 1), date(y, 12, 31)
+    # a year on its own ("the 2026 General Debate"), unless it's in the future ("Agenda 2030")
+    years = [int(y) for y in re.findall(rf"(?<![\d/.-]){_YEAR}(?![\d/.-])", q) if int(y) <= today.year]
+    if len(set(years)) == 1:
+        return date(years[0], 1, 1), date(years[0], 12, 31)
     m = re.search(r"\b(?:last|past) (\d+|five|ten|twenty) years\b", q)
     if m:
         n = {"five": 5, "ten": 10, "twenty": 20}.get(m.group(1)) or int(m.group(1))

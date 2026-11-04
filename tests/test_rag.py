@@ -186,3 +186,13 @@ def test_un_regional_and_income_groups_are_read():
     t = speaker_label(rec(country_code="MLI", country_name="Mali", language=None,
                           groups=["region:africa", "au", "au_suspended", "income:low"]))
     assert "suspended from the African Union's activities on this date" in t and "Low-income economy" in t
+
+
+def test_a_year_on_its_own_is_that_year():
+    from wcs.rag.query_parse import dates_in
+
+    today = date(2026, 11, 4)
+    assert dates_in("What did countries say about Gaza in the 2026 General Debate?", today) == \
+        (date(2026, 1, 1), date(2026, 12, 31))
+    assert dates_in("Who spoke about Agenda 2030?", today) == (None, None)       # a future year isn't a date
+    assert dates_in("Resolution 2334 and the 2016 debate", today) == (date(2016, 1, 1), date(2016, 12, 31))
