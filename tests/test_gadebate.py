@@ -160,3 +160,37 @@ def test_blocked_website_is_a_warning(site_settings):
     update_general_debate(site_settings, countries(), NoDocs(), report, today=date(2026, 10, 24),
                           website=FakeSite(blocked=True))
     assert any("refused access" in w for w in report.warnings) and report.ok
+
+
+def test_a_challenge_page_served_as_200_is_a_refusal_and_stays_visible(site_settings):
+    """The live server found no statements and no warning (November 2026): a page that isn't a sitemap is now a
+    refusal, and the last reading is kept for the status page and for every update's warnings until one succeeds."""
+    from wcs.update import Report, update_general_debate
+
+    class Challenge(FakeSite):
+        def get(self, url):
+            self.calls.append(url)
+            return Resp("<html><title>Just a moment...</title></html>", ctype="text/html")
+
+    class NoDocs:
+        def search(self, query, rows=200):
+            return []
+
+        def pdf(self, symbol, library_url=None):
+            return None
+
+    report = Report(started="now")
+    update_general_debate(site_settings, countries(), NoDocs(), report, today=date(2026, 10, 24), website=Challenge())
+    assert any("refused access" in w and "not a sitemap" in w for w in report.warnings)
+    check = gadebate.last_check(site_settings)
+    assert check["ok"] is False and "not a sitemap" in check["error"]
+    # the next update doesn't read the website again (20 hours), but still warns
+    report = Report(started="later")
+    update_general_debate(site_settings, countries(), NoDocs(), report, today=date(2026, 10, 24), website=Challenge())
+    assert any("refused access" in w for w in report.warnings)
+
+
+def test_a_good_reading_is_recorded(site_settings):
+    gadebate.update(site_settings, countries(), {81}, site=FakeSite())
+    check = gadebate.last_check(site_settings, {81})
+    assert check["ok"] and check["pages_listed"] == {"81": 2} and check["statements_kept"]["81"] >= 1

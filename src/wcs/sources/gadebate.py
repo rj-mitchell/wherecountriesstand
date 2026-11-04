@@ -314,10 +314,42 @@ def reclean(settings: Settings, countries: Countries, state: dict[str, Any],
     return changed
 
 
+def last_check(settings: Settings, sessions: set[int] | None = None) -> dict[str, Any]:
+    """What the last reading of the website found, and how many statements are kept from it, for the status page:
+    the website is read at most every SITEMAP_EVERY_HOURS, so a failure must be visible between readings too."""
+    state = load_state(settings)
+    out = dict(state.get("last_check") or {})
+    if sessions is None:
+        sessions = {int(p.stem.split("-")[1]) for p in cache_dir(settings).glob("records-*.json")}
+    out["statements_kept"] = {str(s): len(load_records(settings, s)) for s in sorted(sessions)}
+    return out
+
+
+def _sitemap(site: Website, url: str) -> str:
+    """A sitemap page, or Blocked if what came back isn't one (a browser check served with status 200)."""
+    r = site.get(url)
+    if "<urlset" not in r.text[:3000] and "<sitemapindex" not in r.text[:3000]:
+        raise Blocked(f"{url} came back as {r.headers.get('content-type', '?')}, not a sitemap: "
+                      f"{' '.join(r.text[:120].split())!r}")
+    return r.text
+
+
 def update(settings: Settings, countries: Countries, sessions: set[int], site: Website | None = None,
-           skip: set[str] | None = None) -> tuple[set[int], list[str]]:
+           skip: set[str] | None = None, force: bool = False) -> tuple[set[int], list[str]]:
     """Fetch new and changed statement pages of the given sessions. ``skip``: record ids the official record already
-    has. Returns the sessions whose records changed, and problems to report."""
+    has. ``force``: read the sitemap now, however recently it was read. Returns the sessions whose records changed,
+    and problems to report. What it found is kept in the state ("last_check") for the status page."""
+    try:
+        return _update(settings, countries, sessions, site, skip, force)
+    except Exception as exc:
+        state = load_state(settings)
+        state["last_check"] = {"at": _now(), "ok": False, "error": f"{type(exc).__name__}: {exc}"[:500]}
+        save_state(settings, state)
+        raise
+
+
+def _update(settings: Settings, countries: Countries, sessions: set[int], site: Website | None,
+            skip: set[str] | None, force: bool) -> tuple[set[int], list[str]]:
     state = load_state(settings)
     by_session: dict[int, dict[str, dict[str, Any]]] = {
         s: {r["record_id"]: r for r in load_records(settings, s)} for s in sessions}
@@ -327,14 +359,17 @@ def update(settings: Settings, countries: Countries, sessions: set[int], site: W
         save_state(settings, state)
     # sessions with records saved but not yet stored (an interrupted run) are returned again until stored
     unstored = {int(s) for s in state.get("unstored", [])} & sessions
-    if _hours_since(state.get("sitemap_checked")) < SITEMAP_EVERY_HOURS:
+    if not force and _hours_since(state.get("sitemap_checked")) < SITEMAP_EVERY_HOURS:
         return unstored, []
     site = site or Website()
     problems: list[str] = []
     pages: dict[str, str] = {}
-    index = site.get(f"{SITE}/sitemap.xml").text
+    index = _sitemap(site, f"{SITE}/sitemap.xml")
     for sub in sitemap_pages(index) or [f"{SITE}/sitemap.xml"]:
-        pages.update(sitemap_statements(site.get(sub).text if sub != f"{SITE}/sitemap.xml" else index, sessions))
+        pages.update(sitemap_statements(_sitemap(site, sub) if sub != f"{SITE}/sitemap.xml" else index, sessions))
+    listed = {s: sum(1 for u in pages if u.split("/")[4] == str(s)) for s in sessions}
+    if not any(listed.values()):
+        problems.append(f"the website's sitemap lists no statements for sessions {sorted(sessions)}")
     changed: set[int] = set()
     for url, mod in sorted(pages.items()):
         seen = state["pages"].get(url, {})
@@ -380,6 +415,9 @@ def update(settings: Settings, countries: Countries, sessions: set[int], site: W
             state["unstored"] = sorted(set(state.get("unstored", [])) | {rec["session"]})  # loses nothing
         save_state(settings, state)
     state["sitemap_checked"] = _now()
+    state["last_check"] = {"at": _now(), "ok": not problems, "pages_listed": {str(s): n for s, n in listed.items()},
+                           "pages_failed": sum(1 for p in problems if p.startswith(SITE)),
+                           "problems": problems[:5]}
     save_state(settings, state)
     return changed | unstored, problems
 
