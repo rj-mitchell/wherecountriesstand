@@ -1,0 +1,29 @@
+To: gaab@un.org
+Subject: Request for automated access to General Debate statements (gadebate.un.org)
+
+Dear General Debate website team,
+
+(I couldn't find an address for the website itself, so I'm writing to the General Assembly Affairs Branch: if this belongs elsewhere, please could you pass it on? Thank you.)
+
+I'm writing from Where Countries Stand (https://wherecountriesstand.com), an independent public website that helps people find out what countries have said, and how they have voted, at the United Nations. It answers questions with short, balanced briefings in which every point cites the UN's own record, with its document symbol. It is a project of Where They Stand, a charitable incorporated organisation being registered in England and Wales.
+
+For the General Debate we rely on the official verbatim records, which appear about a year after each debate. Your website (https://gadebate.un.org) has each statement within days, so we would like to use it until the official record is out. Each statement taken from your site is labelled as not yet the official record, links back to its page, and is replaced by the official record once it is published.
+
+Your site's browser check turns away automated programs. I want to be open that our program has so far presented itself as an ordinary browser to read the statement pages (it keeps to robots.txt and reads slowly), and that the check now turns away our server anyway. We would rather do this with your agreement, so I'm writing to ask whether you would be willing to do one of the following:
+
+1. let our server through the check: it is at 151.247.219.240, and would identify itself as "WhereCountriesStand", with a link to our site; or
+2. point us to a download or data feed of the statements and transcripts, if one exists or is planned.
+
+How it would read the site:
+
+- the sitemap about once a day, and only the statement pages that are new or changed since the last visit;
+- one request every two seconds, with every page kept once fetched, so nothing is read twice;
+- for each statement, only the page itself, the delegation's text and the English transcript.
+
+If you would rather we didn't use the website, we will stop and wait for the official records. I'm happy to answer any questions, or to change how it reads the site to suit you.
+
+Kind regards,
+
+Where They Stand
+wheretheystanduk@gmail.com
+https://wherecountriesstand.com
