@@ -1,9 +1,10 @@
 To: gaab@un.org
+Cc: avlibrary@un.org
 Subject: Request for automated access to General Debate statements (gadebate.un.org)
 
 Dear General Debate website team,
 
-(I couldn't find an address for the website itself, so I'm writing to the General Assembly Affairs Branch: if this belongs elsewhere, please could you pass it on? Thank you.)
+(I couldn't find an address for the website itself, so I'm writing to the General Assembly Affairs Branch, with a copy to the UN Audiovisual Library, which the website names for its audio and video. If this belongs with another team, please could you pass it on? Thank you.)
 
 I'm writing from Where Countries Stand (https://wherecountriesstand.com), an independent public website that helps people find out what countries have said, and how they have voted, at the United Nations. It answers questions with short, balanced briefings in which every point cites the UN's own record, with its document symbol. It is a project of Where They Stand, a charitable incorporated organisation being registered in England and Wales.
 
