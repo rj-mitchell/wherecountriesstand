@@ -5,6 +5,8 @@
 Description=Where Countries Stand: update data
 After=docker.service
 Requires=docker.service
+# Emails the alerts address if this fails (deploy/alert@.service in Where They Stand, docs/HOSTING.md there)
+OnFailure=alert@%n.service
 
 [Service]
 Type=oneshot
