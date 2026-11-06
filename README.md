@@ -27,7 +27,7 @@ shared server, with written briefings switched on and spending caps of $3 a day 
   out (about a year after each debate) the UN's General Debate website; rights of reply from 1993;
 - General Assembly votes from 1946.
 
-The home page shows each source's latest date, and `/api/status` the last update and its warnings. Next: a page
+The home page shows each source's latest date, and the status page (`/status.html`, from `/api/status`) the last update and its warnings, and whether briefings are paused. Next: a page
 for each country (which Where Lives Stand would link to), and testing with people who use assistive technology.
 
 ## In the family
