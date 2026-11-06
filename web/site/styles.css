@@ -408,6 +408,15 @@ details summary { cursor: pointer; font-weight: 700; }
 .sisters a:hover { color: var(--un-blue); }
 .sisters .wts-spine { block-size: 1.4rem; inline-size: auto; }
 
+/* ---- The status and press pages (status.html, press.html) ---- */
+
+.status-list, .press-coverage { max-inline-size: 40rem; margin-block-end: 1rem; }
+.cite-template {
+  margin: 0.5rem 0 1rem; padding: 0.4rem 1rem; border-inline-start: 3px solid var(--rule-faint);
+  background: var(--paper-raised); overflow-wrap: anywhere;
+}
+.cite-template p { margin: 0.4rem 0; }
+
 /* ---- Print: the site's name, the briefing and its sources, and the independence notice ---- */
 
 @media print {

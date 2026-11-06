@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <!--#include head-->
+  <title>Status · Where Countries Stand</title>
+  <meta name="description" content="Whether Where Countries Stand is writing briefings, and how up to date its record of the United Nations is.">
+  <link rel="canonical" href="__SITE__/status.html">
+  <meta property="og:title" content="Status · Where Countries Stand">
+  <meta property="og:description" content="Whether Where Countries Stand is writing briefings, and how up to date its record of the United Nations is.">
+  <meta property="og:url" content="__SITE__/status.html">
+  <script src="/status.js" defer></script>
+</head>
+<body class="wts-headings">
+  <div class="page">
+    <!--#include header-->
+
+    <main class="columns prose" id="main">
+      <h1>Status</h1>
+
+      <p>Whether the site is writing briefings, and how up to date its record of the United Nations is.</p>
+
+      <div id="status-live" aria-live="polite">
+        <p class="status" id="status-checking">Checking…</p>
+      </div>
+      <noscript><p class="note">This page fills in the current status with JavaScript, which is switched off or
+        blocked in your browser. The same information is at <a href="/api/status">/api/status</a>, as JSON: the last
+        update (<code>last_update</code>), the latest record from each source (<code>coverage</code>), and whether
+        briefings are available or paused (<code>briefings</code>).</p></noscript>
+
+      <h2>How updates work</h2>
+      <p>The site checks the United Nations’ records for anything new twice a day, at about 05:45 and 17:45 UTC:
+        Security Council meetings, General Assembly meetings, and General Assembly votes. Records appear after the UN
+        publishes them. A Security Council record usually appears within a day or two of the meeting; a General
+        Assembly record can take longer. A corrected record replaces the earlier version.</p>
+      <p>The record here starts in 1946 for the General Debate and General Assembly votes, and in 1992 for Security
+        Council debates (see <a href="/about.html">About</a>). The UN’s own records are at the
+        <a href="https://digitallibrary.un.org/">UN Digital Library</a> and the
+        <a href="https://documents.un.org/">Official Document System</a>.</p>
+
+      <h2>When briefings are paused</h2>
+      <p>Each briefing costs money to write, so there is a daily and a monthly budget, and each visitor can ask for a
+        limited number of new briefings a day. When a limit is reached, new briefings pause until it resets at
+        midnight UTC (or, for the monthly budget, the start of the next month). Finding sources, and briefings
+        already written for the same question, keep working.</p>
+      <p>If something is not working, please <a href="/corrections.html#report">report it</a> or email
+        <a href="mailto:admin@wherecountriesstand.com">admin@wherecountriesstand.com</a>.</p>
+    </main>
+
+    <!--#include notice-->
+  </div>
+  <!--#include footer-->
+</body>
+</html>

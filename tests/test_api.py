@@ -228,7 +228,9 @@ def test_pages_use_absolute_paths(indexed):  # noqa: F811
 
 def test_status_reports_the_last_update(indexed):  # noqa: F811
     api, _ = make(indexed, FakeClient())
-    assert api.get("/api/status").json() == {"last_update": None}
+    st = api.get("/api/status").json()
+    assert st["last_update"] is None and st["briefings"] == "available" and st["briefings_note"] is None
+    assert st["coverage"]["sc"]["to"] and st["coverage"]["sc"]["speeches"] == 2
     logs = indexed.data_dir / "logs"
     logs.mkdir(parents=True, exist_ok=True)
     (logs / "update-20261101T0300.json").write_text(json.dumps({"started": "2026-11-01T03:00:00+00:00", "ok": True,
@@ -383,7 +385,7 @@ def test_alpha_notice_links_to_the_report_form(indexed):  # noqa: F811
 
 
 PAGES = ("/", "/about.html", "/corrections.html", "/privacy.html", "/accessibility.html", "/terms.html",
-         "/glossary.html", "/missing")
+         "/glossary.html", "/press.html", "/status.html", "/missing")
 INDEPENDENCE = ("Where Countries Stand is independent. It is not affiliated with or endorsed by the United Nations, "
                 "and it does not use the UN's name or emblem.")
 
@@ -403,7 +405,7 @@ def test_every_page_carries_the_family_binding_and_the_standard_furniture(indexe
         assert '<a href="https://github.com/rj-mitchell/wherecountriesstand">Source code</a>' in text, page
         footer = text[text.index('<footer class="foot">'):]
         order = ["/about.html", "/corrections.html", "/accessibility.html", "/privacy.html", "/terms.html",
-                 "https://github.com/rj-mitchell/wherecountriesstand"]
+                 "/press.html", "/status.html", "https://github.com/rj-mitchell/wherecountriesstand"]
         assert [footer.index(f'href="{u}"') for u in order] == sorted(footer.index(f'href="{u}"') for u in order)
 
 
@@ -495,3 +497,52 @@ def test_an_older_state_database_gains_the_cache_writes_column(tmp_path):
     state = StateDB(path)
     with state.connect() as con:
         assert con.execute("SELECT cache_write_tokens, cost_usd FROM usage").fetchone() == (0, 0.5)
+
+
+def test_status_says_when_briefings_are_paused_or_unavailable(indexed, monkeypatch):  # noqa: F811
+    from wcs.api.usage import record_usage
+
+    api, state = make(indexed, FakeClient(), daily_spend_cap_usd=0.5)
+    record_usage(state, "answer", "m", {"input_tokens": 300_000}, {"price_input_per_mtok": 2.0}, "v1")
+    st = api.get("/api/status").json()
+    assert st["briefings"] == "paused" and "Today's budget" in st["briefings_note"]
+    for name in ("WCS_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"):
+        monkeypatch.delenv(name, raising=False)
+    api, _ = make(indexed, None)
+    assert api.get("/api/status").json()["briefings"] == "unavailable"
+
+
+def test_status_keeps_the_backups_private(indexed):  # noqa: F811
+    logs = indexed.data_dir / "logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    (logs / "update-20261101T0300.json").write_text(json.dumps({"started": "2026-11-01T03:00:00+00:00", "ok": True,
+        "warnings": [], "errors": [], "needs_attention": True,
+        "backups": [{"level": "error", "text": "the last off-site copy failed: secret detail"}]}))
+    api, _ = make(indexed, FakeClient())
+    st = api.get("/api/status")
+    assert st.json()["last_update"]["ok"] is True and "secret detail" not in st.text and "backups" not in st.text
+
+
+def test_the_press_page(indexed):  # noqa: F811
+    """Contact, how to cite a briefing and a record, the site in brief, and logo files that are really there."""
+    import re
+
+    api, _ = make(indexed, FakeClient())
+    text = api.get("/press.html").text
+    main = " ".join(text[text.index("<main"):text.index("</main>")].split())
+    assert "mailto:admin@wherecountriesstand.com" in main and INDEPENDENCE.replace("'", "’") in main
+    assert "https://wherecountriesstand.com/b/…" in text and "S/PV.[number]" in text and "CC BY-NC 4.0" in text
+    assert 'id="coverage"' in text and "from 1992" in text  # filled in from /api/meta, readable without it
+    files = re.findall(r'href="(/(?:family/)?[\w-]+\.(?:svg|png))"', main)
+    assert {"/icon.svg", "/family/icon.svg", "/family/icon-512.png", "/family/card.png"} <= set(files)
+    for f in files:
+        assert api.get(f).status_code == 200, f
+
+
+def test_the_status_page_reads_without_javascript(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient())
+    text = api.get("/status.html").text
+    noscript = text[text.index("<noscript>"):text.index("</noscript>")]
+    assert '<a href="/api/status">/api/status</a>' in noscript
+    assert '<script src="/status.js?v=' in text and 'id="status-live"' in text
+    assert "/status.html</loc>" in api.get("/sitemap.xml").text and "/press.html</loc>" in api.get("/sitemap.xml").text
