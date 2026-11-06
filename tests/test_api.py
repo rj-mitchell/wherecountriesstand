@@ -129,7 +129,8 @@ def test_pages_robots_sitemap_and_link_previews(indexed, monkeypatch):  # noqa: 
     robots = api.get("/robots.txt").text
     assert "Disallow: /api/" in robots and "Sitemap: https://countries.example/sitemap.xml" in robots
     sitemap = api.get("/sitemap.xml").text
-    for loc in ("https://countries.example/</loc>", "/privacy.html</loc>", "/accessibility.html</loc>"):
+    for loc in ("https://countries.example/</loc>", "/privacy.html</loc>", "/accessibility.html</loc>",
+                "/terms.html</loc>", "/glossary.html</loc>"):
         assert loc in sitemap
     home = api.get("/").text
     # the family's link card, in Record blue (the kit's head partial)
@@ -364,7 +365,8 @@ def test_alpha_notice_links_to_the_report_form(indexed):  # noqa: F811
     assert "<noscript>" in api.get("/").text
 
 
-PAGES = ("/", "/about.html", "/corrections.html", "/privacy.html", "/accessibility.html", "/missing")
+PAGES = ("/", "/about.html", "/corrections.html", "/privacy.html", "/accessibility.html", "/terms.html",
+         "/glossary.html", "/missing")
 INDEPENDENCE = ("Where Countries Stand is independent. It is not affiliated with or endorsed by the United Nations, "
                 "and it does not use the UN's name or emblem.")
 
@@ -380,9 +382,10 @@ def test_every_page_carries_the_family_binding_and_the_standard_furniture(indexe
         assert '<nav class="wts-shelf"' in text, page                                         # the footer shelf
         assert INDEPENDENCE in text and "Independent. Not affiliated with the United Nations." in text, page
         assert "Where They Stand is applying to register as a charity in England and Wales." in text, page
+        assert "the charity Where They Stand" not in text and "gmail" not in text.lower(), page
         assert '<a href="https://github.com/rj-mitchell/wherecountriesstand">Source code</a>' in text, page
         footer = text[text.index('<footer class="foot">'):]
-        order = ["/about.html", "/corrections.html", "/accessibility.html", "/privacy.html",
+        order = ["/about.html", "/corrections.html", "/accessibility.html", "/privacy.html", "/terms.html",
                  "https://github.com/rj-mitchell/wherecountriesstand"]
         assert [footer.index(f'href="{u}"') for u in order] == sorted(footer.index(f'href="{u}"') for u in order)
 

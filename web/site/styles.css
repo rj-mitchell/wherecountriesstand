@@ -382,6 +382,10 @@ details summary { cursor: pointer; font-weight: 700; }
 .foot .wts-shelf { padding-inline: var(--gutter); }
 .foot .wts-shelf__inner { max-inline-size: calc(var(--measure) - 2 * var(--gutter)); }
 
+/* Glossary: terms in bold, each with its meaning beneath. */
+.glossary dt { font-weight: 700; margin-block-start: 1rem; }
+.glossary dd { margin-inline-start: 0; }
+
 /* ---- The problem-report form (corrections.html) ---- */
 
 .report { display: grid; gap: 0.5rem; max-inline-size: 40rem; margin-block: 1rem 1.5rem; }
@@ -395,3 +399,22 @@ details summary { cursor: pointer; font-weight: 700; }
 }
 .report button { justify-self: start; }
 .note.share a { overflow-wrap: anywhere; }
+
+
+/* ---- Print: the site's name, the briefing and its sources, and the independence notice ---- */
+
+@media print {
+  :root { color-scheme: light; }
+  body { font-size: 11pt; background: white; color: black; }
+  .page { max-inline-size: none; padding: 0; }
+  .skip, .phase, .masthead__mark, nav.sections, .ask, #home, .note.share, .foot__links, .source__more,
+  .masthead .wts-endorse .wts-spine, .wts-shelf__groups, .wts-shelf__links { display: none; }
+  .masthead { grid-template-columns: 1fr auto; border-block-end: 2px solid black; }
+  .masthead .wts-endorse { color: black; }
+  a { color: inherit; }
+  /* the address of each source, so a printed briefing can still be checked */
+  .source__links a[href^="http"]::after, .prose a[href^="http"]::after { content: " (" attr(href) ")"; overflow-wrap: anywhere; }
+  .source { break-inside: avoid; background: none; border: 1px solid #888; border-inline-start-width: 4px; }
+  .notice { break-inside: avoid; }
+  h1, h2, h3 { break-after: avoid; }
+}
