@@ -434,3 +434,11 @@ def test_the_family_kit_copy_matches_its_version_file():
         digest.update(path.encode() + b"\0" + (family / path).read_bytes() + b"\0")
     assert digest.hexdigest() == lines["sha256"]
 
+
+def test_a_briefing_links_to_sister_sites(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient())
+    home = api.get("/").text
+    assert 'id="sisters"' in home and 'id="sister-links"' in home
+    script = (SITE / "app.js").read_text()
+    assert 'const MPS = "https://wherempsstand.com/";' in script
+    assert 'const LIVES = "https://wherelivesstand.com/country/";' in script

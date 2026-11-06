@@ -400,6 +400,13 @@ details summary { cursor: pointer; font-weight: 700; }
 .report button { justify-self: start; }
 .note.share a { overflow-wrap: anywhere; }
 
+/* ---- The same question on a sister site: quiet, each link with the sister site's spine ---- */
+
+.sisters { margin-block: 1.25rem; max-inline-size: 46rem; font-family: var(--sans); font-size: var(--step--1); }
+.sisters ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.35rem; }
+.sisters a { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ink); }
+.sisters a:hover { color: var(--un-blue); }
+.sisters .wts-spine { block-size: 1.4rem; inline-size: auto; }
 
 /* ---- Print: the site's name, the briefing and its sources, and the independence notice ---- */
 
@@ -407,7 +414,7 @@ details summary { cursor: pointer; font-weight: 700; }
   :root { color-scheme: light; }
   body { font-size: 11pt; background: white; color: black; }
   .page { max-inline-size: none; padding: 0; }
-  .skip, .phase, .masthead__mark, nav.sections, .ask, #home, .note.share, .foot__links, .source__more,
+  .skip, .phase, .masthead__mark, nav.sections, .ask, #home, .sisters, .note.share, .foot__links, .source__more,
   .masthead .wts-endorse .wts-spine, .wts-shelf__groups, .wts-shelf__links { display: none; }
   .masthead { grid-template-columns: 1fr auto; border-block-end: 2px solid black; }
   .masthead .wts-endorse { color: black; }
