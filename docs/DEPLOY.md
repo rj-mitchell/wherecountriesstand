@@ -26,8 +26,8 @@ one, the site shows the sources only).
 
 1. **Cloudflare**, for wherecountriesstand.com (as for wherempsstand.com in Where MPs Stand's `docs/HOSTING.md`,
    "Cloudflare protection"):
-   * the "coming soon" page is a Cloudflare Worker, `wherecountriesstand-holding` (`deploy/holding/`): remove its
-     custom domain first (Workers & Pages > wherecountriesstand-holding > Settings > Domains & Routes);
+   * (done on the first deploy: the "coming soon" Worker that held the domain until then was removed on 6 November
+     2026, and its files with it);
    * an **A** record for `@` pointing at the server, **Proxied**, and `www` redirected to it by a redirect rule;
    * SSL/TLS **Full (strict)**, and an **origin certificate** for wherecountriesstand.com (leave its page open).
 2. **Code and settings**, on the server, as root:
