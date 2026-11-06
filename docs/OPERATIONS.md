@@ -129,7 +129,8 @@ wcs withdraw AbC123xy --reason "It attributed a statement to the wrong country."
 ```
 
 A withdrawn briefing's address says it was withdrawn, and why, and the corrections page lists its question and the
-reason. The same question can then be asked again. The alpha notice also gives an email address for problems.
+reason. The same question can then be asked again. The alpha notice on every page links to the report form, and
+gives the email address as well.
 
 ## The General Debate
 

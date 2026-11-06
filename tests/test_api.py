@@ -351,3 +351,11 @@ def test_unknown_addresses_get_a_page_and_the_api_keeps_json(indexed):  # noqa: 
         assert r.status_code == 404 and r.headers["content-type"] == "application/json", path
     assert api.post("/api/nothing", json={}).status_code in (404, 405)
     assert "404" not in api.get("/sitemap.xml").text
+
+
+def test_alpha_notice_links_to_the_report_form(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient())
+    for page in ("/", "/about.html", "/corrections.html", "/privacy.html", "/accessibility.html", "/missing"):
+        assert '<a href="/corrections.html#report">report anything wrong</a>' in api.get(page).text, page
+    assert 'id="report"' in api.get("/corrections.html").text
+    assert "<noscript>" in api.get("/").text
