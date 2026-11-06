@@ -167,3 +167,36 @@ def test_group_names_are_made_one():
     assert cg("Council of Ministers of Bosnia and Herzegovina") is None
     assert cg("Administrator of the United Nations Development Programme") is None
     assert cg("Group of Friends of Haiti") == "Group of Friends of Haiti"
+
+
+def test_voting_data_keeps_only_the_latest_csv(settings, monkeypatch):
+    """Each new voting file is about 370 MB, and every one was kept. The newest is chosen by the date in its name:
+    the names do not sort by date ("2025_9_19" sorts after "2025_10_15")."""
+    from wcs.sources import votes
+
+    folder = votes.raw_dir(settings)
+    folder.mkdir(parents=True)
+    for name in ("2025_9_19_votes_ga.csv", "2025_10_15_votes_ga.csv", "notes.csv"):
+        (folder / name).write_text("old")
+    assert votes.latest_csv(settings).name == "2025_10_15_votes_ga.csv"
+    assert votes.file_date("2026_1_5_votes_ga.csv") == date(2026, 1, 5) and votes.file_date("notes.csv") is None
+
+    class Download:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def raise_for_status(self):
+            pass
+
+        def iter_bytes(self, size):
+            yield b"undl_id,ms_code\n"
+
+    url = "https://digitallibrary.un.org/record/4060887/files/2026_1_5_votes_ga.csv"
+    monkeypatch.setattr(votes, "file_url", lambda s: url)
+    monkeypatch.setattr(votes.httpx, "stream", lambda *a, **kw: Download())
+    out = votes.fetch(settings)
+    assert sorted(p.name for p in folder.iterdir()) == ["2026_1_5_votes_ga.csv", "notes.csv"]
+    assert votes.latest_csv(settings) == out

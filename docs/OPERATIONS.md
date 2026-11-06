@@ -7,7 +7,8 @@ when it reports a problem.
 ## What a run does
 
 1. **General Assembly votes.** Reads the voting data record in the UN Digital Library (its file list carries the
-   file's date). If the UN has published a new file, downloads it and converts it (about 370 MB, 5 seconds).
+   file's date). If the UN has published a new file, downloads it and converts it (about 370 MB, 5 seconds), and
+   deletes the files it supersedes (the newest is chosen by the date in its name, not by the name's order).
 2. **Security Council records** (from `[live] sc_from`, 1 January 2024; the corpus covers the years before):
    * finds meeting records newer than the last one held, in the Digital Library's catalogue, then by probing the
      UN's document system (ODS) for the next meeting numbers;
