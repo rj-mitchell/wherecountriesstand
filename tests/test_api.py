@@ -217,3 +217,33 @@ def test_status_reports_the_last_update(indexed):  # noqa: F811
     st = api.get("/api/status").json()
     assert st["last_update"]["warnings"] == ["the General Debate website refused access (403)"]
     assert st["general_debate"] == {"81": {"website": 0}}
+
+
+def test_stream_stops_when_the_reader_leaves():
+    """A briefing nobody is reading any more must stop being written: its events are closed, which closes the
+    model's stream (found on the live site: a reader who left kept the briefing running, and paid for)."""
+    import threading
+    import time
+
+    from wcs.api.app import sse
+
+    closed = threading.Event()
+    made = []
+
+    def briefing():
+        try:
+            while True:
+                made.append(1)
+                yield {"type": "text", "text": "word "}
+                time.sleep(0.01)
+        finally:
+            closed.set()
+
+    events = briefing()  # held here, so only an explicit close (not the garbage collector) can stop it
+    out = sse(events, keep_alive=1)
+    assert next(out).startswith(b"event: text")
+    out.close()  # the reader has gone: the server closes the response
+    assert closed.wait(2)
+    n = len(made)
+    time.sleep(0.1)
+    assert len(made) == n  # nothing more is written

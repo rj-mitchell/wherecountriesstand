@@ -104,9 +104,8 @@ class ReportBody(BaseModel):
 def sse(events: Iterator[dict[str, Any]], keep_alive: float = KEEP_ALIVE_SECONDS) -> Iterator[bytes]:
     """Server-sent events, with a comment line after a few seconds of silence (while the model is thinking): proxies
     close a response that sends nothing for too long. The events are worked out in a thread of their own, which stops
-    at the next event once the reader has gone."""
-    import json
-
+    at the next event once the reader has gone, and closes them, so a briefing nobody is reading stops being written
+    (and paid for)."""
     q: queue.Queue = queue.Queue()
     gone = threading.Event()
     end = object()
@@ -120,6 +119,8 @@ def sse(events: Iterator[dict[str, Any]], keep_alive: float = KEEP_ALIVE_SECONDS
         except Exception as exc:  # passed on, to be raised where the response is being sent
             q.put(exc)
         finally:
+            if hasattr(events, "close"):
+                events.close()  # here, in the thread that ran it: the model's stream is closed with it
             q.put(end)
 
     threading.Thread(target=work, name="sse", daemon=True).start()
