@@ -1,6 +1,8 @@
 /* Where Countries Stand.
    The look of the UN's printed Official Records (verbatim records of meetings), with the UN's
-   web palette and typeface for the controls. No UN emblem, name or wordmark: see docs/DESIGN.md. */
+   web palette and typeface for the controls. No UN emblem, name or wordmark: see docs/DESIGN.md.
+   The Where They Stand family's binding (the endorsement in the masthead, the footer shelf, Source Serif 4 for
+   headings, Record blue for the spine and icons) comes from /family/family.css, loaded before this file. */
 
 :root {
   color-scheme: light dark;
@@ -17,10 +19,8 @@
   --un-blue: light-dark(oklch(0.54 0.13 237), oklch(0.74 0.12 236));
   /* Text on UN Blue: white on the light page's blue, the page colour on the dark page's lighter blue. */
   --on-blue: light-dark(white, oklch(0.19 0.012 255));
-  --un-blue-soft: light-dark(oklch(0.95 0.025 237), oklch(0.29 0.05 240));
   /* Council navy for the Security Council. */
   --council: light-dark(oklch(0.31 0.06 262), oklch(0.74 0.06 262));
-  --council-soft: light-dark(oklch(0.95 0.012 262), oklch(0.27 0.03 262));
   --warning: light-dark(oklch(0.5 0.13 60), oklch(0.8 0.12 75));
 
   /* Type: Tinos is metrically identical to Times New Roman, the face of the UN's records.
@@ -100,6 +100,9 @@ a:hover { text-decoration-thickness: 2px; }
 }
 
 .masthead__mark { inline-size: 3.2rem; block-size: 3.2rem; align-self: center; }
+
+/* The family's endorsement, under the site's name: the spine in Record blue and "A Where They Stand project". */
+.masthead .wts-endorse { margin-block-start: 0.45rem; font-size: 0.7rem; }
 
 .masthead__name {
   margin: 0;
@@ -201,7 +204,7 @@ button, .button {
 }
 button:active { transform: translateY(1px); }
 
-/* Filter chips: the editable plan, as in Where They Stand. */
+/* Filter chips: the plan read from the question. */
 .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-block: 0.75rem 0; padding: 0; list-style: none; }
 .chip {
   font-family: var(--sans);
@@ -232,7 +235,7 @@ ol.agenda li::marker { font-weight: 700; }
 /* ---- Layout ---- */
 
 /* One column throughout, at a comfortable reading width. */
-.two-up, .columns, .summary, .ask, h1, .chips { max-inline-size: 46rem; }
+.columns, .summary, .ask, h1, .chips { max-inline-size: 46rem; }
 
 /* ---- Briefing ---- */
 
@@ -248,9 +251,6 @@ ol.agenda li::marker { font-weight: 700; }
 /* The briefing: a single column, ragged right. */
 .columns { margin-block: 1.25rem; }
 .columns p { margin-block: 0 0.8rem; }
-
-/* Bold first words of a group, like a speaker's name in the record. */
-.group-name { font-weight: 700; }
 
 .cite {
   font-family: var(--sans);
@@ -294,16 +294,6 @@ ol.agenda li::marker { font-weight: 700; }
   color: var(--ink-muted);
 }
 
-/* ---- Votes: neutral marks, no green-good / red-bad ---- */
-
-.vote { margin-block: 1rem; }
-.vote dt { font-style: italic; margin-block-start: 0.5rem; }
-.vote dd { margin-inline-start: 1.5rem; }
-.tally { font-family: var(--sans); font-size: var(--step--1); display: flex; gap: 1rem; margin-block: 0.5rem; }
-.tally span::before { content: ""; display: inline-block; inline-size: 0.8em; block-size: 0.8em; margin-inline-end: 0.35em; vertical-align: -0.05em; border: 1.5px solid var(--ink); }
-.tally .yes::before { background: var(--ink); }
-.tally .abstain::before { background: repeating-linear-gradient(45deg, var(--ink) 0 1.5px, transparent 1.5px 4px); }
-
 /* ---- Notice box, like the boxed note at the foot of a record's first page ---- */
 
 .notice {
@@ -315,15 +305,6 @@ ol.agenda li::marker { font-weight: 700; }
 }
 .notice p { margin: 0 0 0.4rem; }
 .notice p:last-child { margin: 0; }
-
-.prototype-banner {
-  font-family: var(--sans);
-  font-size: var(--step--1);
-  background: var(--un-blue-soft);
-  color: var(--ink);
-  padding: 0.5rem var(--gutter);
-  text-align: center;
-}
 
 details summary { cursor: pointer; font-weight: 700; }
 
@@ -363,7 +344,7 @@ details summary { cursor: pointer; font-weight: 700; }
 .source--vote .source__meta::before { content: none; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* ---- Skip link, footer, and plain pages (about, privacy, accessibility) ---- */
+/* ---- Skip link, footer, and plain pages (about, privacy, accessibility, terms, glossary) ---- */
 
 .skip {
   position: absolute;
@@ -383,18 +364,23 @@ details summary { cursor: pointer; font-weight: 700; }
 .prose li { margin-block-end: 0.4rem; }
 .prose .note { font-style: italic; color: var(--ink-muted); font-size: var(--step--1); }
 
-.foot {
-  margin-block-start: 1.5rem;
-  padding-block-start: 0.75rem;
-  border-block-start: 1px solid var(--rule);
-  font-family: var(--sans);
-  font-size: var(--step--1);
-  color: var(--ink-muted);
+/* The footer: the site's own links, then the family's shelf across the full width. */
+.page { padding-block-end: 2rem; }
+.foot { font-family: var(--sans); font-size: var(--step--1); color: var(--ink-muted); }
+.foot__inner {
+  max-inline-size: var(--measure);
+  margin-inline: auto;
+  padding: 0 var(--gutter);
 }
-.foot nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin-block-end: 0.4rem; }
-.foot nav a { color: var(--ink); }
-.foot nav a[aria-current="page"] { color: var(--un-blue); font-weight: 500; }
+.foot__inner > * { padding-block-start: 0.75rem; }
+.foot__inner > :first-child { border-block-start: 1px solid var(--rule); }
+.foot__links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+.foot__links a { color: var(--ink); }
+.foot__links a[aria-current="page"] { color: var(--un-blue); font-weight: 500; }
 .foot p { margin: 0; }
+/* The shelf's contents line up with the page's column above it. */
+.foot .wts-shelf { padding-inline: var(--gutter); }
+.foot .wts-shelf__inner { max-inline-size: calc(var(--measure) - 2 * var(--gutter)); }
 
 /* ---- The problem-report form (corrections.html) ---- */
 

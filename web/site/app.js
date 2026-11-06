@@ -253,7 +253,7 @@ function reset(question) {
   $("result").hidden = false;
   $("question").textContent = question;
   $("interpretation").textContent = "";
-  $("today").textContent = new Date().toLocaleDateString("en-GB");
+  $("today").textContent = fmtDate(new Date().toISOString().slice(0, 10));
   document.title = `${question} · Where Countries Stand`;
   for (const id of ["briefing", "notes", "sources", "chips"]) $(id).replaceChildren();
   $("summary").hidden = true;
