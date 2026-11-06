@@ -247,3 +247,50 @@ def test_stream_stops_when_the_reader_leaves():
     n = len(made)
     time.sleep(0.1)
     assert len(made) == n  # nothing more is written
+
+
+def test_briefings_in_progress_count_against_the_caps(tmp_path):
+    from wcs.api.usage import InFlight, check_caps, record_usage
+    state = StateDB(tmp_path / "s.db")
+    limits = {"daily_spend_cap_usd": 1.0, "monthly_spend_cap_usd": 50.0, "price_input_per_mtok": 2.0}
+    record_usage(state, "answer", "m", {"input_tokens": 300_000}, limits, "v1")      # $0.60 spent
+    flight = InFlight(per_key=2, total=3, estimate_usd=0.25)
+    assert flight.start("a") is None and flight.start("a") is None
+    assert "already being written" in flight.start("a")
+    assert flight.start("b") is None and "Many briefings" in flight.start("c")
+    assert flight.pending_usd(besides=1) == 0.5
+    assert check_caps(state, limits, "v2") is None                                     # $0.60 alone is under $1
+    assert "budget" in check_caps(state, limits, "v2", flight.pending_usd(besides=1))  # with $0.50 more on the way
+    flight.finish("a"), flight.finish("a"), flight.finish("b")
+    assert flight.running == {} and flight.pending_usd() == 0
+
+
+def test_a_second_briefing_at_once_waits_its_turn(indexed):  # noqa: F811
+    """While one briefing is being written for a visitor, another question from them gets the sources only."""
+    import threading
+
+    class SlowClient(FakeClient):
+        def __init__(self):
+            super().__init__()
+            self.started, self.release = threading.Event(), threading.Event()
+
+        def _stream(self, **kw):
+            self.started.set()
+            assert self.release.wait(10)
+            return super()._stream(**kw)
+
+    client = SlowClient()
+    api, _ = make(indexed, client, briefings_at_once_per_visitor=1)
+    first: list = []
+    t = threading.Thread(target=lambda: first.append(events(api.post("/api/ask", json=QUESTION))))
+    t.start()
+    try:
+        assert client.started.wait(10)
+        second = events(api.post("/api/ask", json={"question": "What has Fiji said about climate finance?"}))
+    finally:
+        client.release.set()
+        t.join(10)
+    assert second[-1]["answer"] is None and "already being written for you" in second[-1]["note"]
+    assert first[0][-1]["answer"]["citations_total"] == 1 and len(client.calls) == 1
+    third = events(api.post("/api/ask", json={"question": "What has Fiji said about climate finance?"}))
+    assert third[-1]["answer"] is not None  # once the first is done, the next is written

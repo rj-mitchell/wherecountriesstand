@@ -47,6 +47,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from wcs.api.usage import (
+    InFlight,
     RateLimiter,
     StateDB,
     add_report,
@@ -206,6 +207,8 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     limits = settings.usage
     limiter = RateLimiter(int(limits.get("requests_per_minute", 20)))
     cache_hours = float(limits.get("answer_cache_hours", 168))
+    inflight = InFlight(int(limits.get("briefings_at_once_per_visitor", 2)), int(limits.get("briefings_at_once", 8)),
+                        float(limits.get("briefing_estimate_usd", 0.10)))
     app = FastAPI(title="Where Countries Stand", docs_url="/api/docs", openapi_url="/api/openapi.json")
     holder: dict[str, Any] = {"pipeline": pipeline}
     memo: dict[str, tuple[float, Any]] = {}
@@ -375,7 +378,26 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                 replay += [{"type": "text", "text": "".join(text)}, {**final, "usage": None, "cached": True}]
                 store_events(state, key, replay, cache_hours)
 
-        return StreamingResponse(sse(events()), media_type="text/event-stream",
+        def guarded() -> Iterator[dict[str, Any]]:
+            """A briefing about to be written is reserved at its estimated cost while it runs, and the caps are
+            checked again counting the others in progress, so many questions at once cannot all slip past them."""
+            if hit is not None or body.sources_only or blocked or not model_on:
+                yield from events()
+                return
+            refused = inflight.start(who)
+            if refused:
+                yield from sources_only(body, f"{refused} The sources found are shown below.")
+                return
+            try:
+                late = check_caps(state, limits, who, inflight.pending_usd(besides=1))
+                if late:
+                    yield from sources_only(body, f"{late} The sources found are shown below.")
+                    return
+                yield from events()
+            finally:
+                inflight.finish(who)
+
+        return StreamingResponse(sse(guarded()), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     site = Path(settings.section("site").get("dir") or SITE_DIR)

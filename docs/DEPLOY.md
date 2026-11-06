@@ -37,7 +37,9 @@ one, the site shows the sources only).
    cp .env.example .env && nano .env    # WCS_ANTHROPIC_API_KEY, WCS_GUESTBOOK_NAME and WCS_GUESTBOOK_EMAIL
    ```
    Spending caps are in `config/settings.toml`, `[usage]`: $3 a day and $50 a month to start (decision 9), 40 new
-   briefings per visitor per day, 20 requests a minute.
+   briefings per visitor per day, 20 requests a minute. At most 8 briefings are written at once (2 per visitor),
+   and each counts against the caps at an estimated $0.10 until its real cost is known, so many questions arriving
+   together cannot overshoot a cap.
 3. **Start it:**
    ```bash
    bash /opt/wherecountriesstand/deploy/update.sh
