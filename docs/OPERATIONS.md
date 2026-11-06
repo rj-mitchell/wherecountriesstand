@@ -18,7 +18,9 @@ when it reports a problem.
    * stores each year that changed.
 3. **General Debate** (from `[live] gd_from_session`, the 79th session of 2024; the corpus covers the sessions
    before): see [The General Debate](#the-general-debate) below.
-4. **Index.** Re-indexes the years that changed, then embeds new passages for up to `--embed-seconds`.
+4. **Index.** Re-indexes the years that changed, then embeds new passages for up to `--embed-seconds`, and merges
+   what was written into the search indices (see [The search index on disk](#the-search-index-on-disk)). A run
+   that changed nothing leaves the index alone.
 5. **Report.** Writes `data/logs/update-<time>.json` and prints a summary. Exits 1 if something needs attention.
 
 A first run after loading the corpus backfills everything since the corpus ended (S/PV.9525 onwards: about 300
@@ -63,6 +65,26 @@ systemctl start wcs-update.service            # run one now
 If a run, or the nightly backup, fails (exits 1 when something needs attention, or stops with an error), the server
 emails wheretheystanduk@gmail.com with the result and the run's last log lines, at most once every six hours. That is
 set up once for every site on the server (Where They Stand's `docs/HOSTING.md`, "Email from the server").
+
+## The search index on disk
+
+The search index (`data/index/`, LanceDB) never overwrites anything: every write makes a new version of a table
+and leaves the old files on disk. So an update writes as little as it can, and cleans up after itself:
+
+* **Only what changed is written.** A run with no new records writes nothing to the index. Re-indexing a year keeps
+  the vectors of passages whose text is unchanged, so a new meeting costs the embedding of its own passages, not
+  the whole year's.
+* **New rows are merged, not rebuilt.** After writing, the update merges the new rows into the existing keyword,
+  filter and meaning-search indices, compacts small files and deletes versions over an hour old (as Where MPs
+  Stand does after every write). The report says `"index": "merged"`.
+* **Full rebuilds are rare.** The indices are built from scratch on the first build, by `wcs index` and
+  `wcs regroup`, and the meaning-search index is trained again once the vectors have grown by a fifth since it was
+  last trained (recorded in `data/index/state.json`, under `_indices`). The report then says `"index": "built"`.
+  The first update after this was introduced trains it once, since no size was recorded before.
+
+`wcs optimize` does the clean-up on its own, at any time, while the site serves (for example after a run that was
+stopped). `wcs index --re-embed` drops the vectors as well, so that every passage is embedded again: only needed
+after changing the embedding model.
 
 ## When a run reports a problem
 

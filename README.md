@@ -85,8 +85,9 @@ uv run wcs fetch-votes && uv run wcs ingest-votes    # General Assembly votes (a
 uv run wcs update --no-index                           # Security Council records since 2024 (first run: about 10 s a
                                                        # meeting) and General Debate records from 2024
 uv run wcs evaluate                                    # score against the test set (eval/questions.toml)
-uv run wcs index                                      # keyword index (about 40 seconds)
+uv run wcs index                                       # keyword index (about 40 seconds)
 uv run wcs embed --max-seconds 3600                    # meaning search, newest years first (resumable; see below)
+uv run wcs optimize                                    # merge, compact and delete old index versions (updates do this)
 uv run wcs search "use of the veto" --since 2015
 uv run wcs search "climate change security" --group sids
 uv run wcs ask "How have small island States spoken about climate and security since 2018?"

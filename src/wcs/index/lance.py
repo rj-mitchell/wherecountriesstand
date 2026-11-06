@@ -84,8 +84,23 @@ def sql_list(values) -> str:
     return "[" + ", ".join(sql_str(v) for v in values) + "]"
 
 
-# Every read opens the latest table version, so older versions only take disk space.
+# LanceDB never overwrites: every delete, add and index build writes a new version of the table and leaves the old
+# files on disk. Every read opens the latest version, so older versions only take disk space. Lance would keep them
+# for a week: about 10 GB after one large re-enrichment or clean-up (Where MPs Stand, where this was learnt).
+# ``optimize`` drops them once they are an hour old, so it runs after every update that writes to the index.
 KEEP_OLD_VERSIONS = timedelta(hours=1)
+# The meaning-search index (IVF-PQ) is built once there are this many vectors (below that, every vector is compared,
+# which is quick enough), and trained again once there are this many times as many as it was trained on: vectors
+# added later join its existing partitions, which grow, and searches slow down.
+MIN_VECTOR_INDEX_ROWS = 10_000
+VECTOR_INDEX_GROWTH = 1.2
+
+
+def vector_index_due(vectors: int, trained_on: int | None, has_index: bool) -> bool:
+    """Whether the meaning-search index should be (re)trained, rather than have new vectors merged into it."""
+    if vectors < MIN_VECTOR_INDEX_ROWS:
+        return False
+    return not has_index or not trained_on or vectors > VECTOR_INDEX_GROWTH * trained_on
 
 
 class SearchIndex:
@@ -164,22 +179,36 @@ class SearchIndex:
         cols["vector"] = list(vectors.astype(np.float32))
         tbl.add(pa.Table.from_pydict(cols, schema=vector_schema(self.dim)))
 
-    def build_indices(self) -> None:
+    def build_indices(self, vectors: bool = True) -> int | None:
+        """Build every index from scratch: for a first build, or after rewriting much of the index. Routine updates
+        merge new rows into the existing indices instead (``optimize``). Returns the number of vectors the
+        meaning-search index was trained on, if it was built."""
         tbl = self.passages()
         if tbl.count_rows() == 0:
-            return
+            return None
         tbl.create_index("search_text", config=FTS(with_position=False, stem=True, remove_stop_words=True),
                          replace=True)
         self.build_scalar_indices(tbl)
         self.ensure_vector_ids()
-        if VECTORS in self._names():
-            vt = self.vectors()
-            n = vt.count_rows()
-            if n >= 10_000:
-                from lancedb.index import IvfPq
+        return self.build_vector_index() if vectors else None
 
-                vt.create_index("vector", config=IvfPq(distance_type="cosine",
-                                                       num_sub_vectors=max(1, self.dim // 8)), replace=True)
+    def build_vector_index(self) -> int | None:
+        """Train the meaning-search index on the vectors there are now; returns how many, or None if too few."""
+        if VECTORS not in self._names():
+            return None
+        vt = self.vectors()
+        n = vt.count_rows()
+        if n < MIN_VECTOR_INDEX_ROWS:
+            return None
+        from lancedb.index import IvfPq
+
+        vt.create_index("vector", config=IvfPq(distance_type="cosine", num_sub_vectors=max(1, self.dim // 8)),
+                        replace=True)
+        return n
+
+    def has_index(self, name: str, column: str) -> bool:
+        return name in self._names() and any(column in (ix.columns or [])
+                                             for ix in self.db.open_table(name).list_indices())
 
     def ensure_vector_ids(self) -> bool:
         """An index on the vectors table's passage_id, so updating a few passages does not read every vector into
@@ -204,15 +233,18 @@ class SearchIndex:
                 log.warning("scalar index on %s skipped: %s", col, exc)
 
     def unmerged(self) -> int:
-        """Passages not yet in the keyword (BM25) index: added by an update that stopped before merging them."""
-        if PASSAGES not in self._names():
-            return 0
-        tbl = self.passages()
-        for ix in tbl.list_indices():
-            if "search_text" in (ix.columns or []):
-                st = tbl.index_stats(ix.name)
-                return int(st.num_unindexed_rows) if st else 0
-        return 0
+        """Rows not yet in the keyword (BM25) or meaning-search index: added by an update that stopped before
+        merging them."""
+        out = 0
+        for name, column in ((PASSAGES, "search_text"), (VECTORS, "vector")):
+            if name not in self._names():
+                continue
+            tbl = self.db.open_table(name)
+            for ix in tbl.list_indices():
+                if column in (ix.columns or []):
+                    st = tbl.index_stats(ix.name)
+                    out += int(st.num_unindexed_rows) if st else 0
+        return out
 
     def optimize(self) -> None:
         """Merge new rows into the indices, compact small files and drop superseded versions."""
@@ -270,6 +302,28 @@ class SearchIndex:
         rows = self.passages().search().where(
             f"passage_id IN ({', '.join(sql_str(p) for p in passage_ids)})").limit(None).to_list()
         return {r["passage_id"]: r for r in rows}
+
+    def vectors_for_keys(self, keys: list[str]) -> dict[str, np.ndarray]:
+        """passage_id -> vector, for the given source keys (from Where Councils Stand)."""
+        if not keys or VECTORS not in self._names():
+            return {}
+        where = f"source_key IN ({', '.join(sql_str(k) for k in keys)})"
+        found = self.vectors().search().where(where).select(["passage_id", "vector"]).limit(None).to_arrow()
+        # straight from Arrow: a year's vectors as Python floats would take seconds and hundreds of MB
+        flat = found["vector"].combine_chunks().flatten().to_numpy(zero_copy_only=False)
+        return dict(zip(found["passage_id"].to_pylist(), flat.astype(np.float32).reshape(-1, self.dim), strict=True))
+
+    def embedded_ids(self, keys: list[str]) -> set[str]:
+        """The passages of the given source keys that have a vector."""
+        if not keys or VECTORS not in self._names():
+            return set()
+        where = f"source_key IN ({', '.join(sql_str(k) for k in keys)})"
+        return set(self.vectors().search().where(where).select(["passage_id"]).limit(None).to_arrow()["passage_id"]
+                   .to_pylist())
+
+    def versions(self) -> dict[str, int]:
+        """Each table's current version: a write of any kind makes a new one."""
+        return {name: self.db.open_table(name).version for name in (PASSAGES, VECTORS) if name in self._names()}
 
     def rows_for_keys(self, keys: list[str]) -> list[dict[str, Any]]:
         if not keys:
