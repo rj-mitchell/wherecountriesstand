@@ -132,6 +132,13 @@ def test_votes(settings):
     assert "Russian Federation: against." in mixed.blocks[-1] and mixed.blocks[-1].startswith("How the countries")
     assert VoteFinder(settings).find("aggression against Ukraine", Filters(date_to=date(2000, 1, 1))) == []
     assert terms("How did countries vote on nuclear disarmament?") == ["nuclear", "disarmament"]
+    # one finder for the whole site, as the pipeline keeps, with questions arriving on many threads at once
+    from concurrent.futures import ThreadPoolExecutor
+
+    finder = VoteFinder(settings)
+    with ThreadPoolExecutor(8) as pool:
+        results = list(pool.map(lambda _: finder.find("aggression against Ukraine", Filters()), range(64)))
+    assert all(r == found for r in results)
 
 
 def test_pipeline_without_a_model_shows_the_evidence(settings, monkeypatch):
