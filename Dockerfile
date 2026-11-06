@@ -16,6 +16,7 @@ COPY src ./src
 COPY config ./config
 COPY data_static ./data_static
 COPY web/site ./web/site
+COPY web/partials ./web/partials
 RUN uv sync --frozen --no-dev --extra embed --compile-bytecode
 ENV WCS_DATA_DIR=/data \
     PATH="/app/.venv/bin:$PATH" \

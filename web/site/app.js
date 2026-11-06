@@ -5,7 +5,11 @@
 
 const $ = (id) => document.getElementById(id);
 const BODY = { sc: "Security Council", gd: "General Assembly" };
-let names = { countries: {}, groups: {} };
+let names = { countries: {}, kinds: {}, groups: {} };
+// Sister sites a briefing links to (docs/DESIGN.md, "In the family"): Where MPs Stand takes the same question as
+// ?q=, and Where Lives Stand has a page for each country at /country/<ISO 3166 alpha-3 code>, the codes used here.
+const MPS = "https://wherempsstand.com/";
+const LIVES = "https://wherelivesstand.com/country/";
 
 function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -31,7 +35,7 @@ async function loadNames() {
   try {
     const [countries, groups] = await Promise.all([fetch("/api/countries").then((r) => r.json()),
                                                    fetch("/api/groups").then((r) => r.json())]);
-    for (const c of countries) names.countries[c.code] = c.name;
+    for (const c of countries) { names.countries[c.code] = c.name; names.kinds[c.code] = c.kind; }
     for (const g of groups) names.groups[g.key] = g.label;
   } catch (e) { /* the codes are shown instead */ }
 }
@@ -82,6 +86,29 @@ function summary(evidence, sources) {
   parts.push(" · Counted from the record, not written by the model.");
   p.replaceChildren(...parts);
   p.hidden = false;
+}
+
+// ---- the same question on sister sites -------------------------------------------------------------------------
+
+// A sister site's spine, copied from the family shelf in the footer, so a link shows which site it goes to.
+function spine(site) {
+  const drawn = document.querySelector(`.wts-shelf .wts-cloth--${site}`);
+  return drawn ? drawn.cloneNode(true) : null;
+}
+
+function sisters(question, countries = []) {
+  const links = [];
+  if (question) {
+    links.push(el("li", {}, el("a", { href: `${MPS}?q=${encodeURIComponent(question)}` },
+      spine("mps"), "Ask Where MPs Stand the same question")));
+  }
+  for (const code of countries) {
+    if (!["member_state", "observer_state"].includes(names.kinds[code])) continue;
+    links.push(el("li", {}, el("a", { href: LIVES + encodeURIComponent(code) },
+      spine("lives"), `Quality of life in ${names.countries[code]} on Where Lives Stand`)));
+  }
+  $("sister-links").replaceChildren(...links);
+  $("sisters").hidden = !links.length;
 }
 
 // ---- sources ----------------------------------------------------------------------------------------------------
@@ -215,6 +242,7 @@ function handle(ev, st) {
   if (ev.type === "plan") {
     $("interpretation").textContent = ev.plan.interpretation || "";
     chips(ev.plan);
+    sisters($("question").textContent, (ev.plan.filters || {}).countries || []);
     $("status").textContent = "Searching the record…";
   } else if (ev.type === "sources") {
     showSources(ev.sources || []);
@@ -253,12 +281,13 @@ function reset(question) {
   $("result").hidden = false;
   $("question").textContent = question;
   $("interpretation").textContent = "";
-  $("today").textContent = new Date().toLocaleDateString("en-GB");
+  $("today").textContent = fmtDate(new Date().toISOString().slice(0, 10));
   document.title = `${question} · Where Countries Stand`;
   for (const id of ["briefing", "notes", "sources", "chips"]) $(id).replaceChildren();
   $("summary").hidden = true;
   $("marks").hidden = true;
   $("sources-section").hidden = true;
+  sisters(question);
 }
 
 async function openSaved(id) {

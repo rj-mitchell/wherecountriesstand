@@ -1,11 +1,11 @@
 # Putting the site on a server
 
-Where Countries Stand runs on the charity's shared server, beside Where MPs Stand (decision 9), in its own folder
-(`/opt/wherecountriesstand`) with its own container, data, settings and spending caps. Where MPs Stand's web
-server (Caddy) is the front door for every site on the server: it answers wherecountriesstand.com through
-Cloudflare, with the same protections as its own site, and passes the visitors to this site's container over a
-shared Docker network (`sites`). Updates and backups run on timers, each in a one-off container, as on Where MPs
-Stand. See "Other sites on this server" in Where MPs Stand's `docs/HOSTING.md`.
+Where Countries Stand runs on the charity's shared server, beside the charity's other sites (decision 9), in its own
+folder (`/opt/wherecountriesstand`) with its own container, data, settings and spending caps. The server itself, its
+front door (Caddy, in Where MPs Stand's checkout at `/opt/hansardgpt`), Cloudflare, email alerts and the off-site
+backup bucket are shared, and are described once, in Where MPs Stand's [`docs/HOSTING.md`](https://github.com/rj-mitchell/wherempsstand/blob/main/docs/HOSTING.md): see "Other
+sites on this server" there, and its "Adding a site" steps, which this page follows. Only this site's own steps are
+here.
 
 ## What it needs
 
@@ -24,12 +24,10 @@ one, the site shows the sources only).
 
 ## Steps
 
-1. **Cloudflare**, for wherecountriesstand.com (as for wherempsstand.com in Where MPs Stand's `docs/HOSTING.md`,
-   "Cloudflare protection"):
-   * (done on the first deploy: the "coming soon" Worker that held the domain until then was removed on 6 November
-     2026, and its files with it);
-   * an **A** record for `@` pointing at the server, **Proxied**, and `www` redirected to it by a redirect rule;
-   * SSL/TLS **Full (strict)**, and an **origin certificate** for wherecountriesstand.com (leave its page open).
+1. **Cloudflare**, for wherecountriesstand.com: as in "Adding a site" in Where MPs Stand's
+   [`docs/HOSTING.md`](https://github.com/rj-mitchell/wherempsstand/blob/main/docs/HOSTING.md) (an A record, proxied; `www` redirected; Full (strict) with an origin
+   certificate). The "coming soon" Worker that held the domain until the first deploy was removed on 6 November
+   2026.
 2. **Code and settings**, on the server, as root:
    ```bash
    git clone https://github.com/rj-mitchell/wherecountriesstand /opt/wherecountriesstand
@@ -45,11 +43,8 @@ one, the site shows the sources only).
    bash /opt/wherecountriesstand/deploy/update.sh
    ```
    It builds and starts the site, and installs its update and backup timers. With no data yet, it finds nothing.
-4. **The front door:** make sure `wherecountriesstand.com=wherecountriesstand` is in `SITES` in
-   `/opt/hansardgpt/deploy/.env`, then paste the origin certificate:
-   ```bash
-   bash /opt/hansardgpt/deploy/cloudflare.sh site wherecountriesstand.com
-   ```
+4. **The front door:** `wherecountriesstand.com=wherecountriesstand` in `SITES`, and the origin certificate pasted
+   with `cloudflare.sh site wherecountriesstand.com` (Where MPs Stand's "Adding a site", step 3).
 5. **The General Debate corpus** is downloaded by the first load (next step), which fills in the guestbook form
    Harvard Dataverse asks for with `WCS_GUESTBOOK_NAME` and `WCS_GUESTBOOK_EMAIL` from `.env`. Without them the first
    load carries on without the corpus; add them and run `wcs fetch-gd` and `wcs ingest-gd` later (as below), or
@@ -74,8 +69,8 @@ one, the site shows the sources only).
    and a half (`--embed-hours N` does N hours of it at the end of the first load instead). It skips whatever is
    already done, so if it stops, run it again. Keyword search works as soon as the index is built; meaning search
    fills in as it is embedded.
-7. **Check.** Visit the site, ask a question, and run `bash /opt/hansardgpt/deploy/check.sh`, which lists every site
-   on the server. The site takes about 20 seconds to start, and the first few searches after a start take a few
+7. **Check.** Visit the site, ask a question, and run the shared `check.sh` (Where MPs Stand's "Adding a site",
+   step 4). The site takes about 20 seconds to start, and the first few searches after a start take a few
    seconds while the index is read from disk; then most take well under a second.
 
 ## Running it
@@ -95,9 +90,9 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
   site carries on showing sources, and says why.
 * **Backups:** everything but the state database can be rebuilt. That database (spending, saved briefings,
   reports) is copied every night (`wcs-backup.timer`) to `/opt/wherecountriesstand/deploy/backups`, the last 14 kept,
-  and to the charity's Backblaze B2 bucket, the last 60 kept there, beside Where MPs Stand's backups (each site's
-  have their own names, and each site deletes only its own old copies). To set up the off-site copy, once, copy the
-  bucket and key from Where MPs Stand's settings and check them:
+  and to the charity's Backblaze B2 bucket (Where MPs Stand's [`docs/HOSTING.md`](https://github.com/rj-mitchell/wherempsstand/blob/main/docs/HOSTING.md), "Backups"), the last 60
+  kept there under this site's own names. To set up the off-site copy, once, copy the bucket and key from Where MPs
+  Stand's settings (its `HANSARD_B2_*`, a legacy name) and check them:
   ```bash
   cd /opt/wherecountriesstand/deploy
   for k in BUCKET KEY_ID APPLICATION_KEY; do v=$(grep "^HANSARD_B2_$k=" /opt/hansardgpt/deploy/.env | cut -d= -f2-); \
@@ -115,9 +110,21 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
   `https://` and `DOMAIN` from `.env` (or `WCS_SITE_URL`, or `[site] url` in `config/settings.toml`). Crawlers are
   kept out of `/api/`, so one that runs the page's script cannot ask for briefings.
 * **Caching:** pages are sent with `Cache-Control: no-cache`, so browsers and Cloudflare check them on every visit.
-  Each page's stylesheets and scripts carry a hash of their content in their address (`/styles.css?v=…`, added as
-  the page is served), and are kept for a year; a changed file gets a new address, so nothing needs purging after a
-  deploy. The fonts are kept for a year too: a changed font must be given a new file name.
+  Each page's stylesheets and scripts, the family kit's included, carry a hash of their content in their address
+  (`/styles.css?v=…`, added as the page is served), and are kept for a year; a changed file gets a new address, so
+  nothing needs purging after a deploy. The site's own fonts are kept for a year too: a changed font must be given a
+  new file name. The family kit's fonts keep their names when the kit changes, so they are kept for a week; icons
+  and the link card for a day.
+* **Pages and the family kit:** the masthead, notice and footer are written once, in `web/partials/`, and put into
+  each page as the site starts (`<!--#include header-->`); a page naming a partial that doesn't exist stops it
+  starting, so the mistake shows at once. `web/site/family/` is the Where They Stand family kit (the endorsement,
+  the footer shelf, the favicon and link card, Source Serif 4), copied in from the charity's family folder:
+  ```bash
+  node <family folder>/kit/sync.mjs --site countries --out web/site/family           # after the kit changes
+  node <family folder>/kit/sync.mjs --site countries --out web/site/family --check   # is the copy up to date?
+  ```
+  Don't edit the copies. The content security policy set by the front door (`default-src 'self'`) already allows
+  them: the kit has no scripts and asks nothing of other sites.
 * **Visitors' addresses:** the front door passes each visitor's own address (from Cloudflare) in
   `X-Forwarded-For`, which `wcs serve --behind-proxy` trusts. The container's port is reachable only over the
   server's Docker networks, never from outside, so nobody else can set it.

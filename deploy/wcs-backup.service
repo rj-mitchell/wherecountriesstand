@@ -4,7 +4,7 @@
 Description=Where Countries Stand: back up the state database
 After=docker.service
 Requires=docker.service
-# Emails the alerts address if this fails (deploy/alert@.service in Where They Stand, docs/HOSTING.md there)
+# Emails the alerts address if this fails (deploy/alert@.service in Where MPs Stand's repository, rj-mitchell/wherempsstand; docs/HOSTING.md there)
 OnFailure=alert@%n.service
 
 [Service]

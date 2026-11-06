@@ -1,0 +1,36 @@
+# Checks every push and pull request: lint, the tests (offline: the model is faked), and that the family kit's
+# copy in web/site/family/ is the version this site was last synced to and has not been edited since.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  # The Where They Stand family kit version last synced into web/site/family/ (docs/DEPLOY.md, "Pages and the
+  # family kit"). Raise it in the same change as a new sync.
+  FAMILY_KIT_VERSION: "1.0.0"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check src tests scripts
+      - name: Family kit version
+        run: |
+          grep -qx "kit ${FAMILY_KIT_VERSION}" web/site/family/VERSION || {
+            echo "web/site/family/VERSION is not kit ${FAMILY_KIT_VERSION}:"; cat web/site/family/VERSION; exit 1; }
+          grep -qx "site countries" web/site/family/VERSION
+      - name: Tests
+        run: uv run pytest

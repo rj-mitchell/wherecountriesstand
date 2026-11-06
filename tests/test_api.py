@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from test_pipeline import TODAY, FakeClient, indexed  # noqa: F401  (the fixture)
 
+from wcs.api.app import SITE_DIR as SITE
 from wcs.api.app import create_app
 from wcs.api.usage import StateDB, cost_usd, visitor_key
 from wcs.embed.base import HashingEmbedder
@@ -128,10 +129,12 @@ def test_pages_robots_sitemap_and_link_previews(indexed, monkeypatch):  # noqa: 
     robots = api.get("/robots.txt").text
     assert "Disallow: /api/" in robots and "Sitemap: https://countries.example/sitemap.xml" in robots
     sitemap = api.get("/sitemap.xml").text
-    for loc in ("https://countries.example/</loc>", "/privacy.html</loc>", "/accessibility.html</loc>"):
+    for loc in ("https://countries.example/</loc>", "/privacy.html</loc>", "/accessibility.html</loc>",
+                "/terms.html</loc>", "/glossary.html</loc>"):
         assert loc in sitemap
     home = api.get("/").text
-    assert '<meta property="og:image" content="https://countries.example/og-image.png">' in home
+    # the family's link card, in Record blue (the kit's head partial)
+    assert '<meta property="og:image" content="https://wherecountriesstand.com/family/card.png">' in home
     assert "__SITE__" not in home and "noindex" not in home
     shared = api.get("/", params={"q": 'What has Chad said about the "Sahel"?'}).text
     assert '<meta property="og:title" content="What has Chad said about the &quot;Sahel&quot;?">' in shared
@@ -326,10 +329,11 @@ def test_scripts_and_styles_carry_their_hash_and_are_kept_long(indexed):  # noqa
     api, _ = make(indexed, FakeClient())
     home = api.get("/")
     assert home.headers["cache-control"] == "no-cache"
-    refs = re.findall(r'(?:href|src)="(/[a-z]+\.(?:css|js)[^"]*)"', home.text)
-    assert {r.split("?")[0] for r in refs} == {"/fonts.css", "/styles.css", "/app.js"}
+    refs = re.findall(r'(?:href|src)="(/[a-z/]+\.(?:css|js)[^"]*)"', home.text)
+    assert {r.split("?")[0] for r in refs} == {"/fonts.css", "/styles.css", "/app.js", "/family/fonts.css",
+                                              "/family/family.css"}
     for ref in refs:
-        assert re.fullmatch(r"/[a-z]+\.(css|js)\?v=[0-9a-f]{12}", ref), ref
+        assert re.fullmatch(r"/[a-z/]+\.(css|js)\?v=[0-9a-f]{12}", ref), ref
         assert api.get(ref).headers["cache-control"] == "public, max-age=31536000, immutable"
     assert api.get("/styles.css").headers["cache-control"] == "no-cache"          # no hash: checked each time
     assert api.get("/styles.css?v=000000000000").headers["cache-control"] == "no-cache"   # an old hash
@@ -359,3 +363,82 @@ def test_alpha_notice_links_to_the_report_form(indexed):  # noqa: F811
         assert '<a href="/corrections.html#report">report anything wrong</a>' in api.get(page).text, page
     assert 'id="report"' in api.get("/corrections.html").text
     assert "<noscript>" in api.get("/").text
+
+
+PAGES = ("/", "/about.html", "/corrections.html", "/privacy.html", "/accessibility.html", "/terms.html",
+         "/glossary.html", "/missing")
+INDEPENDENCE = ("Where Countries Stand is independent. It is not affiliated with or endorsed by the United Nations, "
+                "and it does not use the UN's name or emblem.")
+
+
+def test_every_page_carries_the_family_binding_and_the_standard_furniture(indexed):  # noqa: F811
+    """The masthead and footer are written once (web/partials/) and put into every page as it is served."""
+    api, _ = make(indexed, FakeClient())
+    for page in PAGES:
+        text = api.get(page).text
+        assert "<!--#include" not in text, page
+        assert '<body class="wts-headings">' in text and '<meta name="theme-color" content="#1F5F8B">' in text, page
+        assert '<a class="wts-endorse" href="https://wheretheystand.uk/">' in text, page    # under the name
+        assert '<nav class="wts-shelf"' in text, page                                         # the footer shelf
+        assert INDEPENDENCE in text and "Independent. Not affiliated with the United Nations." in text, page
+        assert "Where They Stand is applying to register as a charity in England and Wales." in text, page
+        assert "the charity Where They Stand" not in text and "gmail" not in text.lower(), page
+        assert '<a href="https://github.com/rj-mitchell/wherecountriesstand">Source code</a>' in text, page
+        footer = text[text.index('<footer class="foot">'):]
+        order = ["/about.html", "/corrections.html", "/accessibility.html", "/privacy.html", "/terms.html",
+                 "https://github.com/rj-mitchell/wherecountriesstand"]
+        assert [footer.index(f'href="{u}"') for u in order] == sorted(footer.index(f'href="{u}"') for u in order)
+
+
+def test_the_current_page_is_marked_in_the_navigation(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient())
+    assert '<a href="/" aria-current="page">Ask</a>' in api.get("/").text
+    about = api.get("/about.html").text
+    assert about.count('<a href="/about.html" aria-current="page">') == 2      # the sections and the footer
+    assert '<a href="/" aria-current="page">' not in about
+    assert 'aria-current="page"' not in api.get("/missing").text
+    assert '<a href="/">Where Countries Stand</a>' in about                   # the masthead's name is not marked
+
+
+def test_family_files_are_served_and_its_partials_are_not(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient())
+    icon = api.get("/favicon.ico")
+    assert icon.status_code == 200 and icon.headers["content-type"] == "image/x-icon"
+    assert icon.content == (SITE / "family" / "favicon.ico").read_bytes()
+    assert api.get("/family/card.png").headers["cache-control"] == "public, max-age=86400"
+    font = api.get("/family/fonts/source-serif-4-normal-latin.woff2")
+    assert font.status_code == 200 and font.headers["cache-control"] == "public, max-age=604800"
+    for path in ("/family/shelf.html", "/family/head.html", "/family/VERSION", "/family/"):
+        assert api.get(path).status_code == 404, path
+
+
+def test_a_missing_partial_stops_the_site_starting(tmp_path):
+    from wcs.api.app import expand_includes
+    (tmp_path / "header.html").write_text("<p>masthead</p>\n")
+    assert expand_includes("<body>\n  <!--#include header-->\n</body>", tmp_path, tmp_path) == \
+        "<body>\n  <p>masthead</p>\n</body>"
+    with pytest.raises(FileNotFoundError):
+        expand_includes("<!--#include footer-->", tmp_path, tmp_path)
+
+
+def test_the_family_kit_copy_matches_its_version_file():
+    """web/site/family/ is the kit as synced (family/kit/sync.mjs, which CI also checks when it can): its VERSION
+    names the site and the hash of the files, and none of them has been edited since."""
+    import hashlib
+    family = SITE / "family"
+    lines = dict(line.split(" ", 1) for line in (family / "VERSION").read_text().splitlines()[1:5])
+    assert lines["site"] == "countries" and lines["base"] == "/family/"
+    digest = hashlib.sha256()
+    for path in sorted(p.relative_to(family).as_posix() for p in family.rglob("*")
+                       if p.is_file() and p.name != "VERSION"):
+        digest.update(path.encode() + b"\0" + (family / path).read_bytes() + b"\0")
+    assert digest.hexdigest() == lines["sha256"]
+
+
+def test_a_briefing_links_to_sister_sites(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient())
+    home = api.get("/").text
+    assert 'id="sisters"' in home and 'id="sister-links"' in home
+    script = (SITE / "app.js").read_text()
+    assert 'const MPS = "https://wherempsstand.com/";' in script
+    assert 'const LIVES = "https://wherelivesstand.com/country/";' in script

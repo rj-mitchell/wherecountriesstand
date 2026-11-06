@@ -1,12 +1,14 @@
 # Design: the look of the UN's Official Records
 
-Where They Stand takes its look from Hansard's printed Official Report. Where Countries Stand takes
+Where MPs Stand takes its look from Hansard's printed Official Report. Where Countries Stand takes
 its look from the UN's printed **Official Records**: the verbatim records of General Assembly and
 Security Council meetings (document symbols `A/…/PV.…` and `S/PV.…`). It uses the UN's web palette
-and typeface for the controls.
+and typeface for the controls, and wears the Where They Stand family's binding (below).
 
-A working prototype is in [`web/prototype/`](../web/prototype/). Open `index.html` or
-`briefing.html` in a browser.
+The site is in [`web/site/`](../web/site/); its masthead, notice and footer are written once, in
+[`web/partials/`](../web/partials/). Screenshots (6 November 2026) are in [`img/`](img/).
+
+![The home page](img/home-desktop.png)
 
 ## The rule: like the record, never like the UN
 
@@ -22,11 +24,12 @@ Paris Convention. Using them needs the Secretary-General's authorisation. So:
   citations of real UN documents. Our briefings carry no reference numbers that could pass for
   UN ones.
 - **Independence is stated on every page**: in the masthead ("Independent. Not affiliated with the
-  United Nations.") and in the notice box at the foot.
+  United Nations.") and in the notice box at the foot ("Where Countries Stand is independent. It is not
+  affiliated with or endorsed by the United Nations, and it does not use the UN's name or emblem.").
 - **A screenshot must never pass for a UN document.** The record's typography and conventions are
   borrowed, but the masthead is our own name and mark.
 
-This matches Where They Stand, which takes Hansard's look but doesn't use Parliament's logo or the
+This matches Where MPs Stand, which takes Hansard's look but doesn't use Parliament's logo or the
 crowned portcullis.
 
 ## What is borrowed from the record
@@ -40,7 +43,7 @@ Based on S/PV.7565 (20 November 2015):
 | Running header between rules: symbol · agenda item in italic · date | "Briefing" · topic in italic · date |
 | Speakers as **Mr. Delattre** (France) *(spoke in French)*: | Exactly the same in every source. The italic language note doubles as the translation flag. |
 | Procedural lines in italics: *A vote was taken by show of hands.* | The same, for procedural notes and vote labels (*In favour:*) |
-| List of members with dotted leaders: *President:* Mr. Rycroft …… (United Kingdom) | "The Council on this date" panel, and lists of coverage |
+| List of members with dotted leaders: *President:* Mr. Rycroft …… (United Kingdom) | The lists of coverage on the home page |
 | Agenda items as a numbered list | Example questions numbered the same way |
 | Boxed notice at the foot of the first page | Boxed notice at the foot of every page: independence, and that translated speeches are the UN's translations |
 
@@ -48,11 +51,12 @@ Based on S/PV.7565 (20 November 2015):
 
 | Token | Use | Value |
 |---|---|---|
-| UN Blue | Links, focus rings, primary buttons, the **General Assembly** | `#009EDB` (Pantone 2925), from the UN's 2020 brand quick guide |
+| UN Blue | Links, focus rings, primary buttons, the **General Assembly** | `#009EDB` (Pantone 2925), from the UN's 2020 brand quick guide; darkened in the stylesheet to `oklch(0.54 0.13 237)` (about `#0078B0`) so that text and buttons meet the contrast guidelines |
 | Council navy | The **Security Council** | Deep navy, `oklch(0.31 0.06 262)` |
 | Ink and paper | Text and background | Near-black on white. The records are printed on white, unlike Hansard's ivory. |
+| Record blue | The family binding only: the spine, the favicon, `theme-color` and the link card | `#1F5F8B`, the site's cloth in the family (decision 3 of the family plan). Never used for content |
 
-- **The body determines the colour,** the way Where They Stand uses green for the Commons and red
+- **The body determines the colour,** the way Where MPs Stand uses green for the Commons and red
   for the Lords. Sources and filter chips are edged in UN Blue for the General Assembly and Council
   navy for the Security Council. Further bodies (the Human Rights Council, for example) get their
   own colour from the same family.
@@ -60,20 +64,47 @@ Based on S/PV.7565 (20 November 2015):
   for yes and red for no, which would imply that one way is right.
 - **Roboto**, the UN's primary web typeface (Apache 2.0), is used for controls only: navigation,
   buttons, chips, metadata lines and counts. The record is always in Tinos.
-- Both fonts are bundled with the site, not loaded from Google, as Where They Stand bundles
-  Source Serif 4. The prototype loads them from Google Fonts for convenience.
+- **Source Serif 4**, the family's typeface, sets the headings (`h1`–`h6`) only, as on every family
+  site (decision 1 of the family plan). The site's name in the masthead stays in Tinos.
+- All three fonts are bundled with the site, not loaded from Google: Tinos and Roboto in
+  `web/site/fonts/`, Source Serif 4 in the family kit's `web/site/family/fonts/`.
 
 ## The mark
 
-Fifteen seats around a horseshoe table, open towards the viewer (`web/prototype/icon.svg`). It
+Fifteen seats around a horseshoe table, open towards the viewer (`web/site/icon.svg`). It
 suggests where countries sit and stand, and the fifteen seats are the Security Council's. It looks
-nothing like the UN emblem.
+nothing like the UN emblem. It is the page mark, beside the name in the masthead; the favicon and the
+link card are the family's spine instead.
 
-## Shared with Where They Stand
+## Place in the family
+
+Where Countries Stand is a Where They Stand project, on the International shelf with Where Lives Stand.
+Every family site carries the same binding, from the family kit (`web/site/family/`, copied in by the
+kit's `sync.mjs`; don't edit the copies):
+
+- **The endorsement** under the site's name: the spine in Record blue and "A Where They Stand project",
+  linking to wheretheystand.uk.
+- **The footer shelf**: the charity, its status ("Where They Stand is applying to register as a charity
+  in England and Wales."), every project's spine and a link to each sister site.
+- **The favicon, `theme-color` and link card** in Record blue, and Source Serif 4 for headings.
+- **The same furniture, worded the same way**: the phase banner (one sentence, linking to the report
+  form), the independence line, and the footer links in the family order (About · Corrections ·
+  Accessibility · Privacy · Terms · Source code; the site has no How it works, Data, Press or Status page
+  yet).
+
+Where the records meet, a briefing links to its sister sites, each link showing that site's spine:
+"Ask Where MPs Stand the same question" (`https://wherempsstand.com/?q=…`), and, for each country the
+question is about, "Quality of life in … on Where Lives Stand" (`https://wherelivesstand.com/country/<ISO
+alpha-3>`).
+
+The About page carries the family's "In the family" paragraph. Print keeps the site's name, the
+briefing, its sources with their addresses, and the independence notice.
+
+## Shared with the family
 
 - Square corners, ruled lists, and colour only where it carries meaning.
 - OKLCH colour tokens holding both light and dark values, through `light-dark()`. Dark mode follows
   the system setting.
 - One fluid type scale, logical properties, visible focus rings, hover styles only for a mouse,
   and animation only when reduced motion isn't requested.
-- No horizontal scrolling on phones. The prototype is checked at 390 px wide.
+- No horizontal scrolling on phones. Pages are checked at 390 px wide.

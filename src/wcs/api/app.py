@@ -13,7 +13,9 @@ Endpoints:
 * ``GET /api/countries``, ``GET /api/groups``: for the filters.
 * ``GET /api/health``.
 * ``GET /robots.txt``, ``GET /sitemap.xml``, and the pages, with the site's address filled in for link previews
-  (``[site] url``, or ``WCS_SITE_URL``, or ``https://`` and ``DOMAIN``).
+  (``[site] url``, or ``WCS_SITE_URL``, or ``https://`` and ``DOMAIN``). The pages share one masthead and footer:
+  ``<!--#include header-->`` is replaced by ``web/partials/header.html``, and ``<!--#include family/shelf-->`` by the
+  Where They Stand family kit's ``web/site/family/shelf.html`` (see ``render_page``).
 
 Spending is capped per day and per month (``[usage]``), each visitor has a daily limit and a per-minute rate limit,
 and identical questions are answered from a cache until the data changes (``wcs.api.usage``).
@@ -39,6 +41,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import (
+    FileResponse,
     HTMLResponse,
     JSONResponse,
     PlainTextResponse,
@@ -76,6 +79,7 @@ log = logging.getLogger(__name__)
 mimetypes.add_type("font/woff2", ".woff2")  # missing from slim images' MIME lists
 
 SITE_DIR = REPO_ROOT / "web" / "site"
+PARTIALS_DIR = REPO_ROOT / "web" / "partials"
 KEEP_ALIVE_SECONDS = 15
 # Raise when the briefing instructions change, so cached briefings are written again.
 INSTRUCTIONS_VERSION = 3
@@ -152,18 +156,60 @@ def sse(events: Iterator[dict[str, Any]], keep_alive: float = KEEP_ALIVE_SECONDS
 # point at the current files.
 FOREVER = "public, max-age=31536000, immutable"
 ALWAYS_CHECK = "no-cache"
-ASSET_REF = re.compile(r'((?:href|src)=")/([A-Za-z0-9_-]+\.(?:css|js))(")')
+# The family kit's fonts keep their names when the kit changes, so they are kept for a week, not a year.
+A_WEEK = "public, max-age=604800"
+A_DAY = "public, max-age=86400"
+ASSET_REF = re.compile(r'((?:href|src)=")/([A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)?\.(?:css|js))(")')
+# The family kit's partials and its VERSION file are put into the pages by the server, not served on their own.
+FAMILY_PRIVATE = re.compile(r"family/(?:[^/]+\.html|VERSION)")
+INCLUDE = re.compile(r"^([ \t]*)<!--#include ([a-z0-9-]+(?:/[a-z0-9-]+)?)-->", re.M)
+NAV = re.compile(r"<nav\b.*?</nav>", re.S)
 
 
 def asset_versions(site: Path) -> dict[str, str]:
-    """A short hash of the content of each stylesheet and script in the site's folder."""
-    return {p.name: hashlib.sha256(p.read_bytes()).hexdigest()[:12]
-            for p in sorted([*site.glob("*.css"), *site.glob("*.js")])}
+    """A short hash of the content of each stylesheet and script in the site's folder and the family kit's."""
+    files = [*site.glob("*.css"), *site.glob("*.js"), *site.glob("family/*.css")]
+    return {p.relative_to(site).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()[:12] for p in sorted(files)}
 
 
 def versioned(page: str, versions: dict[str, str]) -> str:
     """The page with its stylesheets' and scripts' addresses carrying their content's hash."""
     return ASSET_REF.sub(lambda m: f"{m[1]}/{m[2]}?v={versions[m[2]]}{m[3]}" if m[2] in versions else m[0], page)
+
+
+def expand_includes(page: str, site: Path, partials: Path) -> str:
+    """The page with each ``<!--#include name-->`` replaced by ``partials/name.html``, or, for ``family/name``, by
+    the family kit's ``site/family/name.html``. Partials may include others (the header includes the family's
+    endorsement). A missing partial is an error, so a mistake shows when the site starts, not on a visitor's page."""
+    def one(m: re.Match) -> str:
+        indent, name = m[1], m[2]
+        path = site / f"{name}.html" if name.startswith("family/") else partials / f"{name}.html"
+        if not path.is_file():
+            raise FileNotFoundError(f"{m[0].strip()}: there is no {path}")
+        lines = path.read_text(encoding="utf-8").rstrip("\n").split("\n")
+        return "\n".join(indent + line if line else line for line in lines)  # indented where it is included
+
+    for _ in range(5):
+        if "<!--#include " not in page:
+            break
+        page = INCLUDE.sub(one, page)
+    return page
+
+
+def mark_current(page: str, here: str | None) -> str:
+    """Marks the link to this page in the page's navigation with ``aria-current``, as the masthead and footer are
+    shared by every page."""
+    if not here:
+        return page
+    link = f'<a href="{here}">'
+    return NAV.sub(lambda m: m[0].replace(link, f'<a href="{here}" aria-current="page">'), page)
+
+
+def render_page(path: Path, site: Path, partials: Path, versions: dict[str, str]) -> str:
+    """A page as served (before the site's address is filled in): partials included, its own link in the
+    navigation marked, and its stylesheets' and scripts' addresses carrying their hash."""
+    here = None if path.stem == "404" else "/" if path.stem == "index" else f"/{path.name}"
+    return versioned(mark_current(expand_includes(path.read_text(encoding="utf-8"), site, partials), here), versions)
 
 
 class SiteFiles(StaticFiles):
@@ -179,11 +225,15 @@ class SiteFiles(StaticFiles):
             return FOREVER
         if path.startswith("fonts/") and path.endswith(".woff2"):
             return FOREVER
+        if path.startswith("family/fonts/") and path.endswith(".woff2"):
+            return A_WEEK
         if path.endswith((".png", ".svg", ".ico")):
-            return "public, max-age=86400"
+            return A_DAY
         return ALWAYS_CHECK  # pages, and a script or stylesheet asked for without (or with an old) hash
 
     async def get_response(self, path: str, scope):
+        if FAMILY_PRIVATE.fullmatch(path):
+            raise HTTPException(404, "Not found")
         response = await super().get_response(path, scope)
         if response.status_code == 404:  # Starlette's own 404.html: shown by the app instead, as for every page
             raise HTTPException(404, "Not found")
@@ -462,16 +512,17 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     site = Path(settings.section("site").get("dir") or SITE_DIR)
+    partials = Path(settings.section("site").get("partials") or PARTIALS_DIR)
     versions = asset_versions(site) if site.exists() else {}
-
-    def read_page(path: Path) -> str:
-        return versioned(path.read_text(encoding="utf-8"), versions)
+    # Every page is put together once, as the site starts: a missing partial stops it starting.
+    rendered = {p.stem: render_page(p, site, partials, versions)
+                for p in sorted(site.glob("*.html")) if PAGE_NAME.fullmatch(p.stem)} if site.exists() else {}
 
     def html_page(text: str, status_code: int = 200) -> HTMLResponse:
         return HTMLResponse(text, status_code=status_code, headers={"Cache-Control": ALWAYS_CHECK})
 
     def pages() -> list[str]:
-        return sorted(p.stem for p in site.glob("*.html") if PAGE_NAME.fullmatch(p.stem) and p.stem != "404")
+        return sorted(name for name in rendered if name != "404")
 
     @app.get("/robots.txt", include_in_schema=False)
     def robots(request: Request):
@@ -489,10 +540,9 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                         media_type="application/xml")
 
     def page(request: Request, name: str) -> HTMLResponse:
-        path = site / f"{name}.html"
-        if not PAGE_NAME.fullmatch(name) or name == "404" or not path.is_file():
+        if name not in rendered or name == "404":
             raise HTTPException(404, "Not found")
-        text, base = read_page(path), site_url(settings, request)
+        text, base = rendered[name], site_url(settings, request)
         q = request.query_params.get("q", "") if name == "index" else ""
         if len(q.strip()) >= 3:
             return html_page(question_page(text, q, base, request.url.query))
@@ -510,7 +560,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def shared_briefing(request: Request, bid: str):
         """A saved briefing: the home page, which loads it, with the question as its title and link preview."""
         b = saved_briefing(state, bid) if re.fullmatch(r"[A-Za-z0-9_-]{6,20}", bid) else None
-        text, base = read_page(site / "index.html"), site_url(settings, request)
+        text, base = rendered["index"], site_url(settings, request)
         if b is None:
             return html_page(text.replace(SITE_MARK, base), status_code=404)
         return html_page(question_page(text, b["question"], base, "", f"/b/{bid}"))
@@ -518,10 +568,17 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     @app.exception_handler(StarletteHTTPException)
     async def not_found(request: Request, exc: StarletteHTTPException):
         """A page of the site's own for an address with nothing there; the API keeps its JSON answers."""
-        missing = site / "404.html"
-        if exc.status_code == 404 and not request.url.path.startswith("/api/") and missing.is_file():
-            return html_page(read_page(missing).replace(SITE_MARK, site_url(settings, request)), status_code=404)
+        if exc.status_code == 404 and not request.url.path.startswith("/api/") and "404" in rendered:
+            return html_page(rendered["404"].replace(SITE_MARK, site_url(settings, request)), status_code=404)
         return await http_exception_handler(request, exc)
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon():
+        """Browsers ask for /favicon.ico whatever the page says: the family kit's, the site's spine in its cloth."""
+        icon = site / "family" / "favicon.ico"
+        if not icon.is_file():
+            raise HTTPException(404, "Not found")
+        return FileResponse(icon, media_type="image/x-icon", headers={"Cache-Control": A_DAY})
 
     if site.exists():
         app.mount("/", SiteFiles(directory=site, html=True, versions=versions), name="site")
