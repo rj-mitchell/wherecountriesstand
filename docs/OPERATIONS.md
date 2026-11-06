@@ -67,8 +67,10 @@ systemctl start wcs-update.service            # run one now
 ```
 
 If a run, or the nightly backup, fails (exits 1 when something needs attention, or stops with an error), the server
-emails wheretheystanduk@gmail.com with the result and the run's last log lines, at most once every six hours. That is
-set up once for every site on the server (Where They Stand's `docs/HOSTING.md`, "Email from the server").
+emails the operations address with the result and the run's last log lines, at most once every six hours. That is
+set up once for every site on the server (Where MPs Stand's
+[`docs/HOSTING.md`](https://github.com/rj-mitchell/wherempsstand/blob/main/docs/HOSTING.md), "Email from the
+server", which names the address).
 
 ## The search index on disk
 
