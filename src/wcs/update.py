@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, date, datetime
@@ -68,13 +69,21 @@ class Report:
     warnings: list[str] = field(default_factory=list)
     gd_website: dict[str, Any] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
+    # the nightly backup's health (``backups``); kept out of the public /api/status
+    backups: list[dict[str, str]] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
+        """Whether the data update itself went well (shown on /api/status)."""
         return not self.errors
 
+    @property
+    def needs_attention(self) -> bool:
+        """The update failed somewhere, or the backups have stopped: the scheduled run exits 1, and an email goes."""
+        return not self.ok or any(b["level"] == "error" for b in self.backups)
+
     def to_dict(self) -> dict[str, Any]:
-        return {**asdict(self), "ok": self.ok}
+        return {**asdict(self), "ok": self.ok, "needs_attention": self.needs_attention}
 
 
 def live_from(settings: Settings) -> date:
@@ -470,6 +479,18 @@ def spending(settings: Settings, report: Report) -> None:
         report.warnings.append(f"spending: could not read {path} ({type(exc).__name__}: {exc})")
 
 
+def backups(report: Report, folder: Path | None = None) -> None:
+    """Whether the nightly backup and its off-site copy are still being made (``offsite.backup_alerts``). The update
+    runs every day in the same container as the backup, with the backups' folder (``/backups``, or
+    ``WCS_BACKUP_DIR``), so a backup timer that has stopped is noticed here."""
+    from wcs.offsite import backup_alerts
+
+    try:
+        report.backups = backup_alerts(Path(folder or os.environ.get("WCS_BACKUP_DIR") or "/backups"))
+    except Exception as exc:  # the report itself matters more
+        report.backups = [{"level": "error", "text": f"could not check the backups ({type(exc).__name__}: {exc})"}]
+
+
 def update_index(settings: Settings, ref: Countries, changed: dict[str, set[int]], report: Report,
                  embed_seconds: float | None) -> None:
     """Re-index the years that changed, embed passages still waiting, and merge what was written into the search
@@ -527,6 +548,7 @@ def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd:
         update_index(settings, ref, changed, report, embed_seconds)
     health(report)
     spending(settings, report)
+    backups(report)
     report.finished = datetime.now(UTC).isoformat(timespec="seconds")
     write_report(settings, report)
     return report
