@@ -100,8 +100,16 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
   docker compose run --rm -T app wcs offsite                  # "ok": true
   docker compose run --rm -T app wcs backup --to /backups     # ends "Off-site copy: stored in ..."
   ```
-  To get a backup back from B2: download the newest `wcs-state-….sqlite.gz` from the bucket, unzip it, and copy it
-  into the data volume as `/data/state.db` with the site stopped.
+  To put a backup back, stop the site and restore it; the backup is checked first, and the database it replaces is
+  kept as `/data/state.db.before-restore`:
+  ```bash
+  cd /opt/wherecountriesstand/deploy
+  docker compose stop app
+  docker compose run --rm app wcs restore /backups/wcs-state-2026-11-05.sqlite.gz    # asks first
+  docker compose start app
+  ```
+  For a copy from B2, download it from the bucket into `/opt/wherecountriesstand/deploy/backups` first and hand it to
+  the site's user (`chown 10001:10001 <file>`). Each update warns if the backups stop (`docs/OPERATIONS.md`).
 * **The privacy notice** (`web/site/privacy.html`) says what the site keeps: no requests logged (`wcs serve` turns
   the access log off, and the front door keeps none), written briefings saved at their own addresses (`/b/<id>`) unless withdrawn, problem reports with their contact address deleted when closed, notes
   of failed briefings for 90 days, and a daily visitor code in place of IP addresses. It names Cloudflare, which

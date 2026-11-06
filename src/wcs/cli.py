@@ -6,6 +6,7 @@
     wcs index && wcs embed                 # keyword index, then meaning search (slow; resumable)
     wcs update                             # new votes, Security Council and General Debate records (scheduled)
     wcs backup --to /backups               # copy the state database (scheduled)
+    wcs restore /backups/wcs-state-<day>.sqlite.gz   # put a backup back (with the site stopped)
     wcs search "climate finance" --group sids
     wcs ask "How have small island States spoken about climate change since 2015?"
 """
@@ -185,7 +186,9 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
             typer.echo(f"warning: {w}")
         for e in report.errors:
             typer.echo(f"error: {e}")
-    if not report.ok:
+        for b in report.backups:
+            typer.echo(f"{b['level']}: backup: {b['text']}")
+    if report.needs_attention:
         raise typer.Exit(1)
 
 
@@ -211,6 +214,27 @@ def backup(to: str = typer.Option(..., help="folder for the backups"),
         raise typer.Exit(1) from exc
     typer.echo("Off-site copy: " + (f"stored in {sent['bucket']} ({sent['stored']} kept there)"
                                     if sent.get("ok") else sent["offsite"]))
+
+
+@app.command()
+def restore(archive: str = typer.Argument(..., help="a backup: /backups/wcs-state-YYYY-MM-DD.sqlite.gz"),
+            yes: bool = typer.Option(False, "--yes", help="don't ask first")) -> None:
+    """Put a backup of the state database back (spending, saved briefings, reports). Stop the site first
+    (docs/DEPLOY.md, "Backups"). The backup is checked before anything is replaced, and the database it replaces is
+    kept as data/state.db.before-restore."""
+    from pathlib import Path
+
+    from wcs.backup import restore_backup
+
+    state_db = load_settings().data_dir / "state.db"
+    if not yes and not typer.confirm(f"Replace {state_db} with {archive}? Stop the site first."):
+        raise typer.Exit(1)
+    try:
+        kept = restore_backup(Path(archive), state_db)
+    except (OSError, RuntimeError) as exc:
+        typer.echo(f"Not restored: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    typer.echo(f"restored {state_db} from {archive}" + (f"; the database it replaced is {kept}" if kept else ""))
 
 
 @app.command()

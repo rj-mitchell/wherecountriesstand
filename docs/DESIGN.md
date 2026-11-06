@@ -89,8 +89,9 @@ kit's `sync.mjs`; don't edit the copies):
 - **The favicon, `theme-color` and link card** in Record blue, and Source Serif 4 for headings.
 - **The same furniture, worded the same way**: the phase banner (one sentence, linking to the report
   form), the independence line, and the footer links in the family order (About · Corrections ·
-  Accessibility · Privacy · Terms · Source code; the site has no How it works, Data, Press or Status page
-  yet).
+  Accessibility · Privacy · Terms · Press · Status · Source code; the site has no How it works or Data page
+  yet). The Press page gives the contact, how to cite a statement, a vote and a briefing, the site in brief and
+  the logo files; the Status page reads `/api/status`, and says where it is without JavaScript.
 
 Where the records meet, a briefing links to its sister sites, each link showing that site's spine:
 "Ask Where MPs Stand the same question" (`https://wherempsstand.com/?q=…`), and, for each country the

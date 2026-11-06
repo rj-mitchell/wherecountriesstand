@@ -27,7 +27,7 @@ shared server, with written briefings switched on and spending caps of $3 a day 
   out (about a year after each debate) the UN's General Debate website; rights of reply from 1993;
 - General Assembly votes from 1946.
 
-The home page shows each source's latest date, and `/api/status` the last update and its warnings. Next: a page
+The home page shows each source's latest date, and the status page (`/status.html`, from `/api/status`) the last update and its warnings, and whether briefings are paused. Next: a page
 for each country (which Where Lives Stand would link to), and testing with people who use assistive technology.
 
 ## In the family
@@ -134,7 +134,8 @@ uv run ruff check src tests scripts
 The pages are in `web/site/`; their masthead, notice and footer are written once in `web/partials/` and put into
 each page by the server. `web/site/family/` is the Where They Stand family kit, copied in by its sync script (see
 [`docs/DEPLOY.md`](docs/DEPLOY.md), "Pages and the family kit"); don't edit it. CI (`.github/workflows/ci.yml`)
-runs ruff and the tests on every push and pull request.
+runs ruff and the tests on every push and pull request, and checks every page for accessibility problems
+with axe (`scripts/a11y.mjs`).
 
 ## Known limitations
 

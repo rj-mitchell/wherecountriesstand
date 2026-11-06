@@ -150,3 +150,36 @@ def check(env: dict[str, str] | None = None, client: httpx.Client | None = None)
         b2.close()
     return {"ok": True, "bucket": cfg["bucket"], "backups": len(files),
             "newest": files[-1]["fileName"] if files else None}
+
+
+def backup_alerts(folder: Path, env: dict[str, str] | None = None, now: datetime | None = None,
+                  stale_hours: int = 50) -> list[dict[str, str]]:
+    """A nightly backup that has not run, or an off-site copy that failed or is old, each ``{"level", "text"}``
+    (level "error" or "warning"). Nothing when the folder is not there (a computer that makes no backups). Adapted
+    from Where MPs Stand's ``offsite.py``, which shows them on its admin page; here they go in the update report."""
+    folder = Path(folder)
+    now = now or datetime.now(UTC)
+    if not folder.is_dir():
+        return []
+    out: list[dict[str, str]] = []
+    local = sorted(folder.glob(f"{PREFIX}*.sqlite.gz"))
+    if not local:
+        out.append({"level": "warning", "text": "no backups have been made yet"})
+    elif (now - datetime.fromtimestamp(local[-1].stat().st_mtime, UTC)).total_seconds() > stale_hours * 3600:
+        out.append({"level": "error", "text": f"the last backup was made over two days ago ({local[-1].name}): "
+                                              "is wcs-backup.timer running?"})
+    if configured(env) is None:
+        out.append({"level": "warning", "text": "backups are kept on this server only: no off-site copy is set up"})
+        return out
+    try:
+        status = json.loads((folder / "offsite.json").read_text())
+    except (OSError, ValueError):
+        status = None
+    if local and status is None:
+        out.append({"level": "warning", "text": "no off-site copy has been made yet; one is made with the next backup"})
+    elif status and not status.get("ok"):
+        out.append({"level": "error", "text": f"the last off-site copy failed ({str(status.get('when', ''))[:16]}): "
+                                              f"{status.get('error', '')}"})
+    elif status and (now - datetime.fromisoformat(status["when"])).total_seconds() > stale_hours * 3600:
+        out.append({"level": "error", "text": f"the last off-site copy was over two days ago ({status['when'][:10]})"})
+    return out

@@ -8,7 +8,7 @@ from test_pipeline import TODAY, FakeClient, indexed  # noqa: F401  (the fixture
 
 from wcs.api.app import SITE_DIR as SITE
 from wcs.api.app import create_app
-from wcs.api.usage import StateDB, cost_usd, visitor_key
+from wcs.api.usage import StateDB, cost_usd, network_of, visitor_key
 from wcs.embed.base import HashingEmbedder
 from wcs.engine import Engine
 from wcs.rag.pipeline import Pipeline
@@ -118,6 +118,23 @@ def test_visitor_codes_change_daily(tmp_path):
     assert a != b and "203.0.113.5" not in a
 
 
+def test_ipv6_visitors_are_counted_by_their_64():
+    """One connection is given a whole IPv6 /64, so each address in it is the same visitor for the limits."""
+    assert network_of("2001:db8:1:2:aaaa::1") == network_of("2001:db8:1:2:ffff::9") == "2001:db8:1:2::/64"
+    assert network_of("2001:db8:1:3::1") != network_of("2001:db8:1:2::1")
+    assert network_of("203.0.113.5") == "203.0.113.5"
+    assert network_of("::ffff:203.0.113.5") == "203.0.113.5"
+    assert network_of("::1") == "::1"
+    assert network_of(None) == "-" and network_of("testclient") == "testclient"
+
+
+def test_visitor_codes_group_an_ipv6_64(tmp_path):
+    state = StateDB(tmp_path / "s.db")
+    day = "2026-11-06"
+    assert visitor_key(state, "2001:db8::1", day) == visitor_key(state, "2001:db8::abcd:1", day)
+    assert visitor_key(state, "2001:db8::1", day) != visitor_key(state, "2001:db8:0:1::1", day)
+
+
 def test_question_length_is_checked(indexed):  # noqa: F811
     api, _ = make(indexed, FakeClient())
     assert api.post("/api/ask", json={"question": "x" * 501}).status_code == 422
@@ -211,7 +228,9 @@ def test_pages_use_absolute_paths(indexed):  # noqa: F811
 
 def test_status_reports_the_last_update(indexed):  # noqa: F811
     api, _ = make(indexed, FakeClient())
-    assert api.get("/api/status").json() == {"last_update": None}
+    st = api.get("/api/status").json()
+    assert st["last_update"] is None and st["briefings"] == "available" and st["briefings_note"] is None
+    assert st["coverage"]["sc"]["to"] and st["coverage"]["sc"]["speeches"] == 2
     logs = indexed.data_dir / "logs"
     logs.mkdir(parents=True, exist_ok=True)
     (logs / "update-20261101T0300.json").write_text(json.dumps({"started": "2026-11-01T03:00:00+00:00", "ok": True,
@@ -366,7 +385,7 @@ def test_alpha_notice_links_to_the_report_form(indexed):  # noqa: F811
 
 
 PAGES = ("/", "/about.html", "/corrections.html", "/privacy.html", "/accessibility.html", "/terms.html",
-         "/glossary.html", "/missing")
+         "/glossary.html", "/press.html", "/status.html", "/missing")
 INDEPENDENCE = ("Where Countries Stand is independent. It is not affiliated with or endorsed by the United Nations, "
                 "and it does not use the UN's name or emblem.")
 
@@ -386,7 +405,7 @@ def test_every_page_carries_the_family_binding_and_the_standard_furniture(indexe
         assert '<a href="https://github.com/rj-mitchell/wherecountriesstand">Source code</a>' in text, page
         footer = text[text.index('<footer class="foot">'):]
         order = ["/about.html", "/corrections.html", "/accessibility.html", "/privacy.html", "/terms.html",
-                 "https://github.com/rj-mitchell/wherecountriesstand"]
+                 "/press.html", "/status.html", "https://github.com/rj-mitchell/wherecountriesstand"]
         assert [footer.index(f'href="{u}"') for u in order] == sorted(footer.index(f'href="{u}"') for u in order)
 
 
@@ -442,3 +461,88 @@ def test_a_briefing_links_to_sister_sites(indexed):  # noqa: F811
     script = (SITE / "app.js").read_text()
     assert 'const MPS = "https://wherempsstand.com/";' in script
     assert 'const LIVES = "https://wherelivesstand.com/country/";' in script
+
+
+def test_cost_copes_with_the_sdks_own_names_and_records_cache_writes(tmp_path):
+    """Token counts in the SDK's own names cost the same as the site's (whose input includes the cache writes), and
+    cache writes are recorded (as Where Councils Stand does)."""
+    from wcs.api.usage import record_usage, token_counts
+
+    prices = {"price_input_per_mtok": 4.0, "price_output_per_mtok": 20.0, "price_cache_read_per_mtok": 0.4}
+    ours = {"input_tokens": 1500, "output_tokens": 200, "cache_read_tokens": 3000, "cache_write_tokens": 500}
+    raw = {"input_tokens": 1000, "output_tokens": 200, "cache_read_input_tokens": 3000,
+           "cache_creation_input_tokens": 500}
+    assert token_counts(raw) == ours
+    assert cost_usd(raw, prices) == cost_usd(ours, prices) == pytest.approx(
+        1000 / 1e6 * 4 + 500 / 1e6 * 4 * 1.25 + 200 / 1e6 * 20 + 3000 / 1e6 * 0.4)
+    assert cost_usd({"input_tokens": 1000, "cache_read_input_tokens": None}, prices) == pytest.approx(0.004)
+    state = StateDB(tmp_path / "s.db")
+    record_usage(state, "answer", "m", raw, prices, "v1")
+    with state.connect() as con:
+        row = con.execute("SELECT input_tokens, cache_read_tokens, cache_write_tokens FROM usage").fetchone()
+    assert row == (1500, 3000, 500)
+
+
+def test_an_older_state_database_gains_the_cache_writes_column(tmp_path):
+    import sqlite3
+
+    path = tmp_path / "old.db"
+    con = sqlite3.connect(path)
+    con.execute("CREATE TABLE usage (id INTEGER PRIMARY KEY, visitor TEXT, at TEXT, kind TEXT, model TEXT, "
+                "input_tokens INTEGER, output_tokens INTEGER, cache_read_tokens INTEGER, cost_usd REAL)")
+    con.execute("INSERT INTO usage (visitor, at, kind, input_tokens, cost_usd) VALUES ('v', '2026-01-01', 'answer', "
+                "10, 0.5)")
+    con.commit()
+    con.close()
+    state = StateDB(path)
+    with state.connect() as con:
+        assert con.execute("SELECT cache_write_tokens, cost_usd FROM usage").fetchone() == (0, 0.5)
+
+
+def test_status_says_when_briefings_are_paused_or_unavailable(indexed, monkeypatch):  # noqa: F811
+    from wcs.api.usage import record_usage
+
+    api, state = make(indexed, FakeClient(), daily_spend_cap_usd=0.5)
+    record_usage(state, "answer", "m", {"input_tokens": 300_000}, {"price_input_per_mtok": 2.0}, "v1")
+    st = api.get("/api/status").json()
+    assert st["briefings"] == "paused" and "Today's budget" in st["briefings_note"]
+    for name in ("WCS_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"):
+        monkeypatch.delenv(name, raising=False)
+    api, _ = make(indexed, None)
+    assert api.get("/api/status").json()["briefings"] == "unavailable"
+
+
+def test_status_keeps_the_backups_private(indexed):  # noqa: F811
+    logs = indexed.data_dir / "logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    (logs / "update-20261101T0300.json").write_text(json.dumps({"started": "2026-11-01T03:00:00+00:00", "ok": True,
+        "warnings": [], "errors": [], "needs_attention": True,
+        "backups": [{"level": "error", "text": "the last off-site copy failed: secret detail"}]}))
+    api, _ = make(indexed, FakeClient())
+    st = api.get("/api/status")
+    assert st.json()["last_update"]["ok"] is True and "secret detail" not in st.text and "backups" not in st.text
+
+
+def test_the_press_page(indexed):  # noqa: F811
+    """Contact, how to cite a briefing and a record, the site in brief, and logo files that are really there."""
+    import re
+
+    api, _ = make(indexed, FakeClient())
+    text = api.get("/press.html").text
+    main = " ".join(text[text.index("<main"):text.index("</main>")].split())
+    assert "mailto:admin@wherecountriesstand.com" in main and INDEPENDENCE.replace("'", "’") in main
+    assert "https://wherecountriesstand.com/b/…" in text and "S/PV.[number]" in text and "CC BY-NC 4.0" in text
+    assert 'id="coverage"' in text and "from 1992" in text  # filled in from /api/meta, readable without it
+    files = re.findall(r'href="(/(?:family/)?[\w-]+\.(?:svg|png))"', main)
+    assert {"/icon.svg", "/family/icon.svg", "/family/icon-512.png", "/family/card.png"} <= set(files)
+    for f in files:
+        assert api.get(f).status_code == 200, f
+
+
+def test_the_status_page_reads_without_javascript(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient())
+    text = api.get("/status.html").text
+    noscript = text[text.index("<noscript>"):text.index("</noscript>")]
+    assert '<a href="/api/status">/api/status</a>' in noscript
+    assert '<script src="/status.js?v=' in text and 'id="status-live"' in text
+    assert "/status.html</loc>" in api.get("/sitemap.xml").text and "/press.html</loc>" in api.get("/sitemap.xml").text

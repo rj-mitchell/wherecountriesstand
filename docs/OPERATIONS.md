@@ -98,7 +98,10 @@ The last report's time, warnings and errors are also public at `/api/status` (th
 sources), so the site's freshness can be checked without logging in to the server.
 
 The report also covers the site: spending against the caps and briefings that failed, from `data/state.db`
-(`wcs usage` shows the same, with spend by day, and exits 1 when something needs a look).
+(`wcs usage` shows the same, with spend by day, and exits 1 when something needs a look). And it checks the
+backups (`backups` in the report, kept out of `/api/status`): a nightly backup or off-site copy more than two days
+old, or a failed off-site copy, makes the run exit 1, so the server emails, even when the backup timer itself has
+stopped and so cannot fail.
 
 | Report says | Likely cause | What to do |
 |---|---|---|
@@ -117,6 +120,9 @@ The report also covers the site: spending against the caps and briefings that fa
 | `introductions name another country than the speaker who follows` | The record's pages come out of order (seen in 2020) | Those speeches are left out rather than misattributed; check the record if many are. |
 | `spending: today's cap ... 80% used` (or this month's) | Many briefings asked for | Nothing, if it is a busy day: at the cap the site shows sources only until midnight UTC. `wcs usage` shows spend by day; raise `daily_spend_cap_usd` or `monthly_spend_cap_usd` in `config/settings.toml` if the budget allows. |
 | `spending: ... cap reached: new briefings are paused` | The cap is spent | As above. Visitors still get the sources, and briefings already written still load. |
+| `error: backup: the last backup was made over two days ago` | The backup timer has stopped, or its runs fail | `systemctl status wcs-backup.timer wcs-backup.service`; `journalctl -u wcs-backup.service -n 50`. Run one now with `systemctl start wcs-backup.service`. |
+| `error: backup: the last off-site copy failed` (or `was over two days ago`) | The B2 key was changed or revoked, or B2 was down | `docker compose run --rm -T app wcs offsite` says whether the key works; see `docs/DEPLOY.md`, "Backups". |
+| `warning: backup: backups are kept on this server only` | No off-site copy is set up | Set it up (`docs/DEPLOY.md`, "Backups"). |
 | `briefing(s) failed in the last 24 hours` | The model API refused or timed out, or a bug | `wcs usage` lists each failure with its question and error. An API outage clears itself; the same error again and again is a bug. |
 
 ## Problems, corrections and withdrawn briefings

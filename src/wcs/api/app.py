@@ -10,6 +10,8 @@ Endpoints:
   sources are still shown, which costs nothing.
 * ``POST /api/search``: the plan and ranked sources only, read by the built-in rules (no model call).
 * ``GET /api/meta``: what the record covers, and whether briefings are being written.
+* ``GET /api/status``: the last data update and its warnings, the latest record from each source, and whether
+  briefings are available or paused by a spending cap (for ``/status.html``, and checks from outside).
 * ``GET /api/countries``, ``GET /api/groups``: for the filters.
 * ``GET /api/health``.
 * ``GET /robots.txt``, ``GET /sitemap.xml``, and the pages, with the site's address filled in for link previews
@@ -34,6 +36,7 @@ import re
 import threading
 import time
 from collections.abc import Callable, Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -379,11 +382,26 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         return {"ok": True, "id": add_report(state, body.kind, body.page.strip(), body.message.strip(),
                                              body.contact.strip())}
 
+    def model_available() -> bool:
+        """Whether briefings can be written at all (an API key is set), without loading the search engine."""
+        if holder["pipeline"] is not None:
+            return holder["pipeline"].has_model()
+        from wcs.rag.answer import api_key
+
+        return bool(api_key() or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
+
     @app.get("/api/status")
     def status():
-        """The last data update: when, whether it needs attention, and its warnings (all about the UN's sources), so
-        the site's freshness can be checked from outside the server."""
-        return remembered("status", lambda: update_status(settings), ttl=60)
+        """For the status page, and to check the site from outside the server: the last data update (when, whether
+        it went well, and its warnings, which are about the UN's sources and spending), the latest record from each
+        source, and whether new briefings are being written, or paused because a spending cap is reached."""
+        def build() -> dict[str, Any]:
+            on = model_available()
+            paused = check_caps(state, limits) if on else None
+            return {**update_status(settings), "checked_at": datetime.now(UTC).isoformat(timespec="seconds"),
+                    "briefings": "unavailable" if not on else "paused" if paused else "available",
+                    "briefings_note": paused, "coverage": remembered("coverage", lambda: coverage(settings))}
+        return remembered("status", build, ttl=60)
 
     @app.get("/api/countries")
     def countries_list():

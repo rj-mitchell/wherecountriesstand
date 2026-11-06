@@ -1,5 +1,6 @@
 # Checks every push and pull request: lint, the tests (offline: the model is faked), and that the family kit's
 # copy in web/site/family/ is the version this site was last synced to and has not been edited since.
+# A second job checks every page for accessibility problems (scripts/a11y.mjs).
 name: CI
 
 on:
@@ -34,3 +35,40 @@ jobs:
           grep -qx "site countries" web/site/family/VERSION
       - name: Tests
         run: uv run pytest
+
+  # Every page served by the app (with no data loaded and no API key: the pages, their scripts and the empty states)
+  # is checked with axe for WCAG 2.2 AA problems, light and dark, at desktop and phone widths, as Where MPs Stand
+  # does. A serious or critical problem, or a page that scrolls sideways, fails the check (scripts/a11y.mjs).
+  accessibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: uv sync --frozen
+      - name: Start the site with no data
+        run: |
+          mkdir -p /tmp/wcs-data
+          WCS_DATA_DIR=/tmp/wcs-data nohup uv run wcs serve --port 8000 > /tmp/wcs.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -fsS http://localhost:8000/api/health && break
+            sleep 1
+          done
+          curl -fsS http://localhost:8000/status.html | grep -q "/api/status"
+          curl -fsS http://localhost:8000/api/status | grep -q '"briefings"'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Accessibility check (axe, WCAG 2.2 AA, light and dark, desktop and phone)
+        run: |
+          mkdir -p /tmp/a11y && cp scripts/a11y.mjs /tmp/a11y/
+          cd /tmp/a11y
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund playwright@1.47.2 axe-core@4.10.0
+          npx playwright install --with-deps chromium
+          node a11y.mjs http://localhost:8000
+      - name: Show the site's log if anything failed
+        if: failure()
+        run: cat /tmp/wcs.log || true
