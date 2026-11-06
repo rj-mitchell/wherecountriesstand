@@ -22,7 +22,8 @@ from typing import Any
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS usage (id INTEGER PRIMARY KEY, visitor TEXT, at TEXT, kind TEXT, model TEXT,
-    input_tokens INTEGER, output_tokens INTEGER, cache_read_tokens INTEGER, cost_usd REAL);
+    input_tokens INTEGER, output_tokens INTEGER, cache_read_tokens INTEGER, cost_usd REAL,
+    cache_write_tokens INTEGER DEFAULT 0);
 CREATE INDEX IF NOT EXISTS usage_at ON usage (at);
 CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS answer_cache (key TEXT PRIMARY KEY, created_at TEXT, events TEXT);
@@ -48,6 +49,9 @@ class StateDB:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as con:
             con.executescript(SCHEMA)
+            # databases made before cache writes were recorded
+            if "cache_write_tokens" not in {r[1] for r in con.execute("PRAGMA table_info(usage)")}:
+                con.execute("ALTER TABLE usage ADD COLUMN cache_write_tokens INTEGER DEFAULT 0")
 
     @contextmanager
     def connect(self):
@@ -74,18 +78,38 @@ def prices_for(prices: dict[str, Any], model: str | None) -> dict[str, Any]:
     return prices
 
 
+def token_counts(usage: dict[str, int] | None) -> dict[str, int]:
+    """Token counts in the site's own form, whichever names they come in. ``rag.answer.usage_dict`` gives
+    ``input_tokens`` including cache writes, with ``cache_write_tokens`` and ``cache_read_tokens``. The SDK's own
+    names (``cache_creation_input_tokens``, ``cache_read_input_tokens``) come with ``input_tokens`` that leave the
+    cache writes out, so they are added in. (Where Councils Stand's ``api/usage.py`` copes with both, too.)"""
+    u = usage or {}
+    if "cache_write_tokens" in u:
+        writes = int(u.get("cache_write_tokens") or 0)
+        given = int(u.get("input_tokens") or 0)
+    else:
+        writes = int(u.get("cache_creation_input_tokens") or 0)
+        given = int(u.get("input_tokens") or 0) + writes
+    reads = u.get("cache_read_tokens")
+    if reads is None:
+        reads = u.get("cache_read_input_tokens")
+    return {"input_tokens": given, "output_tokens": int(u.get("output_tokens") or 0),
+            "cache_read_tokens": int(reads or 0), "cache_write_tokens": writes}
+
+
 def cost_usd(usage: dict[str, int] | None, prices: dict[str, Any], model: str | None = None) -> float:
     """Cost of one call. Cache writes cost 1.25x the input price; cache reads are priced separately."""
     if not usage:
         return 0.0
+    u = token_counts(usage)
     prices = prices_for(prices, model)
     price_in = float(prices.get("price_input_per_mtok", 4.0))
-    writes = usage.get("cache_write_tokens", 0)
+    writes = u["cache_write_tokens"]
     return round(
-        (usage.get("input_tokens", 0) - writes) / 1e6 * price_in
+        (u["input_tokens"] - writes) / 1e6 * price_in
         + writes / 1e6 * price_in * float(prices.get("cache_write_multiplier", 1.25))
-        + usage.get("output_tokens", 0) / 1e6 * float(prices.get("price_output_per_mtok", 20.0))
-        + usage.get("cache_read_tokens", 0) / 1e6 * float(prices.get("price_cache_read_per_mtok", 0.2)),
+        + u["output_tokens"] / 1e6 * float(prices.get("price_output_per_mtok", 20.0))
+        + u["cache_read_tokens"] / 1e6 * float(prices.get("price_cache_read_per_mtok", 0.2)),
         6,
     )
 
@@ -124,12 +148,12 @@ def visitor_key(state: StateDB, address: str | None, day: str | None = None) -> 
 def record_usage(state: StateDB, kind: str, model: str | None, usage: dict[str, int] | None,
                  prices: dict[str, Any], visitor: str | None = None) -> float:
     cost = cost_usd(usage, prices, model)
-    u = usage or {}
+    u = token_counts(usage)
     with state.connect() as con:
         con.execute("INSERT INTO usage (visitor, at, kind, model, input_tokens, output_tokens, cache_read_tokens, "
-                    "cost_usd) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    (visitor, utcnow(), kind, model, u.get("input_tokens", 0), u.get("output_tokens", 0),
-                     u.get("cache_read_tokens", 0), cost))
+                    "cache_write_tokens, cost_usd) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (visitor, utcnow(), kind, model, u["input_tokens"], u["output_tokens"], u["cache_read_tokens"],
+                     u["cache_write_tokens"], cost))
     return cost
 
 
