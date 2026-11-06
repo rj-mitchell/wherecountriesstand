@@ -294,3 +294,20 @@ def test_a_second_briefing_at_once_waits_its_turn(indexed):  # noqa: F811
     assert first[0][-1]["answer"]["citations_total"] == 1 and len(client.calls) == 1
     third = events(api.post("/api/ask", json={"question": "What has Fiji said about climate finance?"}))
     assert third[-1]["answer"] is not None  # once the first is done, the next is written
+
+
+def test_saved_briefings_are_shown_with_flags_judged_again(indexed):  # noqa: F811
+    """A mark made by an older rule that has since been corrected (a lead-in taken for an unsupported claim, a
+    neutral "claimed" taken for a loaded word) is not shown on a briefing saved before the correction."""
+    from wcs.api.usage import save_briefing
+    api, state = make(indexed, FakeClient())
+    answer = {"markdown": "Kenya said climate finance is slow. The savings claimed were large.",
+              "segments": [{"text": "Kenya said ", "status": "unsupported"},
+                           {"text": "climate finance is slow.", "status": "cited", "sources": [1]},
+                           {"text": " The savings claimed were large.", "status": "cited", "sources": [1],
+                            "loaded": [{"start": 13, "end": 20, "word": "claimed"}]}],
+              "unsupported_segments": 1, "grounded_ratio": 0.5, "loaded_words": 1}
+    save_briefing(state, "OldOne12", QUESTION["question"], {}, [{"type": "final", "answer": answer}])
+    shown = api.get("/api/briefings/OldOne12").json()["events"][-1]["answer"]
+    assert shown["segments"][0]["status"] == "connective" and shown["unsupported_segments"] == 0
+    assert shown["loaded_words"] == 0 and shown["segments"][2]["loaded"] == []

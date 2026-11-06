@@ -64,7 +64,9 @@ from wcs.api.usage import (
     withdrawn_briefings,
 )
 from wcs.config import REPO_ROOT, Settings, load_settings
+from wcs.rag.neutral import still_loaded
 from wcs.rag.pipeline import AskRequest, Pipeline
+from wcs.rag.verify import recheck_flags
 from wcs.sources import gadebate
 
 log = logging.getLogger(__name__)
@@ -139,6 +141,14 @@ def sse(events: Iterator[dict[str, Any]], keep_alive: float = KEEP_ALIVE_SECONDS
             yield f"event: {ev['type']}\ndata: {json.dumps(ev, default=str)}\n\n".encode()
     finally:
         gone.set()
+
+
+def rechecked(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """A saved or cached briefing as shown today: its points to check and its judgemental-word marks judged again
+    by the current rules, so a mark since found to be wrong is not shown. Nothing is ever newly flagged. (Where MPs
+    Stand does the same with its saved briefings.)"""
+    return [{**e, "answer": still_loaded(recheck_flags(e["answer"]))}
+            if e.get("type") == "final" and isinstance(e.get("answer"), dict) else e for e in events]
 
 
 def data_stamp(settings: Settings) -> str:
@@ -256,7 +266,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
             raise HTTPException(404, "There is no briefing at this address.")
         if b["withdrawn_at"]:
             raise HTTPException(410, f"This briefing has been withdrawn: {b['withdrawn_reason']}")
-        return {k: b[k] for k in ("id", "at", "question", "options", "events")}
+        return {**{k: b[k] for k in ("id", "at", "question", "options")}, "events": rechecked(b["events"])}
 
     @app.get("/api/corrections")
     def corrections():
@@ -334,7 +344,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
 
         def events() -> Iterator[dict[str, Any]]:
             if hit is not None:
-                yield from hit
+                yield from rechecked(hit)
                 return
             if body.sources_only:
                 yield from sources_only(body, "Sources only: no briefing was written.")
