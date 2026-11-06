@@ -85,7 +85,8 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
 
 * **Updates** run twice a day (`wcs-update.timer`, 5.41am and 5.41pm UTC, clear of the other sites' updates;
   `docs/OPERATIONS.md`): new votes, new and corrected Security Council records, the General Debate, the index, and an
-  hour of meaning search for passages still waiting. `journalctl -u wcs-update.service -n 50` shows the last run; a
+  hour of meaning search for passages still waiting. Each waits for any other site's update to finish first (one
+  lock for every site's updates, `/var/lock/wheretheystand-update.lock`). `journalctl -u wcs-update.service -n 50` shows the last run; a
   report that needs attention says so in `/data/logs/update-*.json`.
 * **New code:** merge it into `main` on GitHub, then `bash /opt/wherecountriesstand/deploy/update.sh`.
 * **Memory:** the container is limited to 4 GB (`mem_limit` in `docker-compose.yml`), so a runaway update stops

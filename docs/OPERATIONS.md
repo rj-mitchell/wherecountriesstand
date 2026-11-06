@@ -56,7 +56,9 @@ parser version, the speeches found and any problems).
 ## Scheduling
 
 On the server (`docs/DEPLOY.md`), `wcs-update.timer` runs it twice a day, each run in a one-off container;
-`deploy/update.sh` installs it. To see it:
+`deploy/update.sh` installs it. Every site's scheduled update on the shared server takes the same lock
+(`flock /var/lock/wheretheystand-update.lock`), so a run that starts while another site's update is going waits for
+it to finish rather than competing with it; `systemctl status wcs-update` shows it waiting. To see it:
 
 ```bash
 systemctl list-timers wcs-update.timer        # when it runs next
