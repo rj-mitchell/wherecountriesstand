@@ -134,7 +134,8 @@ uv run ruff check src tests scripts
 The pages are in `web/site/`; their masthead, notice and footer are written once in `web/partials/` and put into
 each page by the server. `web/site/family/` is the Where They Stand family kit, copied in by its sync script (see
 [`docs/DEPLOY.md`](docs/DEPLOY.md), "Pages and the family kit"); don't edit it. CI (`.github/workflows/ci.yml`)
-runs ruff and the tests on every push and pull request.
+runs ruff and the tests on every push and pull request, and checks every page for accessibility problems
+with axe (`scripts/a11y.mjs`).
 
 ## Known limitations
 
