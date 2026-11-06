@@ -8,6 +8,7 @@ itself is never stored. Adapted from Where MPs Stand's ``api/usage.py``.
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import json
 import secrets
 import sqlite3
@@ -89,9 +90,27 @@ def cost_usd(usage: dict[str, int] | None, prices: dict[str, Any], model: str | 
     )
 
 
+def network_of(address: str | None) -> str:
+    """What the limits count by: an IPv4 address, or an IPv6 /64. One home or phone connection is given a whole /64,
+    so counting single IPv6 addresses would let one person appear as countless visitors (from Where MPs Stand's
+    ``api/usage.py``)."""
+    if not address:
+        return "-"
+    try:
+        ip = ipaddress.ip_address(address)
+    except ValueError:
+        return address
+    if ip.version == 4:
+        return str(ip)
+    if ip.ipv4_mapped:
+        return str(ip.ipv4_mapped)
+    return str(ip) if ip.is_loopback else str(ipaddress.ip_network(f"{ip}/64", strict=False))
+
+
 def visitor_key(state: StateDB, address: str | None, day: str | None = None) -> str:
-    """A code for a visitor's IP address, for daily limits; the address itself is not kept. The salt changes every
-    day (UTC) and old ones are deleted, so codes cannot be linked across days or turned back into an address."""
+    """A code for a visitor's IP address (an IPv6 address by its /64: ``network_of``), for daily limits; the address
+    itself is not kept. The salt changes every day (UTC) and old ones are deleted, so codes cannot be linked across
+    days or turned back into an address."""
     name = f"visitor_salt:{day or datetime.now(UTC).strftime('%Y-%m-%d')}"
     salt = state.get(name)
     if salt is None:
@@ -99,7 +118,7 @@ def visitor_key(state: StateDB, address: str | None, day: str | None = None) -> 
             con.execute("INSERT OR IGNORE INTO kv (key, value) VALUES (?, ?)", (name, secrets.token_hex(16)))
             con.execute("DELETE FROM kv WHERE key LIKE 'visitor_salt:%' AND key != ?", (name,))
         salt = state.get(name)
-    return hashlib.sha256(f"{salt}|{address or '-'}".encode()).hexdigest()[:24]
+    return hashlib.sha256(f"{salt}|{network_of(address)}".encode()).hexdigest()[:24]
 
 
 def record_usage(state: StateDB, kind: str, model: str | None, usage: dict[str, int] | None,

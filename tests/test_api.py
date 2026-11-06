@@ -8,7 +8,7 @@ from test_pipeline import TODAY, FakeClient, indexed  # noqa: F401  (the fixture
 
 from wcs.api.app import SITE_DIR as SITE
 from wcs.api.app import create_app
-from wcs.api.usage import StateDB, cost_usd, visitor_key
+from wcs.api.usage import StateDB, cost_usd, network_of, visitor_key
 from wcs.embed.base import HashingEmbedder
 from wcs.engine import Engine
 from wcs.rag.pipeline import Pipeline
@@ -116,6 +116,23 @@ def test_visitor_codes_change_daily(tmp_path):
     state = StateDB(tmp_path / "s.db")
     a, b = visitor_key(state, "203.0.113.5", "2026-10-24"), visitor_key(state, "203.0.113.5", "2026-10-25")
     assert a != b and "203.0.113.5" not in a
+
+
+def test_ipv6_visitors_are_counted_by_their_64():
+    """One connection is given a whole IPv6 /64, so each address in it is the same visitor for the limits."""
+    assert network_of("2001:db8:1:2:aaaa::1") == network_of("2001:db8:1:2:ffff::9") == "2001:db8:1:2::/64"
+    assert network_of("2001:db8:1:3::1") != network_of("2001:db8:1:2::1")
+    assert network_of("203.0.113.5") == "203.0.113.5"
+    assert network_of("::ffff:203.0.113.5") == "203.0.113.5"
+    assert network_of("::1") == "::1"
+    assert network_of(None) == "-" and network_of("testclient") == "testclient"
+
+
+def test_visitor_codes_group_an_ipv6_64(tmp_path):
+    state = StateDB(tmp_path / "s.db")
+    day = "2026-11-06"
+    assert visitor_key(state, "2001:db8::1", day) == visitor_key(state, "2001:db8::abcd:1", day)
+    assert visitor_key(state, "2001:db8::1", day) != visitor_key(state, "2001:db8:0:1::1", day)
 
 
 def test_question_length_is_checked(indexed):  # noqa: F811
