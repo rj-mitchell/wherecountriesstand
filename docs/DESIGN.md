@@ -54,7 +54,7 @@ Based on S/PV.7565 (20 November 2015):
 | UN Blue | Links, focus rings, primary buttons, the **General Assembly** | `#009EDB` (Pantone 2925), from the UN's 2020 brand quick guide; darkened in the stylesheet to `oklch(0.54 0.13 237)` (about `#0078B0`) so that text and buttons meet the contrast guidelines |
 | Council navy | The **Security Council** | Deep navy, `oklch(0.31 0.06 262)` |
 | Ink and paper | Text and background | Near-black on white. The records are printed on white, unlike Hansard's ivory. |
-| Record blue | The family binding only: the spine, the favicon, `theme-color` and the link card | `#1F5F8B`, the site's cloth in the family (decision 3 of the family plan). Never used for content |
+| Record blue | The family binding only: the spine and `theme-color` | `#1F5F8B`, the site's cloth in the family (decision 3 of the family plan). Never used for content |
 
 - **The body determines the colour,** the way Where MPs Stand uses green for the Commons and red
   for the Lords. Sources and filter chips are edged in UN Blue for the General Assembly and Council
@@ -73,8 +73,11 @@ Based on S/PV.7565 (20 November 2015):
 
 Fifteen seats around a horseshoe table, open towards the viewer (`web/site/icon.svg`). It
 suggests where countries sit and stand, and the fifteen seats are the Security Council's. It looks
-nothing like the UN emblem. It is the page mark, beside the name in the masthead; the favicon and the
-link card are the family's spine instead.
+nothing like the UN emblem. It is the page mark, beside the name in the masthead, and since the family kit 1.1.0
+also the favicon and the link card (decision 4 of the family plan, amended at the owner's request on 6 November
+2026). The favicon puts it on a white tile, as it sits on the white page, so it stays clear on a dark browser tab; at
+16 and 32 px, and in the SVG favicon, it has eleven larger seats. The family's spine stays in the endorsement and the
+footer shelf.
 
 ## Place in the family
 
@@ -86,7 +89,8 @@ kit's `sync.mjs`; don't edit the copies):
   linking to wheretheystand.uk.
 - **The footer shelf**: the charity, its status ("Where They Stand is applying to register as a charity
   in England and Wales."), every project's spine and a link to each sister site.
-- **The favicon, `theme-color` and link card** in Record blue, and Source Serif 4 for headings.
+- **The favicon and link card**, the horseshoe (see "The mark"); `theme-color` in Record blue; and Source Serif 4
+  for headings.
 - **The same furniture, worded the same way**: the phase banner (one sentence, linking to the report
   form), the independence line, and the footer links in the family order (About · Corrections ·
   Accessibility · Privacy · Terms · Press · Status · Source code; the site has no How it works or Data page

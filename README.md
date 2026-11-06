@@ -37,8 +37,9 @@ for each country (which Where Lives Stand would link to), and testing with peopl
 - **Where it runs:** the charity's shared server, beside Where MPs Stand, Where Councils Stand and Where Landlords
   Stand; its front door, Cloudflare set-up, email alerts and backup bucket are described in Where MPs Stand's
   [`docs/HOSTING.md`](https://github.com/rj-mitchell/wherempsstand/blob/main/docs/HOSTING.md).
-- **The binding:** the masthead's endorsement, the footer shelf linking every sister site, the favicon and link card
-  in Record blue, and Source Serif 4 for headings, from the family kit in `web/site/family/`. The UN look and its
+- **The binding:** the masthead's endorsement, the footer shelf linking every sister site, the horseshoe mark as the
+  favicon and on the link card, `theme-color` in Record blue, and Source Serif 4 for headings, from the family kit in
+  `web/site/family/`. The UN look and its
   UN blue stay for the content ([`docs/DESIGN.md`](docs/DESIGN.md)).
 - **Links to sister sites:** under each briefing, "Ask Where MPs Stand the same question" (Where MPs Stand reads
   `?q=`), and for each country the question names, "Quality of life in … on Where Lives Stand", at
