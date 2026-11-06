@@ -1,0 +1,224 @@
+/* Where They Stand: the family kit's stylesheet (family/README.md, "Using the kit").
+   Copied into each site by sync.mjs; don't edit the copy, change family/kit/family.css and sync again.
+
+   - Tokens: ink, paper and gilt for the charity, and every project's cloth, each with a light and a dark value.
+     They follow the page's color-scheme (set `color-scheme: light dark` on :root to follow the reader's setting,
+     or `light` / `dark` from a theme switch). Browsers without light-dark() fall back to prefers-color-scheme.
+   - .wts-headings: opt-in Source Serif 4 for a site's headings (decision 1). Put it on <body> or any container.
+   - .wts-endorse: the masthead lockup, the site's spine and "A Where They Stand project" in gilt capitals.
+   - .wts-shelf: the footer shelf.
+   Everything is prefixed wts- so it can't clash with a site's own styles. No scripts, no external requests. */
+
+:root {
+  --wts-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+
+  /* Light values: every browser */
+  --wts-ink: #1C2427;
+  --wts-ink-muted: #5A5242;
+  --wts-paper: #F5F0E3;
+  --wts-paper-light: #FBF8F0;
+  --wts-rule: #CDBF9C;
+  --wts-rule-faint: #DDD4BF;
+  --wts-gilt: #B08D3C;
+  --wts-gilt-text: #7A5C1C;
+  --wts-gilt-spine: #D9BC72;
+  --wts-spine-text: #F3E3B8;
+  --wts-shelf-line: #1C2427;
+
+  /* Each project's cloth: as a fill (spines, icons) and as text or links on the page */
+  --wts-cloth-mps: #1D4535;
+  --wts-cloth-councils: #6E4A2A;
+  --wts-cloth-landlords: #40484D;
+  --wts-cloth-countries: #1F5F8B;
+  --wts-cloth-lives: #5E3F63;
+  --wts-cloth-mps-text: #1D4535;
+  --wts-cloth-councils-text: #6E4A2A;
+  --wts-cloth-landlords-text: #40484D;
+  --wts-cloth-countries-text: #1F5F8B;
+  --wts-cloth-lives-text: #5E3F63;
+}
+
+/* Light and dark, following the page's color-scheme. Dark cloths are lifted until the gilt spine lettering
+   (#F3E3B8) still reads at 4.6:1 on them and they stand at 3:1 from the dark paper. */
+@supports (color: light-dark(#000, #fff)) {
+  :root {
+    --wts-ink: light-dark(#1C2427, #ECE6D6);
+    --wts-ink-muted: light-dark(#5A5242, #BDB5A3);
+    --wts-paper: light-dark(#F5F0E3, #1B2023);
+    --wts-paper-light: light-dark(#FBF8F0, #14181A);
+    --wts-rule: light-dark(#CDBF9C, #5C5440);
+    --wts-rule-faint: light-dark(#DDD4BF, #2E322F);
+    --wts-gilt: light-dark(#B08D3C, #C9A456);
+    --wts-gilt-text: light-dark(#7A5C1C, #D6B76C);
+    --wts-shelf-line: light-dark(#1C2427, #8C8471);
+    --wts-cloth-mps: light-dark(#1D4535, #2F7056);
+    --wts-cloth-councils: light-dark(#6E4A2A, #865A33);
+    --wts-cloth-landlords: light-dark(#40484D, #5B666D);
+    --wts-cloth-countries: light-dark(#1F5F8B, #22699A);
+    --wts-cloth-lives: light-dark(#5E3F63, #7F5585);
+    --wts-cloth-mps-text: light-dark(#1D4535, #93C9AC);
+    --wts-cloth-councils-text: light-dark(#6E4A2A, #D8AE84);
+    --wts-cloth-landlords-text: light-dark(#40484D, #B3BEC5);
+    --wts-cloth-countries-text: light-dark(#1F5F8B, #94C3E8);
+    --wts-cloth-lives-text: light-dark(#5E3F63, #D0ADD6);
+  }
+}
+@supports not (color: light-dark(#000, #fff)) {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --wts-ink: #ECE6D6;
+      --wts-ink-muted: #BDB5A3;
+      --wts-paper: #1B2023;
+      --wts-paper-light: #14181A;
+      --wts-rule: #5C5440;
+      --wts-rule-faint: #2E322F;
+      --wts-gilt: #C9A456;
+      --wts-gilt-text: #D6B76C;
+      --wts-shelf-line: #8C8471;
+      --wts-cloth-mps: #2F7056;
+      --wts-cloth-councils: #865A33;
+      --wts-cloth-landlords: #5B666D;
+      --wts-cloth-countries: #22699A;
+      --wts-cloth-lives: #7F5585;
+      --wts-cloth-mps-text: #93C9AC;
+      --wts-cloth-councils-text: #D8AE84;
+      --wts-cloth-landlords-text: #B3BEC5;
+      --wts-cloth-countries-text: #94C3E8;
+      --wts-cloth-lives-text: #D0ADD6;
+    }
+  }
+}
+
+/* Which cloth an element wears: class wts-cloth--<id> sets --wts-cloth and --wts-cloth-text */
+.wts-cloth--mps { --wts-cloth: var(--wts-cloth-mps); --wts-cloth-text: var(--wts-cloth-mps-text); }
+.wts-cloth--councils { --wts-cloth: var(--wts-cloth-councils); --wts-cloth-text: var(--wts-cloth-councils-text); }
+.wts-cloth--landlords { --wts-cloth: var(--wts-cloth-landlords); --wts-cloth-text: var(--wts-cloth-landlords-text); }
+.wts-cloth--countries { --wts-cloth: var(--wts-cloth-countries); --wts-cloth-text: var(--wts-cloth-countries-text); }
+.wts-cloth--lives { --wts-cloth: var(--wts-cloth-lives); --wts-cloth-text: var(--wts-cloth-lives-text); }
+
+/* ---- Headings in the family's typeface (decision 1). Opt in with class="wts-headings" ---- */
+
+.wts-headings :is(h1, h2, h3, h4, h5, h6),
+.wts-serif {
+  font-family: var(--wts-serif);
+}
+
+/* ---- The spine: drawn in the partials as SVG with its colours as attributes; here only the dark-mode cloth ---- */
+
+.wts-spine { display: block; flex: none; }
+.wts-spine .wts-spine__cloth { fill: var(--wts-cloth); }
+.wts-spine .wts-spine__gilt { stroke: var(--wts-gilt-spine); }
+
+/* ---- The endorsement lockup, beside or under the site's name ---- */
+
+.wts-endorse {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  font-family: var(--wts-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--wts-gilt-text);
+  text-decoration: none;
+}
+.wts-endorse .wts-spine { block-size: 2.2em; inline-size: auto; }
+.wts-endorse:hover .wts-endorse__line,
+.wts-endorse:focus-visible .wts-endorse__line {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+/* ---- The footer shelf ---- */
+
+.wts-shelf {
+  margin-block-start: 2rem;
+  padding: 1.5rem clamp(16px, 4vw, 40px) 1.25rem;
+  background: var(--wts-paper);
+  border-block-start: 1px solid var(--wts-rule);
+  color: var(--wts-ink);
+  font-family: var(--wts-serif);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+.wts-shelf__inner {
+  max-inline-size: 72rem;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1.25rem 2.5rem;
+  align-items: start;
+}
+.wts-shelf a { color: inherit; text-underline-offset: 0.15em; }
+.wts-shelf a:hover { text-decoration-thickness: 2px; }
+.wts-shelf a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+
+.wts-shelf__brand { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+.wts-shelf__brand svg { flex: none; }
+.wts-mark__ink { fill: var(--wts-ink); }
+.wts-mark__mps { fill: var(--wts-cloth-mps); }
+.wts-mark__countries { fill: var(--wts-cloth-countries); }
+.wts-mark__shelf { stroke: var(--wts-ink); }
+.wts-shelf__wordmark {
+  display: inline-block;
+  padding-block-end: 0.3rem;
+  border-block-end: 1.5px solid var(--wts-gilt);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.wts-shelf__status { margin: 0.75rem 0 0.4rem; font-size: 0.9rem; font-style: italic; color: var(--wts-ink-muted); }
+.wts-shelf__links { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; font-size: 0.95rem; }
+
+.wts-shelf__groups { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.wts-shelf__label {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--wts-gilt-text);
+}
+.wts-shelf__books { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; }
+.wts-shelf__books li {
+  display: flex;
+  padding-inline: 0.4rem 0.9rem;
+  border-block-end: 3px solid var(--wts-shelf-line);  /* each book stands on the shelf, row by row */
+}
+.wts-book {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.45rem;
+  min-block-size: 44px;  /* a comfortable target on touch screens */
+  padding-block-start: 0.25rem;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  text-decoration: none;
+}
+.wts-book .wts-spine { margin-block-end: 0; }
+.wts-book__name { padding-block-end: 0.3rem; text-decoration: underline; text-decoration-color: var(--wts-rule); text-underline-offset: 0.2em; }
+.wts-book:hover .wts-book__name { text-decoration-color: currentColor; }
+.wts-book[aria-current] .wts-book__name { font-weight: 600; text-decoration-color: var(--wts-gilt); text-decoration-thickness: 2px; }
+
+/* ---- Forced colours: the spines keep their shape in the system colours ---- */
+
+@media (forced-colors: active) {
+  .wts-spine { forced-color-adjust: none; }
+  .wts-spine .wts-spine__cloth { fill: CanvasText; }
+  .wts-spine .wts-spine__gilt { stroke: Canvas; }
+  .wts-shelf { border-block-start-color: CanvasText; }
+  .wts-shelf__books li { border-block-end-color: CanvasText; }
+  .wts-shelf__wordmark { border-block-end-color: CanvasText; }
+  .wts-shelf__mark { forced-color-adjust: none; }
+  .wts-shelf__mark rect { fill: CanvasText; }
+  .wts-shelf__mark path { stroke: CanvasText; }
+}
+
+@media print {
+  .wts-shelf { background: none; border-block-start: 1px solid; }
+}
