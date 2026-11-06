@@ -114,6 +114,10 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
 * **Search engines and link previews:** `/robots.txt`, `/sitemap.xml` and the pages' link-preview tags use
   `https://` and `DOMAIN` from `.env` (or `WCS_SITE_URL`, or `[site] url` in `config/settings.toml`). Crawlers are
   kept out of `/api/`, so one that runs the page's script cannot ask for briefings.
+* **Caching:** pages are sent with `Cache-Control: no-cache`, so browsers and Cloudflare check them on every visit.
+  Each page's stylesheets and scripts carry a hash of their content in their address (`/styles.css?v=…`, added as
+  the page is served), and are kept for a year; a changed file gets a new address, so nothing needs purging after a
+  deploy. The fonts are kept for a year too: a changed font must be given a new file name.
 * **Visitors' addresses:** the front door passes each visitor's own address (from Cloudflare) in
   `X-Forwarded-For`, which `wcs serve --behind-proxy` trusts. The container's port is reachable only over the
   server's Docker networks, never from outside, so nobody else can set it.

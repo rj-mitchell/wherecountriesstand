@@ -318,3 +318,23 @@ def test_no_generated_api_pages(indexed):  # noqa: F811
     api, _ = make(indexed, FakeClient())
     for path in ("/api/docs", "/api/openapi.json", "/redoc", "/docs", "/openapi.json"):
         assert api.get(path).status_code == 404, path
+
+
+def test_scripts_and_styles_carry_their_hash_and_are_kept_long(indexed):  # noqa: F811
+    """Without a hash in their addresses, browsers asked again for the scripts and styles on every visit."""
+    import re
+    api, _ = make(indexed, FakeClient())
+    home = api.get("/")
+    assert home.headers["cache-control"] == "no-cache"
+    refs = re.findall(r'(?:href|src)="(/[a-z]+\.(?:css|js)[^"]*)"', home.text)
+    assert {r.split("?")[0] for r in refs} == {"/fonts.css", "/styles.css", "/app.js"}
+    for ref in refs:
+        assert re.fullmatch(r"/[a-z]+\.(css|js)\?v=[0-9a-f]{12}", ref), ref
+        assert api.get(ref).headers["cache-control"] == "public, max-age=31536000, immutable"
+    assert api.get("/styles.css").headers["cache-control"] == "no-cache"          # no hash: checked each time
+    assert api.get("/styles.css?v=000000000000").headers["cache-control"] == "no-cache"   # an old hash
+    font = re.search(r"url\((fonts/[^)]+\.woff2)\)", api.get("/fonts.css").text)[1]
+    assert api.get(f"/{font}").headers["cache-control"] == "public, max-age=31536000, immutable"
+    for page in ("/about.html", "/corrections.html", "/b/nosuchbriefing"):
+        r = api.get(page)
+        assert r.headers["cache-control"] == "no-cache" and "?v=" in r.text, page

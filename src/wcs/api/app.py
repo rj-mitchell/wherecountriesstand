@@ -21,6 +21,7 @@ and identical questions are answered from a cache until the data changes (``wcs.
 
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import logging
@@ -141,6 +142,50 @@ def sse(events: Iterator[dict[str, Any]], keep_alive: float = KEEP_ALIVE_SECONDS
             yield f"event: {ev['type']}\ndata: {json.dumps(ev, default=str)}\n\n".encode()
     finally:
         gone.set()
+
+
+# Browsers and Cloudflare may keep these for a year without asking again: a stylesheet's or script's address
+# carries a hash of its content (/styles.css?v=<hash>), so a changed file has a new address, and the fonts' names
+# carry their own codes (a changed font must be given a new name). Pages are checked on every visit, so they always
+# point at the current files.
+FOREVER = "public, max-age=31536000, immutable"
+ALWAYS_CHECK = "no-cache"
+ASSET_REF = re.compile(r'((?:href|src)=")/([A-Za-z0-9_-]+\.(?:css|js))(")')
+
+
+def asset_versions(site: Path) -> dict[str, str]:
+    """A short hash of the content of each stylesheet and script in the site's folder."""
+    return {p.name: hashlib.sha256(p.read_bytes()).hexdigest()[:12]
+            for p in sorted([*site.glob("*.css"), *site.glob("*.js")])}
+
+
+def versioned(page: str, versions: dict[str, str]) -> str:
+    """The page with its stylesheets' and scripts' addresses carrying their content's hash."""
+    return ASSET_REF.sub(lambda m: f"{m[1]}/{m[2]}?v={versions[m[2]]}{m[3]}" if m[2] in versions else m[0], page)
+
+
+class SiteFiles(StaticFiles):
+    """The site's files, with how long each may be kept (see FOREVER)."""
+
+    def __init__(self, *, versions: dict[str, str], **kw: Any):
+        super().__init__(**kw)
+        self.versions = versions
+
+    def cache_control(self, path: str, scope: dict[str, Any]) -> str:
+        query = dict(p.split("=", 1) for p in scope.get("query_string", b"").decode().split("&") if "=" in p)
+        if path in self.versions and query.get("v") == self.versions[path]:
+            return FOREVER
+        if path.startswith("fonts/") and path.endswith(".woff2"):
+            return FOREVER
+        if path.endswith((".png", ".svg", ".ico")):
+            return "public, max-age=86400"
+        return ALWAYS_CHECK  # pages, and a script or stylesheet asked for without (or with an old) hash
+
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        if response.status_code in (200, 304):
+            response.headers["Cache-Control"] = self.cache_control(path, scope)
+        return response
 
 
 def rechecked(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -413,6 +458,13 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     site = Path(settings.section("site").get("dir") or SITE_DIR)
+    versions = asset_versions(site) if site.exists() else {}
+
+    def read_page(path: Path) -> str:
+        return versioned(path.read_text(encoding="utf-8"), versions)
+
+    def html_page(text: str, status_code: int = 200) -> HTMLResponse:
+        return HTMLResponse(text, status_code=status_code, headers={"Cache-Control": ALWAYS_CHECK})
 
     def pages() -> list[str]:
         return sorted(p.stem for p in site.glob("*.html") if PAGE_NAME.fullmatch(p.stem) and p.stem != "404")
@@ -436,11 +488,11 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         path = site / f"{name}.html"
         if not PAGE_NAME.fullmatch(name) or not path.is_file():
             raise HTTPException(404, "Not found")
-        text, base = path.read_text(encoding="utf-8"), site_url(settings, request)
+        text, base = read_page(path), site_url(settings, request)
         q = request.query_params.get("q", "") if name == "index" else ""
         if len(q.strip()) >= 3:
-            return HTMLResponse(question_page(text, q, base, request.url.query))
-        return HTMLResponse(text.replace(SITE_MARK, base))
+            return html_page(question_page(text, q, base, request.url.query))
+        return html_page(text.replace(SITE_MARK, base))
 
     @app.get("/", include_in_schema=False)
     def home(request: Request):
@@ -454,11 +506,11 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def shared_briefing(request: Request, bid: str):
         """A saved briefing: the home page, which loads it, with the question as its title and link preview."""
         b = saved_briefing(state, bid) if re.fullmatch(r"[A-Za-z0-9_-]{6,20}", bid) else None
-        text, base = (site / "index.html").read_text(encoding="utf-8"), site_url(settings, request)
+        text, base = read_page(site / "index.html"), site_url(settings, request)
         if b is None:
-            return HTMLResponse(text.replace(SITE_MARK, base), status_code=404)
-        return HTMLResponse(question_page(text, b["question"], base, "", f"/b/{bid}"))
+            return html_page(text.replace(SITE_MARK, base), status_code=404)
+        return html_page(question_page(text, b["question"], base, "", f"/b/{bid}"))
 
     if site.exists():
-        app.mount("/", StaticFiles(directory=site, html=True), name="site")
+        app.mount("/", SiteFiles(directory=site, html=True, versions=versions), name="site")
     return app
