@@ -12,7 +12,7 @@ For the General Debate we rely on the official verbatim records, which appear ab
 
 Your site's browser check turns away automated programs. I want to be open that our program has so far presented itself as an ordinary browser to read the statement pages (it keeps to robots.txt and reads slowly), and that the check now turns away our server anyway. We would rather do this with your agreement, so I'm writing to ask whether you would be willing to do one of the following:
 
-1. let our server through the check: it is at 151.247.219.240, and would identify itself as "WhereCountriesStand", with a link to our site; or
+1. let our server through the check: it is at [the server's IP address, as given in the letter sent], and would identify itself as "WhereCountriesStand", with a link to our site; or
 2. point us to a download or data feed of the statements and transcripts, if one exists or is planned.
 
 How it would read the site:
