@@ -11,12 +11,11 @@ import re
 from datetime import date
 from typing import Any
 
-import duckdb
-
 from wcs.config import Settings
 from wcs.engine import Filters
 from wcs.reference.countries import Countries, countries
 from wcs.store.parquet import votes_path
+from wcs.store.shared import shared
 
 STOP = set("""a an and are as at be been by did do does for from had has have how in into is it its of on or over
 said say says the their them they this those to was were what when where which who why will with would about
@@ -38,7 +37,9 @@ class VoteFinder:
         self.settings = settings
         self.countries = reference or countries()
         self.path = votes_path(settings.parquet_dir)
-        self.con = duckdb.connect()
+        # one per site, used by every request's thread: each thread gets its own cursor, so two questions at once
+        # never read each other's results
+        self.con = shared()
 
     def available(self) -> bool:
         return self.path.exists()

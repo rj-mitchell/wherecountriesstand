@@ -11,8 +11,11 @@ Each run:
 3. **General Debate.** For each session from ``[live] gd_from_session``, looks for the session's first plenary
    meetings (the Digital Library's catalogue, then ODS) until a record says the debate has ended, and stores the
    statements (``wcs.sources.unga``). The records appear about a year after the debate.
-4. **Index.** Re-indexes the years that changed, then embeds new passages for as long as allowed.
-5. **Report.** Writes data/logs/update-<time>.json, and returns problems so a scheduler can alert on them.
+4. **Index.** Re-indexes the years that changed (keeping the vectors of passages that did not), embeds new passages
+   for as long as allowed, and merges what was written into the search indices. A run that changed nothing leaves
+   the index alone.
+5. **Report.** Writes data/logs/update-<time>.json (the last 60 are kept), and returns problems so a scheduler can
+   alert on them.
 
 Nothing here depends on one website staying the same: discovery and download each have two routes, every parsed
 meeting is checked, and a run that cannot reach the UN at all fails loudly rather than reporting "no new records".
@@ -59,6 +62,7 @@ class Report:
     years_written: dict[int, int] = field(default_factory=dict)
     indexed: int = 0
     embedded: int = 0
+    index: str | None = None  # "merged" (new rows merged into the search indices) or "built" (built afresh)
     latest_meeting: str | None = None
     gd: dict[int, dict[str, Any]] = field(default_factory=dict)  # session -> meetings, statements, concluded
     warnings: list[str] = field(default_factory=list)
@@ -466,6 +470,33 @@ def spending(settings: Settings, report: Report) -> None:
         report.warnings.append(f"spending: could not read {path} ({type(exc).__name__}: {exc})")
 
 
+def update_index(settings: Settings, ref: Countries, changed: dict[str, set[int]], report: Report,
+                 embed_seconds: float | None) -> None:
+    """Re-index the years that changed, embed passages still waiting, and merge what was written into the search
+    indices. A run that changed nothing writes nothing to the index (each write would leave a new version of it on
+    disk until the next clean-up)."""
+    from wcs.index.build import Indexer, refresh_indices
+
+    idx = Indexer(settings, ref)
+    for source, ys in changed.items():
+        for year in sorted(ys):
+            report.indexed += idx.index_year(source, year)
+    # passages still waiting for meaning search (a first load takes hours) are embedded on every run, changes or
+    # not, within the time allowed
+    if embed_seconds and idx.state.unembedded():
+        from wcs.embed.base import get_embedder
+        from wcs.index.build import embed_pending
+
+        try:
+            report.embedded = embed_pending(settings, idx.index, idx.state, get_embedder(settings),
+                                            max_seconds=embed_seconds)
+        except Exception as exc:  # keyword search still works; embedding resumes next run
+            report.warnings.append(f"embedding: {type(exc).__name__}: {exc}")
+    # rows an earlier run added but did not merge (it was stopped) are merged too
+    if report.indexed or report.embedded or idx.index.unmerged():
+        report.index = refresh_indices(idx.index, idx.state)
+
+
 def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd: bool = True, do_index: bool = True,
         embed_seconds: float | None = None, max_new: int | None = None, docs: undocs.UNDocs | None = None,
         reference: Countries | None = None) -> Report:
@@ -493,26 +524,7 @@ def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd:
             log.exception("General Debate update failed")
             report.errors.append(f"General Debate: {type(exc).__name__}: {exc}")
     if do_index and (any(changed.values()) or embed_seconds):
-        from wcs.index.build import Indexer
-
-        idx = Indexer(settings, ref)
-        for source, ys in changed.items():
-            for year in sorted(ys):
-                report.indexed += idx.index_year(source, year)
-        if any(changed.values()):
-            idx.index.build_indices()
-        # passages still waiting for meaning search (a first load takes hours) are embedded on every run, changes
-        # or not, within the time allowed
-        if embed_seconds:
-            from wcs.embed.base import get_embedder
-            from wcs.index.build import embed_pending
-
-            try:
-                report.embedded = embed_pending(settings, idx.index, idx.state, get_embedder(settings),
-                                                max_seconds=embed_seconds)
-                idx.index.build_indices()
-            except Exception as exc:  # keyword search still works; embedding resumes next run
-                report.warnings.append(f"embedding: {type(exc).__name__}: {exc}")
+        update_index(settings, ref, changed, report, embed_seconds)
     health(report)
     spending(settings, report)
     report.finished = datetime.now(UTC).isoformat(timespec="seconds")
@@ -520,9 +532,15 @@ def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd:
     return report
 
 
+REPORTS_KEPT = 60  # a month of updates, twice a day
+
+
 def write_report(settings: Settings, report: Report) -> Path:
+    """Writes data/logs/update-<time>.json, and deletes all but the last ``REPORTS_KEPT``."""
     d = settings.data_dir / "logs"
     d.mkdir(parents=True, exist_ok=True)
     path = d / f"update-{re.sub(r'[^0-9T]', '', report.started)[:15]}.json"
     path.write_text(json.dumps(report.to_dict(), indent=1, default=str))
+    for old in sorted(d.glob("update-*.json"))[:-REPORTS_KEPT]:  # the names sort by time
+        old.unlink(missing_ok=True)
     return path

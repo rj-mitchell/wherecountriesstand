@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import re
+from datetime import date
 from pathlib import Path
 
 import duckdb
@@ -34,7 +35,21 @@ def file_url(settings: Settings) -> str:
     raise RuntimeError("no CSV file listed in the voting data record")
 
 
+_FILE_DATE = re.compile(r"(?<!\d)(\d{4})[_-](\d{1,2})[_-](\d{1,2})(?!\d)")
+
+
+def file_date(name: str) -> date | None:
+    """The date in a file's name ("2026_10_15_votes_ga.csv"). The month and day are not always two digits, so the
+    names do not sort by date."""
+    m = _FILE_DATE.search(name)
+    try:
+        return date(*map(int, m.groups())) if m else None
+    except ValueError:
+        return None
+
+
 def fetch(settings: Settings, force: bool = False) -> Path:
+    """Download the current CSV (about 370 MB), then delete the ones it supersedes."""
     url = file_url(settings)
     out = raw_dir(settings) / url.rsplit("/", 1)[-1]
     if out.exists() and not force:
@@ -48,12 +63,25 @@ def fetch(settings: Settings, force: bool = False) -> Path:
             for chunk in r.iter_bytes(1 << 20):
                 fh.write(chunk)
     tmp.replace(out)
+    for old in superseded(settings, out):
+        log.info("deleting %s, superseded by %s", old.name, out.name)
+        old.unlink()
     return out
 
 
+def superseded(settings: Settings, current: Path) -> list[Path]:
+    """The other CSVs with an earlier date in their name than ``current``'s (one with no date is left alone)."""
+    new = file_date(current.name)
+    if new is None:
+        return []
+    return [p for p in raw_dir(settings).glob("*.csv")
+            if p != current and (d := file_date(p.name)) is not None and d < new]
+
+
 def latest_csv(settings: Settings) -> Path | None:
-    found = sorted(raw_dir(settings).glob("*.csv"))
-    return found[-1] if found else None
+    """The CSV with the latest date in its name (by date, not by name)."""
+    found = list(raw_dir(settings).glob("*.csv"))
+    return max(found, key=lambda p: (file_date(p.name) or date.min, p.name)) if found else None
 
 
 def ingest(settings: Settings, csv_path: Path | None = None) -> int:

@@ -21,6 +21,7 @@ and identical questions are answered from a cache until the data changes (``wcs.
 
 from __future__ import annotations
 
+import hashlib
 import html
 import json
 import logging
@@ -36,6 +37,7 @@ from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import (
     HTMLResponse,
     JSONResponse,
@@ -45,8 +47,10 @@ from fastapi.responses import (
 )
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from wcs.api.usage import (
+    InFlight,
     RateLimiter,
     StateDB,
     add_report,
@@ -63,7 +67,9 @@ from wcs.api.usage import (
     withdrawn_briefings,
 )
 from wcs.config import REPO_ROOT, Settings, load_settings
+from wcs.rag.neutral import still_loaded
 from wcs.rag.pipeline import AskRequest, Pipeline
+from wcs.rag.verify import recheck_flags
 from wcs.sources import gadebate
 
 log = logging.getLogger(__name__)
@@ -104,9 +110,8 @@ class ReportBody(BaseModel):
 def sse(events: Iterator[dict[str, Any]], keep_alive: float = KEEP_ALIVE_SECONDS) -> Iterator[bytes]:
     """Server-sent events, with a comment line after a few seconds of silence (while the model is thinking): proxies
     close a response that sends nothing for too long. The events are worked out in a thread of their own, which stops
-    at the next event once the reader has gone."""
-    import json
-
+    at the next event once the reader has gone, and closes them, so a briefing nobody is reading stops being written
+    (and paid for)."""
     q: queue.Queue = queue.Queue()
     gone = threading.Event()
     end = object()
@@ -120,6 +125,8 @@ def sse(events: Iterator[dict[str, Any]], keep_alive: float = KEEP_ALIVE_SECONDS
         except Exception as exc:  # passed on, to be raised where the response is being sent
             q.put(exc)
         finally:
+            if hasattr(events, "close"):
+                events.close()  # here, in the thread that ran it: the model's stream is closed with it
             q.put(end)
 
     threading.Thread(target=work, name="sse", daemon=True).start()
@@ -137,6 +144,60 @@ def sse(events: Iterator[dict[str, Any]], keep_alive: float = KEEP_ALIVE_SECONDS
             yield f"event: {ev['type']}\ndata: {json.dumps(ev, default=str)}\n\n".encode()
     finally:
         gone.set()
+
+
+# Browsers and Cloudflare may keep these for a year without asking again: a stylesheet's or script's address
+# carries a hash of its content (/styles.css?v=<hash>), so a changed file has a new address, and the fonts' names
+# carry their own codes (a changed font must be given a new name). Pages are checked on every visit, so they always
+# point at the current files.
+FOREVER = "public, max-age=31536000, immutable"
+ALWAYS_CHECK = "no-cache"
+ASSET_REF = re.compile(r'((?:href|src)=")/([A-Za-z0-9_-]+\.(?:css|js))(")')
+
+
+def asset_versions(site: Path) -> dict[str, str]:
+    """A short hash of the content of each stylesheet and script in the site's folder."""
+    return {p.name: hashlib.sha256(p.read_bytes()).hexdigest()[:12]
+            for p in sorted([*site.glob("*.css"), *site.glob("*.js")])}
+
+
+def versioned(page: str, versions: dict[str, str]) -> str:
+    """The page with its stylesheets' and scripts' addresses carrying their content's hash."""
+    return ASSET_REF.sub(lambda m: f"{m[1]}/{m[2]}?v={versions[m[2]]}{m[3]}" if m[2] in versions else m[0], page)
+
+
+class SiteFiles(StaticFiles):
+    """The site's files, with how long each may be kept (see FOREVER)."""
+
+    def __init__(self, *, versions: dict[str, str], **kw: Any):
+        super().__init__(**kw)
+        self.versions = versions
+
+    def cache_control(self, path: str, scope: dict[str, Any]) -> str:
+        query = dict(p.split("=", 1) for p in scope.get("query_string", b"").decode().split("&") if "=" in p)
+        if path in self.versions and query.get("v") == self.versions[path]:
+            return FOREVER
+        if path.startswith("fonts/") and path.endswith(".woff2"):
+            return FOREVER
+        if path.endswith((".png", ".svg", ".ico")):
+            return "public, max-age=86400"
+        return ALWAYS_CHECK  # pages, and a script or stylesheet asked for without (or with an old) hash
+
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        if response.status_code == 404:  # Starlette's own 404.html: shown by the app instead, as for every page
+            raise HTTPException(404, "Not found")
+        if response.status_code in (200, 304):
+            response.headers["Cache-Control"] = self.cache_control(path, scope)
+        return response
+
+
+def rechecked(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """A saved or cached briefing as shown today: its points to check and its judgemental-word marks judged again
+    by the current rules, so a mark since found to be wrong is not shown. Nothing is ever newly flagged. (Where MPs
+    Stand does the same with its saved briefings.)"""
+    return [{**e, "answer": still_loaded(recheck_flags(e["answer"]))}
+            if e.get("type") == "final" and isinstance(e.get("answer"), dict) else e for e in events]
 
 
 def data_stamp(settings: Settings) -> str:
@@ -205,7 +266,11 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     limits = settings.usage
     limiter = RateLimiter(int(limits.get("requests_per_minute", 20)))
     cache_hours = float(limits.get("answer_cache_hours", 168))
-    app = FastAPI(title="Where Countries Stand", docs_url="/api/docs", openapi_url="/api/openapi.json")
+    inflight = InFlight(int(limits.get("briefings_at_once_per_visitor", 2)), int(limits.get("briefings_at_once", 8)),
+                        float(limits.get("briefing_estimate_usd", 0.10)))
+    # No generated API pages: Swagger's page loads its script from a CDN and runs inline code, which the site's
+    # content security policy blocks, so it showed a blank page. The endpoints are listed at the top of this file.
+    app = FastAPI(title="Where Countries Stand", docs_url=None, redoc_url=None, openapi_url=None)
     holder: dict[str, Any] = {"pipeline": pipeline}
     memo: dict[str, tuple[float, Any]] = {}
 
@@ -252,7 +317,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
             raise HTTPException(404, "There is no briefing at this address.")
         if b["withdrawn_at"]:
             raise HTTPException(410, f"This briefing has been withdrawn: {b['withdrawn_reason']}")
-        return {k: b[k] for k in ("id", "at", "question", "options", "events")}
+        return {**{k: b[k] for k in ("id", "at", "question", "options")}, "events": rechecked(b["events"])}
 
     @app.get("/api/corrections")
     def corrections():
@@ -330,7 +395,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
 
         def events() -> Iterator[dict[str, Any]]:
             if hit is not None:
-                yield from hit
+                yield from rechecked(hit)
                 return
             if body.sources_only:
                 yield from sources_only(body, "Sources only: no briefing was written.")
@@ -374,10 +439,36 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                 replay += [{"type": "text", "text": "".join(text)}, {**final, "usage": None, "cached": True}]
                 store_events(state, key, replay, cache_hours)
 
-        return StreamingResponse(sse(events()), media_type="text/event-stream",
+        def guarded() -> Iterator[dict[str, Any]]:
+            """A briefing about to be written is reserved at its estimated cost while it runs, and the caps are
+            checked again counting the others in progress, so many questions at once cannot all slip past them."""
+            if hit is not None or body.sources_only or blocked or not model_on:
+                yield from events()
+                return
+            refused = inflight.start(who)
+            if refused:
+                yield from sources_only(body, f"{refused} The sources found are shown below.")
+                return
+            try:
+                late = check_caps(state, limits, who, inflight.pending_usd(besides=1))
+                if late:
+                    yield from sources_only(body, f"{late} The sources found are shown below.")
+                    return
+                yield from events()
+            finally:
+                inflight.finish(who)
+
+        return StreamingResponse(sse(guarded()), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     site = Path(settings.section("site").get("dir") or SITE_DIR)
+    versions = asset_versions(site) if site.exists() else {}
+
+    def read_page(path: Path) -> str:
+        return versioned(path.read_text(encoding="utf-8"), versions)
+
+    def html_page(text: str, status_code: int = 200) -> HTMLResponse:
+        return HTMLResponse(text, status_code=status_code, headers={"Cache-Control": ALWAYS_CHECK})
 
     def pages() -> list[str]:
         return sorted(p.stem for p in site.glob("*.html") if PAGE_NAME.fullmatch(p.stem) and p.stem != "404")
@@ -399,13 +490,13 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
 
     def page(request: Request, name: str) -> HTMLResponse:
         path = site / f"{name}.html"
-        if not PAGE_NAME.fullmatch(name) or not path.is_file():
+        if not PAGE_NAME.fullmatch(name) or name == "404" or not path.is_file():
             raise HTTPException(404, "Not found")
-        text, base = path.read_text(encoding="utf-8"), site_url(settings, request)
+        text, base = read_page(path), site_url(settings, request)
         q = request.query_params.get("q", "") if name == "index" else ""
         if len(q.strip()) >= 3:
-            return HTMLResponse(question_page(text, q, base, request.url.query))
-        return HTMLResponse(text.replace(SITE_MARK, base))
+            return html_page(question_page(text, q, base, request.url.query))
+        return html_page(text.replace(SITE_MARK, base))
 
     @app.get("/", include_in_schema=False)
     def home(request: Request):
@@ -419,11 +510,19 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def shared_briefing(request: Request, bid: str):
         """A saved briefing: the home page, which loads it, with the question as its title and link preview."""
         b = saved_briefing(state, bid) if re.fullmatch(r"[A-Za-z0-9_-]{6,20}", bid) else None
-        text, base = (site / "index.html").read_text(encoding="utf-8"), site_url(settings, request)
+        text, base = read_page(site / "index.html"), site_url(settings, request)
         if b is None:
-            return HTMLResponse(text.replace(SITE_MARK, base), status_code=404)
-        return HTMLResponse(question_page(text, b["question"], base, "", f"/b/{bid}"))
+            return html_page(text.replace(SITE_MARK, base), status_code=404)
+        return html_page(question_page(text, b["question"], base, "", f"/b/{bid}"))
+
+    @app.exception_handler(StarletteHTTPException)
+    async def not_found(request: Request, exc: StarletteHTTPException):
+        """A page of the site's own for an address with nothing there; the API keeps its JSON answers."""
+        missing = site / "404.html"
+        if exc.status_code == 404 and not request.url.path.startswith("/api/") and missing.is_file():
+            return html_page(read_page(missing).replace(SITE_MARK, site_url(settings, request)), status_code=404)
+        return await http_exception_handler(request, exc)
 
     if site.exists():
-        app.mount("/", StaticFiles(directory=site, html=True), name="site")
+        app.mount("/", SiteFiles(directory=site, html=True, versions=versions), name="site")
     return app

@@ -7,7 +7,8 @@ when it reports a problem.
 ## What a run does
 
 1. **General Assembly votes.** Reads the voting data record in the UN Digital Library (its file list carries the
-   file's date). If the UN has published a new file, downloads it and converts it (about 370 MB, 5 seconds).
+   file's date). If the UN has published a new file, downloads it and converts it (about 370 MB, 5 seconds), and
+   deletes the files it supersedes (the newest is chosen by the date in its name, not by the name's order).
 2. **Security Council records** (from `[live] sc_from`, 1 January 2024; the corpus covers the years before):
    * finds meeting records newer than the last one held, in the Digital Library's catalogue, then by probing the
      UN's document system (ODS) for the next meeting numbers;
@@ -18,8 +19,11 @@ when it reports a problem.
    * stores each year that changed.
 3. **General Debate** (from `[live] gd_from_session`, the 79th session of 2024; the corpus covers the sessions
    before): see [The General Debate](#the-general-debate) below.
-4. **Index.** Re-indexes the years that changed, then embeds new passages for up to `--embed-seconds`.
-5. **Report.** Writes `data/logs/update-<time>.json` and prints a summary. Exits 1 if something needs attention.
+4. **Index.** Re-indexes the years that changed, then embeds new passages for up to `--embed-seconds`, and merges
+   what was written into the search indices (see [The search index on disk](#the-search-index-on-disk)). A run
+   that changed nothing leaves the index alone.
+5. **Report.** Writes `data/logs/update-<time>.json` (the last 60, a month's, are kept) and prints a summary. Exits
+   1 if something needs attention.
 
 A first run after loading the corpus backfills everything since the corpus ended (S/PV.9525 onwards: about 300
 meetings a year). It takes about 10 seconds a meeting, mostly reading the PDF, and saves its progress after every
@@ -52,7 +56,9 @@ parser version, the speeches found and any problems).
 ## Scheduling
 
 On the server (`docs/DEPLOY.md`), `wcs-update.timer` runs it twice a day, each run in a one-off container;
-`deploy/update.sh` installs it. To see it:
+`deploy/update.sh` installs it. Every site's scheduled update on the shared server takes the same lock
+(`flock /var/lock/wheretheystand-update.lock`), so a run that starts while another site's update is going waits for
+it to finish rather than competing with it; `systemctl status wcs-update` shows it waiting. To see it:
 
 ```bash
 systemctl list-timers wcs-update.timer        # when it runs next
@@ -63,6 +69,26 @@ systemctl start wcs-update.service            # run one now
 If a run, or the nightly backup, fails (exits 1 when something needs attention, or stops with an error), the server
 emails wheretheystanduk@gmail.com with the result and the run's last log lines, at most once every six hours. That is
 set up once for every site on the server (Where They Stand's `docs/HOSTING.md`, "Email from the server").
+
+## The search index on disk
+
+The search index (`data/index/`, LanceDB) never overwrites anything: every write makes a new version of a table
+and leaves the old files on disk. So an update writes as little as it can, and cleans up after itself:
+
+* **Only what changed is written.** A run with no new records writes nothing to the index. Re-indexing a year keeps
+  the vectors of passages whose text is unchanged, so a new meeting costs the embedding of its own passages, not
+  the whole year's.
+* **New rows are merged, not rebuilt.** After writing, the update merges the new rows into the existing keyword,
+  filter and meaning-search indices, compacts small files and deletes versions over an hour old (as Where MPs
+  Stand does after every write). The report says `"index": "merged"`.
+* **Full rebuilds are rare.** The indices are built from scratch on the first build, by `wcs index` and
+  `wcs regroup`, and the meaning-search index is trained again once the vectors have grown by a fifth since it was
+  last trained (recorded in `data/index/state.json`, under `_indices`). The report then says `"index": "built"`.
+  The first update after this was introduced trains it once, since no size was recorded before.
+
+`wcs optimize` does the clean-up on its own, at any time, while the site serves (for example after a run that was
+stopped). `wcs index --re-embed` drops the vectors as well, so that every passage is embedded again: only needed
+after changing the embedding model.
 
 ## When a run reports a problem
 
@@ -103,7 +129,8 @@ wcs withdraw AbC123xy --reason "It attributed a statement to the wrong country."
 ```
 
 A withdrawn briefing's address says it was withdrawn, and why, and the corrections page lists its question and the
-reason. The same question can then be asked again. The alpha notice also gives an email address for problems.
+reason. The same question can then be asked again. The alpha notice on every page links to the report form, and
+gives the email address as well.
 
 ## The General Debate
 

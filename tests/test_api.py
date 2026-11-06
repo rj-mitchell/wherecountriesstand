@@ -217,3 +217,145 @@ def test_status_reports_the_last_update(indexed):  # noqa: F811
     st = api.get("/api/status").json()
     assert st["last_update"]["warnings"] == ["the General Debate website refused access (403)"]
     assert st["general_debate"] == {"81": {"website": 0}}
+
+
+def test_stream_stops_when_the_reader_leaves():
+    """A briefing nobody is reading any more must stop being written: its events are closed, which closes the
+    model's stream (found on the live site: a reader who left kept the briefing running, and paid for)."""
+    import threading
+    import time
+
+    from wcs.api.app import sse
+
+    closed = threading.Event()
+    made = []
+
+    def briefing():
+        try:
+            while True:
+                made.append(1)
+                yield {"type": "text", "text": "word "}
+                time.sleep(0.01)
+        finally:
+            closed.set()
+
+    events = briefing()  # held here, so only an explicit close (not the garbage collector) can stop it
+    out = sse(events, keep_alive=1)
+    assert next(out).startswith(b"event: text")
+    out.close()  # the reader has gone: the server closes the response
+    assert closed.wait(2)
+    n = len(made)
+    time.sleep(0.1)
+    assert len(made) == n  # nothing more is written
+
+
+def test_briefings_in_progress_count_against_the_caps(tmp_path):
+    from wcs.api.usage import InFlight, check_caps, record_usage
+    state = StateDB(tmp_path / "s.db")
+    limits = {"daily_spend_cap_usd": 1.0, "monthly_spend_cap_usd": 50.0, "price_input_per_mtok": 2.0}
+    record_usage(state, "answer", "m", {"input_tokens": 300_000}, limits, "v1")      # $0.60 spent
+    flight = InFlight(per_key=2, total=3, estimate_usd=0.25)
+    assert flight.start("a") is None and flight.start("a") is None
+    assert "already being written" in flight.start("a")
+    assert flight.start("b") is None and "Many briefings" in flight.start("c")
+    assert flight.pending_usd(besides=1) == 0.5
+    assert check_caps(state, limits, "v2") is None                                     # $0.60 alone is under $1
+    assert "budget" in check_caps(state, limits, "v2", flight.pending_usd(besides=1))  # with $0.50 more on the way
+    flight.finish("a"), flight.finish("a"), flight.finish("b")
+    assert flight.running == {} and flight.pending_usd() == 0
+
+
+def test_a_second_briefing_at_once_waits_its_turn(indexed):  # noqa: F811
+    """While one briefing is being written for a visitor, another question from them gets the sources only."""
+    import threading
+
+    class SlowClient(FakeClient):
+        def __init__(self):
+            super().__init__()
+            self.started, self.release = threading.Event(), threading.Event()
+
+        def _stream(self, **kw):
+            self.started.set()
+            assert self.release.wait(10)
+            return super()._stream(**kw)
+
+    client = SlowClient()
+    api, _ = make(indexed, client, briefings_at_once_per_visitor=1)
+    first: list = []
+    t = threading.Thread(target=lambda: first.append(events(api.post("/api/ask", json=QUESTION))))
+    t.start()
+    try:
+        assert client.started.wait(10)
+        second = events(api.post("/api/ask", json={"question": "What has Fiji said about climate finance?"}))
+    finally:
+        client.release.set()
+        t.join(10)
+    assert second[-1]["answer"] is None and "already being written for you" in second[-1]["note"]
+    assert first[0][-1]["answer"]["citations_total"] == 1 and len(client.calls) == 1
+    third = events(api.post("/api/ask", json={"question": "What has Fiji said about climate finance?"}))
+    assert third[-1]["answer"] is not None  # once the first is done, the next is written
+
+
+def test_saved_briefings_are_shown_with_flags_judged_again(indexed):  # noqa: F811
+    """A mark made by an older rule that has since been corrected (a lead-in taken for an unsupported claim, a
+    neutral "claimed" taken for a loaded word) is not shown on a briefing saved before the correction."""
+    from wcs.api.usage import save_briefing
+    api, state = make(indexed, FakeClient())
+    answer = {"markdown": "Kenya said climate finance is slow. The savings claimed were large.",
+              "segments": [{"text": "Kenya said ", "status": "unsupported"},
+                           {"text": "climate finance is slow.", "status": "cited", "sources": [1]},
+                           {"text": " The savings claimed were large.", "status": "cited", "sources": [1],
+                            "loaded": [{"start": 13, "end": 20, "word": "claimed"}]}],
+              "unsupported_segments": 1, "grounded_ratio": 0.5, "loaded_words": 1}
+    save_briefing(state, "OldOne12", QUESTION["question"], {}, [{"type": "final", "answer": answer}])
+    shown = api.get("/api/briefings/OldOne12").json()["events"][-1]["answer"]
+    assert shown["segments"][0]["status"] == "connective" and shown["unsupported_segments"] == 0
+    assert shown["loaded_words"] == 0 and shown["segments"][2]["loaded"] == []
+
+
+def test_no_generated_api_pages(indexed):  # noqa: F811
+    """Swagger's page needs a CDN and inline script, which the site's content security policy blocks: it was blank."""
+    api, _ = make(indexed, FakeClient())
+    for path in ("/api/docs", "/api/openapi.json", "/redoc", "/docs", "/openapi.json"):
+        assert api.get(path).status_code == 404, path
+
+
+def test_scripts_and_styles_carry_their_hash_and_are_kept_long(indexed):  # noqa: F811
+    """Without a hash in their addresses, browsers asked again for the scripts and styles on every visit."""
+    import re
+    api, _ = make(indexed, FakeClient())
+    home = api.get("/")
+    assert home.headers["cache-control"] == "no-cache"
+    refs = re.findall(r'(?:href|src)="(/[a-z]+\.(?:css|js)[^"]*)"', home.text)
+    assert {r.split("?")[0] for r in refs} == {"/fonts.css", "/styles.css", "/app.js"}
+    for ref in refs:
+        assert re.fullmatch(r"/[a-z]+\.(css|js)\?v=[0-9a-f]{12}", ref), ref
+        assert api.get(ref).headers["cache-control"] == "public, max-age=31536000, immutable"
+    assert api.get("/styles.css").headers["cache-control"] == "no-cache"          # no hash: checked each time
+    assert api.get("/styles.css?v=000000000000").headers["cache-control"] == "no-cache"   # an old hash
+    font = re.search(r"url\((fonts/[^)]+\.woff2)\)", api.get("/fonts.css").text)[1]
+    assert api.get(f"/{font}").headers["cache-control"] == "public, max-age=31536000, immutable"
+    for page in ("/about.html", "/corrections.html", "/b/nosuchbriefing"):
+        r = api.get(page)
+        assert r.headers["cache-control"] == "no-cache" and "?v=" in r.text, page
+
+
+def test_unknown_addresses_get_a_page_and_the_api_keeps_json(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient())
+    for path in ("/nothing-here", "/nope.html", "/404.html", "/fonts/missing.woff2", "/a/b/c"):
+        r = api.get(path)
+        assert r.status_code == 404 and r.headers["content-type"].startswith("text/html"), path
+        assert "<h1>Page not found</h1>" in r.text and "?v=" in r.text and 'content="noindex"' in r.text
+    for path in ("/api/nothing", "/api/briefings/nope99"):
+        r = api.get(path)
+        assert r.status_code == 404 and r.headers["content-type"] == "application/json", path
+    assert api.post("/api/nothing", json={}).status_code in (404, 405)
+    assert "404" not in api.get("/sitemap.xml").text
+
+
+def test_alpha_notice_links_to_the_report_form(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient())
+    for page in ("/", "/about.html", "/corrections.html", "/privacy.html", "/accessibility.html", "/missing"):
+        assert '<a href="/corrections.html#report">report anything wrong</a>' in api.get(page).text, page
+    assert 'id="report"' in api.get("/corrections.html").text
+    assert "<noscript>" in api.get("/").text

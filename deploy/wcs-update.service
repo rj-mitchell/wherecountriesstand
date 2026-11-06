@@ -12,6 +12,9 @@ OnFailure=alert@%n.service
 Type=oneshot
 WorkingDirectory=/opt/wherecountriesstand/deploy
 # Exits 1 when something needs attention; the report is in /data/logs/update-*.json.
-ExecStart=/usr/bin/docker compose run --rm -T app wcs update --embed-seconds 3600
+# One heavy job at a time on the shared server: every site's scheduled update takes this lock, so this one waits
+# (it does not fail) while another site's is running, and they never compete for the CPU, memory and disk.
+ExecStart=/usr/bin/flock /var/lock/wheretheystand-update.lock /usr/bin/docker compose run --rm -T app wcs update --embed-seconds 3600
 Nice=10
-TimeoutStartSec=3h
+# Up to 3 hours of its own, plus the wait for the other sites' updates (Where MPs Stand's can take 6)
+TimeoutStartSec=9h

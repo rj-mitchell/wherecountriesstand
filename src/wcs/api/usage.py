@@ -119,8 +119,10 @@ def spent(state: StateDB, since: str) -> float:
         return float(con.execute("SELECT coalesce(sum(cost_usd), 0) FROM usage WHERE at >= ?", (since,)).fetchone()[0])
 
 
-def check_caps(state: StateDB, limits: dict[str, Any], visitor: str | None = None) -> str | None:
-    """A plain-English reason if another briefing may not be written now, else None."""
+def check_caps(state: StateDB, limits: dict[str, Any], visitor: str | None = None,
+               pending_usd: float = 0.0) -> str | None:
+    """A plain-English reason if another briefing may not be written now, else None. ``pending_usd`` is the
+    estimated cost of briefings being written at this moment, whose cost is not recorded yet."""
     now = datetime.now(UTC)
     day, month = now.strftime("%Y-%m-%d"), now.strftime("%Y-%m")
     if visitor is not None:
@@ -130,11 +132,44 @@ def check_caps(state: StateDB, limits: dict[str, Any], visitor: str | None = Non
         if asked >= int(limits.get("per_visitor_daily_questions", 40)):
             return ("You have reached today's limit for new briefings. It resets at midnight UTC; briefings others "
                     "have already asked for still load.")
-    if spent(state, day) >= float(limits.get("daily_spend_cap_usd", 3.0)):
+    if spent(state, day) + pending_usd >= float(limits.get("daily_spend_cap_usd", 3.0)):
         return "Today's budget for new briefings has been used up. It resets at midnight UTC."
-    if spent(state, month) >= float(limits.get("monthly_spend_cap_usd", 50.0)):
+    if spent(state, month) + pending_usd >= float(limits.get("monthly_spend_cap_usd", 50.0)):
         return "This month's budget for new briefings has been used up."
     return None
+
+
+class InFlight:
+    """Briefings being written right now (from Where MPs Stand's ``api/usage.py``). Their cost is only known when
+    they finish, so without this, many questions at once would all pass the spending caps before any was counted:
+    each is reserved at an estimated cost while it runs, and each visitor (and the site as a whole) may have only a
+    few at once."""
+
+    def __init__(self, per_key: int = 2, total: int = 8, estimate_usd: float = 0.10):
+        self.per_key, self.total, self.estimate_usd = per_key, total, estimate_usd
+        self.running: dict[str, int] = defaultdict(int)
+        self.lock = threading.Lock()
+
+    def start(self, key: str) -> str | None:
+        """Reserve a place, or say why not."""
+        with self.lock:
+            if self.running.get(key, 0) >= self.per_key:  # .get: a refused visitor leaves nothing behind
+                return "A briefing is already being written for you; please wait for it to finish."
+            if sum(self.running.values()) >= self.total:
+                return "Many briefings are being written at the moment; please try again in a minute."
+            self.running[key] += 1
+            return None
+
+    def finish(self, key: str) -> None:
+        with self.lock:
+            self.running[key] -= 1
+            if self.running[key] <= 0:
+                del self.running[key]
+
+    def pending_usd(self, besides: int = 0) -> float:
+        """Estimated cost of the briefings in progress, not counting ``besides`` of them (the caller's own)."""
+        with self.lock:
+            return max(sum(self.running.values()) - besides, 0) * self.estimate_usd
 
 
 class RateLimiter:

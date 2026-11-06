@@ -37,7 +37,9 @@ one, the site shows the sources only).
    cp .env.example .env && nano .env    # WCS_ANTHROPIC_API_KEY, WCS_GUESTBOOK_NAME and WCS_GUESTBOOK_EMAIL
    ```
    Spending caps are in `config/settings.toml`, `[usage]`: $3 a day and $50 a month to start (decision 9), 40 new
-   briefings per visitor per day, 20 requests a minute.
+   briefings per visitor per day, 20 requests a minute. At most 8 briefings are written at once (2 per visitor),
+   and each counts against the caps at an estimated $0.10 until its real cost is known, so many questions arriving
+   together cannot overshoot a cap.
 3. **Start it:**
    ```bash
    bash /opt/wherecountriesstand/deploy/update.sh
@@ -83,7 +85,8 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
 
 * **Updates** run twice a day (`wcs-update.timer`, 5.41am and 5.41pm UTC, clear of the other sites' updates;
   `docs/OPERATIONS.md`): new votes, new and corrected Security Council records, the General Debate, the index, and an
-  hour of meaning search for passages still waiting. `journalctl -u wcs-update.service -n 50` shows the last run; a
+  hour of meaning search for passages still waiting. Each waits for any other site's update to finish first (one
+  lock for every site's updates, `/var/lock/wheretheystand-update.lock`). `journalctl -u wcs-update.service -n 50` shows the last run; a
   report that needs attention says so in `/data/logs/update-*.json`.
 * **New code:** merge it into `main` on GitHub, then `bash /opt/wherecountriesstand/deploy/update.sh`.
 * **Memory:** the container is limited to 4 GB (`mem_limit` in `docker-compose.yml`), so a runaway update stops
@@ -111,6 +114,10 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
 * **Search engines and link previews:** `/robots.txt`, `/sitemap.xml` and the pages' link-preview tags use
   `https://` and `DOMAIN` from `.env` (or `WCS_SITE_URL`, or `[site] url` in `config/settings.toml`). Crawlers are
   kept out of `/api/`, so one that runs the page's script cannot ask for briefings.
+* **Caching:** pages are sent with `Cache-Control: no-cache`, so browsers and Cloudflare check them on every visit.
+  Each page's stylesheets and scripts carry a hash of their content in their address (`/styles.css?v=…`, added as
+  the page is served), and are kept for a year; a changed file gets a new address, so nothing needs purging after a
+  deploy. The fonts are kept for a year too: a changed font must be given a new file name.
 * **Visitors' addresses:** the front door passes each visitor's own address (from Cloudflare) in
   `X-Forwarded-For`, which `wcs serve --behind-proxy` trusts. The container's port is reachable only over the
   server's Docker networks, never from outside, so nobody else can set it.

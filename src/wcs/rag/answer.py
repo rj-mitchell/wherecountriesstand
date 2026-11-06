@@ -36,13 +36,24 @@ def api_key() -> str | None:
         return None
 
 
+# A briefing streams for a minute or two at most: five minutes without a byte means the connection is dead, and
+# ten seconds is ample to connect. Two retries for a refused or dropped request (the SDK waits between them). The
+# same for every site of Where They Stand. anthropic.Timeout, not httpx.Timeout: from version 2 the SDK has its own
+# copy of httpx and refuses the other's.
+TIMEOUT_SECONDS = 300.0
+CONNECT_SECONDS = 10.0
+MAX_RETRIES = 2
+
+
 def make_client():
     import anthropic
 
     # Never follow an ANTHROPIC_BASE_URL inherited from another tool; the app talks to the API itself.
     base_url = os.environ.get("WCS_ANTHROPIC_BASE_URL", "https://api.anthropic.com")
     key = api_key()
-    return anthropic.Anthropic(api_key=key, base_url=base_url) if key else anthropic.Anthropic(base_url=base_url)
+    options: dict[str, Any] = {"base_url": base_url, "max_retries": MAX_RETRIES,
+                               "timeout": anthropic.Timeout(TIMEOUT_SECONDS, connect=CONNECT_SECONDS)}
+    return anthropic.Anthropic(api_key=key, **options) if key else anthropic.Anthropic(**options)
 
 
 def cached_system(text: str) -> list[dict[str, Any]]:

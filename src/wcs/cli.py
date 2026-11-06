@@ -411,14 +411,31 @@ def ingest_votes() -> None:
 
 
 @app.command()
-def index(years: str = typer.Option(None), source: list[str] = typer.Option(None)) -> None:
-    """Build the keyword index from the Parquet store."""
+def index(years: str = typer.Option(None), source: list[str] = typer.Option(None),
+          re_embed: bool = typer.Option(False, help="drop the vectors too, so every passage is embedded again (after "
+                                                    "changing the embedding model)")) -> None:
+    """Build the keyword index from the Parquet store, and the search indices afresh. Passages whose text is
+    unchanged keep their vectors."""
     from wcs.index.build import SOURCES, Indexer
     from wcs.reference.countries import countries
 
     s = load_settings()
-    n = Indexer(s, countries()).index_all(tuple(source) if source else SOURCES, _years(years))
+    n = Indexer(s, countries(), keep_vectors=not re_embed).index_all(tuple(source) if source else SOURCES,
+                                                                      _years(years))
     typer.echo(f"{n} passages indexed")
+
+
+@app.command()
+def optimize() -> None:
+    """Merge rows waiting outside the search indices, compact small files, and delete versions of the index over an
+    hour old (each update does this itself; this is for a one-off clean-up)."""
+    from wcs.index.lance import SearchIndex
+
+    s = load_settings()
+    idx = SearchIndex(s.index_dir, int(s.embedding.get("dim", 384)))
+    before = idx.versions()
+    idx.optimize()
+    typer.echo(f"Done: table versions {before} -> {idx.versions()}")
 
 
 @app.command()
@@ -436,13 +453,15 @@ def regroup() -> None:
 def embed(max_seconds: float = typer.Option(None, help="stop after about this long (resumable)")) -> None:
     """Embed indexed passages for meaning search, newest years first."""
     from wcs.embed.base import get_embedder
-    from wcs.index.build import State, embed_pending
+    from wcs.index.build import State, embed_pending, refresh_indices
     from wcs.index.lance import SearchIndex
 
     s = load_settings()
     idx = SearchIndex(s.index_dir, int(s.embedding.get("dim", 384)))
-    n = embed_pending(s, idx, State(s.index_dir / "state.json"), get_embedder(s), max_seconds=max_seconds)
-    idx.build_indices()
+    state = State(s.index_dir / "state.json")
+    n = embed_pending(s, idx, state, get_embedder(s), max_seconds=max_seconds)
+    if n:
+        refresh_indices(idx, state)
     typer.echo(f"{n} passages embedded")
 
 
