@@ -311,3 +311,10 @@ def test_saved_briefings_are_shown_with_flags_judged_again(indexed):  # noqa: F8
     shown = api.get("/api/briefings/OldOne12").json()["events"][-1]["answer"]
     assert shown["segments"][0]["status"] == "connective" and shown["unsupported_segments"] == 0
     assert shown["loaded_words"] == 0 and shown["segments"][2]["loaded"] == []
+
+
+def test_no_generated_api_pages(indexed):  # noqa: F811
+    """Swagger's page needs a CDN and inline script, which the site's content security policy blocks: it was blank."""
+    api, _ = make(indexed, FakeClient())
+    for path in ("/api/docs", "/api/openapi.json", "/redoc", "/docs", "/openapi.json"):
+        assert api.get(path).status_code == 404, path

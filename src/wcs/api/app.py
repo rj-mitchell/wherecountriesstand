@@ -219,7 +219,9 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     cache_hours = float(limits.get("answer_cache_hours", 168))
     inflight = InFlight(int(limits.get("briefings_at_once_per_visitor", 2)), int(limits.get("briefings_at_once", 8)),
                         float(limits.get("briefing_estimate_usd", 0.10)))
-    app = FastAPI(title="Where Countries Stand", docs_url="/api/docs", openapi_url="/api/openapi.json")
+    # No generated API pages: Swagger's page loads its script from a CDN and runs inline code, which the site's
+    # content security policy blocks, so it showed a blank page. The endpoints are listed at the top of this file.
+    app = FastAPI(title="Where Countries Stand", docs_url=None, redoc_url=None, openapi_url=None)
     holder: dict[str, Any] = {"pipeline": pipeline}
     memo: dict[str, tuple[float, Any]] = {}
 
