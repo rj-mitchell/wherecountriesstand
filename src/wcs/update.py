@@ -14,7 +14,8 @@ Each run:
 4. **Index.** Re-indexes the years that changed (keeping the vectors of passages that did not), embeds new passages
    for as long as allowed, and merges what was written into the search indices. A run that changed nothing leaves
    the index alone.
-5. **Report.** Writes data/logs/update-<time>.json, and returns problems so a scheduler can alert on them.
+5. **Report.** Writes data/logs/update-<time>.json (the last 60 are kept), and returns problems so a scheduler can
+   alert on them.
 
 Nothing here depends on one website staying the same: discovery and download each have two routes, every parsed
 meeting is checked, and a run that cannot reach the UN at all fails loudly rather than reporting "no new records".
@@ -531,9 +532,15 @@ def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd:
     return report
 
 
+REPORTS_KEPT = 60  # a month of updates, twice a day
+
+
 def write_report(settings: Settings, report: Report) -> Path:
+    """Writes data/logs/update-<time>.json, and deletes all but the last ``REPORTS_KEPT``."""
     d = settings.data_dir / "logs"
     d.mkdir(parents=True, exist_ok=True)
     path = d / f"update-{re.sub(r'[^0-9T]', '', report.started)[:15]}.json"
     path.write_text(json.dumps(report.to_dict(), indent=1, default=str))
+    for old in sorted(d.glob("update-*.json"))[:-REPORTS_KEPT]:  # the names sort by time
+        old.unlink(missing_ok=True)
     return path

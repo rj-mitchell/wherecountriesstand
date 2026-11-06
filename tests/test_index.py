@@ -13,7 +13,7 @@ from wcs.index.build import Indexer, embed_pending, refresh_indices
 from wcs.index.lance import vector_index_due
 from wcs.reference.countries import countries
 from wcs.store.parquet import write_year
-from wcs.update import Report, run, update_index
+from wcs.update import REPORTS_KEPT, Report, run, update_index, write_report
 
 D = date(2026, 3, 2)
 
@@ -118,3 +118,13 @@ def test_vector_index_due():
     assert vector_index_due(int(n * 1.2) + 1, n, True)       # grown by more than a fifth
     assert vector_index_due(n, n, False)                     # the index has gone
 
+
+def test_update_reports_are_pruned(settings):
+    logs = settings.data_dir / "logs"
+    logs.mkdir(parents=True)
+    for day in range(1, 71):
+        (logs / f"update-202609{day:02d}T0541.json").write_text("{}")  # 70 older ones
+    write_report(settings, Report(started="2026-11-06T05:41:00+00:00"))
+    kept = sorted(p.name for p in logs.glob("update-*.json"))
+    assert len(kept) == REPORTS_KEPT and kept[-1] == "update-20261106T054100.json"
+    assert kept[0] == f"update-202609{71 - REPORTS_KEPT + 1:02d}T0541.json"

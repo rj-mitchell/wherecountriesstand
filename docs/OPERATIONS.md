@@ -21,7 +21,8 @@ when it reports a problem.
 4. **Index.** Re-indexes the years that changed, then embeds new passages for up to `--embed-seconds`, and merges
    what was written into the search indices (see [The search index on disk](#the-search-index-on-disk)). A run
    that changed nothing leaves the index alone.
-5. **Report.** Writes `data/logs/update-<time>.json` and prints a summary. Exits 1 if something needs attention.
+5. **Report.** Writes `data/logs/update-<time>.json` (the last 60, a month's, are kept) and prints a summary. Exits
+   1 if something needs attention.
 
 A first run after loading the corpus backfills everything since the corpus ended (S/PV.9525 onwards: about 300
 meetings a year). It takes about 10 seconds a meeting, mostly reading the PDF, and saves its progress after every
