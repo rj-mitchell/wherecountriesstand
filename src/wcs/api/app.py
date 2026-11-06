@@ -37,6 +37,7 @@ from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import (
     HTMLResponse,
     JSONResponse,
@@ -46,6 +47,7 @@ from fastapi.responses import (
 )
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from wcs.api.usage import (
     InFlight,
@@ -183,6 +185,8 @@ class SiteFiles(StaticFiles):
 
     async def get_response(self, path: str, scope):
         response = await super().get_response(path, scope)
+        if response.status_code == 404:  # Starlette's own 404.html: shown by the app instead, as for every page
+            raise HTTPException(404, "Not found")
         if response.status_code in (200, 304):
             response.headers["Cache-Control"] = self.cache_control(path, scope)
         return response
@@ -486,7 +490,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
 
     def page(request: Request, name: str) -> HTMLResponse:
         path = site / f"{name}.html"
-        if not PAGE_NAME.fullmatch(name) or not path.is_file():
+        if not PAGE_NAME.fullmatch(name) or name == "404" or not path.is_file():
             raise HTTPException(404, "Not found")
         text, base = read_page(path), site_url(settings, request)
         q = request.query_params.get("q", "") if name == "index" else ""
@@ -510,6 +514,14 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         if b is None:
             return html_page(text.replace(SITE_MARK, base), status_code=404)
         return html_page(question_page(text, b["question"], base, "", f"/b/{bid}"))
+
+    @app.exception_handler(StarletteHTTPException)
+    async def not_found(request: Request, exc: StarletteHTTPException):
+        """A page of the site's own for an address with nothing there; the API keeps its JSON answers."""
+        missing = site / "404.html"
+        if exc.status_code == 404 and not request.url.path.startswith("/api/") and missing.is_file():
+            return html_page(read_page(missing).replace(SITE_MARK, site_url(settings, request)), status_code=404)
+        return await http_exception_handler(request, exc)
 
     if site.exists():
         app.mount("/", SiteFiles(directory=site, html=True, versions=versions), name="site")

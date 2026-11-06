@@ -338,3 +338,16 @@ def test_scripts_and_styles_carry_their_hash_and_are_kept_long(indexed):  # noqa
     for page in ("/about.html", "/corrections.html", "/b/nosuchbriefing"):
         r = api.get(page)
         assert r.headers["cache-control"] == "no-cache" and "?v=" in r.text, page
+
+
+def test_unknown_addresses_get_a_page_and_the_api_keeps_json(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient())
+    for path in ("/nothing-here", "/nope.html", "/404.html", "/fonts/missing.woff2", "/a/b/c"):
+        r = api.get(path)
+        assert r.status_code == 404 and r.headers["content-type"].startswith("text/html"), path
+        assert "<h1>Page not found</h1>" in r.text and "?v=" in r.text and 'content="noindex"' in r.text
+    for path in ("/api/nothing", "/api/briefings/nope99"):
+        r = api.get(path)
+        assert r.status_code == 404 and r.headers["content-type"] == "application/json", path
+    assert api.post("/api/nothing", json={}).status_code in (404, 405)
+    assert "404" not in api.get("/sitemap.xml").text
