@@ -203,3 +203,13 @@ def test_a_year_on_its_own_is_that_year():
         (date(2026, 1, 1), date(2026, 12, 31))
     assert dates_in("Who spoke about Agenda 2030?", today) == (None, None)       # a future year isn't a date
     assert dates_in("Resolution 2334 and the 2016 debate", today) == (date(2016, 1, 1), date(2016, 12, 31))
+
+
+def test_model_client_gives_up_on_a_dead_connection(monkeypatch):
+    """A stalled connection must not hold a briefing (and its place under the caps) open for ever."""
+    from wcs.rag.answer import make_client
+
+    monkeypatch.setenv("WCS_ANTHROPIC_API_KEY", "sk-ant-test")
+    client = make_client()
+    assert client.timeout.read == 300.0 and client.timeout.connect == 10.0 and client.max_retries == 2
+    assert str(client.base_url).startswith("https://api.anthropic.com")
