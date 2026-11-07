@@ -427,8 +427,12 @@ def test_family_files_are_served_and_its_partials_are_not(indexed):  # noqa: F81
     assert api.get("/family/card.png").headers["cache-control"] == "public, max-age=86400"
     font = api.get("/family/fonts/source-serif-4-normal-latin.woff2")
     assert font.status_code == 200 and font.headers["cache-control"] == "public, max-age=604800"
-    for path in ("/family/shelf.html", "/family/head.html", "/family/VERSION", "/family/"):
+    for path in ("/family/shelf.html", "/family/head.html", "/family/"):
         assert api.get(path).status_code == 404, path
+    # the kit's VERSION is served, for the charity's nightly family check
+    version = api.get("/family/VERSION")
+    assert version.status_code == 200 and version.text.startswith("Where They Stand family kit")
+    assert "site countries" in version.text
 
 
 def test_a_missing_partial_stops_the_site_starting(tmp_path):

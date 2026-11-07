@@ -163,8 +163,9 @@ ALWAYS_CHECK = "no-cache"
 A_WEEK = "public, max-age=604800"
 A_DAY = "public, max-age=86400"
 ASSET_REF = re.compile(r'((?:href|src)=")/([A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)?\.(?:css|js))(")')
-# The family kit's partials and its VERSION file are put into the pages by the server, not served on their own.
-FAMILY_PRIVATE = re.compile(r"family/(?:[^/]+\.html|VERSION)")
+# The family kit's partials are put into the pages by the server, not served on their own. Its VERSION file is
+# served, as on every site of the family: the charity's nightly family check reads it at /family/VERSION.
+FAMILY_PRIVATE = re.compile(r"family/[^/]+\.html")
 INCLUDE = re.compile(r"^([ \t]*)<!--#include ([a-z0-9-]+(?:/[a-z0-9-]+)?)-->", re.M)
 NAV = re.compile(r"<nav\b.*?</nav>", re.S)
 
