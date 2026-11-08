@@ -223,7 +223,7 @@ def test_pages_use_absolute_paths(indexed):  # noqa: F811
     for name in ("/", "/about.html", "/corrections.html", "/privacy.html", "/accessibility.html"):
         html_text = api.get(name).text
         local = [u for u in re.findall(r'(?:href|src)="([^"]+)"', html_text)
-                 if not u.startswith(("https://", "http://", "mailto:", "#", "/"))]
+                 if not u.startswith(("https://", "http://", "mailto:", "#", "/", "data:"))]  # data: the kit's inline cartridge
         assert local == [], (name, local)
 
 def test_status_reports_the_last_update(indexed):  # noqa: F811
