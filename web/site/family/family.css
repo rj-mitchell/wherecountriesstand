@@ -144,13 +144,18 @@
   font-size: 1rem;
   line-height: 1.45;
 }
+/* The charity on the left and the shelves beside it, which take the rest of the width: each group of books sits on
+   one shelf wherever the page has room, and a group goes under the other only when the two don't fit side by side. */
 .wts-shelf__inner {
   max-inline-size: 72rem;
   margin-inline: auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem 2.5rem;
   align-items: start;
+}
+@media (min-width: 60rem) {
+  .wts-shelf__inner { grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr); }
 }
 .wts-shelf a { color: inherit; text-underline-offset: 0.15em; }
 .wts-shelf a:hover { text-decoration-thickness: 2px; }
@@ -175,7 +180,8 @@
 .wts-shelf__status { margin: 0.75rem 0 0.4rem; font-size: 0.9rem; font-style: italic; color: var(--wts-ink-muted); }
 .wts-shelf__links { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; font-size: 0.95rem; }
 
-.wts-shelf__groups { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.wts-shelf__groups { display: flex; flex-wrap: wrap; gap: 1rem 2.5rem; }
+.wts-shelf__group { flex: 0 1 auto; min-inline-size: 0; }
 .wts-shelf__label {
   margin: 0 0 0.5rem;
   font-size: 0.75rem;
