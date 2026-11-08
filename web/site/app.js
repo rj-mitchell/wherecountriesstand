@@ -130,7 +130,7 @@ function sourceCard(s) {
   if (s.language) who.push(" ", el("i", {}, `(spoke in ${s.language})`));
   who.push(":");
   const words = (s.text || "").split(/\s+/);
-  const short = words.slice(0, 90).join(" ") + (words.length > 90 ? " …" : "");
+  const short = words.slice(0, 90).join(" ") + (words.length > 90 ? "\u00a0…" : "");  // the ellipsis never alone on a line
   const links = [];
   if (s.language) links.push(el("span", { class: "translated" }, "English text: UN translation."), " · ");
   if (s.text_source === "delegation") links.push(el("span", { class: "translated" }, "Text issued by the delegation, as prepared; not yet the official record."), " · ");
