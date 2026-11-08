@@ -396,7 +396,7 @@ def test_every_page_carries_the_family_binding_and_the_standard_furniture(indexe
     for page in PAGES:
         text = api.get(page).text
         assert "<!--#include" not in text, page
-        assert '<body class="wts-headings">' in text and '<meta name="theme-color" content="#1F5F8B">' in text, page
+        assert '<body class="wts-headings">' in text and '<meta name="theme-color" content="#1F5F8B" media="(prefers-color-scheme: light)">' in text, page
         assert '<a class="wts-endorse" href="https://wheretheystand.uk/">' in text, page    # under the name
         assert '<nav class="wts-shelf"' in text, page                                         # the footer shelf
         assert INDEPENDENCE in text and "Independent. Not affiliated with the United Nations." in text, page

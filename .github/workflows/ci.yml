@@ -14,7 +14,7 @@ permissions:
 env:
   # The Where They Stand family kit version last synced into web/site/family/ (docs/DEPLOY.md, "Pages and the
   # family kit"). Raise it in the same change as a new sync.
-  FAMILY_KIT_VERSION: "1.3.1"
+  FAMILY_KIT_VERSION: "1.4.0"
 
 jobs:
   check:
