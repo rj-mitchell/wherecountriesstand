@@ -19,8 +19,9 @@
     <form class="ask" id="ask">
       <label for="q">Ask a question</label>
       <div class="ask__row">
-        <input id="q" name="q" type="search" required minlength="3" maxlength="500"
-               placeholder="How have small island states spoken about climate change since 2015?">
+        <textarea id="q" name="q" rows="1" required minlength="3" maxlength="500" autocomplete="off"
+                  enterkeyhint="go"
+                  placeholder="How have small island states spoken about climate change since 2015?"></textarea>
         <button type="submit" id="go">Prepare briefing</button>
       </div>
       <div class="ask__options">

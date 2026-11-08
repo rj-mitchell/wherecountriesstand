@@ -95,3 +95,27 @@ def test_pipeline_end_to_end_is_grounded(indexed):
     assert [b["type"] for b in blocks[:-1]] == ["search_result"] * len(cards)
     assert "Use only the supplied search results" in call["system"][0]["text"]
     assert "on behalf of" in call["system"][0]["text"]
+
+
+class QuotingClient(FakeClient):
+    """Quotes its source in straight quotes, as the model does."""
+
+    def _stream(self, **kw):
+        self.calls.append(kw)
+        first = next(b for b in kw["messages"][0]["content"] if b["type"] == "search_result")
+        quote = first["content"][0]["text"]
+        return FakeStream([
+            {"text": "Kenya's delegate said \""},
+            {"text": quote[:40], "citations": [{"search_result_index": 0, "cited_text": quote, "source": "x"}]},
+            {"text": "\" in 2023."},
+        ])
+
+
+def test_briefings_are_written_with_curly_quotes(indexed):
+    eng = Engine(indexed, embedder=HashingEmbedder(64), today=TODAY)
+    out = answer_once(Pipeline(indexed, eng, client=QuotingClient(), today=TODAY),
+                      AskRequest("What has Kenya said about climate finance?"))
+    final = out["final"]["answer"]
+    text = "".join(s["text"] for s in final["segments"])
+    assert text.startswith("Kenya’s delegate said “") and "”" in text and '"' not in text and "'" not in text
+    assert final["quotes_total"] == 1  # the quotation was checked before its marks were curled

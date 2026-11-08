@@ -19,6 +19,7 @@ from wcs.rag.neutral import flag_loaded
 from wcs.rag.prompts import NO_RECORDS
 from wcs.rag.query_parse import QueryPlan, parse_offline, parse_with_model
 from wcs.rag.sources import build_sources
+from wcs.rag.typography import curl_answer, curl_event
 from wcs.rag.verify import check_quotes, drop_preambles, verify
 from wcs.votes import VoteFinder
 
@@ -123,7 +124,7 @@ class Pipeline:
         ev: dict[str, Any] = {"type": "plan", "plan": plan.to_dict(), "usage": parse_usage}
         if plan.parse_error:
             ev["parse_error"] = plan.parse_error
-        yield ev
+        yield curl_event(ev)  # the interpretation in curly quotes, as the briefing
         result, votes, sources = self.find(plan, req)
         yield {"type": "sources", "sources": [s.card() for s in sources], "candidates": result.candidates,
                "semantic": result.semantic_available, "evidence": {**result.evidence, "votes": len(votes)}}
@@ -154,8 +155,9 @@ class Pipeline:
         britishise_segments(report.segments)  # the model's own words only; quotations stay verbatim
         loaded = flag_loaded(report.segments)  # judgemental words in its own voice are highlighted, not hidden
         check_quotes(report, sources)         # quotations not found word for word in their sources are marked
-        yield {"type": "final", "answer": {**report.to_dict(), "loaded_words": loaded}, "usage": final["usage"],
-               "model": final.get("model"), "stop_reason": final.get("stop_reason")}
+        # curly quotes and apostrophes, last, once the checks have read the text as the model wrote it
+        yield {"type": "final", "answer": curl_answer({**report.to_dict(), "loaded_words": loaded}),
+               "usage": final["usage"], "model": final.get("model"), "stop_reason": final.get("stop_reason")}
 
 
 def answer_once(pipeline: Pipeline, req: AskRequest) -> dict[str, Any]:

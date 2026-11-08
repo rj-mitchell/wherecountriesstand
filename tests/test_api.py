@@ -335,6 +335,35 @@ def test_saved_briefings_are_shown_with_flags_judged_again(indexed):  # noqa: F8
     assert shown["loaded_words"] == 0 and shown["segments"][2]["loaded"] == []
 
 
+def test_saved_briefings_are_shown_with_curly_quotes(indexed):  # noqa: F811
+    """A briefing saved before quotes were curled is shown with them curled, its marks where they were."""
+    from wcs.api.usage import save_briefing
+    api, state = make(indexed, FakeClient())
+    text = 'Kenya called it "too slow" and the Council\'s regime was mentioned.'
+    mark = {"start": text.index("regime"), "end": text.index("regime") + 6, "word": "regime"}
+    answer = {"segments": [{"text": text, "status": "cited", "sources": [1], "loaded": [mark]}], "loaded_words": 1}
+    save_briefing(state, "Quoted12", QUESTION["question"], {}, [{"type": "final", "answer": answer}])
+    shown = api.get("/api/briefings/Quoted12").json()["events"][-1]["answer"]["segments"][0]
+    assert shown["text"] == "Kenya called it “too slow” and the Council’s regime was mentioned."
+    assert shown["loaded"] == [mark] and shown["text"][mark["start"]:mark["end"]] == "regime"
+
+
+def test_a_saved_curled_briefing_keeps_its_points_to_check(indexed):  # noqa: F811
+    """The recheck reads a briefing saved with curly quotes as it read the straight ones: a sentence that ends in a
+    closing quote is still a claim of its own, not a lead-in to the quotation after it."""
+    from wcs.api.usage import save_briefing
+    from wcs.rag.typography import curl_answer
+    api, state = make(indexed, FakeClient())
+    answer = {"segments": [{"text": 'He said "no." Mr Smith said ', "status": "unsupported"},
+                           {"text": "we will act", "status": "cited", "sources": [1]}],
+              "unsupported_segments": 1}
+    for bid, saved in (("Straight1", answer), ("Curled12", curl_answer(answer))):
+        save_briefing(state, bid, QUESTION["question"], {}, [{"type": "final", "answer": saved}])
+        shown = api.get(f"/api/briefings/{bid}").json()["events"][-1]["answer"]["segments"][0]
+        assert shown["status"] == "unsupported", bid
+        assert shown["text"] == "He said “no.” Mr Smith said ", bid
+
+
 def test_no_generated_api_pages(indexed):  # noqa: F811
     """Swagger's page needs a CDN and inline script, which the site's content security policy blocks: it was blank."""
     api, _ = make(indexed, FakeClient())

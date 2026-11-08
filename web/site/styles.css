@@ -220,8 +220,11 @@ h3 { text-wrap: balance; }
   border: 1px solid var(--rule-faint);
 }
 .ask label { display: block; font-weight: 700; margin-block-end: 0.4rem; }
-.ask__row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.ask input[type="search"] {
+.ask__row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: start; }
+/* The question box grows with the question, from one line to four, so a long question (and the example in it) shows
+   in full on a phone. Enter asks; Shift+Enter starts a new line (app.js). Where a browser can't size it to its text,
+   it is tall enough for the example (two lines, three on the narrowest phones) and can be pulled taller. */
+.ask textarea {
   flex: 1 1 20rem;
   min-inline-size: 0;
   font: inherit;
@@ -230,7 +233,19 @@ h3 { text-wrap: balance; }
   background: var(--paper);
   border: 1px solid var(--rule);
   border-radius: 0;
+  field-sizing: content;
+  min-block-size: calc(1lh + 1.2rem + 2px);
+  max-block-size: calc(4lh + 1.2rem + 2px);
+  resize: none;
 }
+@supports not (field-sizing: content) {
+  .ask textarea { block-size: calc(3lh + 1.2rem + 2px); resize: vertical; }
+  @media (min-width: 22rem) {
+    .ask textarea { block-size: calc(2lh + 1.2rem + 2px); }
+  }
+}
+/* the button as tall as the box's first line, beside it or under it, however tall the box grows */
+.ask__row > button { min-block-size: calc(var(--step-0) * 1.45 + 1.2rem + 2px); }
 
 button, .button {
   font-family: var(--sans);

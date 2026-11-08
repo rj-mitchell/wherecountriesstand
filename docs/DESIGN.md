@@ -66,6 +66,9 @@ Based on S/PV.7565 (20 November 2015):
   buttons, chips, metadata lines and counts. The record is always in Tinos.
 - **Source Serif 4**, the family's typeface, sets the headings (`h1`–`h6`) only, as on every family
   site (decision 1 of the family plan). The site's name in the masthead stays in Tinos.
+- **Quotation marks and apostrophes are curly** (“ ” ‘ ’), as the record prints them. The model writes straight
+  ones, which are curled once a briefing has been checked (`wcs.rag.typography`); those inside a web address,
+  `code` or an HTML tag are left as they are.
 - All three fonts are bundled with the site, not loaded from Google: Tinos and Roboto in
   `web/site/fonts/`, Source Serif 4 in the family kit's `web/site/family/fonts/`.
 
@@ -113,3 +116,6 @@ briefing, its sources with their addresses, and the independence notice.
 - One fluid type scale, logical properties, visible focus rings, hover styles only for a mouse,
   and animation only when reduced motion isn't requested.
 - No horizontal scrolling on phones. Pages are checked at 390 px wide.
+- The question box grows with the question, from one line to four (`field-sizing: content`), so a long question,
+  and the example in it, shows in full on a phone; Enter asks and Shift+Enter starts a new line. Where a browser
+  can't size a box to its text, it is two lines tall (three on the narrowest phones) and can be pulled taller.

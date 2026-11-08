@@ -367,9 +367,15 @@ function fromUrl() {
 document.addEventListener("DOMContentLoaded", () => {
   loadCoverage();
   loadNames().then(fromUrl);
+  // The question box is a textarea, so a long question wraps: Enter asks, Shift+Enter starts a new line.
+  $("q").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || e.shiftKey || e.isComposing) return;
+    e.preventDefault();
+    if (!$("go").disabled) $("ask").requestSubmit();  // as Enter in a one-line box: not while a briefing is written
+  });
   $("ask").addEventListener("submit", (e) => {
     e.preventDefault();
-    const q = $("q").value.trim();
+    const q = $("q").value.replace(/\s+/g, " ").trim();
     if (q.length < 3) return;
     const mode = document.querySelector("input[name=mode]:checked").value;
     const sourcesOnly = document.querySelector("input[name=sources_only]").checked;
