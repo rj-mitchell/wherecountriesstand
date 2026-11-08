@@ -207,7 +207,7 @@
   text-decoration: none;
 }
 .wts-book .wts-spine { margin-block-end: 0; }
-.wts-seal { display: block; flex: none; margin-block-end: 0.15rem; }
+.wts-cart { display: block; flex: none; }
 .wts-book__name { padding-block-end: 0.3rem; text-decoration: underline; text-decoration-color: var(--wts-rule); text-underline-offset: 0.2em; }
 .wts-book:hover .wts-book__name { text-decoration-color: currentColor; }
 .wts-book[aria-current] .wts-book__name { font-weight: 600; text-decoration-color: var(--wts-gilt); text-decoration-thickness: 2px; }
