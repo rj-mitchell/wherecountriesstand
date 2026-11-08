@@ -7,6 +7,10 @@
    - .wts-headings: opt-in Source Serif 4 for a site's headings (decision 1). Put it on <body> or any container.
    - .wts-endorse: the masthead lockup, the site's spine and "A Where They Stand project" in gilt capitals.
    - .wts-shelf: the footer shelf.
+   - Shared conventions a site may use for its own controls, so the family feels alike to the hand and the keyboard
+     (family/README.md, "Shared conventions"): --wts-focus, --wts-focus-width and --wts-focus-offset for focus rings;
+     --wts-ease-out, --wts-ease-in-out and --wts-duration for motion; --wts-target and --wts-target-min for target sizes.
+     The kit's own parts use them; nothing else on a page changes unless the site opts in.
    Everything is prefixed wts- so it can't clash with a site's own styles. No scripts, no external requests. */
 
 :root {
@@ -36,6 +40,21 @@
   --wts-cloth-landlords-text: #40484D;
   --wts-cloth-countries-text: #1F5F8B;
   --wts-cloth-lives-text: #5E3F63;
+
+  /* Shared conventions (opt in). The focus ring: a site may set --wts-focus to its own focus colour on :root, and the
+     shelf then wears it too (and the endorsement, where the site has no ring of its own); it must read at 3:1 on the
+     shelf's paper in both modes. */
+  --wts-focus: currentColor;
+  --wts-focus-width: 3px;
+  --wts-focus-offset: 3px;
+  /* Motion: ease out for things that respond to the reader, ease in-out for things that move on screen; UI changes in
+     about --wts-duration, never more than 300ms. Movement goes inside @media (prefers-reduced-motion: no-preference). */
+  --wts-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --wts-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --wts-duration: 160ms;
+  /* Targets: at least --wts-target-min (WCAG 2.5.8), and --wts-target on touch screens */
+  --wts-target-min: 24px;
+  --wts-target: 44px;
 }
 
 /* Light and dark, following the page's color-scheme. Dark cloths are lifted until the gilt spine lettering
@@ -115,6 +134,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.55em;
+  min-block-size: var(--wts-target-min);
   font-family: var(--wts-serif);
   font-size: 0.75rem;
   font-weight: 600;
@@ -123,20 +143,37 @@
   text-transform: uppercase;
   color: var(--wts-gilt-text);
   text-decoration: none;
+  touch-action: manipulation;
 }
 .wts-endorse .wts-spine { block-size: 2.2em; inline-size: auto; }
-.wts-endorse:hover .wts-endorse__line,
-.wts-endorse:focus-visible .wts-endorse__line {
+/* On a narrow phone the line wraps as two even lines ("A Where They / Stand project"), not one word left over */
+.wts-endorse__line { text-wrap: balance; }
+.wts-endorse:focus-visible .wts-endorse__line,
+.wts-endorse:active .wts-endorse__line {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
+}
+.wts-endorse:active .wts-endorse__line { text-decoration-thickness: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .wts-endorse:hover .wts-endorse__line {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+}
+/* A ring only where the site has none of its own: zero specificity, so any site rule for links wins */
+:where(.wts-endorse:focus-visible) {
+  outline: var(--wts-focus-width) solid var(--wts-focus);
+  outline-offset: var(--wts-focus-offset);
 }
 
 /* ---- The footer shelf ---- */
 
 .wts-shelf {
   margin-block-start: 2rem;
-  padding: 1.5rem clamp(16px, 4vw, 40px) 1.25rem;
+  padding-block: 1.5rem 1.25rem;
+  padding-inline: clamp(1rem, 0.5rem + 3.5vw, 2.5rem);
   background: var(--wts-paper);
   border-block-start: 1px solid var(--wts-rule);
   color: var(--wts-ink);
@@ -157,12 +194,15 @@
 @media (min-width: 60rem) {
   .wts-shelf__inner { grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr); }
 }
-.wts-shelf a { color: inherit; text-underline-offset: 0.15em; }
-.wts-shelf a:hover { text-decoration-thickness: 2px; }
-.wts-shelf a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+.wts-shelf a { color: inherit; text-underline-offset: 0.15em; touch-action: manipulation; }
+.wts-shelf a:active { text-decoration-thickness: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .wts-shelf a:hover { text-decoration-thickness: 2px; }
+}
+.wts-shelf a:focus-visible { outline: var(--wts-focus-width) solid var(--wts-focus); outline-offset: var(--wts-focus-offset); }
 
 .wts-shelf__brand { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; }
-.wts-shelf__brand svg { flex: none; }
+.wts-shelf__brand svg { flex: none; block-size: 2.25em; inline-size: auto; }  /* 36px at 16px text, and grows with it */
 .wts-mark__ink { fill: var(--wts-ink); }
 .wts-mark__mps { fill: var(--wts-cloth-mps); }
 .wts-mark__countries { fill: var(--wts-cloth-countries); }
@@ -176,14 +216,29 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
   line-height: 1;
+  transition: border-block-end-color var(--wts-duration) var(--wts-ease-out);
 }
-.wts-shelf__status { margin: 0.75rem 0 0.4rem; font-size: 0.9rem; font-style: italic; color: var(--wts-ink-muted); }
-.wts-shelf__links { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; font-size: 0.95rem; }
+.wts-shelf__brand:active .wts-shelf__wordmark { border-block-end-color: currentColor; }
+@media (hover: hover) and (pointer: fine) {
+  .wts-shelf__brand:hover .wts-shelf__wordmark { border-block-end-color: currentColor; }
+}
+.wts-shelf__status {
+  margin-block: 0.75rem 0.4rem;
+  margin-inline: 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--wts-ink-muted);
+  text-wrap: pretty;
+}
+.wts-shelf__links { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0 1.25rem; font-size: 0.95rem; }
+/* The two links stand at least 24px tall (WCAG 2.5.8), and reach 44px on touch screens without moving */
+.wts-shelf__links a { display: inline-flex; align-items: center; min-block-size: var(--wts-target-min); }
 
 .wts-shelf__groups { display: flex; flex-wrap: wrap; gap: 1rem 2.5rem; }
 .wts-shelf__group { flex: 0 1 auto; min-inline-size: 0; }
 .wts-shelf__label {
-  margin: 0 0 0.5rem;
+  margin-block: 0 0.5rem;
+  margin-inline: 0;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.2em;
@@ -193,6 +248,7 @@
 .wts-shelf__books { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; }
 .wts-shelf__books li {
   display: flex;
+  flex-grow: 1;  /* where the books wrap, as on a phone, each row's shelf runs the full width, not ragged */
   padding-inline: 0.4rem 0.9rem;
   border-block-end: 3px solid var(--wts-shelf-line);  /* each book stands on the shelf, row by row */
 }
@@ -200,17 +256,51 @@
   display: flex;
   align-items: flex-end;
   gap: 0.45rem;
-  min-block-size: 44px;  /* a comfortable target on touch screens */
+  min-block-size: var(--wts-target);  /* a comfortable target on touch screens */
   padding-block-start: 0.25rem;
   font-size: 0.95rem;
   line-height: 1.2;
   text-decoration: none;
 }
-.wts-book .wts-spine { margin-block-end: 0; }
+/* The spines grow with the text (32px, and the current site's 40px, at 16px), so a reader's larger text keeps the books
+   in proportion to their names */
+.wts-book .wts-spine { margin-block-end: 0; block-size: 2.106em; inline-size: auto; }
+.wts-book[aria-current] .wts-spine { block-size: 2.632em; }
 .wts-cart { display: block; flex: none; }
-.wts-book__name { padding-block-end: 0.3rem; text-decoration: underline; text-decoration-color: var(--wts-rule); text-underline-offset: 0.2em; }
-.wts-book:hover .wts-book__name { text-decoration-color: currentColor; }
+.wts-book__name {
+  padding-block-end: 0.3rem;
+  text-decoration: underline;
+  text-decoration-color: var(--wts-rule);
+  text-underline-offset: 0.2em;
+  text-wrap: balance;  /* only wraps at large text sizes; then as two even lines */
+  transition: text-decoration-color var(--wts-duration) var(--wts-ease-out);
+}
+.wts-book:active .wts-book__name { text-decoration-color: currentColor; }
+@media (hover: hover) and (pointer: fine) {
+  .wts-book:hover .wts-book__name { text-decoration-color: currentColor; }
+}
 .wts-book[aria-current] .wts-book__name { font-weight: 600; text-decoration-color: var(--wts-gilt); text-decoration-thickness: 2px; }
+
+/* ---- Touch screens: the endorsement and the shelf's two links reach --wts-target without changing the layout ---- */
+
+@media (pointer: coarse) {
+  .wts-endorse,
+  .wts-shelf__links a { position: relative; }
+  .wts-endorse::after,
+  .wts-shelf__links a::after {
+    content: "";
+    position: absolute;
+    inset-block: calc((100% - var(--wts-target)) / 2);
+    inset-inline: -0.25rem;
+  }
+}
+
+/* ---- More contrast: the quiet underlines and the muted line take full ink ---- */
+
+@media (prefers-contrast: more) {
+  .wts-book__name { text-decoration-color: currentColor; }
+  .wts-shelf__status { color: var(--wts-ink); }
+}
 
 /* ---- Forced colours: the spines keep their shape in the system colours ---- */
 
@@ -224,6 +314,8 @@
   .wts-shelf__mark { forced-color-adjust: none; }
   .wts-shelf__mark rect { fill: CanvasText; }
   .wts-shelf__mark path { stroke: CanvasText; }
+  /* without colour, the endorsement is marked as a link the way every other link is: underlined */
+  .wts-endorse .wts-endorse__line { text-decoration: underline; text-underline-offset: 0.2em; }
 }
 
 @media print {
