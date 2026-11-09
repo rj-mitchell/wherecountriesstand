@@ -244,3 +244,16 @@ def test_statements_kept_in_the_repository_are_imported_by_the_update(site_setti
                           website=FakeSite(blocked=True))
     assert "gd:81:KEN" in {r["record_id"] for r in read_year(site_settings.parquet_dir, "gd", 2026)}
     assert gadebate.import_bundled(site_settings, {81}) == {}           # once only
+
+
+def test_health_skips_sessions_stored_again_without_a_count():
+    # November 2026: a new parser version re-read every cached General Debate record, so older sessions were stored
+    # again and reached the report with only their website count; the health check then failed on KeyError
+    from wcs.update import Report, health
+
+    report = Report(started="now")
+    report.gd = {75: {"website": 0}, 79: {"website": 0, "meetings": 0, "statements": 0, "replies": 0,
+                                         "concluded": False, "awaiting": 11}}
+    health(report, today=date(2026, 11, 9))
+    assert any("79th session" in w for w in report.warnings)
+    assert not any("75th session" in w for w in report.warnings)
