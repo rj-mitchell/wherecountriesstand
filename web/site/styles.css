@@ -37,9 +37,25 @@
 
   --gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem);
   --measure: 72rem;
+  --wts-gutter: var(--gutter);
+  --wts-shelf-width: calc(var(--measure) - 2 * var(--gutter));
+  /* The reading column: everything below the masthead, as in docs/DESIGN.md ("about 46rem"). */
+  --column: 46rem;
+
+  /* The family's shelf wears the site's focus ring (family kit 1.3.0, "Shared conventions"); UN Blue reads at more
+     than 3:1 on the shelf's paper in both modes. */
+  --wts-focus: var(--un-blue);
+
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+
+/* Jumps to a source from its citation glide, unless reduced motion is asked for. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 
 body {
   margin: 0;
@@ -48,23 +64,31 @@ body {
   font-family: var(--serif);
   font-size: var(--step-0);
   line-height: 1.45;
-  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
 }
 
 .page {
   max-inline-size: var(--measure);
   margin-inline: auto;
   padding-inline: var(--gutter);
-  padding-block-end: 4rem;
 }
 
-a { color: var(--un-blue); text-underline-offset: 0.15em; }
-a:hover { text-decoration-thickness: 2px; }
+a { color: var(--un-blue); text-underline-offset: 0.15em; touch-action: manipulation; }
+a:active { text-decoration-thickness: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  a:hover { text-decoration-thickness: 2px; }
+}
 
 :focus-visible {
-  outline: 3px solid var(--un-blue);
-  outline-offset: 2px;
+  outline: var(--wts-focus-width, 3px) solid var(--un-blue);
+  outline-offset: var(--wts-focus-offset, 3px);
 }
+
+/* Radio buttons and tick boxes in UN Blue, like the other controls; placeholders in the muted ink, which reads at
+   4.5:1 in both modes (the browser's own grey is fainter in dark mode). */
+input[type="radio"], input[type="checkbox"] { accent-color: var(--un-blue); }
+::placeholder { color: var(--ink-muted); opacity: 1; }
 
 /* ---- Masthead: laid out like the first page of a verbatim record ---- */
 
@@ -101,8 +125,9 @@ a:hover { text-decoration-thickness: 2px; }
 
 .masthead__mark { inline-size: 3.2rem; block-size: 3.2rem; align-self: center; }
 
-/* The family's endorsement, under the site's name: the spine in Record blue and "A Where They Stand project". */
-.masthead .wts-endorse { margin-block-start: 0.45rem; font-size: 0.7rem; }
+/* The family's endorsement, under the site's name (before the subtitle, as on the sister sites): the spine in Record
+   blue and "A Where They Stand project", at the kit's size. */
+.masthead .wts-endorse { margin-block-start: 0.35rem; }
 
 .masthead__name {
   margin: 0;
@@ -113,7 +138,7 @@ a:hover { text-decoration-thickness: 2px; }
 }
 .masthead__name a { color: inherit; text-decoration: none; }
 
-.masthead__sub { margin: 0.15rem 0 0; font-style: italic; color: var(--ink-muted); font-size: var(--step--1); }
+.masthead__sub { margin: 0.3rem 0 0; font-style: italic; color: var(--ink-muted); font-size: var(--step--1); }
 
 .masthead__status {
   font-style: italic;
@@ -131,9 +156,24 @@ nav.sections {
   font-family: var(--sans);
   font-size: var(--step--1);
 }
-nav.sections a { color: var(--ink); text-decoration: none; }
+/* each link at least 24px tall (WCAG 2.2, 2.5.8), and 44px on a touch screen */
+nav.sections a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--wts-target-min);
+  color: var(--ink);
+  text-decoration: none;
+  text-underline-offset: 0.2em;
+}
 nav.sections a[aria-current="page"] { color: var(--un-blue); font-weight: 500; }
-nav.sections a:hover { text-decoration: underline; }
+nav.sections a:active { text-decoration: underline; text-decoration-thickness: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  nav.sections a:hover { text-decoration: underline; }
+}
+@media (pointer: coarse) {
+  nav.sections { padding-block: 0; }
+  nav.sections a { min-block-size: var(--wts-target); }
+}
 
 /* ---- Running header, as at the top of each record page ---- */
 
@@ -160,7 +200,9 @@ h1 {
 h2 {
   font-size: var(--step-1);
   margin-block: 2rem 0.5rem;
+  text-wrap: balance;
 }
+h3 { text-wrap: balance; }
 
 /* Small headings in the record's "Agenda" style. */
 .label {
@@ -178,8 +220,11 @@ h2 {
   border: 1px solid var(--rule-faint);
 }
 .ask label { display: block; font-weight: 700; margin-block-end: 0.4rem; }
-.ask__row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.ask input[type="search"] {
+.ask__row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: start; }
+/* The question box grows with the question, from one line to four, so a long question (and the example in it) shows
+   in full on a phone. Enter asks; Shift+Enter starts a new line (app.js). Where a browser can't size it to its text,
+   it is tall enough for the example (two lines, three on the narrowest phones) and can be pulled taller. */
+.ask textarea {
   flex: 1 1 20rem;
   min-inline-size: 0;
   font: inherit;
@@ -188,7 +233,19 @@ h2 {
   background: var(--paper);
   border: 1px solid var(--rule);
   border-radius: 0;
+  field-sizing: content;
+  min-block-size: calc(1lh + 1.2rem + 2px);
+  max-block-size: calc(4lh + 1.2rem + 2px);
+  resize: none;
 }
+@supports not (field-sizing: content) {
+  .ask textarea { block-size: calc(3lh + 1.2rem + 2px); resize: vertical; }
+  @media (min-width: 22rem) {
+    .ask textarea { block-size: calc(2lh + 1.2rem + 2px); }
+  }
+}
+/* the button as tall as the box's first line, beside it or under it, however tall the box grows */
+.ask__row > button { min-block-size: calc(var(--step-0) * 1.45 + 1.2rem + 2px); }
 
 button, .button {
   font-family: var(--sans);
@@ -201,8 +258,10 @@ button, .button {
   border: 0;
   border-radius: 0;
   cursor: pointer;
+  touch-action: manipulation;
 }
-button:active { transform: translateY(1px); }
+/* While a briefing is being prepared, its button waits. */
+button:disabled { background: var(--ink-muted); cursor: progress; }
 
 /* Filter chips: the plan read from the question. */
 .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-block: 0.75rem 0; padding: 0; list-style: none; }
@@ -220,22 +279,25 @@ button:active { transform: translateY(1px); }
 
 ol.agenda { padding-inline-start: 2rem; margin: 0; }
 ol.agenda li { padding-block: 0.3rem; border-block-end: 1px solid var(--rule-faint); }
-ol.agenda li::marker { font-weight: 700; }
+ol.agenda li::marker { font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* ---- Dotted leaders, as in the record's list of members ---- */
 
 .leaders { margin: 0; padding: 0; list-style: none; }
-.leaders li { display: flex; align-items: baseline; gap: 0.4rem; padding-block: 0.1rem; }
+/* Where a line doesn't fit, as on a phone, the value drops to its own line, set to the right, and the dots run to
+   the edge after the label, rather than both halves breaking into narrow columns either side of a few dots. */
+.leaders li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.4rem; padding-block: 0.1rem; }
 .leaders li > :first-child,
 .leaders li > :last-child { flex: 0 1 auto; min-inline-size: 0; overflow-wrap: anywhere; }
 .leaders .dots { flex: 1 0 1.5rem; border-block-end: 2px dotted var(--ink-muted); transform: translateY(-0.3em); }
-.leaders li > :last-child { text-align: end; }
+.leaders li > :last-child { margin-inline-start: auto; text-align: end; }
 .leaders i { color: var(--ink-muted); }
 
 /* ---- Layout ---- */
 
-/* One column throughout, at a comfortable reading width. */
-.columns, .summary, .ask, h1, .chips { max-inline-size: 46rem; }
+/* One column throughout, at a comfortable reading width: the home page's lists, and a briefing's notes and sources,
+   as well as its text. */
+.columns, .summary, .ask, h1, .chips, #home, .marks, #notes, #sources-section { max-inline-size: var(--column); }
 
 /* ---- Briefing ---- */
 
@@ -270,12 +332,15 @@ ol.agenda li::marker { font-weight: 700; }
 .sources { list-style: none; padding: 0; margin: 0; counter-reset: source; }
 .source {
   counter-increment: source;
+  scroll-margin-block-start: 1rem;
   margin-block: 0 1rem;
   padding: 0.75rem 1rem;
   background: var(--paper-raised);
   border-inline-start: 4px solid var(--council);
 }
 .source--ga { border-inline-start-color: var(--un-blue); }
+/* The source a citation was followed to */
+.source:target { outline: 2px solid var(--un-blue); outline-offset: 2px; }
 .source__meta {
   font-family: var(--sans);
   font-size: var(--step--1);
@@ -288,6 +353,7 @@ ol.agenda li::marker { font-weight: 700; }
 .source__speaker i { font-style: italic; }
 .source blockquote { margin: 0; }
 .source__links { font-family: var(--sans); font-size: var(--step--1); margin: 0.5rem 0 0; }
+.source__links a { display: inline-block; min-block-size: var(--wts-target-min); line-height: var(--wts-target-min); }
 .translated {
   font-family: var(--sans);
   font-size: var(--step--1);
@@ -301,33 +367,44 @@ ol.agenda li::marker { font-weight: 700; }
   padding: 0.75rem 1rem;
   border: 1px solid var(--rule);
   font-size: var(--step--1);
-  max-inline-size: 44rem;
+  max-inline-size: var(--column);
 }
 .notice p { margin: 0 0 0.4rem; }
 .notice p:last-child { margin: 0; }
 
 details summary { cursor: pointer; font-weight: 700; }
 
+/* Colour fades need no reduced-motion query; the press, which moves, does. */
+button { transition: background-color var(--wts-duration) var(--wts-ease-out); }
+button:not(:disabled):active { background: var(--council); }
 @media (prefers-reduced-motion: no-preference) {
-  button { transition: background-color 120ms ease; }
+  button { transition: background-color var(--wts-duration) var(--wts-ease-out), transform 100ms var(--wts-ease-out); }
+  button:not(:disabled):active { transform: translateY(1px); }
 }
-@media (hover: hover) {
-  button:hover { background: var(--council); }
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):hover { background: var(--council); }
 }
 
 @media (max-width: 40rem) {
   .masthead { grid-template-columns: auto 1fr; }
   .masthead__status { grid-column: 1 / -1; text-align: start; }
-  .running-head { grid-template-columns: 1fr auto; }
-  .running-head > :nth-child(2) { display: none; }
+  /* the reading of the question moves under "Briefing" and the date, rather than being hidden on a phone */
+  .running-head { grid-template-columns: 1fr auto; gap: 0.2rem 1rem; }
+  .running-head > :nth-child(2) { grid-row: 2; grid-column: 1 / -1; text-align: start; }
+  .running-head > :nth-child(2):empty { display: none; }
 }
 
 
 /* ---- the live site ------------------------------------------------------------------------- */
 
-.ask__options { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 0.6rem; font-family: var(--sans);
+.ask__options { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin-block-start: 0.5rem; font-family: var(--sans);
   font-size: var(--step--1); color: var(--ink-muted); }
-.ask__options label { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 400; margin: 0; }
+.ask__options label { display: inline-flex; align-items: center; gap: 0.35rem; min-block-size: var(--wts-target-min);
+  font-weight: 400; margin: 0; cursor: pointer; }
+@media (pointer: coarse) {
+  .ask__options { gap: 0 1.25rem; }
+  .ask__options label { min-block-size: var(--wts-target); }
+}
 .status { font-family: var(--sans); font-size: var(--step--1); color: var(--ink-muted); margin: 1rem 0; }
 .status[hidden] { display: none; }
 .note { border: 1px solid var(--rule-faint); background: var(--paper-raised); padding: 0.8rem 1rem; margin: 1rem 0;
@@ -339,10 +416,13 @@ details summary { cursor: pointer; font-weight: 700; }
 .loaded { text-decoration: underline dotted var(--warning); text-underline-offset: 0.2em; }
 .misquote { text-decoration: underline wavy var(--warning); text-underline-offset: 0.2em; }
 .marks { font-family: var(--sans); font-size: var(--step--1); color: var(--ink-muted); }
-.source__more summary { font-family: var(--sans); font-size: var(--step--1); color: var(--un-blue); cursor: pointer; }
+/* Roboto is loaded at 400 and 500 only, so 500, not a synthesised bold; at least 24px tall to tap */
+.source__more summary { font-family: var(--sans); font-size: var(--step--1); font-weight: 500; color: var(--un-blue);
+  cursor: pointer; padding-block: 0.2rem; inline-size: fit-content; }
 .source__more p { white-space: pre-line; }
 .source--vote .source__meta::before { content: none; }
-.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
 /* ---- Skip link, footer, and plain pages (about, privacy, accessibility, terms, glossary) ---- */
 
@@ -361,6 +441,7 @@ details summary { cursor: pointer; font-weight: 700; }
 
 .prose h3 { font-size: var(--step-0); margin: 1.2rem 0 0.3rem; }
 .prose ul { padding-inline-start: 1.25rem; margin-block: 0 0.8rem; }
+.prose .status-list { padding-inline-start: 0; }
 .prose li { margin-block-end: 0.4rem; }
 .prose .note { font-style: italic; color: var(--ink-muted); font-size: var(--step--1); }
 
@@ -376,13 +457,17 @@ details summary { cursor: pointer; font-weight: 700; }
 .foot__inner > :first-child { border-block-start: 1px solid var(--rule); }
 .foot__links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
 .foot__links a { color: var(--ink); }
-/* each link at least 24px high, so wrapped lines of links are far enough apart to tap (WCAG 2.2, 2.5.8) */
-.foot__links a { display: inline-block; min-block-size: 24px; line-height: 24px; }
+/* each link at least 24px high, so wrapped lines of links are far enough apart to tap (WCAG 2.2, 2.5.8), and 44px on
+   a touch screen, as the shelf's own links are */
+.foot__links a { display: inline-block; min-block-size: var(--wts-target-min); line-height: var(--wts-target-min); }
+@media (pointer: coarse) {
+  .foot__links { row-gap: 0; }
+  .foot__links a { min-block-size: var(--wts-target); line-height: var(--wts-target); }
+}
 .foot__links a[aria-current="page"] { color: var(--un-blue); font-weight: 500; }
 .foot p { margin: 0; }
-/* The shelf's contents line up with the page's column above it. */
-.foot .wts-shelf { padding-inline: var(--gutter); }
-.foot .wts-shelf__inner { max-inline-size: calc(var(--measure) - 2 * var(--gutter)); }
+/* The shelf's contents line up with the page's column above it (the kit's --wts-gutter and --wts-shelf-width, set on
+   :root). */
 
 /* Glossary: terms in bold, each with its meaning beneath. */
 .glossary dt { font-weight: 700; margin-block-start: 1rem; }
@@ -393,21 +478,31 @@ details summary { cursor: pointer; font-weight: 700; }
 .report { display: grid; gap: 0.5rem; max-inline-size: 40rem; margin-block: 1rem 1.5rem; }
 .report fieldset { border: 1px solid var(--rule-faint); padding: 0.75rem 1rem; margin: 0 0 0.5rem; }
 .report legend { font-weight: 700; padding-inline: 0.25rem; }
-.report fieldset label { display: block; margin-block: 0.25rem; }
+/* each choice at least 24px tall, and 44px on a touch screen */
+.report fieldset label { display: flex; align-items: center; gap: 0.4rem; min-block-size: var(--wts-target-min);
+  margin-block: 0.25rem; cursor: pointer; }
+@media (pointer: coarse) {
+  .report fieldset label { min-block-size: var(--wts-target); margin-block: 0; }
+}
 .report > label { font-weight: 700; margin-block-start: 0.5rem; }
 .report input[type="text"], .report input[type="email"], .report textarea {
-  font: inherit; padding: 0.5rem 0.6rem; border: 1px solid var(--rule); background: var(--paper); color: var(--ink);
-  inline-size: 100%;
+  font: inherit; padding: 0.5rem 0.6rem; border: 1px solid var(--rule); border-radius: 0; background: var(--paper);
+  color: var(--ink); inline-size: 100%;
 }
+.report textarea { resize: vertical; }
 .report button { justify-self: start; }
 .note.share a { overflow-wrap: anywhere; }
+.note.share a:last-child { white-space: nowrap; }  /* "Report a problem with it" kept together */
 
 /* ---- The same question on a sister site: quiet, each link with the sister site's spine ---- */
 
 .sisters { margin-block: 1.25rem; max-inline-size: 46rem; font-family: var(--sans); font-size: var(--step--1); }
 .sisters ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.35rem; }
-.sisters a { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ink); }
-.sisters a:hover { color: var(--un-blue); }
+.sisters a { display: inline-flex; align-items: center; gap: 0.5rem; min-block-size: var(--wts-target-min); color: var(--ink); }
+.sisters a:active { color: var(--un-blue); }
+@media (hover: hover) and (pointer: fine) {
+  .sisters a:hover { color: var(--un-blue); }
+}
 .sisters .wts-spine { block-size: 1.4rem; inline-size: auto; }
 
 /* ---- The status and press pages (status.html, press.html) ---- */
@@ -418,6 +513,22 @@ details summary { cursor: pointer; font-weight: 700; }
   background: var(--paper-raised); overflow-wrap: anywhere;
 }
 .cite-template p { margin: 0.4rem 0; }
+
+/* ---- More contrast: the muted ink and faint rules take full strength ---- */
+
+@media (prefers-contrast: more) {
+  :root { --ink-muted: var(--ink); --rule-faint: var(--rule); }
+}
+
+/* ---- Forced colours: the alpha tag and the buttons keep an edge when backgrounds are dropped ---- */
+
+@media (forced-colors: active) {
+  .phase__tag { border: 1px solid; }
+  button { border: 1px solid ButtonText; }
+  button:disabled { border-color: GrayText; }
+  .source:target { outline-color: Highlight; }
+  ::placeholder { color: GrayText; }
+}
 
 /* ---- Print: the site's name, the briefing and its sources, and the independence notice ---- */
 

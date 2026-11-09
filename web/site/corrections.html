@@ -30,12 +30,13 @@
           <label><input type="radio" name="kind" value="other"> Something else</label>
         </fieldset>
         <label for="page">The briefing’s address, if it is about one</label>
-        <input id="page" name="page" type="text" maxlength="300" placeholder="https://wherecountriesstand.com/b/…">
+        <input id="page" name="page" type="text" inputmode="url" autocomplete="off" spellcheck="false" maxlength="300"
+               placeholder="https://wherecountriesstand.com/b/…">
         <label for="message">What is wrong?</label>
         <textarea id="message" name="message" rows="6" minlength="5" maxlength="4000" required></textarea>
         <label for="contact">Your email address, if you would like a reply (optional)</label>
-        <input id="contact" name="contact" type="email" maxlength="200" autocomplete="email">
-        <p class="note">The address is used only to reply to you, and deleted when the report is dealt with (see the
+        <input id="contact" name="contact" type="email" maxlength="200" autocomplete="email" aria-describedby="contact-note">
+        <p class="note" id="contact-note">The address is used only to reply to you, and deleted when the report is dealt with (see the
           <a href="/privacy.html">privacy notice</a>).</p>
         <button type="submit" id="send">Send</button>
         <p class="status" id="report-status" role="status" aria-live="polite"></p>

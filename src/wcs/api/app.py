@@ -75,6 +75,7 @@ from wcs.api.usage import (
 from wcs.config import REPO_ROOT, Settings, load_settings
 from wcs.rag.neutral import still_loaded
 from wcs.rag.pipeline import AskRequest, Pipeline
+from wcs.rag.typography import curl_events
 from wcs.rag.verify import recheck_flags
 from wcs.sources import gadebate
 
@@ -249,9 +250,29 @@ class SiteFiles(StaticFiles):
 def rechecked(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """A saved or cached briefing as shown today: its points to check and its judgemental-word marks judged again
     by the current rules, so a mark since found to be wrong is not shown. Nothing is ever newly flagged. (Where MPs
-    Stand does the same with its saved briefings.)"""
-    return [{**e, "answer": still_loaded(recheck_flags(e["answer"]))}
-            if e.get("type") == "final" and isinstance(e.get("answer"), dict) else e for e in events]
+    Stand does the same with its saved briefings.) Its quotes are curled, as a new briefing's are, for one saved
+    before they were."""
+    return curl_events([{**e, "answer": still_loaded(_recheck_straight(e["answer"]))}
+                        if e.get("type") == "final" and isinstance(e.get("answer"), dict) else e for e in events])
+
+
+_STRAIGHT = str.maketrans("“”‘’", "\"\"''")
+
+
+def _recheck_straight(answer: dict[str, Any]) -> dict[str, Any]:
+    """recheck_flags on the text as the checks first read it, with straight quotes: a briefing saved since quotes
+    were curled would otherwise not show a sentence ending in a closing quote (He said “no.” Smith said …) and could
+    lose a point to check. Only the statuses come back; the saved text is kept."""
+    segs = answer.get("segments")
+    if not segs:
+        return recheck_flags(answer)
+    straight = {**answer, "segments": [{**s, "text": s["text"].translate(_STRAIGHT)}
+                                       if isinstance(s.get("text"), str) else s for s in segs]}
+    out = recheck_flags(straight)
+    if out is straight:
+        return answer
+    return {**out, "segments": [{**o, "text": s["text"]} if "text" in s else o
+                                for o, s in zip(out["segments"], segs, strict=True)]}
 
 
 def data_stamp(settings: Settings) -> str:

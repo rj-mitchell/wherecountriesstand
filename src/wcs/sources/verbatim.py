@@ -26,7 +26,9 @@ from typing import Any
 
 from wcs.sources.pdftext import Line, two_column_order
 
-PARSER_VERSION = 2
+# 3: an agenda item or heading wrapped onto a line that starts with a capital ("...Representative of Sierra" /
+#    "Leone to the United Nations ...") is kept whole: its lines share a text box
+PARSER_VERSION = 3
 
 MONTHS = {m: i for i, m in enumerate(["January", "February", "March", "April", "May", "June", "July", "August",
                                       "September", "October", "November", "December"], 1)}
@@ -96,7 +98,8 @@ def front_matter(lines: list[Line], m: Meeting) -> None:
     first = sorted((ln for ln in lines if ln.page == 0), key=lambda ln: (-round(ln.y1 / 3), ln.x0))
     state = None
     pres: list[str] = []
-    agenda: list[str] = []
+    agenda: list[tuple[str, bool]] = []  # each agenda line, and whether it wraps on from the line before
+    last: Line | None = None              # the agenda line before
     pending: list[str] = []
     for ln in first:
         t = ln.text
@@ -128,7 +131,10 @@ def front_matter(lines: list[Line], m: Meeting) -> None:
             elif not t.startswith(("Mr", "Ms", "Mrs", "Miss", "Dr", "Sir", "Dame")):
                 pending.append(t)  # a long name wrapped onto the next line ("United Kingdom of Great Britain and")
         elif state == "agenda" and ln.size >= 9.5 and not FURNITURE.match(t):
-            agenda.append(t)
+            # an item's lines share a text box and sit a line apart; the next item has a box of its own
+            wraps = last is not None and ln.box == last.box and 0 < last.y1 - ln.y1 <= 1.6 * ln.size
+            agenda.append((t, wraps))
+            last = ln
     if pres:
         joined = " ".join(pres)
         m.president = LEADER.split(joined)[0].strip() or None
@@ -137,11 +143,12 @@ def front_matter(lines: list[Line], m: Meeting) -> None:
     m.agenda = join_agenda(agenda)
 
 
-def join_agenda(lines: list[str]) -> list[str]:
-    """Agenda lines as items: a line that continues the one before (lower-case start) joins it."""
+def join_agenda(lines: list[tuple[str, bool]]) -> list[str]:
+    """Agenda lines as items: a line that continues the one before (wrapped in the same text box, a lower-case
+    start, or the line before ending in "of" or "the") joins it."""
     items: list[str] = []
-    for t in lines:
-        if items and (t[:1].islower() or items[-1].endswith((",", "and", "of", "the", "-"))):
+    for t, wraps in lines:
+        if items and (wraps or t[:1].islower() or items[-1].endswith((",", "and", "of", "the", "-"))):
             items[-1] = f"{items[-1]} {t}"
         else:
             items.append(t)
@@ -170,8 +177,12 @@ class Para:
     def heading(self) -> bool:
         """A heading inside the record (an agenda item): bold (a "(continued)" may be in italics), short, no
         attribution colon."""
-        return all(ln.bold > 0.9 or (ln.bold >= 0.5 and ln.bold + ln.italic >= 0.9) for ln in self.lines) and \
-            ":" not in self.text and len(self.text) < 300
+        return self.bold and ":" not in self.text and len(self.text) < 300
+
+    @property
+    def bold(self) -> bool:
+        """Set in bold throughout (a "(continued)" may be in italics)."""
+        return all(ln.bold > 0.9 or (ln.bold >= 0.5 and ln.bold + ln.italic >= 0.9) for ln in self.lines)
 
 
 def body_lines(lines: list[Line]) -> list[Line]:
@@ -270,16 +281,22 @@ CONNECTOR = re.compile(r"(?:\b(?:of|the|and|for|to|on|in|by|at)|[,\-\u2013\u2014
 CHAIR_SPEAKER = re.compile(r"^The (?:Acting |Temporary )?President\b")
 
 
-def join_headings(texts: list[str]) -> list[str]:
+def join_headings(texts: list[str], boxes: list[int] | None = None) -> list[str]:
     """Consecutive heading paragraphs as headings: a line that continues the one before (a wrapped "Address by ..."
-    heading, a lower-case start, a line ending in "of" or "the") joins it."""
+    heading, a lower-case start, a line ending in "of" or "the", or a line in the same text box, given ``boxes``)
+    joins it."""
     out: list[str] = []
+    boxes = boxes or [-1] * len(texts)
     # headings printed one after another can come back as one paragraph ("General debate Address by Mr. ...")
-    texts = [part for t in texts for part in re.split(r"\s+(?=Agenda items?\s+\d|Address by\b|Statement by\b)", t)]
-    for t in texts:
+    split = [(part, b) for t, b in zip(texts, boxes, strict=True)
+             for part in re.split(r"\s+(?=Agenda items?\s+\d|Address by\b|Statement by\b)", t)]
+    prev_box = None
+    for t, box in split:
         t = " ".join(t.split())
+        same_box = box >= 0 and box == prev_box
+        prev_box = box
         if out and not HEADING_OPENER.match(t) and not AGENDA_ITEM.fullmatch(out[-1]) and (
-                t[:1].islower() or CONNECTOR.search(out[-1]) or SUBHEADING.match(out[-1])):
+                same_box or t[:1].islower() or CONNECTOR.search(out[-1]) or SUBHEADING.match(out[-1])):
             out[-1] = f"{out[-1]} {t}"
         else:
             out.append(t)
@@ -294,11 +311,12 @@ def speeches(lines: list[Line], m: Meeting) -> None:
     agenda = m.agenda[0] if m.agenda else None
     current: Speech | None = None
     pending: list[str] = []      # heading paragraphs not yet read
+    pending_boxes: list[int] = []  # the text box each starts in: a heading's lines indented on their own share one
     subheading: str | None = None  # an "Address by ..." heading, for the next speech that is not the chair's
 
     def read_headings() -> None:
         nonlocal agenda, subheading
-        for h in join_headings(pending):
+        for h in join_headings(pending, pending_boxes):
             if SUBHEADING.match(h):
                 subheading = h
             elif AGENDA_ITEM.match(h):
@@ -308,6 +326,7 @@ def speeches(lines: list[Line], m: Meeting) -> None:
             else:
                 agenda = _match_agenda(h, m.agenda) or agenda
         pending.clear()
+        pending_boxes.clear()
 
     for p in paras:
         found = detect(p)
@@ -316,8 +335,12 @@ def speeches(lines: list[Line], m: Meeting) -> None:
         if found is None and any_bold and current is not None and CHAIR_SPEAKER.match(current.speaker) and \
                 (w := attribution_by_wording(p)) and "(" in w[0] and not CHAIR_SPEAKER.match(w[0]):
             found = w
-        if found is None and p.heading:
+        # a heading's line with a colon in it ("Court of Justice: list of nominations") is still the heading when it is
+        # in bold in the heading's text box
+        if found is None and (p.heading or (pending_boxes and p.lines[0].box == pending_boxes[-1] and p.bold and
+                                            len(p.text) < 300)):
             pending.append(p.text)
+            pending_boxes.append(p.lines[0].box)
             continue
         read_headings()
         if found is not None:
@@ -363,6 +386,12 @@ def briefers_in(text: str) -> dict[str, str]:
 
 def _match_agenda(heading: str, items: list[str]) -> str | None:
     h = " ".join(heading.split()).lower()
+    # items can open with the same words ("Note by the Secretary-General on the election of ..."): the document
+    # symbol at the end tells them apart
+    symbol = re.search(r"\(([as]/[^()\s]+)\)$", h)
+    for item in items:
+        if symbol and item.lower().endswith(f"({symbol.group(1)})"):
+            return item
     for item in items:
         if item.lower().startswith(h[:40]) or h.startswith(item.lower()[:40]):
             return item

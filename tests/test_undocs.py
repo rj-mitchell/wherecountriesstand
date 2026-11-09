@@ -138,6 +138,44 @@ def test_front_matter_and_speeches():
     assert m.briefers["DiCarlo"].startswith("Under-Secretary-General")
 
 
+def test_agenda_items_wrapped_onto_a_capital_are_kept_whole():
+    # S/PV.10047 and S/PV.10040: an item wraps onto a line that starts with a capital ("Sierra" / "Leone"), and two
+    # items open with the same words; on the record's first page, the heading's lines are indented paragraphs of
+    # their own, and one of them has a colon
+    letter = "Letter dated 6 November 2025 from the Permanent Representative of Sierra"
+    note = "Note by the Secretary-General on the election of a member of the International"
+    front = [x for x in record_lines() if x.page == 0 and x.text != "Children and armed conflict"]
+    at = next(i for i, x in enumerate(front) if x.text == "Agenda") + 1
+    front[at:at] = [
+        ln(0, 311, "Peace consolidation in West Africa", x=127, box=2),
+        ln(0, 293, letter, x=159, box=3),
+        ln(0, 281, "Leone to the United Nations addressed to the Secretary-General (S/2025/718)", x=159, box=3),
+        ln(0, 263, note, x=159, box=4),
+        ln(0, 251, "Court of Justice: list of nominations by national groups (S/2025/606)", x=159, box=4),
+        ln(0, 233, note, x=159, box=5),
+        ln(0, 221, "Court of Justice: curricula vitae of the candidates (S/2025/607)", x=159, box=5)]
+    heading = [("Letter dated 6 November 2025 from the Permanent Representative of", 21),
+               ("Sierra Leone to the United Nations addressed to the Secretary-General", 21), ("(S/2025/718)", 21),
+               ("Note by the Secretary-General on the election of a member of the", 22),
+               ("International Court of Justice: curricula vitae of the candidates", 22), ("(S/2025/607)", 22)]
+    body = [ln(1, 715, "The meeting was called to order at 10 a.m.", x=147, box=10),
+            ln(1, 700, "Peace consolidation in West Africa", x=123, bold="Peace consolidation in West Africa",
+               box=20),
+            *[ln(1, 682 - 12 * i, t, x=141, bold=t, box=b) for i, (t, b) in enumerate(heading)],
+            ln(1, 600, "The President: I welcome the Ministers and the representatives", x=147,
+               bold="The President", box=30),
+            *[ln(1, 588 - 12 * i, t, x=123, box=30) for i, t in enumerate(["of the region, who join us", "today",
+                                                                          "for this briefing."])]]
+    m = parse(front + body, "S/PV.10047")
+    full = f"{letter} Leone to the United Nations addressed to the Secretary-General (S/2025/718)"
+    assert m.agenda == ["Peace consolidation in West Africa", full,
+                        f"{note} Court of Justice: list of nominations by national groups (S/2025/606)",
+                        f"{note} Court of Justice: curricula vitae of the candidates (S/2025/607)"]
+    assert [s.agenda for s in m.speeches] == [m.agenda[3]]
+    assert m.speeches[0].text == "I welcome the Ministers and the representatives of the region, who join us today " \
+        "for this briefing."
+
+
 def test_records_for_a_meeting(settings):
     m = parse(merge_fragments(record_lines()), "S/PV.10300")
     recs = undocs.records_for(m, {"symbol": "S/PV.10300"}, countries(), settings)
