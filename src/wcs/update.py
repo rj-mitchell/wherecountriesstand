@@ -446,6 +446,10 @@ GD_OVERDUE_DAYS = 456  # the records are usually out within about a year of the 
 def health(report: Report, today: date | None = None) -> None:
     today = today or date.today()
     for session, info in report.gd.items():
+        # only the sessions this update looked for get a count; an older session is in the report only because its
+        # records were stored again (re-read with a new parser version, November 2026), and isn't overdue
+        if "statements" not in info:
+            continue
         held = date(1945 + session, 9, 30)
         if not info["statements"] and (today - held).days > GD_OVERDUE_DAYS:
             report.warnings.append(f"no General Debate records yet for the {session}th session (September "
