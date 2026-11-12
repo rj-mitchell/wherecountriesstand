@@ -91,7 +91,8 @@ _DATE_ONLY = re.compile(r"^\W*(?:on\s+)?\(?\s*(?:(?:written|oral)\s+(?:answer|qu
                         r"(?:\d{1,2}\s+)?(?:[A-Z][a-z]+\s+)?\d{4}\s*\)?\W*$")
 
 
-def _is_connective(text: str) -> bool:
+def _is_connective(text: str, short: bool = True) -> bool:
+    """A date, a heading, a line ending in a colon or, with ``short``, a join or short transition."""
     t = text.strip()
     if not t or _DATE_ONLY.match(t):
         return True
@@ -99,19 +100,26 @@ def _is_connective(text: str) -> bool:
         return True
     # bullet markers, joins between cited spans, short transitions
     stripped = re.sub(r"^[\s\-*•\d.)]+", "", t)
-    return len(stripped) <= _CONNECTIVE_MAX and not re.search(r"\d{4}|£|%", stripped)
+    return short and len(stripped) <= _CONNECTIVE_MAX and not re.search(r"\d{4}|£|%", stripped)
 
 
 def recheck_flags(answer: dict[str, Any] | None) -> dict[str, Any] | None:
     """A saved briefing's points to check, judged again by the current rules: a passage since recognised as a date,
-    a join or a note about the evidence is no longer one. Nothing is ever newly flagged."""
+    a label, a lead-in or a note about the evidence is no longer one. Being short is never reason enough: a flagged
+    sentence may be a claim that verify() split off a lead-in. Nothing is ever newly flagged."""
     segs = (answer or {}).get("segments")
     if not segs:
         return answer
 
     def cleared(i: int) -> bool:
-        nxt = i + 1 < len(segs) and segs[i + 1].get("status") == "cited"
-        return all(x.status == "connective" for x in _classify_uncited(segs[i]["text"], nxt))
+        # as in verify(): short uncited pieces of a lead-in do not stop it leading in to the citation after them
+        j = i + 1
+        while j < len(segs) and segs[j].get("status") != "cited" and _is_lead_in_piece(segs[j].get("text") or ""):
+            j += 1
+        nxt = j < len(segs) and segs[j].get("status") == "cited"
+        # flagged=True: verify() marks a whole sentence split off a lead-in as a claim however short it is, and that
+        # is not known here, so a point to check is never cleared only for being short
+        return all(x.status == "connective" for x in _classify_uncited(segs[i]["text"], nxt, flagged=True))
 
     fixed = {i for i, x in enumerate(segs) if x.get("status") == "unsupported" and cleared(i)}
     if not fixed:
@@ -154,7 +162,7 @@ _SENTENCE_END = re.compile(r"[.!?][\"')\]]*\s+\S")
 _ATTRIBUTION_MAX = 220
 
 
-def _classify_uncited(text: str, next_is_cited: bool) -> list[Segment]:
+def _classify_uncited(text: str, next_is_cited: bool, flagged: bool = False) -> list[Segment]:
     """Split an uncited block into lines and label each one.
 
     * headings, bold group labels, bullets and joins are ``connective``;
@@ -162,6 +170,9 @@ def _classify_uncited(text: str, next_is_cited: bool) -> list[Segment]:
       when the very next span is cited and the lead-in states nothing on its own;
     * notes about the evidence itself ("No division records were supplied") are ``connective``;
     * anything else (a claim with no citation) is ``unsupported``.
+
+    ``flagged`` is for judging again a passage already marked as a point to check (``recheck_flags``): there, being
+    short does not make it a join.
     """
     # an honorific's full stop ("Mr. Delattre") ends no sentence: the checks read a copy with it masked (the same
     # length, so positions carry over), and the text kept is the original
@@ -187,7 +198,7 @@ def _classify_uncited(text: str, next_is_cited: bool) -> list[Segment]:
         body = re.sub(r"^[\s\-*•\d.)]+", "", mlines[i]).strip()
         lead_in = (last and next_is_cited and len(body) <= _ATTRIBUTION_MAX
                    and not _SENTENCE_END.search(body.rstrip()) and not body.endswith("."))
-        if ((_is_connective(line) and i not in claims) or _LABEL.match(line) or lead_in
+        if ((_is_connective(line, short=not flagged) and i not in claims) or _LABEL.match(line) or lead_in
                 or (_EVIDENCE_NOTE.search(body) and not _SOMEONE_SAID.search(body))):
             status = "connective"
         else:
