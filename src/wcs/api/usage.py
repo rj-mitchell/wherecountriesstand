@@ -32,6 +32,11 @@ CREATE TABLE IF NOT EXISTS briefings (id TEXT PRIMARY KEY, at TEXT NOT NULL, que
     options TEXT NOT NULL, events TEXT NOT NULL, withdrawn_at TEXT, withdrawn_reason TEXT);
 CREATE TABLE IF NOT EXISTS reports (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, kind TEXT NOT NULL,
     page TEXT, message TEXT NOT NULL, contact TEXT, closed_at TEXT);
+CREATE TABLE IF NOT EXISTS statements (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, page TEXT NOT NULL,
+    country TEXT, name TEXT NOT NULL, role TEXT NOT NULL, text TEXT NOT NULL, link TEXT NOT NULL DEFAULT '',
+    email TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'pending', shown_on TEXT, ended_at TEXT, reason TEXT,
+    log TEXT NOT NULL DEFAULT '[]');
+CREATE INDEX IF NOT EXISTS statements_page ON statements (status, page);
 """
 
 FAILURE_DAYS = 90  # how long notes of failed briefings are kept
@@ -42,7 +47,8 @@ def utcnow() -> str:
 
 
 class StateDB:
-    """The site's own small database (data/state.db): spend, the answer cache, failures."""
+    """The site's own small database (data/state.db): spend, the answer cache, failures, saved briefings, problem
+    reports and statements under the right of reply (``wcs.api.statements``)."""
 
     def __init__(self, path: Path):
         self.path = Path(path)

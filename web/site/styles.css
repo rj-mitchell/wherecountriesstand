@@ -297,7 +297,9 @@ ol.agenda li::marker { font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* One column throughout, at a comfortable reading width: the home page's lists, and a briefing's notes and sources,
    as well as its text. */
-.columns, .summary, .ask, h1, .chips, #home, .marks, #notes, #sources-section { max-inline-size: var(--column); }
+.columns, .summary, .ask, h1, .chips, #home, .marks, #notes, .statements, #sources-section {
+  max-inline-size: var(--column);
+}
 
 /* ---- Briefing ---- */
 
@@ -491,8 +493,61 @@ button:not(:disabled):active { background: var(--council); }
 }
 .report textarea { resize: vertical; }
 .report button { justify-self: start; }
+/* One route's fields at a time: the report's, or the statement's (corrections.js) */
+.report .report__part { display: grid; gap: 0.5rem; border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+.report .report__part[hidden] { display: none; }
+.report .report__part > label { display: block; min-block-size: 0; margin-block: 0.5rem 0; font-weight: 700;
+  cursor: default; }
+.report input[type="url"] {
+  font: inherit; padding: 0.5rem 0.6rem; border: 1px solid var(--rule); border-radius: 0; background: var(--paper);
+  color: var(--ink); inline-size: 100%;
+}
+.report .note { margin: 0; }
 .note.share a { overflow-wrap: anywhere; }
 .note.share a:last-child { white-space: nowrap; }  /* "Report a problem with it" kept together */
+
+/* ---- Statements under the right of reply (decision 16) ----
+   In the author's own words, so set apart from the site's own text and from the record it quotes: the controls'
+   sans face rather than the record's serif, on a sunk panel with a dashed edge, never the sources' solid rule. */
+
+.statements { max-inline-size: var(--column); }
+.statement {
+  margin-block: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--ink-muted);
+  background: var(--paper-raised);
+  font-family: var(--sans);
+  font-size: var(--step--1);
+}
+.statement .statement__head, .statement-example .statement__head {
+  margin: 0 0 0.2rem;
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  font-weight: 500;
+  line-height: 1.3;
+}
+.statement p { margin: 0 0 0.5rem; }
+.statement__role { color: var(--ink-muted); }
+.statement__text p { margin-block: 0 0.5rem; white-space: pre-line; }
+.statement__link a { overflow-wrap: anywhere; }
+.statement .statement__note { margin: 0.5rem 0 0; font-style: italic; color: var(--ink-muted); }
+.statement-example { margin: 1rem 0 1.25rem; }
+.statement-example .statement { margin: 0; }
+.statement-example figcaption { font-family: var(--sans); font-size: var(--step--1); color: var(--ink-muted);
+  margin-block-start: 0.4rem; }
+
+/* ---- If you're named (named.html): the three routes, each with a way to start it ---- */
+
+.prose ol.routes { padding-inline-start: 1.5rem; margin-block: 0 1rem; }
+.routes > li { padding-block: 0.25rem 0.5rem; border-block-end: 1px solid var(--rule-faint); }
+.routes > li::marker { font-weight: 700; }
+.routes h3 { margin-block-start: 0.4rem; }
+.routes p { margin-block: 0 0.6rem; }
+a.button { display: inline-block; text-decoration: none; }
+a.button:active { background: var(--council); }
+@media (hover: hover) and (pointer: fine) {
+  a.button:hover { background: var(--council); }
+}
 
 /* ---- The same question on a sister site: quiet, each link with the sister site's spine ---- */
 
@@ -526,6 +581,7 @@ button:not(:disabled):active { background: var(--council); }
   .phase__tag { border: 1px solid; }
   button { border: 1px solid ButtonText; }
   button:disabled { border-color: GrayText; }
+  a.button { border: 1px solid LinkText; }
   .source:target { outline-color: Highlight; }
   ::placeholder { color: GrayText; }
 }

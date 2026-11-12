@@ -471,14 +471,18 @@ def health(report: Report, today: date | None = None) -> None:
 
 def spending(settings: Settings, report: Report) -> None:
     """The site's spending and failed briefings, from its own database (the site and the updater share the data
-    folder), so the update report is the one place to look."""
+    folder), so the update report is the one place to look. Also deletes statements' confirming addresses that are
+    due to go (``wcs.api.statements.forget_emails``)."""
     path = settings.data_dir / "state.db"
     if not path.exists():
         return
-    from wcs.api import usage
+    from wcs.api import statements, usage
 
     try:
-        report.warnings += usage.warnings(usage.summary(usage.StateDB(path), settings.usage, days=1))
+        state = usage.StateDB(path)
+        report.warnings += usage.warnings(usage.summary(state, settings.usage, days=1))
+        # the privacy notice: a statement's confirming address goes three months after it is withdrawn or declined
+        statements.forget_emails(state)
     except Exception as exc:  # the report itself matters more
         report.warnings.append(f"spending: could not read {path} ({type(exc).__name__}: {exc})")
 
