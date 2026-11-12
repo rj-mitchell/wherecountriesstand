@@ -111,7 +111,8 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
   For a copy from B2, download it from the bucket into `/opt/wherecountriesstand/deploy/backups` first and hand it to
   the site's user (`chown 10001:10001 <file>`). Each update warns if the backups stop (`docs/OPERATIONS.md`).
 * **The privacy notice** (`web/site/privacy.html`) says what the site keeps: no requests logged (`wcs serve` turns
-  the access log off, and the front door keeps none), written briefings saved at their own addresses (`/b/<id>`) unless withdrawn, problem reports with their contact address deleted when closed, notes
+  the access log off, and the front door keeps none), written briefings saved at their own addresses (`/b/<id>`) unless withdrawn, problem reports with their contact address deleted when closed,
+  statements' confirming addresses deleted three months after a statement is withdrawn or declined, notes
   of failed briefings for 90 days, and a daily visitor code in place of IP addresses. It names Cloudflare, which
   carries the site's visits. Keep it true when changing any of these, or the hosting.
 * **Search engines and link previews:** `/robots.txt`, `/sitemap.xml` and the pages' link-preview tags use

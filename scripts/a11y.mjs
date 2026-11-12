@@ -11,8 +11,9 @@ import { chromium } from "playwright";
 const require = createRequire(join(process.cwd(), "noop.js"));
 const axe = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 const base = process.argv[2] ?? "http://localhost:8000";
-const pages = ["/", "/about.html", "/glossary.html", "/corrections.html", "/accessibility.html", "/privacy.html",
-  "/terms.html", "/press.html", "/status.html", "/no-such-page"];
+// the corrections page twice: with the report's fields, and with the statement's (the right of reply, decision 16)
+const pages = ["/", "/about.html", "/glossary.html", "/corrections.html", "/corrections.html?kind=statement",
+  "/named.html", "/accessibility.html", "/privacy.html", "/terms.html", "/press.html", "/status.html", "/no-such-page"];
 
 const browser = await chromium.launch();
 let failures = 0;

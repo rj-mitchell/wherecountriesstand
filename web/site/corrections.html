@@ -3,10 +3,10 @@
 <head>
   <!--#include head-->
   <title>Corrections and problems · Where Countries Stand</title>
-  <meta name="description" content="How to report a problem with Where Countries Stand, and the briefings it has withdrawn.">
+  <meta name="description" content="How to report something wrong or unfair on Where Countries Stand, add a statement in your own words, and the briefings it has withdrawn.">
   <link rel="canonical" href="__SITE__/corrections.html">
   <meta property="og:title" content="Corrections and problems · Where Countries Stand">
-  <meta property="og:description" content="How to report a problem with Where Countries Stand, and the briefings it has withdrawn.">
+  <meta property="og:description" content="How to report something wrong or unfair on Where Countries Stand, add a statement in your own words, and the briefings it has withdrawn.">
   <meta property="og:url" content="__SITE__/corrections.html">
   <script src="/corrections.js" defer></script>
 </head>
@@ -20,27 +20,82 @@
       <p>Briefings are written by an AI model from the UN’s own records, and every point is checked against its
         source, but mistakes can still get through. If something is wrong, misleading or unfair, please tell us.
         A briefing found to be wrong is withdrawn: its address then says so and why, and it is listed below.</p>
+      <p><strong>We reply within 5 working days, and decide within 20 working days.</strong> Requests to remove
+        something about a person, and anything that may be unlawful or harmful, are dealt with sooner.</p>
+      <p>Corrections cover everything the site says, not only briefings: the groups a country is counted in on the
+        date (regions, the UN’s regional groups, its place at the Security Council, blocs such as the African
+        Union or the Group of 77, and income groups), country names and status, who a statement is attributed to and the speaker’s
+        role, statements made on behalf of a group, the labels saying a text is a translation or not yet the official
+        record, the counts above a briefing, and the links it makes to sister sites. Mistakes in the UN’s records
+        themselves can only be corrected by the United Nations.</p>
+      <p>If you speak for a country at the United Nations, or you are named in its records,
+        <a href="/named.html">If you’re named on this site</a> explains the three routes (something is wrong, you’ve
+        been characterised unfairly, or adding a statement in your own words), how we check who you are, and how to
+        appeal a decision.</p>
 
       <h2>Report a problem</h2>
       <form class="report" id="report">
-        <fieldset>
+        <fieldset aria-describedby="kind-hint">
           <legend>What is it about?</legend>
-          <label><input type="radio" name="kind" value="problem" checked> A mistake in a briefing or the data</label>
+          <label><input type="radio" name="kind" value="error" checked> Something is wrong</label>
+          <label><input type="radio" name="kind" value="unfair"> You’ve been characterised unfairly</label>
+          <label><input type="radio" name="kind" value="statement"> Add a statement in your own words</label>
           <label><input type="radio" name="kind" value="takedown"> Something about you that you want removed</label>
           <label><input type="radio" name="kind" value="other"> Something else</label>
         </fieldset>
-        <label for="page">The briefing’s address, if it is about one</label>
-        <input id="page" name="page" type="text" inputmode="url" autocomplete="off" spellcheck="false" maxlength="300"
-               placeholder="https://wherecountriesstand.com/b/…">
-        <label for="message">What is wrong?</label>
-        <textarea id="message" name="message" rows="6" minlength="5" maxlength="4000" required></textarea>
-        <label for="contact">Your email address, if you would like a reply (optional)</label>
-        <input id="contact" name="contact" type="email" maxlength="200" autocomplete="email" aria-describedby="contact-note">
-        <p class="note" id="contact-note">The address is used only to reply to you, and deleted when the report is dealt with (see the
-          <a href="/privacy.html">privacy notice</a>).</p>
+        <p class="note" id="kind-hint">A fact, a quotation, a date, a label, a group or a connection is incorrect, or
+          a briefing misstates the record.</p>
+
+        <fieldset class="report__part" id="report-fields">
+          <legend class="visually-hidden">Your report</legend>
+          <label for="page">The address of the page or briefing, if it is about one</label>
+          <input id="page" name="page" type="text" inputmode="url" autocomplete="off" spellcheck="false" maxlength="300"
+                 placeholder="https://wherecountriesstand.com/b/…">
+          <label for="message" id="message-label">What is wrong?</label>
+          <textarea id="message" name="message" rows="6" minlength="5" maxlength="4000" required></textarea>
+          <label for="contact">Your email address, if you would like a reply (optional)</label>
+          <input id="contact" name="contact" type="email" maxlength="200" autocomplete="email" aria-describedby="contact-note">
+          <p class="note" id="contact-note">The address is used only to reply to you, and deleted when the report is
+            dealt with (see the <a href="/privacy.html">privacy notice</a>).</p>
+        </fieldset>
+
+        <fieldset class="report__part" id="statement-fields" hidden disabled>
+          <legend class="visually-hidden">Your statement</legend>
+          <p class="note">A statement is shown beside the briefing it is about, as you wrote it, once we have confirmed
+            who sent it. It can be up to 150 words, in your own name; it can’t be defamatory or abusive, be about a
+            private individual or another person’s conduct, or appeal for votes, money or support. See
+            <a href="/named.html">If you’re named on this site</a>.</p>
+          <label for="st-page">The address of the briefing it is about</label>
+          <input id="st-page" name="st-page" type="text" inputmode="url" autocomplete="off" spellcheck="false"
+                 maxlength="300" required placeholder="https://wherecountriesstand.com/b/…">
+          <label for="st-name">Your name, as it should be shown</label>
+          <input id="st-name" name="st-name" type="text" maxlength="200" autocomplete="name" required>
+          <label for="st-role">Your role</label>
+          <input id="st-role" name="st-role" type="text" maxlength="200" required aria-describedby="st-role-hint">
+          <p class="note" id="st-role-hint">Such as “Permanent Representative of [country] to the United Nations”, or
+            “Spokesperson, Ministry of Foreign Affairs of [country]”.</p>
+          <label for="st-text">Your statement, up to 150 words</label>
+          <textarea id="st-text" name="st-text" rows="8" maxlength="1500" required aria-describedby="st-count"></textarea>
+          <p class="note" id="st-count">0 words of 150.</p>
+          <label for="st-link">A link to the record, if there is one (optional)</label>
+          <input id="st-link" name="st-link" type="url" maxlength="500" spellcheck="false"
+                 placeholder="https://undocs.org/…">
+          <label for="st-email">Your email address, so we can confirm who you are</label>
+          <input id="st-email" name="st-email" type="email" maxlength="200" autocomplete="email" required
+                 aria-describedby="st-email-note">
+          <p class="note" id="st-email-note">An address at your permanent mission or foreign ministry is quickest. It
+            is used only to confirm who you are and to let you update or withdraw the statement; it is kept while the
+            statement is waiting or shown, and deleted three months after it is withdrawn or declined (see the
+            <a href="/privacy.html">privacy notice</a>).</p>
+        </fieldset>
+
         <button type="submit" id="send">Send</button>
         <p class="status" id="report-status" role="status" aria-live="polite"></p>
       </form>
+      <noscript><p class="status">The form needs JavaScript, which is switched off or blocked in your browser. Please
+        email <a href="mailto:admin@wherecountriesstand.com">admin@wherecountriesstand.com</a> instead, saying
+        which route it is, the address of the page or briefing, and what is wrong or unfair; for a statement, up to
+        150 words, your name and role as they should be shown, and a link to the record if there is one.</p></noscript>
       <p>You can also email <a href="mailto:admin@wherecountriesstand.com">admin@wherecountriesstand.com</a>.</p>
 
       <h2>Withdrawn briefings</h2>
