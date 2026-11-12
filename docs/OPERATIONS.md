@@ -140,6 +140,46 @@ A withdrawn briefing's address says it was withdrawn, and why, and the correctio
 reason. The same question can then be asked again. The alpha notice on every page links to the report form, and
 gives the email address as well.
 
+The form offers the charity's three routes (the impartiality policy, section 7.1; decision 16): reports come in with
+the kind `error` ("Something is wrong") or `unfair` ("You've been characterised unfairly"), or `takedown` or `other`
+(older ones say `problem`, the same as `error`). **Reply within 5 working days, and decide within 20 working days**:
+the site says so on the corrections page and on "If you're named" (`/named.html`). A takedown request, or anything
+that may be unlawful or harmful, comes first. Log each decision and its reason (the trustees review the log at each
+meeting); a letter claiming legal liability goes straight to the trustees.
+
+### Statements under the right of reply
+
+The third route, "Add a statement in your own words", sends a statement (up to 150 words, a name and role, the
+briefing it is about, an optional link to the record, and an email address) to `data/state.db`, where it waits. It
+is shown only once published, beside its briefing, headed "Statement from [name], [date]" and followed by "In their
+own words. Not checked or endorsed by Where Countries Stand." Statements are never given to the model or put in the
+index.
+
+```bash
+wcs statements                                  # waiting and published, newest first (--all: declined and withdrawn too)
+wcs publish-statement 3                         # once its author is confirmed: shown from today, as written
+wcs publish-statement 3 --country KEN           # ... and recorded as Kenya's, for a country page once there is one
+wcs decline-statement 3 --reason "It is about another delegation's conduct."
+wcs update-statement 3 --text-file new.txt      # the author's new words (or --text, --name, --role, --link, --country)
+wcs withdraw-statement 3                        # at the author's request ("Withdrawn by its author.")
+wcs withdraw-statement 3 --reason "It appeals for support, which statements can't."   # removed by the site
+```
+
+1. **Confirm who sent it.** Reply to the address it came with, and wait for an answer from it: an address at the
+   permanent mission or the foreign ministry is best; for any other, ask for confirmation from an address the mission
+   or government publishes. Do the same before an update or a withdrawal the author asks for.
+2. **Check it against the rules** (policy 7.2; `/named.html` says them in plain words): up to 150 words (the site
+   checks), about the briefing it sits beside, nothing defamatory or abusive, nothing about a private individual or
+   another person's conduct, no personal data about anyone else, no appeals for votes, money or support.
+3. **Publish it as written, or decline it with the reason** (and tell the author). Never edit it: if something in it
+   breaks the rules, ask the author to send it again without it, or agree the removal with them and use
+   `update-statement` with their agreed words.
+4. **Withdrawing**: an author can withdraw a statement at any time; the site can remove one that breaks the rules,
+   and tells the author why.
+
+The confirming address is deleted three months after a statement is withdrawn or declined (the privacy notice): as
+each statement arrives, by every statement command, and twice a day by `wcs update`.
+
 ## The General Debate
 
 **Before the 79th session (2023 and earlier)** the General Debate comes from the corpus, which its authors update

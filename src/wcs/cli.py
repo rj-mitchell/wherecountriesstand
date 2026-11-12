@@ -7,6 +7,7 @@
     wcs update                             # new votes, Security Council and General Debate records (scheduled)
     wcs backup --to /backups               # copy the state database (scheduled)
     wcs restore /backups/wcs-state-<day>.sqlite.gz   # put a backup back (with the site stopped)
+    wcs reports && wcs statements          # problem reports, and statements under the right of reply
     wcs search "climate finance" --group sids
     wcs ask "How have small island States spoken about climate change since 2015?"
 """
@@ -298,6 +299,116 @@ def close_report_cmd(report_id: int) -> None:
 
     ok = close_report(StateDB(load_settings().data_dir / "state.db"), report_id)
     typer.echo("closed" if ok else "no open report with that number")
+
+
+def _statement_lines(st: dict) -> list[str]:
+    from wcs.api.statements import word_count
+
+    lines = [f"#{st['id']}  {st['at']}  {st['status']}  {st['page']}"
+             + (f"  (speaks for {st['country']})" if st["country"] else ""),
+             f"    from: {st['name']}, {st['role']}"]
+    if st["email"]:
+        lines.append(f"    confirm with: {st['email']}")
+    if st["link"]:
+        lines.append(f"    record: {st['link']}")
+    lines += [f"    {para}" for para in st["text"].splitlines() if para.strip()]
+    lines.append(f"    ({word_count(st['text'])} words"
+                 + (f"; shown from {st['shown_on']}" if st["status"] == "published" else "")
+                 + (f"; {st['status']}: {st['reason']}" if st["reason"] else "") + ")")
+    return lines
+
+
+def _statements_state():
+    """The state database, with the confirming addresses of statements that ended three months ago deleted first
+    (the privacy notice)."""
+    from wcs.api.statements import forget_emails
+    from wcs.api.usage import StateDB
+
+    state = StateDB(load_settings().data_dir / "state.db")
+    forget_emails(state)
+    return state
+
+
+def _country(code: str | None) -> str | None:
+    from wcs.api.statements import check_country
+
+    try:
+        return check_country(code)
+    except ValueError as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(1) from exc
+
+
+@app.command("statements")
+def list_statements(all_: bool = typer.Option(False, "--all", help="include declined and withdrawn statements")) -> None:
+    """Statements under the right of reply sent through the site, newest first: those waiting for a decision and
+    those shown. Confirm who sent one (reply to its address, ideally a mission's or government's) before publishing."""
+    from wcs.api.statements import statements
+
+    for st in statements(_statements_state(), open_only=not all_):
+        typer.echo("\n".join(_statement_lines(st)))
+
+
+# the same command under Where Councils Stand's name for it, so the owner's habit works on either site
+app.command("list-statements", hidden=True)(list_statements)
+
+
+@app.command("publish-statement")
+def publish_statement_cmd(statement_id: int, country: str = typer.Option(
+        None, help="the country it speaks for (ISO alpha-3, e.g. KEN), for that country's page once there is one")) \
+        -> None:
+    """Show a waiting statement beside its briefing, dated today, as written (never edited)."""
+    from wcs.api.statements import publish_statement
+
+    ok = publish_statement(_statements_state(), statement_id, _country(country))
+    typer.echo("published" if ok else "no waiting statement with that number")
+
+
+@app.command("decline-statement")
+def decline_statement_cmd(statement_id: int, reason: str = typer.Option(
+        ..., help="for the author and the log, e.g. 'It is about another delegation's conduct.'")) -> None:
+    """Decline a waiting statement, with the reason (tell its author). Its address is deleted three months later."""
+    from wcs.api.statements import decline_statement
+
+    ok = decline_statement(_statements_state(), statement_id, reason)
+    typer.echo("declined" if ok else "no waiting statement with that number")
+
+
+@app.command("update-statement")
+def update_statement_cmd(statement_id: int, text: str = typer.Option(None, help="the author's new wording, as sent"),
+                         text_file: str = typer.Option(None, help="the new wording, from a file"),
+                         name: str = typer.Option(None), role: str = typer.Option(None),
+                         link: str = typer.Option(None, help="the link to the record ('' for none)"),
+                         country: str = typer.Option(None, help="the country it speaks for (ISO alpha-3)")) -> None:
+    """Change a statement at its author's request (confirmed from their address). A published one with new words is
+    dated afresh."""
+    from pathlib import Path
+
+    from wcs.api.statements import check_line, check_link, check_text, update_statement
+
+    try:
+        new_text = check_text(Path(text_file).read_text(encoding="utf-8") if text_file else text) \
+            if (text or text_file) else None
+        new_name = check_line(name, "a name") if name is not None else None
+        new_role = check_line(role, "a role") if role is not None else None
+        new_link = check_link(link) if link is not None else None
+    except ValueError as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    ok = update_statement(_statements_state(), statement_id, text=new_text, name=new_name, role=new_role,
+                          link=new_link, country=_country(country))
+    typer.echo("updated" if ok else "nothing changed: no waiting or published statement with that number, or no change")
+
+
+@app.command("withdraw-statement")
+def withdraw_statement_cmd(statement_id: int, reason: str = typer.Option(
+        "Withdrawn by its author.", help="if the site removes it, why (policy 7.2: say why)")) -> None:
+    """Take a statement down, at its author's request or because it breaks the rules. Its address is deleted three
+    months later."""
+    from wcs.api.statements import withdraw_statement
+
+    ok = withdraw_statement(_statements_state(), statement_id, reason)
+    typer.echo("withdrawn" if ok else "no waiting or published statement with that number")
 
 
 @app.command()

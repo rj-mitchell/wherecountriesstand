@@ -95,7 +95,7 @@ kit's `sync.mjs`; don't edit the copies):
 - **The favicon and link card**, the horseshoe (see "The mark"); `theme-color` in Record blue; and Source Serif 4
   for headings.
 - **The same furniture, worded the same way**: the phase banner (one sentence, linking to the report
-  form), the independence line, and the footer links in the family order (About · Corrections ·
+  form), the independence line, and the footer links in the family order (About · Corrections · If you're named ·
   Accessibility · Privacy · Terms · Press · Status · Source code; the site has no How it works or Data page
   yet). The Press page gives the contact, how to cite a statement, a vote and a briefing, the site in brief and
   the logo files; the Status page reads `/api/status`, and says where it is without JavaScript.
@@ -104,6 +104,12 @@ Where the records meet, a briefing links to its sister sites, each link showing 
 "Ask Where MPs Stand the same question" (`https://wherempsstand.com/?q=…`), and, for each country the
 question is about, "Quality of life in … on Where Lives Stand" (`https://wherelivesstand.com/country/<ISO
 alpha-3>`).
+
+A **statement under the right of reply** (decision 16) is the one text on the site that is neither the record nor
+the site's own: it sits after the briefing's notes, in the controls' sans face rather than the record's serif, on a
+sunk panel with a dashed edge (never the sources' solid rule), headed "Statement from [name], [date]" with the
+author's role beneath, and ends "In their own words. Not checked or endorsed by Where Countries Stand." in italic.
+"If you're named" (`/named.html`) shows an example.
 
 The About page carries the family's "In the family" paragraph. Print keeps the site's name, the
 briefing, its sources with their addresses, and the independence notice.

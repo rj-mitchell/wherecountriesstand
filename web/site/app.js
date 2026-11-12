@@ -10,6 +10,9 @@ let names = { countries: {}, kinds: {}, groups: {} };
 // ?q=, and Where Lives Stand has a page for each country at /country/<ISO 3166 alpha-3 code>, the codes used here.
 const MPS = "https://wherempsstand.com/";
 const LIVES = "https://wherelivesstand.com/country/";
+// A statement under the right of reply is shown with these words, in the family's wording (decision 16).
+const NOT_ENDORSED = "In their own words. Not checked or endorsed by Where Countries Stand.";
+let shownBriefing = null;  // the briefing whose statements may be shown (a new question clears it)
 
 function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -229,6 +232,30 @@ function renderAnswer(answer) {
   $("marks").hidden = !marks.length;
 }
 
+// ---- statements under the right of reply -----------------------------------------------------------------------
+
+// Published statements beside a briefing, from /api/statements: in the author's own words, set apart from the site's
+// text, and never part of the briefing (they are not in its saved events, and the model never sees them).
+async function showStatements(id) {
+  shownBriefing = id;
+  const res = await fetch(`/api/statements?page=${encodeURIComponent(`/b/${id}`)}`).catch(() => null);
+  const data = res && res.ok ? await res.json().catch(() => null) : null;
+  if (shownBriefing !== id) return;  // another question was asked meanwhile
+  $("statements").replaceChildren(...((data && data.statements) || []).map(statementCard));
+}
+
+function statementCard(s) {
+  const head = `statement-${s.id}`;
+  const paras = s.text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  return el("section", { class: "statement", "aria-labelledby": head },
+    el("h2", { class: "statement__head", id: head }, `Statement from ${s.name}, ${fmtDate(s.shown_on)}`),
+    el("p", { class: "statement__role" }, s.role),
+    el("div", { class: "statement__text" }, paras.map((p) => el("p", {}, p))),
+    /^https?:\/\//i.test(s.link || "") ? el("p", { class: "statement__link" }, "The record it points to: ",
+                el("a", { href: s.link, rel: "ugc nofollow noopener" }, s.link)) : null,
+    el("p", { class: "statement__note" }, NOT_ENDORSED));
+}
+
 function note(text, error = false) {
   $("notes").append(el("p", { class: `note${error ? " note--error" : ""}` }, text));
 }
@@ -257,7 +284,7 @@ function handle(ev, st) {
     else if (st.drafting) st.drafting.remove();
     if (ev.note) note(ev.note);
     if (ev.cached && !st.saved) note("This briefing was written earlier for the same question and the same data.");
-    if (ev.briefing_id) saved(ev.briefing_id, st);
+    if (ev.briefing_id) { saved(ev.briefing_id, st); showStatements(ev.briefing_id); }
   } else if (ev.type === "error") {
     $("status").textContent = "";
     note(ev.message, true);
@@ -283,7 +310,8 @@ function reset(question) {
   $("interpretation").textContent = "";
   $("today").textContent = fmtDate(new Date().toISOString().slice(0, 10));
   document.title = `${question} · Where Countries Stand`;
-  for (const id of ["briefing", "notes", "sources", "chips"]) $(id).replaceChildren();
+  for (const id of ["briefing", "notes", "statements", "sources", "chips"]) $(id).replaceChildren();
+  shownBriefing = null;
   $("summary").hidden = true;
   $("marks").hidden = true;
   $("sources-section").hidden = true;

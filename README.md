@@ -47,6 +47,14 @@ for each country (which Where Lives Stand would link to), and testing with peopl
 - **Links from sister sites:** the family shelf on every sister site's footer, and the hub. Where Lives Stand could
   link a country's dossier here once this site has country pages; until then, to a question about that country.
 
+## Corrections and the right of reply
+
+The charity's corrections and right-of-reply policy (decision 16): "If you're named" (`/named.html`, in every footer)
+sets out the three routes for countries' delegations, missions and governments, and people named in the record, with
+the response times ("We reply within 5 working days, and decide within 20 working days."). A statement in someone's
+own words is held until the owner confirms who sent it (`wcs statements`, `docs/OPERATIONS.md`), then shown beside
+its briefing, set apart from the site's text; it never reaches the model or the index.
+
 ## Documents
 
 | Document | What it is |

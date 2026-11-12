@@ -220,7 +220,7 @@ def test_pages_use_absolute_paths(indexed):  # noqa: F811
     """The home page is also served at /b/<id>, so its files and links must not be relative."""
     import re
     api, _ = make(indexed, FakeClient())
-    for name in ("/", "/about.html", "/corrections.html", "/privacy.html", "/accessibility.html"):
+    for name in ("/", "/about.html", "/corrections.html", "/named.html", "/privacy.html", "/accessibility.html"):
         html_text = api.get(name).text
         local = [u for u in re.findall(r'(?:href|src)="([^"]+)"', html_text)
                  if not u.startswith(("https://", "http://", "mailto:", "#", "/", "data:"))]  # data: the kit's inline cartridge
@@ -413,7 +413,7 @@ def test_alpha_notice_links_to_the_report_form(indexed):  # noqa: F811
     assert "<noscript>" in api.get("/").text
 
 
-PAGES = ("/", "/about.html", "/corrections.html", "/privacy.html", "/accessibility.html", "/terms.html",
+PAGES = ("/", "/about.html", "/corrections.html", "/named.html", "/privacy.html", "/accessibility.html", "/terms.html",
          "/glossary.html", "/press.html", "/status.html", "/missing")
 INDEPENDENCE = ("Where Countries Stand is independent. It is not affiliated with or endorsed by the United Nations, "
                 "and it does not use the UN's name or emblem.")
@@ -433,7 +433,7 @@ def test_every_page_carries_the_family_binding_and_the_standard_furniture(indexe
         assert "the charity Where They Stand" not in text and "gmail" not in text.lower(), page
         assert '<a href="https://github.com/rj-mitchell/wherecountriesstand">Source code</a>' in text, page
         footer = text[text.index('<footer class="foot">'):]
-        order = ["/about.html", "/corrections.html", "/accessibility.html", "/privacy.html", "/terms.html",
+        order = ["/about.html", "/corrections.html", "/named.html", "/accessibility.html", "/privacy.html", "/terms.html",
                  "/press.html", "/status.html", "https://github.com/rj-mitchell/wherecountriesstand"]
         assert [footer.index(f'href="{u}"') for u in order] == sorted(footer.index(f'href="{u}"') for u in order)
 

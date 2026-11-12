@@ -12,6 +12,11 @@ Endpoints:
 * ``GET /api/meta``: what the record covers, and whether briefings are being written.
 * ``GET /api/status``: the last data update and its warnings, the latest record from each source, and whether
   briefings are available or paused by a spending cap (for ``/status.html``, and checks from outside).
+* ``POST /api/report``: a problem report from the corrections page ("Something is wrong", "You've been characterised
+  unfairly", a takedown request, or something else).
+* ``POST /api/statements``: a statement under the right of reply, held until the owner has confirmed who sent it;
+  ``GET /api/statements?page=/b/<id>`` (or ``?country=KEN``): the published statements beside a briefing (or a
+  country's). They are never part of the record (``wcs.api.statements``).
 * ``GET /api/countries``, ``GET /api/groups``: for the filters.
 * ``GET /api/health``.
 * ``GET /robots.txt``, ``GET /sitemap.xml``, and the pages, with the site's address filled in for link previews
@@ -39,6 +44,7 @@ from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
@@ -55,6 +61,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from wcs.api import statements
 from wcs.api.usage import (
     InFlight,
     RateLimiter,
@@ -109,10 +116,25 @@ class AskBody(BaseModel):
 
 
 class ReportBody(BaseModel):
-    kind: Literal["problem", "takedown", "other"] = "problem"
+    # The first two are the family's routes (the impartiality policy, section 7.1): "Something is wrong" and "You've
+    # been characterised unfairly". A statement in someone's own words has its own form (StatementBody). "problem" is
+    # what the form sent before the routes were named, and is still taken from links and pages kept from then;
+    # "takedown" is a request to remove something about a person, dealt with first.
+    kind: Literal["error", "unfair", "problem", "takedown", "other"] = "error"
     page: str = Field(default="", max_length=300)
     message: str = Field(min_length=5, max_length=4000)
     contact: str = Field(default="", max_length=200)
+
+
+class StatementBody(BaseModel):
+    """A statement under the right of reply (``wcs.api.statements``): checked again in the handler, with words for
+    the reader."""
+    page: str = Field(max_length=300)
+    name: str = Field(max_length=200)
+    role: str = Field(max_length=200)
+    text: str = Field(max_length=statements.MAX_CHARS + 100)
+    link: str = Field(default="", max_length=500)
+    email: str = Field(max_length=200)
 
 
 def sse(events: Iterator[dict[str, Any]], keep_alive: float = KEEP_ALIVE_SECONDS) -> Iterator[bytes]:
@@ -403,6 +425,44 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         visitor(request)  # the rate limit
         return {"ok": True, "id": add_report(state, body.kind, body.page.strip(), body.message.strip(),
                                              body.contact.strip())}
+
+    # ---- statements under the right of reply (decision 16) ------------------------------------------------------
+
+    def site_hosts(request: Request) -> tuple[str, ...]:
+        own = (urlsplit(site_url(settings, request)).hostname or "").lower()
+        return (*statements.SITE_HOSTS, *([own] if own else []), (request.url.hostname or "").lower())
+
+    @app.post("/api/statements")
+    def add_statement(body: StatementBody, request: Request):
+        """A statement as sent: held until the owner has confirmed who sent it, then published or declined."""
+        visitor(request)  # the rate limit
+        try:
+            page = statements.item_address(body.page, site_hosts(request))
+            name = statements.check_line(body.name, "your name, as it should be shown")
+            role = statements.check_line(body.role, "your role, such as Permanent Representative of Kenya to the "
+                                                    "United Nations")
+            text = statements.check_text(body.text)
+            link = statements.check_link(body.link)
+            email = statements.check_email(body.email)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        b = saved_briefing(state, page.removeprefix("/b/"))
+        if b is None or b["withdrawn_at"]:
+            raise HTTPException(422, "There is no briefing at that address. Check the address of the briefing the "
+                                     "statement is about.")
+        return {"ok": True, "id": statements.add_statement(state, page, name, role, text, link, email)}
+
+    @app.get("/api/statements")
+    def published_statements(page: str = "", country: str = ""):
+        """The published statements beside one briefing (``page``, its address) or of one country (``country``)."""
+        try:
+            item = statements.item_address(page) if page else None
+            code = statements.check_country(country)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        if not item and not code:
+            raise HTTPException(422, "Give the address of a briefing (page) or a country's code (country).")
+        return {"statements": statements.published_statements(state, item, code), "note": statements.NOT_ENDORSED}
 
     def model_available() -> bool:
         """Whether briefings can be written at all (an API key is set), without loading the search engine."""
