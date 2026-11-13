@@ -160,6 +160,44 @@ def test_question_length_is_checked(indexed):  # noqa: F811
     assert api.post("/api/ask", json={"question": "x" * 501}).status_code == 422
 
 
+class ReadingClient(FakeClient):
+    """The model reads the question too, and says what the reading cost."""
+
+    def _parse(self, **kw):
+        from types import SimpleNamespace as NS
+
+        from wcs.rag.query_parse import ParsedQuery
+
+        self.read_with = kw["model"]
+        parsed = ParsedQuery(search_text="climate finance", date_from="2020-01-01", date_to=None, sources=[],
+                             countries=[], groups=[], group_by="region", wants_votes=False,
+                             interpretation="What countries have said about climate finance since 2020.")
+        return NS(stop_reason="end_turn", parsed_output=parsed,
+                  usage=NS(input_tokens=1_000_000, output_tokens=0, cache_read_input_tokens=0,
+                           cache_creation_input_tokens=0))
+
+
+def test_reading_a_question_is_priced_as_the_model_that_read_it(indexed):  # noqa: F811
+    """As Where MPs Stand: with no model set for reading questions, the briefing's model reads them, and the cost is
+    recorded against that model and at its prices (it was recorded against no model, at the base prices)."""
+    indexed.raw["usage"] = {**indexed.raw["usage"], "models": {
+        "claude-haiku-5-5": {"price_input_per_mtok": 0.1}, "claude-sonnet-5-5": {"price_input_per_mtok": 3.0}}}
+
+    def parse_row(client):
+        api, state = make(indexed, client)
+        assert events(api.post("/api/ask", json=QUESTION))[0]["plan"]["parser"] == "model"
+        with state.connect() as con:
+            return con.execute("SELECT model, cost_usd FROM usage WHERE kind = 'parse' ORDER BY id DESC").fetchone()
+
+    client = ReadingClient()
+    assert parse_row(client) == ("claude-haiku-5-5", pytest.approx(0.1)) and client.read_with == "claude-haiku-5-5"
+    indexed.raw["answer"] = {**indexed.raw["answer"], "query_parse_model": ""}
+    with StateDB(indexed.data_dir / "state.db").connect() as con:
+        con.execute("DELETE FROM answer_cache")
+    client = ReadingClient()
+    assert parse_row(client) == ("claude-sonnet-5-5", pytest.approx(3.0)) and client.read_with == "claude-sonnet-5-5"
+
+
 def test_an_edited_plan_has_a_size_limit(indexed):  # noqa: F811
     """As Where MPs Stand: a reader's edited plan is a few hundred characters; one of any size is refused."""
     client = FakeClient()

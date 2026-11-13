@@ -82,6 +82,7 @@ from wcs.api.usage import (
 from wcs.config import REPO_ROOT, Settings, load_settings
 from wcs.rag.neutral import still_loaded
 from wcs.rag.pipeline import AskRequest, Pipeline
+from wcs.rag.query_parse import parse_model
 from wcs.rag.typography import curl_events
 from wcs.rag.verify import recheck_flags
 from wcs.sources import gadebate
@@ -572,8 +573,8 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                         if ev.get("parse_error"):
                             record_failure(state, "question reading", body.question, ev.pop("parse_error"))
                         if ev.get("usage"):
-                            record_usage(state, "parse", settings.answer.get("query_parse_model"), ev["usage"],
-                                         limits, who)
+                            # priced as the model that read it (the briefing's own when no other is set)
+                            record_usage(state, "parse", parse_model(settings), ev["usage"], limits, who)
                     if ev["type"] == "error":
                         # the model declined to answer: noted for the owner, and its call still counted as spent
                         record_failure(state, "briefing", body.question, ev.get("message", ""))
