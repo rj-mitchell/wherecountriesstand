@@ -78,38 +78,41 @@ class StateDB:
 
 def prices_for(prices: dict[str, Any], model: str | None) -> dict[str, Any]:
     """The [usage] prices, with any per-model prices (``[usage.models."<model>"]``) on top."""
-    for name, own in (prices.get("models") or {}).items():
+    per_model = prices.get("models") or {}
+    for name, own in per_model.items():
         if model and (model == name or model.startswith(name)):
             return {**prices, **own}
     return prices
 
 
 def token_counts(usage: dict[str, int] | None) -> dict[str, int]:
-    """Token counts in the site's own form, whichever names they come in. ``rag.answer.usage_dict`` gives
-    ``input_tokens`` including cache writes, with ``cache_write_tokens`` and ``cache_read_tokens``. The SDK's own
-    names (``cache_creation_input_tokens``, ``cache_read_input_tokens``) come with ``input_tokens`` that leave the
-    cache writes out, so they are added in. (Where Councils Stand's ``api/usage.py`` copes with both, too.)"""
+    """One call's token counts under this site's names, whichever form they come in: ``usage_dict``'s
+    (``cache_read_tokens``, ``cache_write_tokens``, and ``input_tokens`` that includes the cache writes) or the SDK's
+    own (``cache_read_input_tokens``, ``cache_creation_input_tokens``, and ``input_tokens`` that does not)."""
     u = usage or {}
-    if "cache_write_tokens" in u:
-        writes = int(u.get("cache_write_tokens") or 0)
-        given = int(u.get("input_tokens") or 0)
-    else:
-        writes = int(u.get("cache_creation_input_tokens") or 0)
-        given = int(u.get("input_tokens") or 0) + writes
+    # Every count is made a whole number, and this site's name for cache reads is used whenever it is present, even
+    # at 0, before the SDK's.
     reads = u.get("cache_read_tokens")
     if reads is None:
         reads = u.get("cache_read_input_tokens")
-    return {"input_tokens": given, "output_tokens": int(u.get("output_tokens") or 0),
+    if "cache_write_tokens" in u:
+        writes = int(u.get("cache_write_tokens") or 0)
+        uncached = int(u.get("input_tokens") or 0) - writes
+    else:
+        writes = int(u.get("cache_creation_input_tokens") or 0)
+        uncached = int(u.get("input_tokens") or 0)
+    return {"input_tokens": uncached + writes, "output_tokens": int(u.get("output_tokens") or 0),
             "cache_read_tokens": int(reads or 0), "cache_write_tokens": writes}
 
 
 def cost_usd(usage: dict[str, int] | None, prices: dict[str, Any], model: str | None = None) -> float:
-    """Cost of one call. Cache writes cost 1.25x the input price; cache reads are priced separately."""
+    """Cost of one call. Cache writes cost 1.25x the input price; cache reads are priced separately. The token counts
+    may use this site's names or the SDK's own (``token_counts``)."""
     if not usage:
         return 0.0
-    u = token_counts(usage)
     prices = prices_for(prices, model)
     price_in = float(prices.get("price_input_per_mtok", 4.0))
+    u = token_counts(usage)
     writes = u["cache_write_tokens"]
     return round(
         (u["input_tokens"] - writes) / 1e6 * price_in
@@ -326,11 +329,21 @@ def new_briefing_id() -> str:
 
 def save_briefing(state: StateDB, bid: str, question: str, options: dict[str, Any],
                   events: list[dict[str, Any]]) -> str:
-    """A written briefing, kept at its own address (/b/<id>) while the site runs, unless withdrawn."""
+    """A written briefing, kept at its own address (/b/<id>) while the site runs, unless withdrawn. Returns the id it
+    was kept under: ``bid``, or another if that one is taken (as Where MPs Stand's ``store_briefing``), with the
+    events' own ``briefing_id`` changed to match."""
     with state.connect() as con:
-        con.execute("INSERT INTO briefings (id, at, question, options, events) VALUES (?, ?, ?, ?, ?)",
-                    (bid, utcnow(), question, json.dumps(options), json.dumps(events, default=str)))
-    return bid
+        for _ in range(5):
+            try:
+                con.execute("INSERT INTO briefings (id, at, question, options, events) VALUES (?, ?, ?, ?, ?)",
+                            (bid, utcnow(), question, json.dumps(options), json.dumps(events, default=str)))
+                return bid
+            except sqlite3.IntegrityError as exc:  # an id collision is astronomically unlikely; try another
+                if "UNIQUE" not in str(exc):
+                    raise
+                taken, bid = bid, new_briefing_id()
+                events = [{**e, "briefing_id": bid} if e.get("briefing_id") == taken else e for e in events]
+    raise RuntimeError("could not allocate a briefing id")
 
 
 def saved_briefing(state: StateDB, bid: str) -> dict[str, Any] | None:

@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+import typer
 from test_api import QUESTION, events, make
 from test_pipeline import FakeClient, indexed  # noqa: F401  (the fixture)
 from typer.testing import CliRunner
@@ -18,6 +19,7 @@ from wcs.cli import app as cli
 
 SAID = "Our delegation's position on adaptation finance is set out in full in document A/79/123, paragraph 4."
 WORDS = "In their own words. Not checked or endorsed by Where Countries Stand."
+CHECKED = "Reply from the mission's published address, 14 November."
 
 
 def briefing(api) -> str:
@@ -60,9 +62,17 @@ def test_name_role_link_email_and_country_are_checked():
     for bad in ("", " x ", "x" * 201):
         with pytest.raises(ValueError):
             st.check_line(bad, "a name")
+    # the words for "too long" name the thing, not the whole phrase written for "Give …."
+    with pytest.raises(ValueError, match=r"^Give your role, such as Permanent Representative\.$"):
+        st.check_line(" ", "your role, such as Permanent Representative")
+    with pytest.raises(ValueError, match=r"^Your role can be up to 200 characters\.$"):
+        st.check_line("x" * 201, "your role, such as Permanent Representative")
+    with pytest.raises(ValueError, match=r"^A name can be up to 200 characters\.$"):
+        st.check_line("x" * 201, "a name")
     assert st.check_link("") == "" and st.check_link(" https://undocs.org/en/A/79/123 ") == "https://undocs.org/en/A/79/123"
-    for bad in ("javascript:alert(1)", "undocs.org/x", "https://", "https://un.org/a b"):
-        with pytest.raises(ValueError):
+    for bad in ("javascript:alert(1)", "undocs.org/x", "https://", "https://un.org/a b",
+                'https://un.org/a"onmouseover="x', "https://un.org/a'b", "https://un.org/<script>", "https://un.org/a>b"):
+        with pytest.raises(ValueError, match="web address"):
             st.check_link(bad)
     assert st.check_email(" press@mission.example ") == "press@mission.example"
     for bad in ("", "press", "press@mission", "a b@c.d"):
@@ -95,6 +105,7 @@ def test_what_is_sent_is_refused_with_words_for_the_reader(indexed):  # noqa: F8
     assert api.post("/api/statements", json={k: v for k, v in body(bid).items() if k != "link"}).status_code == 200
     for bad, says in ((body(bid, email="nobody"), "confirm who you are"),
                       (body(bid, link="javascript:alert(1)"), "web address"),
+                      (body(bid, link='https://undocs.org/en/A/79/123"><b>'), "web address"),
                       (body(bid, page="https://example.org/b/" + bid), "wherecountriesstand.com"),
                       (body(bid, page="https://wherecountriesstand.com/about.html"), "a briefing on this site"),
                       (body(bid, page="/b/nosuchbriefing"), "no briefing at that address")):
@@ -116,9 +127,9 @@ def test_the_test_servers_own_address_is_this_site(indexed, monkeypatch):  # noq
 
 # ---- the owner's commands ----------------------------------------------------------------------------------------
 
-def run(*args: str) -> str:
+def run(*args: str, exit_code: int = 0) -> str:
     result = CliRunner().invoke(cli, list(args))
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == exit_code, result.output
     return result.output
 
 
@@ -133,11 +144,26 @@ def test_the_owners_commands(indexed):  # noqa: F811
     assert "(16 words)" in listed and SAID in listed
     assert run("list-statements") == listed                                          # Where Councils Stand's name
 
-    assert run("publish-statement", str(sid), "--country", "ken") == "published\n"
-    assert run("publish-statement", str(sid)) == "no waiting statement with that number\n"
+    # how the sender was confirmed is required, and kept in the log's entry for the publishing
+    assert CliRunner().invoke(cli, ["publish-statement", str(sid), "--country", "ken"]).exit_code == 2
+    blank = CliRunner().invoke(cli, ["publish-statement", str(sid), "--checked", "  "])
+    assert blank.exit_code == 1 and "how you confirmed who sent it" in blank.output
+    assert st.statement(state, sid)["status"] == "pending"
+    assert run("publish-statement", str(sid), "--checked", CHECKED, "--country", "ken") == "published\n"
+    # a command that did nothing says so and exits 1
+    assert run("publish-statement", str(sid), "--checked", CHECKED, exit_code=1) == \
+        "no waiting statement with that number\n"
+    assert run("decline-statement", str(sid), "--reason", "Too late.", exit_code=1) == \
+        "no waiting statement with that number\n"
     shown = st.statement(state, sid)
     assert shown["status"] == "published" and shown["country"] == "KEN"
     assert shown["shown_on"] == datetime.now(UTC).strftime("%Y-%m-%d")
+    assert [(e["action"], e.get("note")) for e in shown["log"]] == [("received", None), ("published", CHECKED)]
+    assert f"sender confirmed: {CHECKED}" in run("statements")                       # the owner can read it back
+    # the option's own help, not the help page as drawn (its boxes and colours differ from one terminal to another)
+    option = next(o for o in typer.main.get_command(cli).commands["publish-statement"].params if o.name == "checked")
+    assert option.required and "never shown on the site" in option.help
+    assert "Do not put the sender's email address in it" in option.help
 
     assert CliRunner().invoke(cli, ["decline-statement", str(other)]).exit_code != 0   # a reason is required
     assert run("decline-statement", str(other), "--reason", "It is about another delegation's conduct.") == "declined\n"
@@ -149,18 +175,24 @@ def test_the_owners_commands(indexed):  # noqa: F811
     assert run("update-statement", str(sid), "--text", "New words, as the author sent them.") == "updated\n"
     assert st.statement(state, sid)["text"] == "New words, as the author sent them."
     assert [e["action"] for e in st.statement(state, sid)["log"]] == ["received", "published", "updated"]
-    assert run("update-statement", str(sid)).startswith("nothing changed")
+    assert run("update-statement", str(sid), exit_code=1).startswith("nothing changed")
 
     assert run("withdraw-statement", str(sid)) == "withdrawn\n"
     assert st.statement(state, sid)["reason"] == "Withdrawn by its author."
-    assert run("withdraw-statement", str(sid)) == "no waiting or published statement with that number\n"
+    assert run("withdraw-statement", str(sid), exit_code=1) == "no waiting or published statement with that number\n"
+    # the same for reports and saved briefings
+    assert run("close-report", "999", exit_code=1) == "no open report with that number\n"
+    assert run("withdraw", "nosuchbriefing", "--reason", "x", exit_code=1) == "no briefing with that id\n"
+    rid = api.post("/api/report", json={"kind": "error", "page": f"/b/{bid}", "message": "A date is wrong."}).json()["id"]
+    assert run("close-report", str(rid)) == "closed\n" and run("close-report", str(rid), exit_code=1)
+    assert run("withdraw", bid, "--reason", "It misread a statement.") == "withdrawn\n"
     assert api.get("/api/statements", params={"page": f"/b/{bid}"}).json()["statements"] == []
 
 
 def test_the_confirming_address_goes_three_months_after_a_statement_ends(tmp_path):
     state = StateDB(tmp_path / "s.db")
     ids = [st.add_statement(state, "/b/AbC123xy", "A", "Role", "Words.", "", f"{n}@mission.example") for n in range(4)]
-    st.publish_statement(state, ids[0])
+    st.publish_statement(state, ids[0], checked=CHECKED)
     st.withdraw_statement(state, ids[1], "Withdrawn by its author.")
     st.decline_statement(state, ids[2], "Off the subject.")
     now = datetime.now(UTC)
@@ -189,7 +221,7 @@ def test_a_published_statement_is_shown_beside_its_briefing_without_the_address(
     api, state = make(indexed, FakeClient(), requests_per_minute=1000)
     bid = briefing(api)
     sid = api.post("/api/statements", json=body(bid, text="First paragraph.\n\nSecond paragraph.")).json()["id"]
-    st.publish_statement(state, sid, "KEN")
+    st.publish_statement(state, sid, "KEN", checked=CHECKED)
     out = api.get("/api/statements", params={"page": f"/b/{bid}"}).json()
     assert out["note"] == WORDS
     [shown] = out["statements"]
@@ -198,6 +230,13 @@ def test_a_published_statement_is_shown_beside_its_briefing_without_the_address(
                      "text": "First paragraph.\n\nSecond paragraph.", "link": "https://undocs.org/en/A/79/123",
                      "shown_on": datetime.now(UTC).strftime("%Y-%m-%d")}
     assert "mission.example" not in json.dumps(out)
+    # nor the owner's note of how the sender was confirmed: it is in the log, which is never sent
+    assert st.statement(state, sid)["log"][-1]["note"] == CHECKED
+    assert "published address" not in json.dumps(out) and "log" not in shown
+    assert "published address" not in api.get("/api/statements", params={"country": "KEN"}).text
+    assert "published address" not in api.get(f"/api/briefings/{bid}").text
+    with pytest.raises(ValueError, match="how you confirmed"):
+        st.publish_statement(state, sid, checked=" ")
     assert api.get("/api/statements", params={"country": "ken"}).json()["statements"] == [shown]
     assert api.get("/api/statements", params={"page": "/b/otherbriefing"}).json()["statements"] == []
     assert api.get("/api/statements").status_code == 422
@@ -227,7 +266,7 @@ def test_statements_never_reach_the_model_the_index_or_a_briefing(indexed):  # n
     bid = briefing(api)
     marker = "Zanzibarian marker phrase about climate finance"
     sid = api.post("/api/statements", json=body(bid, text=f"{marker}. Climate finance for adaptation.")).json()["id"]
-    st.publish_statement(state, sid, "KEN")
+    st.publish_statement(state, sid, "KEN", checked=CHECKED)
     calls_before = len(client.calls)
     again = api.post("/api/ask", json={"question": "What has Kenya said about climate finance for adaptation?"})
     assert len(client.calls) > calls_before                                          # a new briefing was written

@@ -222,7 +222,8 @@ def restore(archive: str = typer.Argument(..., help="a backup: /backups/wcs-stat
             yes: bool = typer.Option(False, "--yes", help="don't ask first")) -> None:
     """Put a backup of the state database back (spending, saved briefings, reports). Stop the site first
     (docs/DEPLOY.md, "Backups"). The backup is checked before anything is replaced, and the database it replaces is
-    kept as data/state.db.before-restore."""
+    kept as data/state.db.before-restore. A kept copy from an earlier restore is never written over: move or delete
+    it first."""
     from pathlib import Path
 
     from wcs.backup import restore_backup
@@ -280,6 +281,14 @@ def usage(days: int = typer.Option(7, help="list daily spend and failures for th
         raise typer.Exit(1)
 
 
+def _done(ok: bool, done: str, failed: str) -> None:
+    """Say what an owner's command on reports, statements or briefings did. One that did nothing (no such number, or
+    not in a state to be changed) exits 1, as the sister sites' commands do, so it cannot be taken for done."""
+    typer.echo(done if ok else failed)
+    if not ok:
+        raise typer.Exit(1)
+
+
 @app.command("reports")
 def list_reports(all_: bool = typer.Option(False, "--all", help="include reports already dealt with")) -> None:
     """Problems and takedown requests sent through the site's form (newest first)."""
@@ -298,7 +307,7 @@ def close_report_cmd(report_id: int) -> None:
     from wcs.api.usage import StateDB, close_report
 
     ok = close_report(StateDB(load_settings().data_dir / "state.db"), report_id)
-    typer.echo("closed" if ok else "no open report with that number")
+    _done(ok, "closed", "no open report with that number")
 
 
 def _statement_lines(st: dict) -> list[str]:
@@ -312,6 +321,8 @@ def _statement_lines(st: dict) -> list[str]:
     if st["link"]:
         lines.append(f"    record: {st['link']}")
     lines += [f"    {para}" for para in st["text"].splitlines() if para.strip()]
+    # the owner's note of how the sender was confirmed, from the log's entry for the publishing
+    lines += [f"    sender confirmed: {e['note']}" for e in st["log"] if e["action"] == "published" and e.get("note")]
     lines.append(f"    ({word_count(st['text'])} words"
                  + (f"; shown from {st['shown_on']}" if st["status"] == "published" else "")
                  + (f"; {st['status']}: {st['reason']}" if st["reason"] else "") + ")")
@@ -354,14 +365,23 @@ app.command("list-statements", hidden=True)(list_statements)
 
 
 @app.command("publish-statement")
-def publish_statement_cmd(statement_id: int, country: str = typer.Option(
+def publish_statement_cmd(statement_id: int, checked: str = typer.Option(
+        ..., help="how you confirmed who sent it, for the log (never shown on the site), e.g. 'Reply from the "
+                  "mission's published address, 14 November.' Do not put the sender's email address in it: the "
+                  "privacy notice promises that address is deleted"),
+        country: str = typer.Option(
         None, help="the country it speaks for (ISO alpha-3, e.g. KEN), for that country's page once there is one")) \
         -> None:
-    """Show a waiting statement beside its briefing, dated today, as written (never edited)."""
+    """Show a waiting statement beside its briefing, dated today, as written (never edited), once you have confirmed
+    who sent it: --checked says how."""
     from wcs.api.statements import publish_statement
 
-    ok = publish_statement(_statements_state(), statement_id, _country(country))
-    typer.echo("published" if ok else "no waiting statement with that number")
+    try:
+        ok = publish_statement(_statements_state(), statement_id, _country(country), checked=checked)
+    except ValueError as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    _done(ok, "published", "no waiting statement with that number")
 
 
 @app.command("decline-statement")
@@ -371,7 +391,7 @@ def decline_statement_cmd(statement_id: int, reason: str = typer.Option(
     from wcs.api.statements import decline_statement
 
     ok = decline_statement(_statements_state(), statement_id, reason)
-    typer.echo("declined" if ok else "no waiting statement with that number")
+    _done(ok, "declined", "no waiting statement with that number")
 
 
 @app.command("update-statement")
@@ -397,7 +417,7 @@ def update_statement_cmd(statement_id: int, text: str = typer.Option(None, help=
         raise typer.Exit(1) from exc
     ok = update_statement(_statements_state(), statement_id, text=new_text, name=new_name, role=new_role,
                           link=new_link, country=_country(country))
-    typer.echo("updated" if ok else "nothing changed: no waiting or published statement with that number, or no change")
+    _done(ok, "updated", "nothing changed: no waiting or published statement with that number, or no change")
 
 
 @app.command("withdraw-statement")
@@ -408,7 +428,7 @@ def withdraw_statement_cmd(statement_id: int, reason: str = typer.Option(
     from wcs.api.statements import withdraw_statement
 
     ok = withdraw_statement(_statements_state(), statement_id, reason)
-    typer.echo("withdrawn" if ok else "no waiting or published statement with that number")
+    _done(ok, "withdrawn", "no waiting or published statement with that number")
 
 
 @app.command()
@@ -418,7 +438,7 @@ def withdraw(briefing_id: str, reason: str = typer.Option(..., help="shown at it
     from wcs.api.usage import StateDB, withdraw_briefing
 
     ok = withdraw_briefing(StateDB(load_settings().data_dir / "state.db"), briefing_id, reason)
-    typer.echo("withdrawn" if ok else "no briefing with that id")
+    _done(ok, "withdrawn", "no briefing with that id")
 
 
 @app.command("gd-website")
@@ -656,6 +676,8 @@ def ask(question: str, mode: str = "summary", as_json: bool = typer.Option(False
         typer.echo("\n" + final["answer"]["markdown"])
     elif final.get("note"):
         typer.echo("\n" + final["note"])
+    elif out.get("error"):
+        typer.echo("\n" + out["error"]["message"])
 
 
 if __name__ == "__main__":

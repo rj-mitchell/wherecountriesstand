@@ -58,7 +58,7 @@ from fastapi.responses import (
     StreamingResponse,
 )
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from wcs.api import statements
@@ -82,6 +82,7 @@ from wcs.api.usage import (
 from wcs.config import REPO_ROOT, Settings, load_settings
 from wcs.rag.neutral import still_loaded
 from wcs.rag.pipeline import AskRequest, Pipeline
+from wcs.rag.query_parse import parse_model
 from wcs.rag.typography import curl_events
 from wcs.rag.verify import recheck_flags
 from wcs.sources import gadebate
@@ -105,6 +106,9 @@ class Turn(BaseModel):
     answer: str = Field(default="", max_length=4000)
 
 
+PLAN_MAX_CHARS = 20_000  # an edited plan is a few hundred characters; this is far more than any reader needs
+
+
 class AskBody(BaseModel):
     question: str = Field(min_length=3, max_length=500)
     mode: Literal["summary", "comprehensive"] = "summary"
@@ -113,6 +117,14 @@ class AskBody(BaseModel):
     role_weight: float | None = Field(default=None, ge=1, le=2)
     history: list[Turn] = Field(default_factory=list, max_length=4)
     sources_only: bool = False
+
+    @field_validator("plan")
+    @classmethod
+    def _plan_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
+        # as Where MPs Stand: a plan is saved with its briefing and goes into the prompt, so it cannot be any size
+        if v is not None and len(json.dumps(v, default=str)) > PLAN_MAX_CHARS:
+            raise ValueError("the search plan is too large")
+        return v
 
 
 class ReportBody(BaseModel):
@@ -561,8 +573,14 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                         if ev.get("parse_error"):
                             record_failure(state, "question reading", body.question, ev.pop("parse_error"))
                         if ev.get("usage"):
-                            record_usage(state, "parse", settings.answer.get("query_parse_model"), ev["usage"],
-                                         limits, who)
+                            # priced as the model that read it (the briefing's own when no other is set)
+                            record_usage(state, "parse", parse_model(settings), ev["usage"], limits, who)
+                    if ev["type"] == "error":
+                        # the model declined to answer: noted for the owner, and its call still counted as spent
+                        record_failure(state, "briefing", body.question, ev.get("message", ""))
+                        if ev.get("usage"):
+                            record_usage(state, "answer", ev.get("model"), ev["usage"], limits, who)
+                        ev = {"type": "error", "message": ev.get("message", "")}
                     if ev["type"] == "final" and ev.get("usage"):
                         record_usage(state, "answer", ev.get("model"), ev["usage"], limits, who)
                     if ev["type"] == "final" and ev.get("answer") and not ev["answer"].get("no_records"):
@@ -570,8 +588,9 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                         ev = {**ev, "briefing_id": new_briefing_id()}
                         saved = [e for e in kept if e["type"] in ("plan", "sources")]
                         saved += [{"type": "text", "text": "".join(text)}, {**ev, "usage": None}]
-                        save_briefing(state, ev["briefing_id"], body.question,
-                                      body.model_dump(exclude={"question", "history"}), saved)
+                        # the id it was kept under: another, in the rare case that the first was taken
+                        ev["briefing_id"] = save_briefing(state, ev["briefing_id"], body.question,
+                                                          body.model_dump(exclude={"question", "history"}), saved)
                     if ev["type"] == "text":
                         text.append(ev["text"])
                     elif ev["type"] != "citation":

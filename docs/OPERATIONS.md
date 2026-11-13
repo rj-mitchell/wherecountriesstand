@@ -123,7 +123,7 @@ stopped and so cannot fail.
 | `error: backup: the last backup was made over two days ago` | The backup timer has stopped, or its runs fail | `systemctl status wcs-backup.timer wcs-backup.service`; `journalctl -u wcs-backup.service -n 50`. Run one now with `systemctl start wcs-backup.service`. |
 | `error: backup: the last off-site copy failed` (or `was over two days ago`) | The B2 key was changed or revoked, or B2 was down | `docker compose run --rm -T app wcs offsite` says whether the key works; see `docs/DEPLOY.md`, "Backups". |
 | `warning: backup: backups are kept on this server only` | No off-site copy is set up | Set it up (`docs/DEPLOY.md`, "Backups"). |
-| `briefing(s) failed in the last 24 hours` | The model API refused or timed out, or a bug | `wcs usage` lists each failure with its question and error. An API outage clears itself; the same error again and again is a bug. |
+| `briefing(s) failed in the last 24 hours` | The model API refused or timed out, the model declined to answer a question, or a bug | `wcs usage` lists each failure with its question and error. An API outage clears itself; the same error again and again is a bug. `The model declined to answer this question.` needs nothing done: the reader was told so and shown the sources, nothing was saved, and the call is counted in the spending. |
 
 ## Problems, corrections and withdrawn briefings
 
@@ -135,6 +135,9 @@ wcs reports                       # open reports, newest first (--all for closed
 wcs close-report 12               # dealt with: its contact address is deleted (the privacy notice says so)
 wcs withdraw AbC123xy --reason "It attributed a statement to the wrong country."
 ```
+
+A command that finds nothing to change (no open report with that number, no briefing with that id, a statement
+that is not waiting) says so and exits 1; so do the statement commands below.
 
 A withdrawn briefing's address says it was withdrawn, and why, and the corrections page lists its question and the
 reason. The same question can then be asked again. The alpha notice on every page links to the report form, and
@@ -157,8 +160,9 @@ index.
 
 ```bash
 wcs statements                                  # waiting and published, newest first (--all: declined and withdrawn too)
-wcs publish-statement 3                         # once its author is confirmed: shown from today, as written
-wcs publish-statement 3 --country KEN           # ... and recorded as Kenya's, for a country page once there is one
+wcs publish-statement 3 --checked "Reply from the mission's published address, 14 November."
+                                                # once its author is confirmed: shown from today, as written
+wcs publish-statement 3 --checked "…" --country KEN   # ... and recorded as Kenya's, for a country page once there is one
 wcs decline-statement 3 --reason "It is about another delegation's conduct."
 wcs update-statement 3 --text-file new.txt      # the author's new words (or --text, --name, --role, --link, --country)
 wcs withdraw-statement 3                        # at the author's request ("Withdrawn by its author.")
@@ -167,7 +171,10 @@ wcs withdraw-statement 3 --reason "It appeals for support, which statements can'
 
 1. **Confirm who sent it.** Reply to the address it came with, and wait for an answer from it: an address at the
    permanent mission or the foreign ministry is best; for any other, ask for confirmation from an address the mission
-   or government publishes. Do the same before an update or a withdrawal the author asks for.
+   or government publishes. Do the same before an update or a withdrawal the author asks for. Say how you
+   confirmed it when you publish (`--checked`, required): the note is kept in the statement's log, is never shown on
+   the site, and `wcs statements` reads it back as "sender confirmed". Leave the sender's email address out of the
+   note: the privacy notice promises that address is deleted, and the note is kept.
 2. **Check it against the rules** (policy 7.2; `/named.html` says them in plain words): up to 150 words (the site
    checks), about the briefing it sits beside, nothing defamatory or abusive, nothing about a private individual or
    another person's conduct, no personal data about anyone else, no appeals for votes, money or support.
