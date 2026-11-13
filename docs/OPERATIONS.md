@@ -136,6 +136,9 @@ wcs close-report 12               # dealt with: its contact address is deleted (
 wcs withdraw AbC123xy --reason "It attributed a statement to the wrong country."
 ```
 
+A command that finds nothing to change (no open report with that number, no briefing with that id, a statement
+that is not waiting) says so and exits 1; so do the statement commands below.
+
 A withdrawn briefing's address says it was withdrawn, and why, and the corrections page lists its question and the
 reason. The same question can then be asked again. The alpha notice on every page links to the report form, and
 gives the email address as well.

@@ -79,12 +79,14 @@ def check_text(text: str) -> str:
 
 
 def check_line(value: str, what: str, longest: int = 200) -> str:
-    """A name or role, on one line."""
+    """A name or role, on one line. ``what`` is written for "Give …." ("your role, such as …"); the message about
+    length names the thing by the words before its first comma ("Your role can be up to 200 characters.")."""
     v = " ".join((value or "").split())
     if len(v) < 2:
         raise ValueError(f"Give {what}.")
     if len(v) > longest:
-        raise ValueError(f"{what[0].upper()}{what[1:]} can be up to {longest} characters.")
+        thing = what.split(",")[0]
+        raise ValueError(f"{thing[0].upper()}{thing[1:]} can be up to {longest} characters.")
     return v
 
 

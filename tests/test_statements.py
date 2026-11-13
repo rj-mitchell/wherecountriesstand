@@ -61,6 +61,13 @@ def test_name_role_link_email_and_country_are_checked():
     for bad in ("", " x ", "x" * 201):
         with pytest.raises(ValueError):
             st.check_line(bad, "a name")
+    # the words for "too long" name the thing, not the whole phrase written for "Give …."
+    with pytest.raises(ValueError, match=r"^Give your role, such as Permanent Representative\.$"):
+        st.check_line(" ", "your role, such as Permanent Representative")
+    with pytest.raises(ValueError, match=r"^Your role can be up to 200 characters\.$"):
+        st.check_line("x" * 201, "your role, such as Permanent Representative")
+    with pytest.raises(ValueError, match=r"^A name can be up to 200 characters\.$"):
+        st.check_line("x" * 201, "a name")
     assert st.check_link("") == "" and st.check_link(" https://undocs.org/en/A/79/123 ") == "https://undocs.org/en/A/79/123"
     for bad in ("javascript:alert(1)", "undocs.org/x", "https://", "https://un.org/a b",
                 'https://un.org/a"onmouseover="x', "https://un.org/a'b", "https://un.org/<script>", "https://un.org/a>b"):
@@ -119,9 +126,9 @@ def test_the_test_servers_own_address_is_this_site(indexed, monkeypatch):  # noq
 
 # ---- the owner's commands ----------------------------------------------------------------------------------------
 
-def run(*args: str) -> str:
+def run(*args: str, exit_code: int = 0) -> str:
     result = CliRunner().invoke(cli, list(args))
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == exit_code, result.output
     return result.output
 
 
@@ -142,7 +149,11 @@ def test_the_owners_commands(indexed):  # noqa: F811
     assert blank.exit_code == 1 and "how you confirmed who sent it" in blank.output
     assert st.statement(state, sid)["status"] == "pending"
     assert run("publish-statement", str(sid), "--checked", CHECKED, "--country", "ken") == "published\n"
-    assert run("publish-statement", str(sid), "--checked", CHECKED) == "no waiting statement with that number\n"
+    # a command that did nothing says so and exits 1
+    assert run("publish-statement", str(sid), "--checked", CHECKED, exit_code=1) == \
+        "no waiting statement with that number\n"
+    assert run("decline-statement", str(sid), "--reason", "Too late.", exit_code=1) == \
+        "no waiting statement with that number\n"
     shown = st.statement(state, sid)
     assert shown["status"] == "published" and shown["country"] == "KEN"
     assert shown["shown_on"] == datetime.now(UTC).strftime("%Y-%m-%d")
@@ -161,11 +172,17 @@ def test_the_owners_commands(indexed):  # noqa: F811
     assert run("update-statement", str(sid), "--text", "New words, as the author sent them.") == "updated\n"
     assert st.statement(state, sid)["text"] == "New words, as the author sent them."
     assert [e["action"] for e in st.statement(state, sid)["log"]] == ["received", "published", "updated"]
-    assert run("update-statement", str(sid)).startswith("nothing changed")
+    assert run("update-statement", str(sid), exit_code=1).startswith("nothing changed")
 
     assert run("withdraw-statement", str(sid)) == "withdrawn\n"
     assert st.statement(state, sid)["reason"] == "Withdrawn by its author."
-    assert run("withdraw-statement", str(sid)) == "no waiting or published statement with that number\n"
+    assert run("withdraw-statement", str(sid), exit_code=1) == "no waiting or published statement with that number\n"
+    # the same for reports and saved briefings
+    assert run("close-report", "999", exit_code=1) == "no open report with that number\n"
+    assert run("withdraw", "nosuchbriefing", "--reason", "x", exit_code=1) == "no briefing with that id\n"
+    rid = api.post("/api/report", json={"kind": "error", "page": f"/b/{bid}", "message": "A date is wrong."}).json()["id"]
+    assert run("close-report", str(rid)) == "closed\n" and run("close-report", str(rid), exit_code=1)
+    assert run("withdraw", bid, "--reason", "It misread a statement.") == "withdrawn\n"
     assert api.get("/api/statements", params={"page": f"/b/{bid}"}).json()["statements"] == []
 
 
