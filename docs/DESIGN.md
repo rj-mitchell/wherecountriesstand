@@ -111,6 +111,13 @@ sunk panel with a dashed edge (never the sources' solid rule), headed "Statement
 author's role beneath, and ends "In their own words. Not checked or endorsed by Where Countries Stand." in italic.
 "If you're named" (`/named.html`) shows an example.
 
+**Why use this rather than a chatbot?** (decision 17). On the home page, straight under the question box and not
+moving it: one line in the record's serif ("Answers only from the UN's records, every point linked and checked."),
+then a plain `<details>` whose summary is set like "Full statement" under a source (the controls' sans, UN Blue, at
+least 24 px tall and 44 px on a touch screen), opening a ruled list of five one-line points. It is the first thing in
+`#home`, so it goes when a briefing is shown. The About page has the same points at more length. The screenshot at
+the top of this page was taken before it was added.
+
 The About page carries the family's "In the family" paragraph. Print keeps the site's name, the
 briefing, its sources with their addresses, and the independence notice.
 
