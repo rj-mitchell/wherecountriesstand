@@ -275,6 +275,30 @@ button:disabled { background: var(--ink-muted); cursor: progress; }
 .chip--ga { border-inline-start: 4px solid var(--un-blue); }
 .chip--sc { border-inline-start: 4px solid var(--council); }
 
+/* ---- Why use this rather than a chatbot? (the home page, under the question box) ----
+   One line that is always shown, then a disclosure. It is the first thing in #home, so it sits straight under the
+   question box and goes when a briefing is shown. Its negative margin collapses with the box's 1.75rem, leaving 1rem
+   between them, so the two read as one; the box itself does not move. */
+
+.why { margin-block-start: -0.75rem; }
+.why__line { margin: 0; }
+/* the summary in the controls' face, as "Full statement" under a source; at least 24px tall, and 44px on a touch
+   screen (Roboto is loaded at 400 and 500 only) */
+.why summary {
+  inline-size: fit-content;
+  padding-block: 0.2rem;
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  font-weight: 500;
+  color: var(--un-blue);
+}
+@media (pointer: coarse) {
+  .why summary { padding-block: calc((var(--wts-target) - 1lh) / 2); }
+}
+.why ul { margin: 0.25rem 0 0; padding: 0; list-style: none; border-block-start: 1px solid var(--rule-faint); }
+.why li { padding-block: 0.35rem; border-block-end: 1px solid var(--rule-faint); }
+.why details p { margin: 0.5rem 0 0; }
+
 /* ---- Numbered example questions, like agenda items ---- */
 
 ol.agenda { padding-inline-start: 2rem; margin: 0; }

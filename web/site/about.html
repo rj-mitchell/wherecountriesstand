@@ -17,10 +17,46 @@
       <h1>About Where Countries Stand</h1>
 
       <p>Where Countries Stand prepares short, balanced briefings on what countries have said at the United
-        Nations, and how they have voted. Every point quotes the UN’s own verbatim record and links to it.
-        If the record holds nothing relevant, it says “No records found” rather than guessing.</p>
+        Nations, and how they have voted.</p>
 
-      <h2>The record</h2>
+      <h2 id="why">Why use this rather than a chatbot?</h2>
+      <p><strong>Only the record.</strong> The AI that writes a briefing is given only the UN records found for
+        your question, and may use nothing else: not even well-known facts, dates or names. Those records are
+        statements made in the Security Council and in the General Assembly’s General Debate, and the General
+        Assembly’s recorded votes (<a href="#record">The record</a>).</p>
+      <p>One kind of source is not the official record. The General Debate’s verbatim records are published about
+        a year after each debate. Until then, a speech comes from the UN’s own General Debate website: the text
+        the delegation issued, as prepared, or an AI transcript of the UN’s English interpretation. Each is
+        labelled “not yet the official record” beside the source, and the record replaces it when it is
+        published.</p>
+      <p><strong>Every point linked and checked.</strong> Each point links to its source, and each source to where
+        it was published. Once a briefing is written, every citation is checked against the source text, and every
+        quotation word for word. Sentences that make a point no source supports are flagged
+        (<a href="#how">How a briefing is made</a> says how).</p>
+      <p><strong>Up to date.</strong> The UN’s records are read in twice a day: new Security Council meetings,
+        General Assembly votes and General Debate records. The home page shows the latest date held for each, and
+        the <a href="/status.html">Status page</a> when the record was last read.</p>
+      <p><strong>It says when there is nothing.</strong> If the record holds nothing relevant, you see “No records
+        found”, not a guess. When the search finds nothing at all, no briefing is written. When it finds only
+        passing mentions, the AI is told to say “No records found” and what the records do cover.</p>
+      <p><strong>Balanced by design.</strong> Evidence is chosen across groups of countries, not only by relevance:
+        by region as a rule, by bloc where a question compares blocs, or by place at the Security Council
+        (permanent, elected and invited members). The best statement is taken from each group in turn, with no
+        more than two from any one country unless the question names the countries it is about. Briefings report
+        in neutral words (<a href="#impartiality">Impartiality</a>).</p>
+      <p><strong>Records searched in full.</strong> Security Council verbatim records from 1992, and the General
+        Assembly’s General Debate and recorded votes from 1946, all searchable and linked. Security Council
+        statements, and General Debate statements taken from the UN’s verbatim records, carry their document
+        symbols (<i>S/PV</i>, <i>A/…/PV</i>); votes carry their resolution numbers. Unless a question gives
+        dates, a briefing draws on the last ten years.</p>
+      <p><strong>Open.</strong> The method and the code are published, every briefing is labelled as written by
+        AI, the site is free, and it doesn’t track you. The method is on this page, the code is linked under
+        <a href="#licences">Licences</a>, and the <a href="/privacy.html">privacy notice</a> sets out the little
+        that is stored.</p>
+      <p>Briefings here are written by AI too. The difference is what the AI is given and how it is checked.
+        <a href="#how">How it works</a></p>
+
+      <h2 id="record">The record</h2>
       <p><strong>The Security Council.</strong> Its debates from 1992, from the UN Security Council Debates corpus
         (Schoenfeld and others, CC0) to the end of 2023, and from the UN’s verbatim records (<i>S/PV</i>) since,
         checked for new meetings twice a day.</p>
@@ -31,7 +67,7 @@
         Rights of reply are included as records of their own.</p>
       <p><strong>General Assembly votes.</strong> Every recorded vote since 1946, from the UN Digital Library.</p>
 
-      <h2>How a briefing is made</h2>
+      <h2 id="how">How a briefing is made</h2>
       <p>The question is read for its subject, dates, countries and groups, shown as filters above each briefing.
         The record is searched by keyword and by meaning; statements by heads of State or Government and ministers
         carry a little more weight, and recent statements more than old ones. Countries are grouped by their
@@ -39,12 +75,12 @@
         is checked against them: unsourced connecting sentences are shown in grey, quotations not found word for
         word are marked, and judgemental words in the model’s own voice are underlined.</p>
 
-      <h2>Impartiality</h2>
+      <h2 id="impartiality">Impartiality</h2>
       <p>Briefings describe positions; they do not take them. The site’s own voice does not use labels such as
         “regime” or “rogue state”. Statements made on behalf of a group are attributed to the group. Countries are
         named as the UN names them.</p>
 
-      <h2>Licences</h2>
+      <h2 id="licences">Licences</h2>
       <p>The code is open source, under the AGPL-3.0 licence:
         <a href="https://github.com/rj-mitchell/wherecountriesstand">read the source code</a>. Briefing text is
         licensed CC BY-NC 4.0, because the UN’s own terms for its documents are non-commercial, with attribution.
