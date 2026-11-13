@@ -88,8 +88,10 @@ def check_line(value: str, what: str, longest: int = 200) -> str:
 
 
 def check_link(link: str) -> str:
+    """A link to the record: a web address, with no quotes, angle brackets or spaces (as Where MPs Stand)."""
     link = (link or "").strip()
-    if link and (urlsplit(link).scheme not in ("http", "https") or not urlsplit(link).hostname or " " in link):
+    if link and (urlsplit(link).scheme not in ("http", "https") or not urlsplit(link).hostname
+                 or any(c in link for c in "\"'<> ")):
         raise ValueError("The link to the record must be a web address starting https:// (or leave it empty).")
     return link
 

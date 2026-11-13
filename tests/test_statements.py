@@ -61,8 +61,9 @@ def test_name_role_link_email_and_country_are_checked():
         with pytest.raises(ValueError):
             st.check_line(bad, "a name")
     assert st.check_link("") == "" and st.check_link(" https://undocs.org/en/A/79/123 ") == "https://undocs.org/en/A/79/123"
-    for bad in ("javascript:alert(1)", "undocs.org/x", "https://", "https://un.org/a b"):
-        with pytest.raises(ValueError):
+    for bad in ("javascript:alert(1)", "undocs.org/x", "https://", "https://un.org/a b",
+                'https://un.org/a"onmouseover="x', "https://un.org/a'b", "https://un.org/<script>", "https://un.org/a>b"):
+        with pytest.raises(ValueError, match="web address"):
             st.check_link(bad)
     assert st.check_email(" press@mission.example ") == "press@mission.example"
     for bad in ("", "press", "press@mission", "a b@c.d"):
@@ -95,6 +96,7 @@ def test_what_is_sent_is_refused_with_words_for_the_reader(indexed):  # noqa: F8
     assert api.post("/api/statements", json={k: v for k, v in body(bid).items() if k != "link"}).status_code == 200
     for bad, says in ((body(bid, email="nobody"), "confirm who you are"),
                       (body(bid, link="javascript:alert(1)"), "web address"),
+                      (body(bid, link='https://undocs.org/en/A/79/123"><b>'), "web address"),
                       (body(bid, page="https://example.org/b/" + bid), "wherecountriesstand.com"),
                       (body(bid, page="https://wherecountriesstand.com/about.html"), "a briefing on this site"),
                       (body(bid, page="/b/nosuchbriefing"), "no briefing at that address")):
