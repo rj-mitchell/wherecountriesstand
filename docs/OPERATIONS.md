@@ -157,8 +157,9 @@ index.
 
 ```bash
 wcs statements                                  # waiting and published, newest first (--all: declined and withdrawn too)
-wcs publish-statement 3                         # once its author is confirmed: shown from today, as written
-wcs publish-statement 3 --country KEN           # ... and recorded as Kenya's, for a country page once there is one
+wcs publish-statement 3 --checked "Reply from the mission's published address, 14 November."
+                                                # once its author is confirmed: shown from today, as written
+wcs publish-statement 3 --checked "…" --country KEN   # ... and recorded as Kenya's, for a country page once there is one
 wcs decline-statement 3 --reason "It is about another delegation's conduct."
 wcs update-statement 3 --text-file new.txt      # the author's new words (or --text, --name, --role, --link, --country)
 wcs withdraw-statement 3                        # at the author's request ("Withdrawn by its author.")
@@ -167,7 +168,10 @@ wcs withdraw-statement 3 --reason "It appeals for support, which statements can'
 
 1. **Confirm who sent it.** Reply to the address it came with, and wait for an answer from it: an address at the
    permanent mission or the foreign ministry is best; for any other, ask for confirmation from an address the mission
-   or government publishes. Do the same before an update or a withdrawal the author asks for.
+   or government publishes. Do the same before an update or a withdrawal the author asks for. Say how you
+   confirmed it when you publish (`--checked`, required): the note is kept in the statement's log, is never shown on
+   the site, and `wcs statements` reads it back as "sender confirmed". Leave the sender's email address out of the
+   note: the privacy notice promises that address is deleted, and the note is kept.
 2. **Check it against the rules** (policy 7.2; `/named.html` says them in plain words): up to 150 words (the site
    checks), about the briefing it sits beside, nothing defamatory or abusive, nothing about a private individual or
    another person's conduct, no personal data about anyone else, no appeals for votes, money or support.

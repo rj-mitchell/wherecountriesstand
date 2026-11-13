@@ -312,6 +312,8 @@ def _statement_lines(st: dict) -> list[str]:
     if st["link"]:
         lines.append(f"    record: {st['link']}")
     lines += [f"    {para}" for para in st["text"].splitlines() if para.strip()]
+    # the owner's note of how the sender was confirmed, from the log's entry for the publishing
+    lines += [f"    sender confirmed: {e['note']}" for e in st["log"] if e["action"] == "published" and e.get("note")]
     lines.append(f"    ({word_count(st['text'])} words"
                  + (f"; shown from {st['shown_on']}" if st["status"] == "published" else "")
                  + (f"; {st['status']}: {st['reason']}" if st["reason"] else "") + ")")
@@ -354,13 +356,22 @@ app.command("list-statements", hidden=True)(list_statements)
 
 
 @app.command("publish-statement")
-def publish_statement_cmd(statement_id: int, country: str = typer.Option(
+def publish_statement_cmd(statement_id: int, checked: str = typer.Option(
+        ..., help="how you confirmed who sent it, for the log (never shown on the site), e.g. 'Reply from the "
+                  "mission's published address, 14 November.' Do not put the sender's email address in it: the "
+                  "privacy notice promises that address is deleted"),
+        country: str = typer.Option(
         None, help="the country it speaks for (ISO alpha-3, e.g. KEN), for that country's page once there is one")) \
         -> None:
-    """Show a waiting statement beside its briefing, dated today, as written (never edited)."""
+    """Show a waiting statement beside its briefing, dated today, as written (never edited), once you have confirmed
+    who sent it: --checked says how."""
     from wcs.api.statements import publish_statement
 
-    ok = publish_statement(_statements_state(), statement_id, _country(country))
+    try:
+        ok = publish_statement(_statements_state(), statement_id, _country(country), checked=checked)
+    except ValueError as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(1) from exc
     typer.echo("published" if ok else "no waiting statement with that number")
 
 

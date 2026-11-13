@@ -3,7 +3,7 @@ delegation or permanent mission, its government, a person named in the UN's reco
 a short statement in their own words beside an item on the site.
 
 The items are saved briefings (``/b/<id>``): the site has no country pages yet. A statement can be given the country
-it speaks for (``wcs publish-statement 3 --country KEN``), so a country's page can gather its statements once there is
+it speaks for (``wcs publish-statement 3 --checked "…" --country KEN``), so a country's page can gather its statements once there is
 one (``GET /api/statements?country=KEN``).
 
 A statement is kept in the site's own database (``data/state.db``, table ``statements``, as problem reports are) and
@@ -36,7 +36,8 @@ SITE_NAME = "Where Countries Stand"
 NOT_ENDORSED = f"In their own words. Not checked or endorsed by {SITE_NAME}."
 # How long the confirming address is kept after a statement is withdrawn or declined (the privacy notice).
 EMAIL_MONTHS = 3
-# What the public sees of a statement: never its author's email address, the reason it ended or the owner's log.
+# What the public sees of a statement: never its author's email address, the reason it ended or the owner's log
+# (which holds the owner's note of how the sender was confirmed).
 PUBLIC = ("id", "page", "country", "name", "role", "text", "link", "shown_on")
 # A saved briefing's address, as app.shared_briefing accepts it.
 _ITEM = re.compile(r"^/b/([A-Za-z0-9_-]{6,20})$")
@@ -191,11 +192,17 @@ def _change(state: StateDB, sid: int, from_status: tuple[str, ...], action: str,
     return True
 
 
-def publish_statement(state: StateDB, sid: int, country: str | None = None) -> bool:
-    """Show a waiting statement beside its briefing, dated today, as written. ``country`` records the country it
-    speaks for, for that country's page once there is one."""
+def publish_statement(state: StateDB, sid: int, country: str | None = None, *, checked: str) -> bool:
+    """Show a waiting statement beside its briefing, dated today, as written, once the owner has confirmed who sent
+    it. ``checked`` says how (policy 7.2, "Who is checked"; as Where Landlords Stand): it is kept in the log's entry
+    for the publishing, which only the owner sees, and should not hold the sender's email address, which the privacy
+    notice promises to delete. ``country`` records the country it speaks for, for that country's page once there is
+    one."""
+    checked = " ".join((checked or "").split())
+    if not checked:
+        raise ValueError("Say how you confirmed who sent it (--checked), for the log.")
     extra = {"country": country} if country else {}
-    return _change(state, sid, ("pending",), "published", status="published", shown_on=today(), **extra)
+    return _change(state, sid, ("pending",), "published", checked, status="published", shown_on=today(), **extra)
 
 
 def decline_statement(state: StateDB, sid: int, reason: str) -> bool:

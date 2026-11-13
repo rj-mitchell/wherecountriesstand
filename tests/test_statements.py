@@ -18,6 +18,7 @@ from wcs.cli import app as cli
 
 SAID = "Our delegation's position on adaptation finance is set out in full in document A/79/123, paragraph 4."
 WORDS = "In their own words. Not checked or endorsed by Where Countries Stand."
+CHECKED = "Reply from the mission's published address, 14 November."
 
 
 def briefing(api) -> str:
@@ -135,11 +136,20 @@ def test_the_owners_commands(indexed):  # noqa: F811
     assert "(16 words)" in listed and SAID in listed
     assert run("list-statements") == listed                                          # Where Councils Stand's name
 
-    assert run("publish-statement", str(sid), "--country", "ken") == "published\n"
-    assert run("publish-statement", str(sid)) == "no waiting statement with that number\n"
+    # how the sender was confirmed is required, and kept in the log's entry for the publishing
+    assert CliRunner().invoke(cli, ["publish-statement", str(sid), "--country", "ken"]).exit_code == 2
+    blank = CliRunner().invoke(cli, ["publish-statement", str(sid), "--checked", "  "])
+    assert blank.exit_code == 1 and "how you confirmed who sent it" in blank.output
+    assert st.statement(state, sid)["status"] == "pending"
+    assert run("publish-statement", str(sid), "--checked", CHECKED, "--country", "ken") == "published\n"
+    assert run("publish-statement", str(sid), "--checked", CHECKED) == "no waiting statement with that number\n"
     shown = st.statement(state, sid)
     assert shown["status"] == "published" and shown["country"] == "KEN"
     assert shown["shown_on"] == datetime.now(UTC).strftime("%Y-%m-%d")
+    assert [(e["action"], e.get("note")) for e in shown["log"]] == [("received", None), ("published", CHECKED)]
+    assert f"sender confirmed: {CHECKED}" in run("statements")                       # the owner can read it back
+    help_text = " ".join(re.sub(r"[│╭╮╰╯─]", " ", run("publish-statement", "--help")).split())
+    assert "Do not put the sender's email address in it" in help_text and "never shown on the site" in help_text
 
     assert CliRunner().invoke(cli, ["decline-statement", str(other)]).exit_code != 0   # a reason is required
     assert run("decline-statement", str(other), "--reason", "It is about another delegation's conduct.") == "declined\n"
@@ -162,7 +172,7 @@ def test_the_owners_commands(indexed):  # noqa: F811
 def test_the_confirming_address_goes_three_months_after_a_statement_ends(tmp_path):
     state = StateDB(tmp_path / "s.db")
     ids = [st.add_statement(state, "/b/AbC123xy", "A", "Role", "Words.", "", f"{n}@mission.example") for n in range(4)]
-    st.publish_statement(state, ids[0])
+    st.publish_statement(state, ids[0], checked=CHECKED)
     st.withdraw_statement(state, ids[1], "Withdrawn by its author.")
     st.decline_statement(state, ids[2], "Off the subject.")
     now = datetime.now(UTC)
@@ -191,7 +201,7 @@ def test_a_published_statement_is_shown_beside_its_briefing_without_the_address(
     api, state = make(indexed, FakeClient(), requests_per_minute=1000)
     bid = briefing(api)
     sid = api.post("/api/statements", json=body(bid, text="First paragraph.\n\nSecond paragraph.")).json()["id"]
-    st.publish_statement(state, sid, "KEN")
+    st.publish_statement(state, sid, "KEN", checked=CHECKED)
     out = api.get("/api/statements", params={"page": f"/b/{bid}"}).json()
     assert out["note"] == WORDS
     [shown] = out["statements"]
@@ -200,6 +210,13 @@ def test_a_published_statement_is_shown_beside_its_briefing_without_the_address(
                      "text": "First paragraph.\n\nSecond paragraph.", "link": "https://undocs.org/en/A/79/123",
                      "shown_on": datetime.now(UTC).strftime("%Y-%m-%d")}
     assert "mission.example" not in json.dumps(out)
+    # nor the owner's note of how the sender was confirmed: it is in the log, which is never sent
+    assert st.statement(state, sid)["log"][-1]["note"] == CHECKED
+    assert "published address" not in json.dumps(out) and "log" not in shown
+    assert "published address" not in api.get("/api/statements", params={"country": "KEN"}).text
+    assert "published address" not in api.get(f"/api/briefings/{bid}").text
+    with pytest.raises(ValueError, match="how you confirmed"):
+        st.publish_statement(state, sid, checked=" ")
     assert api.get("/api/statements", params={"country": "ken"}).json()["statements"] == [shown]
     assert api.get("/api/statements", params={"page": "/b/otherbriefing"}).json()["statements"] == []
     assert api.get("/api/statements").status_code == 422
@@ -229,7 +246,7 @@ def test_statements_never_reach_the_model_the_index_or_a_briefing(indexed):  # n
     bid = briefing(api)
     marker = "Zanzibarian marker phrase about climate finance"
     sid = api.post("/api/statements", json=body(bid, text=f"{marker}. Climate finance for adaptation.")).json()["id"]
-    st.publish_statement(state, sid, "KEN")
+    st.publish_statement(state, sid, "KEN", checked=CHECKED)
     calls_before = len(client.calls)
     again = api.post("/api/ask", json={"question": "What has Kenya said about climate finance for adaptation?"})
     assert len(client.calls) > calls_before                                          # a new briefing was written
