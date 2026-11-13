@@ -48,8 +48,12 @@ def make_backup(state_db: Path, dest: Path, keep: int = 14, day: str | None = No
 def restore_backup(archive: Path, state_db: Path) -> Path | None:
     """Put a backup's state database back as ``state_db``. Stop the site first. The backup is unpacked and checked
     before anything is replaced; the database it replaces is kept beside it as ``state.db.before-restore``, which is
-    returned (None when there was none)."""
+    returned (None when there was none). A kept copy from an earlier restore is never written over: the restore is
+    refused until it has been moved or deleted."""
     archive, state_db = Path(archive), Path(state_db)
+    kept = state_db.with_name(state_db.name + ".before-restore") if state_db.exists() else None
+    if kept and kept.exists():  # the only copy of what an earlier restore replaced: never written over
+        raise RuntimeError(f"{kept} is still there from an earlier restore: move or delete it first")
     state_db.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=state_db.parent) as tmp:
         db = Path(tmp) / "state.db"
@@ -71,10 +75,12 @@ def restore_backup(archive: Path, state_db: Path) -> Path | None:
             raise RuntimeError(f"the backup's database failed its integrity check: {ok}")
         if not {"usage", "briefings"} <= tables:
             raise RuntimeError(f"{archive.name} is not a backup of this site's state database")
-        kept = None
-        if state_db.exists():
-            kept = state_db.with_name(state_db.name + ".before-restore")
-            shutil.copy2(state_db, kept)
+        if kept:
+            # copied under a temporary name and renamed into place, so a failure part-way never leaves a damaged
+            # kept copy
+            copy = Path(tmp) / kept.name
+            shutil.copy2(state_db, copy)
+            copy.replace(kept)
         for suffix in ("-wal", "-shm", "-journal"):  # left from the database being replaced, they would corrupt it
             Path(f"{state_db}{suffix}").unlink(missing_ok=True)
         db.chmod(0o600)

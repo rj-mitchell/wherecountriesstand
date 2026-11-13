@@ -222,7 +222,8 @@ def restore(archive: str = typer.Argument(..., help="a backup: /backups/wcs-stat
             yes: bool = typer.Option(False, "--yes", help="don't ask first")) -> None:
     """Put a backup of the state database back (spending, saved briefings, reports). Stop the site first
     (docs/DEPLOY.md, "Backups"). The backup is checked before anything is replaced, and the database it replaces is
-    kept as data/state.db.before-restore."""
+    kept as data/state.db.before-restore. A kept copy from an earlier restore is never written over: move or delete
+    it first."""
     from pathlib import Path
 
     from wcs.backup import restore_backup
