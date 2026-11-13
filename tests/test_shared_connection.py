@@ -46,3 +46,18 @@ def test_views_and_settings_are_shared_registrations_are_not():
     assert seen == {"view": 1, "registered": False}
     assert shared(con) is con
 
+
+def test_a_row_read_singly_does_not_block_the_next_registration_or_relation():
+    """DuckDB 2 refuses to register a table or run a relation while the cursor's last result has rows unread, which
+    is how every fetchone() that finds its row leaves it. A request thread keeps its cursor, so one lookup would
+    otherwise break the next search on that thread."""
+    import pyarrow as pa
+
+    con = shared()
+    con.execute("CREATE TABLE t AS SELECT range AS i FROM range(5000)")
+    assert con.execute("SELECT i FROM t ORDER BY i").fetchone() == (0,)
+    con.register("mine", pa.table({"x": [7]}))
+    assert con.execute("SELECT x FROM mine").fetchone() == (7,)
+    assert con.sql("SELECT count(*) FROM t").fetchall() == [(5000,)]
+    assert con.execute("SELECT i FROM t ORDER BY i").fetchone() == (0,)
+    assert con.table("t").limit(1).fetchall() == [(0,)]
