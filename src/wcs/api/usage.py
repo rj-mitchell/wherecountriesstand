@@ -90,8 +90,8 @@ def token_counts(usage: dict[str, int] | None) -> dict[str, int]:
     (``cache_read_tokens``, ``cache_write_tokens``, and ``input_tokens`` that includes the cache writes) or the SDK's
     own (``cache_read_input_tokens``, ``cache_creation_input_tokens``, and ``input_tokens`` that does not)."""
     u = usage or {}
-    # Unlike Where MPs Stand's copy, which is otherwise the same: every count is made a whole number, and this
-    # site's name for cache reads is used whenever it is present, even at 0, before the SDK's.
+    # Every count is made a whole number, and this site's name for cache reads is used whenever it is present, even
+    # at 0, before the SDK's.
     reads = u.get("cache_read_tokens")
     if reads is None:
         reads = u.get("cache_read_input_tokens")
