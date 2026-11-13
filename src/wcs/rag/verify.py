@@ -106,7 +106,9 @@ def _is_connective(text: str, short: bool = True) -> bool:
 def recheck_flags(answer: dict[str, Any] | None) -> dict[str, Any] | None:
     """A saved briefing's points to check, judged again by the current rules: a passage since recognised as a date,
     a label, a lead-in or a note about the evidence is no longer one. Being short is never reason enough: a flagged
-    sentence may be a claim that verify() split off a lead-in. Nothing is ever newly flagged."""
+    sentence may be a claim that verify() split off a lead-in. Nor is standing before a lead-in: a passage is judged
+    here without the block it was written in, so a whole line, or a sentence that closed, is not taken for the opening
+    of the quotation after it. Nothing is ever newly flagged."""
     segs = (answer or {}).get("segments")
     if not segs:
         return answer
@@ -159,6 +161,7 @@ _EVIDENCE_NOTE = re.compile(
 _SOMEONE_SAID = re.compile(r"\b(?:[A-Z][\w'-]+|[Hh]e|[Ss]he|[Tt]hey)\s+(?:also\s+)?"
                            r"(?:said|argued|claimed|stated|told|described|called)\b")
 _SENTENCE_END = re.compile(r"[.!?][\"')\]]*\s+\S")
+_CLOSED = re.compile(r"[.!?][\"')\]]*$")  # the text ends where a sentence does
 _ATTRIBUTION_MAX = 220
 
 
@@ -172,7 +175,7 @@ def _classify_uncited(text: str, next_is_cited: bool, flagged: bool = False) -> 
     * anything else (a claim with no citation) is ``unsupported``.
 
     ``flagged`` is for judging again a passage already marked as a point to check (``recheck_flags``): there, being
-    short does not make it a join.
+    short does not make it a join, and a line that ended or a sentence that closed is no lead-in.
     """
     # an honorific's full stop ("Mr. Delattre") ends no sentence: the checks read a copy with it masked (the same
     # length, so positions carry over), and the text kept is the original
@@ -198,7 +201,14 @@ def _classify_uncited(text: str, next_is_cited: bool, flagged: bool = False) -> 
         body = re.sub(r"^[\s\-*•\d.)]+", "", mlines[i]).strip()
         lead_in = (last and next_is_cited and len(body) <= _ATTRIBUTION_MAX
                    and not _SENTENCE_END.search(body.rstrip()) and not body.endswith("."))
-        if ((_is_connective(line, short=not flagged) and i not in claims) or _LABEL.match(line) or lead_in
+        if flagged and (line.endswith("\n") or _CLOSED.search(body)):
+            # judged again on its own, a flagged passage is the last line of nothing: a line that ended, or a
+            # sentence that closed ("... in real terms?"), led in to no quotation when verify() read it
+            lead_in = False
+        # judged again, a passage that does not end its line may be a sentence verify() split off a lead-in, which
+        # it counts as a claim whatever it looks like (a date, a heading, something short)
+        claim = i in claims or (flagged and not line.endswith("\n"))
+        if ((_is_connective(line, short=not flagged) and not claim) or _LABEL.match(line) or lead_in
                 or (_EVIDENCE_NOTE.search(body) and not _SOMEONE_SAID.search(body))):
             status = "connective"
         else:
