@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+import typer
 from test_api import QUESTION, events, make
 from test_pipeline import FakeClient, indexed  # noqa: F401  (the fixture)
 from typer.testing import CliRunner
@@ -159,8 +160,10 @@ def test_the_owners_commands(indexed):  # noqa: F811
     assert shown["shown_on"] == datetime.now(UTC).strftime("%Y-%m-%d")
     assert [(e["action"], e.get("note")) for e in shown["log"]] == [("received", None), ("published", CHECKED)]
     assert f"sender confirmed: {CHECKED}" in run("statements")                       # the owner can read it back
-    help_text = " ".join(re.sub(r"[│╭╮╰╯─]", " ", run("publish-statement", "--help")).split())
-    assert "Do not put the sender's email address in it" in help_text and "never shown on the site" in help_text
+    # the option's own help, not the help page as drawn (its boxes and colours differ from one terminal to another)
+    option = next(o for o in typer.main.get_command(cli).commands["publish-statement"].params if o.name == "checked")
+    assert option.required and "never shown on the site" in option.help
+    assert "Do not put the sender's email address in it" in option.help
 
     assert CliRunner().invoke(cli, ["decline-statement", str(other)]).exit_code != 0   # a reason is required
     assert run("decline-statement", str(other), "--reason", "It is about another delegation's conduct.") == "declined\n"
