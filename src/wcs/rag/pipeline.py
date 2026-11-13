@@ -132,7 +132,7 @@ class Pipeline:
             yield {"type": "final", "answer": {"segments": [{"text": NO_RECORDS + " The archive contains no records "
                    "matching this question and these filters.", "sources": [], "cited": [], "status": "connective"}],
                    "markdown": NO_RECORDS, "no_records": True, "citations_total": 0, "citations_invalid": 0,
-                   "grounded_ratio": 1.0}, "usage": None}
+                   "grounded_ratio": 1.0, "unsupported_segments": 0}, "usage": None}
             return
         if not self.has_model():
             yield {"type": "final", "answer": None, "usage": None,

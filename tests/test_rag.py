@@ -148,6 +148,8 @@ def test_pipeline_without_a_model_shows_the_evidence(settings, monkeypatch):
     out = answer_once(Pipeline(settings, today=TODAY), AskRequest("What has been said about peacekeeping?"))
     assert out["plan"]["plan"]["parser"] == "offline"
     assert out["final"]["answer"]["no_records"]   # nothing is indexed in an empty data folder
+    # the same counts as a written briefing carries (rag.verify), so every answer can be read the same way
+    assert out["final"]["answer"]["unsupported_segments"] == 0 and out["final"]["answer"]["grounded_ratio"] == 1.0
 
 
 def test_lead_ins_in_pieces_are_not_claims():
