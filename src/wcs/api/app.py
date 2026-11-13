@@ -588,8 +588,9 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                         ev = {**ev, "briefing_id": new_briefing_id()}
                         saved = [e for e in kept if e["type"] in ("plan", "sources")]
                         saved += [{"type": "text", "text": "".join(text)}, {**ev, "usage": None}]
-                        save_briefing(state, ev["briefing_id"], body.question,
-                                      body.model_dump(exclude={"question", "history"}), saved)
+                        # the id it was kept under: another, in the rare case that the first was taken
+                        ev["briefing_id"] = save_briefing(state, ev["briefing_id"], body.question,
+                                                          body.model_dump(exclude={"question", "history"}), saved)
                     if ev["type"] == "text":
                         text.append(ev["text"])
                     elif ev["type"] != "citation":

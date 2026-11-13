@@ -326,11 +326,21 @@ def new_briefing_id() -> str:
 
 def save_briefing(state: StateDB, bid: str, question: str, options: dict[str, Any],
                   events: list[dict[str, Any]]) -> str:
-    """A written briefing, kept at its own address (/b/<id>) while the site runs, unless withdrawn."""
+    """A written briefing, kept at its own address (/b/<id>) while the site runs, unless withdrawn. Returns the id it
+    was kept under: ``bid``, or another if that one is taken (as Where MPs Stand's ``store_briefing``), with the
+    events' own ``briefing_id`` changed to match."""
     with state.connect() as con:
-        con.execute("INSERT INTO briefings (id, at, question, options, events) VALUES (?, ?, ?, ?, ?)",
-                    (bid, utcnow(), question, json.dumps(options), json.dumps(events, default=str)))
-    return bid
+        for _ in range(5):
+            try:
+                con.execute("INSERT INTO briefings (id, at, question, options, events) VALUES (?, ?, ?, ?, ?)",
+                            (bid, utcnow(), question, json.dumps(options), json.dumps(events, default=str)))
+                return bid
+            except sqlite3.IntegrityError as exc:  # an id collision is astronomically unlikely; try another
+                if "UNIQUE" not in str(exc):
+                    raise
+                taken, bid = bid, new_briefing_id()
+                events = [{**e, "briefing_id": bid} if e.get("briefing_id") == taken else e for e in events]
+    raise RuntimeError("could not allocate a briefing id")
 
 
 def saved_briefing(state: StateDB, bid: str) -> dict[str, Any] | None:

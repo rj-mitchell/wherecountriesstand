@@ -289,6 +289,26 @@ def test_briefings_are_saved_shared_and_withdrawn(indexed, monkeypatch):  # noqa
     assert reports(state) == [] and reports(state, open_only=False)[0]["contact"] == ""
 
 
+def test_a_briefing_whose_id_is_taken_is_kept_under_another(indexed, monkeypatch):  # noqa: F811
+    """As Where MPs Stand: a clash of ids (64 random bits) once lost a briefing that had been written and paid for.
+    It is kept under a new id, which the reader, the saved copy and the cached copy all carry."""
+    monkeypatch.setattr("wcs.api.app.new_briefing_id", lambda: "SAMEid11")
+    api, state = make(indexed, FakeClient())
+    first = events(api.post("/api/ask", json=QUESTION))[-1]
+    assert first["briefing_id"] == "SAMEid11"
+    other = {"question": "What has Kenya said about climate finance?"}
+    second = events(api.post("/api/ask", json=other))[-1]
+    bid = second["briefing_id"]
+    assert second["type"] == "final" and bid != "SAMEid11" and len(bid) >= 6
+    saved = api.get(f"/api/briefings/{bid}").json()
+    assert saved["question"] == other["question"] and saved["events"][-1]["briefing_id"] == bid
+    assert api.get("/api/briefings/SAMEid11").json()["question"] == QUESTION["question"]   # the first is untouched
+    assert events(api.post("/api/ask", json=other))[-1]["briefing_id"] == bid                # and the cached copy
+    with state.connect() as con:
+        assert con.execute("SELECT count(*) FROM briefings").fetchone()[0] == 2
+        assert con.execute("SELECT count(*) FROM failures WHERE kind = 'briefing'").fetchone()[0] == 0
+
+
 def test_pages_use_absolute_paths(indexed):  # noqa: F811
     """The home page is also served at /b/<id>, so its files and links must not be relative."""
     import re
