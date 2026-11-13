@@ -150,6 +150,12 @@ class Pipeline:
                 yield event
         if final is None:
             raise RuntimeError("the model returned no answer")
+        if final.get("stop_reason") == "refusal":
+            # the model declined: an error for the reader, never an empty briefing shown as fully grounded (as Where
+            # MPs Stand). The call was still paid for, so its token counts go with the event to be recorded.
+            yield {"type": "error", "message": "The model declined to answer this question.",
+                   "usage": final["usage"], "model": final.get("model")}
+            return
         report = verify(final["blocks"], sources)
         drop_preambles(report.segments)       # "Across the records retrieved, ..." openers
         britishise_segments(report.segments)  # the model's own words only; quotations stay verbatim
@@ -164,6 +170,6 @@ def answer_once(pipeline: Pipeline, req: AskRequest) -> dict[str, Any]:
     """Run a question to the end and collect the plan, sources and answer."""
     out: dict[str, Any] = {}
     for ev in pipeline.run(req):
-        if ev["type"] in ("plan", "sources", "final"):
+        if ev["type"] in ("plan", "sources", "final", "error"):
             out[ev["type"]] = ev
     return out

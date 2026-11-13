@@ -563,6 +563,12 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                         if ev.get("usage"):
                             record_usage(state, "parse", settings.answer.get("query_parse_model"), ev["usage"],
                                          limits, who)
+                    if ev["type"] == "error":
+                        # the model declined to answer: noted for the owner, and its call still counted as spent
+                        record_failure(state, "briefing", body.question, ev.get("message", ""))
+                        if ev.get("usage"):
+                            record_usage(state, "answer", ev.get("model"), ev["usage"], limits, who)
+                        ev = {"type": "error", "message": ev.get("message", "")}
                     if ev["type"] == "final" and ev.get("usage"):
                         record_usage(state, "answer", ev.get("model"), ev["usage"], limits, who)
                     if ev["type"] == "final" and ev.get("answer") and not ev["answer"].get("no_records"):

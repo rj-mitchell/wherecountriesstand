@@ -4,7 +4,7 @@ import json
 
 import pytest
 from fastapi.testclient import TestClient
-from test_pipeline import TODAY, FakeClient, indexed  # noqa: F401  (the fixture)
+from test_pipeline import TODAY, FakeClient, RefusingClient, indexed  # noqa: F401  (the fixture)
 
 from wcs.api.app import SITE_DIR as SITE
 from wcs.api.app import create_app
@@ -89,6 +89,26 @@ def test_ask_streams_records_spend_and_caches(indexed):  # noqa: F811
                                                                indexed.usage, "claude-sonnet-5-5"))
     again = events(api.post("/api/ask", json=QUESTION))
     assert again[-1]["cached"] is True and len(client.calls) == 1   # answered from the cache
+
+
+def test_a_refusal_is_an_error_and_nothing_is_saved_or_cached(indexed):  # noqa: F811
+    """The model declining to answer was once shown, saved and cached as an empty briefing with nothing to check.
+    The reader is told, the owner has a note of it, and the call is still counted as spent."""
+    client = RefusingClient()
+    api, state = make(indexed, client)
+    evs = events(api.post("/api/ask", json=QUESTION))
+    assert [e["type"] for e in evs] == ["plan", "sources", "error"]
+    assert evs[-1] == {"type": "error", "message": "The model declined to answer this question."}
+    with state.connect() as con:
+        assert con.execute("SELECT count(*) FROM briefings").fetchone()[0] == 0
+        assert con.execute("SELECT count(*) FROM answer_cache").fetchone()[0] == 0
+        assert con.execute("SELECT question, error FROM failures WHERE kind = 'briefing'").fetchall() == [
+            (QUESTION["question"], "The model declined to answer this question.")]
+        kind, cost = con.execute("SELECT kind, cost_usd FROM usage").fetchone()
+    assert kind == "answer" and cost == pytest.approx(cost_usd({"input_tokens": 1000, "output_tokens": 200},
+                                                               indexed.usage, "claude-sonnet-5-5"))
+    again = events(api.post("/api/ask", json=QUESTION))
+    assert again[-1]["type"] == "error" and len(client.calls) == 2   # asked afresh: nothing was kept to replay
 
 
 def test_caps_fall_back_to_sources(indexed):  # noqa: F811

@@ -119,3 +119,21 @@ def test_briefings_are_written_with_curly_quotes(indexed):
     text = "".join(s["text"] for s in final["segments"])
     assert text.startswith("Kenya’s delegate said “") and "”" in text and '"' not in text and "'" not in text
     assert final["quotes_total"] == 1  # the quotation was checked before its marks were curled
+
+
+class RefusingClient(FakeClient):
+    """Declines to answer: no text, and the stop reason the API gives for it."""
+
+    def _stream(self, **kw):
+        self.calls.append(kw)
+        return FakeStream([], stop_reason="refusal")
+
+
+def test_pipeline_reports_refusals_instead_of_answering(indexed):
+    """As Where MPs Stand: the model declining is an error, not an empty briefing with nothing to mark."""
+    eng = Engine(indexed, embedder=HashingEmbedder(64), today=TODAY)
+    out = answer_once(Pipeline(indexed, eng, client=RefusingClient(), today=TODAY),
+                      AskRequest("What has been said about climate finance since 2020?"))
+    assert "final" not in out and len(out["sources"]["sources"]) == 2
+    assert out["error"]["message"] == "The model declined to answer this question."
+    assert out["error"]["usage"]["input_tokens"] == 1000  # the call was still paid for

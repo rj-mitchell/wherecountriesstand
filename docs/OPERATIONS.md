@@ -123,7 +123,7 @@ stopped and so cannot fail.
 | `error: backup: the last backup was made over two days ago` | The backup timer has stopped, or its runs fail | `systemctl status wcs-backup.timer wcs-backup.service`; `journalctl -u wcs-backup.service -n 50`. Run one now with `systemctl start wcs-backup.service`. |
 | `error: backup: the last off-site copy failed` (or `was over two days ago`) | The B2 key was changed or revoked, or B2 was down | `docker compose run --rm -T app wcs offsite` says whether the key works; see `docs/DEPLOY.md`, "Backups". |
 | `warning: backup: backups are kept on this server only` | No off-site copy is set up | Set it up (`docs/DEPLOY.md`, "Backups"). |
-| `briefing(s) failed in the last 24 hours` | The model API refused or timed out, or a bug | `wcs usage` lists each failure with its question and error. An API outage clears itself; the same error again and again is a bug. |
+| `briefing(s) failed in the last 24 hours` | The model API refused or timed out, the model declined to answer a question, or a bug | `wcs usage` lists each failure with its question and error. An API outage clears itself; the same error again and again is a bug. `The model declined to answer this question.` needs nothing done: the reader was told so and shown the sources, nothing was saved, and the call is counted in the spending. |
 
 ## Problems, corrections and withdrawn briefings
 

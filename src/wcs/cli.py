@@ -656,6 +656,8 @@ def ask(question: str, mode: str = "summary", as_json: bool = typer.Option(False
         typer.echo("\n" + final["answer"]["markdown"])
     elif final.get("note"):
         typer.echo("\n" + final["note"])
+    elif out.get("error"):
+        typer.echo("\n" + out["error"]["message"])
 
 
 if __name__ == "__main__":
