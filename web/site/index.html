@@ -58,6 +58,29 @@
     </section>
 
     <div id="home">
+      <!-- Under the question box, and gone with the rest of the home page once a question is asked: one line that is
+           always shown, and the reasons behind it for anyone who opens them (docs/DECISIONS.md, 17). The same points
+           are on the About page at more length; keep the two in step. -->
+      <div class="why">
+        <p class="why__line">Answers only from the UN’s records, every point linked and checked.</p>
+        <details>
+          <summary>Why use this rather than a chatbot?</summary>
+          <ul>
+            <li><strong>Only the record.</strong> The AI that writes a briefing is given only the UN records found
+              for your question, and may use nothing else.</li>
+            <li><strong>Every point linked and checked.</strong> Each point links to its source. Citations are
+              checked against the source text, quotations word for word, and any sentence no source supports is
+              flagged.</li>
+            <li><strong>Up to date.</strong> The UN’s records are read in twice a day.</li>
+            <li><strong>It says when there is nothing.</strong> If the record holds nothing relevant, you see “No
+              records found”, not a guess.</li>
+            <li><strong>Balanced by design.</strong> Evidence is chosen across groups of countries (by region, by
+              bloc or by place at the Security Council), not only by relevance.</li>
+          </ul>
+          <p>Briefings here are written by AI too. The difference is what the AI is given and how it is checked.
+            <a href="/about.html#how">How it works</a></p>
+        </details>
+      </div>
       <section>
         <h2 class="label">Example questions</h2>
         <ol class="agenda" id="examples">
@@ -80,7 +103,6 @@
           <li><span>quotes the verbatim UN record</span><span class="dots"></span><span>with its document symbol</span></li>
           <li><span>groups countries</span><span class="dots"></span><span>by membership on the date</span></li>
           <li><span>marks translated speeches</span><span class="dots"></span><span><i>(spoke in French)</i></span></li>
-          <li><span>says when nothing is found</span><span class="dots"></span><span>“No records found.”</span></li>
         </ul>
       </section>
     </div>
