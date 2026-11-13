@@ -58,7 +58,7 @@ from fastapi.responses import (
     StreamingResponse,
 )
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from wcs.api import statements
@@ -105,6 +105,9 @@ class Turn(BaseModel):
     answer: str = Field(default="", max_length=4000)
 
 
+PLAN_MAX_CHARS = 20_000  # an edited plan is a few hundred characters; this is far more than any reader needs
+
+
 class AskBody(BaseModel):
     question: str = Field(min_length=3, max_length=500)
     mode: Literal["summary", "comprehensive"] = "summary"
@@ -113,6 +116,14 @@ class AskBody(BaseModel):
     role_weight: float | None = Field(default=None, ge=1, le=2)
     history: list[Turn] = Field(default_factory=list, max_length=4)
     sources_only: bool = False
+
+    @field_validator("plan")
+    @classmethod
+    def _plan_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
+        # as Where MPs Stand: a plan is saved with its briefing and goes into the prompt, so it cannot be any size
+        if v is not None and len(json.dumps(v, default=str)) > PLAN_MAX_CHARS:
+            raise ValueError("the search plan is too large")
+        return v
 
 
 class ReportBody(BaseModel):

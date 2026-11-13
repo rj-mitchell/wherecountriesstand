@@ -160,6 +160,21 @@ def test_question_length_is_checked(indexed):  # noqa: F811
     assert api.post("/api/ask", json={"question": "x" * 501}).status_code == 422
 
 
+def test_an_edited_plan_has_a_size_limit(indexed):  # noqa: F811
+    """As Where MPs Stand: a reader's edited plan is a few hundred characters; one of any size is refused."""
+    client = FakeClient()
+    api, state = make(indexed, client)
+    plan = {"search_text": "climate finance", "filters": {"date_from": "2020-01-01"}}
+    assert api.post("/api/search", json={**QUESTION, "plan": plan}).status_code == 200
+    huge = {**plan, "interpretation": "x" * 20_000}
+    for path in ("/api/search", "/api/ask"):
+        r = api.post(path, json={**QUESTION, "plan": huge})
+        assert r.status_code == 422 and "the search plan is too large" in r.text
+    with state.connect() as con:
+        assert con.execute("SELECT count(*) FROM briefings").fetchone()[0] == 0
+    assert client.calls == []
+
+
 def test_pages_robots_sitemap_and_link_previews(indexed, monkeypatch):  # noqa: F811
     monkeypatch.setenv("WCS_SITE_URL", "https://countries.example")
     api, _ = make(indexed, FakeClient())
