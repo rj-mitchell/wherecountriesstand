@@ -49,7 +49,7 @@ class Result:
 
 
 def load_questions(path: Path = QUESTIONS) -> tuple[date, list[dict[str, Any]]]:
-    data = tomllib.loads(path.read_text())
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
     return date.fromisoformat(data["today"]), data["q"]
 
 
@@ -77,8 +77,8 @@ def compare(plan: QueryPlan, expect: dict[str, Any], today: date, default_years:
 
 
 def run(settings: Settings, with_model: bool = False, ids: set[str] | None = None,
-        pipeline: Pipeline | None = None) -> list[Result]:
-    today, questions = load_questions()
+        pipeline: Pipeline | None = None, path: Path = QUESTIONS) -> list[Result]:
+    today, questions = load_questions(path)
     p = pipeline or Pipeline(settings, today=today)
     default_years = int(settings.archive.get("default_years", 10))
     out: list[Result] = []
@@ -128,10 +128,9 @@ def summary(results: list[Result]) -> dict[str, Any]:
     }
 
 
-def save(results: list[Result], with_model: bool) -> Path:
-    runs = REPO_ROOT / "eval" / "runs"
-    runs.mkdir(parents=True, exist_ok=True)
-    path = runs / f"{datetime.now(UTC).strftime('%Y%m%dT%H%M%S')}{'-model' if with_model else ''}.json"
+def save(results: list[Result], with_model: bool, folder: Path = REPO_ROOT / "eval" / "runs") -> Path:
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"{datetime.now(UTC).strftime('%Y%m%dT%H%M%S')}{'-model' if with_model else ''}.json"
     path.write_text(json.dumps({"summary": summary(results), "results": [asdict(r) for r in results]}, indent=1,
-                               default=str))
+                               default=str), encoding="utf-8")
     return path
