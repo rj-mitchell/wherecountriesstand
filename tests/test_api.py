@@ -4,7 +4,7 @@ import json
 
 import pytest
 from fastapi.testclient import TestClient
-from test_pipeline import TODAY, FakeClient, indexed  # noqa: F401  (the fixture)
+from test_pipeline import TODAY, FakeClient, RefusingClient, indexed  # noqa: F401  (the fixture)
 
 from wcs.api.app import SITE_DIR as SITE
 from wcs.api.app import create_app
@@ -91,6 +91,26 @@ def test_ask_streams_records_spend_and_caches(indexed):  # noqa: F811
     assert again[-1]["cached"] is True and len(client.calls) == 1   # answered from the cache
 
 
+def test_a_refusal_is_an_error_and_nothing_is_saved_or_cached(indexed):  # noqa: F811
+    """The model declining to answer was once shown, saved and cached as an empty briefing with nothing to check.
+    The reader is told, the owner has a note of it, and the call is still counted as spent."""
+    client = RefusingClient()
+    api, state = make(indexed, client)
+    evs = events(api.post("/api/ask", json=QUESTION))
+    assert [e["type"] for e in evs] == ["plan", "sources", "error"]
+    assert evs[-1] == {"type": "error", "message": "The model declined to answer this question."}
+    with state.connect() as con:
+        assert con.execute("SELECT count(*) FROM briefings").fetchone()[0] == 0
+        assert con.execute("SELECT count(*) FROM answer_cache").fetchone()[0] == 0
+        assert con.execute("SELECT question, error FROM failures WHERE kind = 'briefing'").fetchall() == [
+            (QUESTION["question"], "The model declined to answer this question.")]
+        kind, cost = con.execute("SELECT kind, cost_usd FROM usage").fetchone()
+    assert kind == "answer" and cost == pytest.approx(cost_usd({"input_tokens": 1000, "output_tokens": 200},
+                                                               indexed.usage, "claude-sonnet-5-5"))
+    again = events(api.post("/api/ask", json=QUESTION))
+    assert again[-1]["type"] == "error" and len(client.calls) == 2   # asked afresh: nothing was kept to replay
+
+
 def test_caps_fall_back_to_sources(indexed):  # noqa: F811
     client = FakeClient()
     api, _ = make(indexed, client, daily_spend_cap_usd=0.0)
@@ -138,6 +158,59 @@ def test_visitor_codes_group_an_ipv6_64(tmp_path):
 def test_question_length_is_checked(indexed):  # noqa: F811
     api, _ = make(indexed, FakeClient())
     assert api.post("/api/ask", json={"question": "x" * 501}).status_code == 422
+
+
+class ReadingClient(FakeClient):
+    """The model reads the question too, and says what the reading cost."""
+
+    def _parse(self, **kw):
+        from types import SimpleNamespace as NS
+
+        from wcs.rag.query_parse import ParsedQuery
+
+        self.read_with = kw["model"]
+        parsed = ParsedQuery(search_text="climate finance", date_from="2020-01-01", date_to=None, sources=[],
+                             countries=[], groups=[], group_by="region", wants_votes=False,
+                             interpretation="What countries have said about climate finance since 2020.")
+        return NS(stop_reason="end_turn", parsed_output=parsed,
+                  usage=NS(input_tokens=1_000_000, output_tokens=0, cache_read_input_tokens=0,
+                           cache_creation_input_tokens=0))
+
+
+def test_reading_a_question_is_priced_as_the_model_that_read_it(indexed):  # noqa: F811
+    """As Where MPs Stand: with no model set for reading questions, the briefing's model reads them, and the cost is
+    recorded against that model and at its prices (it was recorded against no model, at the base prices)."""
+    indexed.raw["usage"] = {**indexed.raw["usage"], "models": {
+        "claude-haiku-5-5": {"price_input_per_mtok": 0.1}, "claude-sonnet-5-5": {"price_input_per_mtok": 3.0}}}
+
+    def parse_row(client):
+        api, state = make(indexed, client)
+        assert events(api.post("/api/ask", json=QUESTION))[0]["plan"]["parser"] == "model"
+        with state.connect() as con:
+            return con.execute("SELECT model, cost_usd FROM usage WHERE kind = 'parse' ORDER BY id DESC").fetchone()
+
+    client = ReadingClient()
+    assert parse_row(client) == ("claude-haiku-5-5", pytest.approx(0.1)) and client.read_with == "claude-haiku-5-5"
+    indexed.raw["answer"] = {**indexed.raw["answer"], "query_parse_model": ""}
+    with StateDB(indexed.data_dir / "state.db").connect() as con:
+        con.execute("DELETE FROM answer_cache")
+    client = ReadingClient()
+    assert parse_row(client) == ("claude-sonnet-5-5", pytest.approx(3.0)) and client.read_with == "claude-sonnet-5-5"
+
+
+def test_an_edited_plan_has_a_size_limit(indexed):  # noqa: F811
+    """As Where MPs Stand: a reader's edited plan is a few hundred characters; one of any size is refused."""
+    client = FakeClient()
+    api, state = make(indexed, client)
+    plan = {"search_text": "climate finance", "filters": {"date_from": "2020-01-01"}}
+    assert api.post("/api/search", json={**QUESTION, "plan": plan}).status_code == 200
+    huge = {**plan, "interpretation": "x" * 20_000}
+    for path in ("/api/search", "/api/ask"):
+        r = api.post(path, json={**QUESTION, "plan": huge})
+        assert r.status_code == 422 and "the search plan is too large" in r.text
+    with state.connect() as con:
+        assert con.execute("SELECT count(*) FROM briefings").fetchone()[0] == 0
+    assert client.calls == []
 
 
 def test_pages_robots_sitemap_and_link_previews(indexed, monkeypatch):  # noqa: F811
@@ -214,6 +287,26 @@ def test_briefings_are_saved_shared_and_withdrawn(indexed, monkeypatch):  # noqa
                                       "contact": "reader@example.org"}).json()
     assert reports(state)[0]["contact"] == "reader@example.org" and close_report(state, r["id"])
     assert reports(state) == [] and reports(state, open_only=False)[0]["contact"] == ""
+
+
+def test_a_briefing_whose_id_is_taken_is_kept_under_another(indexed, monkeypatch):  # noqa: F811
+    """As Where MPs Stand: a clash of ids (64 random bits) once lost a briefing that had been written and paid for.
+    It is kept under a new id, which the reader, the saved copy and the cached copy all carry."""
+    monkeypatch.setattr("wcs.api.app.new_briefing_id", lambda: "SAMEid11")
+    api, state = make(indexed, FakeClient())
+    first = events(api.post("/api/ask", json=QUESTION))[-1]
+    assert first["briefing_id"] == "SAMEid11"
+    other = {"question": "What has Kenya said about climate finance?"}
+    second = events(api.post("/api/ask", json=other))[-1]
+    bid = second["briefing_id"]
+    assert second["type"] == "final" and bid != "SAMEid11" and len(bid) >= 6
+    saved = api.get(f"/api/briefings/{bid}").json()
+    assert saved["question"] == other["question"] and saved["events"][-1]["briefing_id"] == bid
+    assert api.get("/api/briefings/SAMEid11").json()["question"] == QUESTION["question"]   # the first is untouched
+    assert events(api.post("/api/ask", json=other))[-1]["briefing_id"] == bid                # and the cached copy
+    with state.connect() as con:
+        assert con.execute("SELECT count(*) FROM briefings").fetchone()[0] == 2
+        assert con.execute("SELECT count(*) FROM failures WHERE kind = 'briefing'").fetchone()[0] == 0
 
 
 def test_pages_use_absolute_paths(indexed):  # noqa: F811

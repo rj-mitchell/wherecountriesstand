@@ -108,6 +108,10 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
   docker compose run --rm app wcs restore /backups/wcs-state-2026-11-05.sqlite.gz    # asks first
   docker compose start app
   ```
+  A second restore is refused while `/data/state.db.before-restore` is still there ("Not restored: … is still there
+  from an earlier restore: move or delete it first"), so restoring the wrong day and then the right one cannot lose
+  the database the site was running on. Once you are sure which copy you want, move it out of the way or delete it
+  (`docker compose run --rm app mv /data/state.db.before-restore /data/state.db.before-restore-1`) and restore again.
   For a copy from B2, download it from the bucket into `/opt/wherecountriesstand/deploy/backups` first and hand it to
   the site's user (`chown 10001:10001 <file>`). Each update warns if the backups stop (`docs/OPERATIONS.md`).
 * **The privacy notice** (`web/site/privacy.html`) says what the site keeps: no requests logged (`wcs serve` turns

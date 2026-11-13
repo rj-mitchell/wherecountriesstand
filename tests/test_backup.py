@@ -52,6 +52,56 @@ def test_restore_puts_a_backup_back_and_keeps_the_database_it_replaces(tmp_path)
     assert not (tmp_path / "data" / "state.db-journal").exists()
 
 
+def test_a_second_restore_never_writes_over_the_kept_copy(tmp_path, monkeypatch):
+    """Restoring the wrong day and then the right one once replaced state.db.before-restore, and the database the
+    site had been running on was gone for good. The second restore is refused before anything is touched."""
+    import pytest
+
+    from wcs import backup
+    from wcs.backup import restore_backup
+
+    wrong = make_backup(state_db(tmp_path / "a.db", 0.12), tmp_path / "backups", day="2026-10-01")
+    right = make_backup(state_db(tmp_path / "b.db", 0.34), tmp_path / "backups", day="2026-10-02")
+    (tmp_path / "data").mkdir()
+    live = state_db(tmp_path / "data" / "state.db", 9.99)
+    kept = restore_backup(wrong, live)
+    assert kept == tmp_path / "data" / "state.db.before-restore"
+    before = {p: p.read_bytes() for p in (live, kept, wrong, right)}
+    (tmp_path / "data" / "state.db-journal").write_bytes(b"left over")
+    with pytest.raises(RuntimeError, match="state.db.before-restore is still there from an earlier restore: move or "
+                                           "delete it first"):
+        restore_backup(right, live)
+    assert {p: p.read_bytes() for p in before} == before                              # live, kept copy, archives
+    assert sorted(p.name for p in (tmp_path / "data").iterdir()) == ["state.db", "state.db-journal",
+                                                                     "state.db.before-restore"]
+    (tmp_path / "data" / "state.db-journal").unlink()
+    r = CliRunner().invoke(app, ["restore", str(right), "--yes"], env={"WCS_DATA_DIR": str(tmp_path / "data")})
+    assert r.exit_code == 1 and "Not restored: " in r.output and "move or delete it first" in r.output
+    assert {p: p.read_bytes() for p in before} == before
+    # once the kept copy is moved away, the restore goes ahead
+    kept.rename(tmp_path / "data" / "original.db")
+    assert restore_backup(right, live) == kept
+    assert sqlite3.connect(live).execute("SELECT cost FROM usage").fetchall() == [(0.34,)]
+    assert sqlite3.connect(kept).execute("SELECT cost FROM usage").fetchall() == [(0.12,)]
+    assert sqlite3.connect(tmp_path / "data" / "original.db").execute("SELECT cost FROM usage").fetchall() == [(9.99,)]
+
+    # a copy that fails part-way leaves no kept copy at all, never a damaged one, and the live database as it was
+    kept.unlink()
+    live_now = live.read_bytes()
+
+    def fails(src, dst, **kw):
+        with open(dst, "wb") as f:
+            f.write(b"half a file")
+        raise OSError("No space left on device")
+
+    monkeypatch.setattr(backup.shutil, "copy2", fails)
+    with pytest.raises(OSError, match="No space left"):
+        restore_backup(wrong, live)
+    monkeypatch.undo()
+    assert not kept.exists() and live.read_bytes() == live_now
+    assert sorted(p.name for p in (tmp_path / "data").iterdir()) == ["original.db", "state.db"]
+
+
 def test_restore_refuses_a_damaged_or_foreign_file_and_changes_nothing(tmp_path):
     import pytest
 

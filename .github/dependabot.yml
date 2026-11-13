@@ -1,0 +1,60 @@
+# Dependency updates: the same shape in every Where They Stand repository (the charity's family/TOOLCHAIN.md).
+# Each Monday Dependabot looks for newer versions and opens a few grouped pull requests, at most three open at a
+# time for each kind of dependency. It proposes; nothing is merged without a review and a green CI run.
+#
+# The Python minor version, the Node major version and the uv version are the family's toolchain. They are set once,
+# in family/TOOLCHAIN.md, and changed in every repository in the same week, so they are not Dependabot's to move:
+# the Docker section below takes newer releases of Python 3.12 only.
+version: 2
+updates:
+  # Python packages (pyproject.toml and uv.lock)
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    groups:
+      # The libraries that decide what a briefing says and which passages it is built from. A pull request in this
+      # group must come with an evaluation run (`wcs evaluate`, on eval/questions.toml) before it is merged. This
+      # group is listed first: a package goes in the first group it matches.
+      ai-sensitive:
+        patterns:
+          - "anthropic"
+          - "lancedb"
+          - "fastembed"
+      # Every other Python package
+      python:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "anthropic"
+          - "lancedb"
+          - "fastembed"
+
+  # The actions the workflows in .github/workflows/ use
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # The base image in the Dockerfile: newer releases of Python 3.12 only (see the note at the top)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    groups:
+      docker:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
