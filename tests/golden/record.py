@@ -12,6 +12,11 @@ search the same. It needs the modules the switch deleted (``wcs.api.usage``, ``w
 commit to record again.
 """
 
+# ruff: noqa: I001
+# The imports below are not sorted by the linter: several are of modules the switch deleted, and the linter sorts
+# an import differently when its module is not there (it takes it for an outside library). Sorted either way, the
+# other checkout would complain: a fresh one in CI, or one where the old modules' cache folders are still about.
+
 from __future__ import annotations
 
 import json
