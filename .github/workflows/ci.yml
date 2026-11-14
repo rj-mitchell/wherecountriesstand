@@ -51,7 +51,11 @@ jobs:
       - name: Start the site with no data
         run: |
           mkdir -p /tmp/wcs-data
-          WCS_DATA_DIR=/tmp/wcs-data nohup uv run wcs serve --port 8000 > /tmp/wcs.log 2>&1 &
+          # Started with the environment's own program, not through `uv run`: a `uv run` left in the background
+          # holds uv's cache, and the toolchain step's tidying of that cache at the end of the job then waits
+          # five minutes for it and fails the job (the accessibility check itself having passed).
+          WCS_DATA_DIR=/tmp/wcs-data nohup .venv/bin/wcs serve --port 8000 > /tmp/wcs.log 2>&1 &
+          echo $! > /tmp/wcs.pid
           for i in $(seq 1 60); do
             curl -fsS http://localhost:8000/api/health && break
             sleep 1
@@ -65,3 +69,6 @@ jobs:
       - name: Show the site's log if anything failed
         if: failure()
         run: cat /tmp/wcs.log || true
+      - name: Stop the site
+        if: always()
+        run: kill "$(cat /tmp/wcs.pid)" 2>/dev/null || true
