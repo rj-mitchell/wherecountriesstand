@@ -117,3 +117,13 @@ def test_a_named_country_is_not_capped_at_two(engine):
     assert len([r for r in res.records if r["country_code"] == "FRA"]) == 4   # all of France's
     assert len([r for r in engine.search("climate finance", Filters(), limit=12).records
                 if r["country_code"] == "FRA"]) == 2                                   # balanced otherwise
+
+
+def test_the_first_check_of_what_is_embedded_is_made_however_lately_the_computer_started(engine, monkeypatch):
+    """The answer is kept for ten minutes by the computer's own clock, which counts from when it started. On one
+    started less than ten minutes ago the first check was taken for a recent one and never made, and the search
+    failed with an error where it should have said nothing relevant was found (found while moving onto wts-core)."""
+    import time
+
+    monkeypatch.setattr(time, "monotonic", lambda: 5.0)
+    assert engine.mostly_embedded() is True

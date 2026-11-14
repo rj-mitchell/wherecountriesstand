@@ -96,6 +96,7 @@ class Engine:
         self.today = today
         self._has_vectors = False
         self._meaning: bool | None = None  # whether the index was built with this embedder; None: not yet asked
+        self._embedded_checked: tuple[bool, float] | None = None  # mostly_embedded's answer, and when it was given
 
     def has_vectors(self) -> bool:
         if not self._has_vectors:
@@ -106,7 +107,7 @@ class Engine:
         """Whether nearly every passage has been embedded for meaning search (checked every ten minutes): only then
         can "nothing close in meaning" be trusted to mean nothing relevant."""
         now = time.monotonic()
-        if getattr(self, "_embedded_checked", (None, 0.0))[1] < now - 600:
+        if self._embedded_checked is None or self._embedded_checked[1] < now - 600:
             st = self.index.stats()
             self._embedded_checked = (st["passages"] > 0 and st["vectors"] >= share * st["passages"], now)
         return self._embedded_checked[0]
