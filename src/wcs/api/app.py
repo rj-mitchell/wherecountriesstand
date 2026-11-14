@@ -79,7 +79,7 @@ from wcs.api.usage import (
     visitor_key,
     withdrawn_briefings,
 )
-from wcs.config import REPO_ROOT, Settings, load_settings
+from wcs.config import INSTRUCTIONS_VERSION, REPO_ROOT, Settings, load_settings
 from wcs.rag.neutral import still_loaded
 from wcs.rag.pipeline import AskRequest, Pipeline
 from wcs.rag.query_parse import parse_model
@@ -93,8 +93,6 @@ mimetypes.add_type("font/woff2", ".woff2")  # missing from slim images' MIME lis
 SITE_DIR = REPO_ROOT / "web" / "site"
 PARTIALS_DIR = REPO_ROOT / "web" / "partials"
 KEEP_ALIVE_SECONDS = 15
-# Raise when the briefing instructions change, so cached briefings are written again.
-INSTRUCTIONS_VERSION = 3
 # Pages carry this in place of the site's address (in canonical links and link previews); it is filled in as they
 # are served.
 SITE_MARK = "__SITE__"

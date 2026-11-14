@@ -1,10 +1,21 @@
 from __future__ import annotations
 
-from datetime import date
+import os
 
-import pytest
+# A test that reads a command's help must have Typer's colours off before Typer is imported: GitHub Actions makes
+# Typer colour its help, which splits an option's name in two.
+os.environ["_TYPER_FORCE_DISABLE_TERMINAL"] = "1"
+os.environ["NO_COLOR"] = "1"
 
-from wcs.config import load_settings
+import sys  # noqa: E402
+from datetime import date  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+import pytest  # noqa: E402
+
+from wcs.config import load_settings  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).parent / "golden"))  # tests/golden/shared.py: the scenarios the goldens hold
 
 
 @pytest.fixture
