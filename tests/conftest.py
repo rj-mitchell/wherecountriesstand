@@ -41,3 +41,10 @@ def speech(record_id: str, d: date, code: str | None, text: str, **kw) -> dict:
         "on_behalf_of": kw.pop("behalf", None), "language": kw.pop("language", None), "ocr": False,
         "text": text, "url": "https://undocs.org/en/S/PV.9000", **kw,
     }
+
+
+def model_of(sdk):
+    """The site's model client over a faked Anthropic SDK (``None`` stays ``None``: no model at all)."""
+    from wts_core.adapters.anthropic import BASE_URL, AnthropicClient
+
+    return None if sdk is None else AnthropicClient("test-key", base_url=BASE_URL, client=sdk)

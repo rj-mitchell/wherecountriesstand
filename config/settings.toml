@@ -80,6 +80,9 @@ comprehensive_effort = "high"
 query_parse_effort = "low"
 max_tokens = 16000
 use_fallbacks = true
+# How the instructions to the model are kept in the provider's prompt cache between requests: "short" (a few
+# minutes, as always), "long" (an hour, which costs more to write) or "off".
+cache_instructions = "short"
 
 [embedding]
 # "fastembed" (local ONNX model; weights fetched once from Hugging Face and pinned)

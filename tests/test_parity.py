@@ -19,16 +19,42 @@ def by_name(rows):
 # ---- settings ------------------------------------------------------------------------------------------------------
 
 
+# Keys written into config/settings.toml with the move, each with the value the code had as its fallback or the
+# package's behaviour as it always was, so nothing changes by their being there (wts-core docs/MIGRATION.md 1.1:
+# "each site's code fallbacks are written into its settings.toml at adoption with today's values").
+ADDED = {
+    ("answer", "cache_instructions"): "short",  # MIGRATION 1.5: prompt caching becomes a setting, on as before
+}
+
+
+def without_the_added(gives: dict) -> dict:
+    """What a case gives, with the keys added at the move taken out of the sections they were added to (checked
+    to hold what ``ADDED`` says, where the case reads the real settings file)."""
+    import copy
+
+    out = copy.deepcopy(gives)
+    for (section, key), value in ADDED.items():
+        for holder in (out["raw"], out):
+            if key in holder.get(section, {}):
+                assert holder[section].pop(key) == value, (section, key)
+            if section in holder and not holder[section] and section not in ("site",):
+                del holder[section]
+    return out
+
+
 def test_settings_resolve_as_they_did(tmp_path, monkeypatch):
     """The real settings file and samples, with a local file, overrides and each environment variable: the whole
-    of what was read, the data folder, and every accessor of the site's own."""
+    of what was read, the data folder, and every accessor of the site's own. The one difference is the keys the
+    move wrote into the file (``ADDED``)."""
     monkeypatch.setattr("os.environ", dict(__import__("os").environ))  # the cases set and clear WCS_ variables
     before = by_name(shared.read("settings.json"))
     now = by_name(shared.settings_cases(tmp_path / "settings", REPO_ROOT,
                                         lambda path, **overrides: load_settings(path, **overrides)))
     assert now.keys() == before.keys() and len(before) == len(shared.SETTINGS_CASES)
     for name in before:
-        assert now[name] == before[name], name
+        assert without_the_added(now[name]["gives"]) == before[name]["gives"], name
+    real = now["the real settings file"]["gives"]["raw"]
+    assert all(real[section][key] == value for (section, key), value in ADDED.items())
 
 
 # ---- the checks on briefings -----------------------------------------------------------------------------------

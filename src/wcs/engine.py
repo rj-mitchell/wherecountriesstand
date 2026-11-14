@@ -15,6 +15,7 @@ from datetime import date
 from typing import Any
 
 from wts_core.adapters.lancedb import date_lit, sql_list, sql_str
+from wts_core.briefing import current_stages
 from wts_core.ports import Embedder, IndexOutOfDate
 
 from wcs.adapters import get_embedder
@@ -169,6 +170,7 @@ class Engine:
                 lap("meaning")
             bm = by_keyword.result()
             lap("keyword")
+        current_stages().mark("searched")  # for the record of the briefing being written, if one is
 
         cands: dict[str, Candidate] = {}
 
@@ -233,6 +235,7 @@ class Engine:
         else:
             top = scored[:limit]
         lap("select")
+        current_stages().mark("ranked")
         records = self.records_for(top) if top else []
         lap("records")
         return SearchResult(top, records, no_records, len(cands), semantic, where,

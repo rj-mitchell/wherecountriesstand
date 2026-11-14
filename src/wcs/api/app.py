@@ -448,9 +448,9 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         """Whether briefings can be written at all (an API key is set), without loading the search engine."""
         if holder["pipeline"] is not None:
             return holder["pipeline"].has_model()
-        from wcs.rag.answer import api_key
+        from wcs.adapters import has_model
 
-        return bool(api_key() or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
+        return has_model(settings)
 
     @app.get("/api/status")
     def status():

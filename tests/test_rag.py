@@ -207,14 +207,20 @@ def test_a_year_on_its_own_is_that_year():
     assert dates_in("Resolution 2334 and the 2016 debate", today) == (date(2016, 1, 1), date(2016, 12, 31))
 
 
-def test_model_client_gives_up_on_a_dead_connection(monkeypatch):
-    """A stalled connection must not hold a briefing (and its place under the caps) open for ever."""
-    from wcs.rag.answer import make_client
+def test_model_client_gives_up_on_a_dead_connection(settings, monkeypatch):
+    """A stalled connection must not hold a briefing (and its place under the caps) open for ever. (The client is
+    the shared package's, made from this site's settings and its own name for the key.)"""
+    from wcs.adapters import has_model, model_client
 
+    for name in ("WCS_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"):
+        monkeypatch.delenv(name, raising=False)
+    assert has_model(settings) is False
     monkeypatch.setenv("WCS_ANTHROPIC_API_KEY", "sk-ant-test")
-    client = make_client()
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://elsewhere.example")  # another tool's: never followed
+    assert has_model(settings) is True
+    client = model_client(settings).client  # the SDK's own client, as the site's is set up
     assert client.timeout.read == 300.0 and client.timeout.connect == 10.0 and client.max_retries == 2
-    assert str(client.base_url).startswith("https://api.anthropic.com")
+    assert str(client.base_url).startswith("https://api.anthropic.com") and client.api_key == "sk-ant-test"
 
 
 def as_saved(blocks, quotation="it has failed"):

@@ -3,6 +3,7 @@
 import json
 
 import pytest
+from conftest import model_of
 from fastapi.testclient import TestClient
 from test_pipeline import TODAY, FakeClient, RefusingClient, indexed  # noqa: F401  (the fixture)
 from wts_core.adapters.hashing import HashingEmbedder
@@ -28,7 +29,7 @@ def events(response) -> list[dict]:
 def make(settings, client=None, **usage):
     settings.raw["usage"] = {**settings.raw.get("usage", {}), **usage}
     eng = Engine(settings, embedder=HashingEmbedder(64), today=TODAY)
-    pipe = Pipeline(settings, eng, client=client, today=TODAY)
+    pipe = Pipeline(settings, eng, client=model_of(client), today=TODAY)
     state = StateDB(settings.data_dir / "state.db")
     return TestClient(create_app(settings, pipeline=pipe, state=state)), state
 
