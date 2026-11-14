@@ -2,8 +2,8 @@ from datetime import date
 
 import pytest
 from conftest import speech
+from wts_core.adapters.hashing import HashingEmbedder
 
-from wcs.embed.base import HashingEmbedder
 from wcs.engine import Engine, Filters, build_where
 from wcs.index.build import Indexer, chunk_text, embed_pending
 from wcs.reference.countries import countries
@@ -97,14 +97,14 @@ def test_chunking():
 
 def test_regroup_updates_groups_in_place(engine, settings):
     from wcs.index.build import regroup
-    from wcs.index.lance import PASSAGES, VECTORS
+    from wcs.index.lance import PASSAGES, VECTORS, group_rows, set_groups
 
     index = engine.index
     for name in (PASSAGES, VECTORS):   # as if indexed before the Group of 77 was added
-        index.set_groups(name, [{"passage_id": "sc:S/PV.9000:0005#0", "groups": ["region:africa"]}])
+        set_groups(index, name, [{"passage_id": "sc:S/PV.9000:0005#0", "groups": ["region:africa"]}])
     vectors_before = index.vectors().count_rows()
     assert regroup(settings, countries(), index) == {PASSAGES: 1, VECTORS: 1}
-    rows = {r["passage_id"]: r["groups"] for r in index.group_rows(VECTORS)}
+    rows = {r["passage_id"]: r["groups"] for r in group_rows(index, VECTORS)}
     assert {"g77", "nam", "au", "council_elected"} <= set(rows["sc:S/PV.9000:0005#0"])
     assert index.vectors().count_rows() == vectors_before
     assert regroup(settings, countries(), index) == {PASSAGES: 0, VECTORS: 0}
@@ -117,3 +117,13 @@ def test_a_named_country_is_not_capped_at_two(engine):
     assert len([r for r in res.records if r["country_code"] == "FRA"]) == 4   # all of France's
     assert len([r for r in engine.search("climate finance", Filters(), limit=12).records
                 if r["country_code"] == "FRA"]) == 2                                   # balanced otherwise
+
+
+def test_the_first_check_of_what_is_embedded_is_made_however_lately_the_computer_started(engine, monkeypatch):
+    """The answer is kept for ten minutes by the computer's own clock, which counts from when it started. On one
+    started less than ten minutes ago the first check was taken for a recent one and never made, and the search
+    failed with an error where it should have said nothing relevant was found (found while moving onto wts-core)."""
+    import time
+
+    monkeypatch.setattr(time, "monotonic", lambda: 5.0)
+    assert engine.mostly_embedded() is True

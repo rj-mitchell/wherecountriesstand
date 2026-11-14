@@ -1,0 +1,1546 @@
+{
+ "results": [
+  {
+   "category": "topic",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "climate-security",
+   "problems": [],
+   "question": "How have countries described climate change as a threat to peace and security?",
+   "records": 2,
+   "votes": 0
+  },
+  {
+   "category": "topic",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "veto",
+   "problems": [],
+   "question": "What has been said about limiting the use of the veto?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "topic",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "sc-reform",
+   "problems": [],
+   "question": "What do countries want from Security Council reform?",
+   "records": 2,
+   "votes": 0
+  },
+  {
+   "category": "topic",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "ai",
+   "problems": [],
+   "question": "What have countries said about artificial intelligence and lethal autonomous weapons?",
+   "records": 1,
+   "votes": 0
+  },
+  {
+   "category": "topic",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "peacekeeping",
+   "problems": [],
+   "question": "How have countries spoken about the safety of peacekeepers?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "topic",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "sanctions-humanitarian",
+   "problems": [],
+   "question": "What concerns have been raised about the humanitarian effects of sanctions?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "topic",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "debt",
+   "problems": [],
+   "question": "What have countries said about sovereign debt relief for developing countries?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "topic",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "wps",
+   "problems": [],
+   "question": "How has the women, peace and security agenda been discussed?",
+   "records": 2,
+   "votes": 0
+  },
+  {
+   "category": "topic",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "cyber",
+   "problems": [],
+   "question": "What has been said about cyberattacks on critical infrastructure?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "topic",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "nuclear-disarmament",
+   "problems": [],
+   "question": "What positions have been taken on nuclear disarmament and the Treaty on the Prohibition of Nuclear Weapons?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "country",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "UKR"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "ukraine-grain",
+   "problems": [
+    "no source from UKR"
+   ],
+   "question": "What has Ukraine said about the Black Sea Grain Initiative?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "country",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "CHN"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "china-sea",
+   "problems": [
+    "no source from CHN"
+   ],
+   "question": "What has China said about the South China Sea?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "country",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "BRA"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "brazil-reform",
+   "problems": [
+    "no source from BRA"
+   ],
+   "question": "How has Brazil argued for a permanent seat on the Security Council?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "country",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "GBR"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "uk-falklands",
+   "problems": [
+    "no source from GBR"
+   ],
+   "question": "What has the United Kingdom said about the Falkland Islands?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "country",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "IND"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "india-terrorism",
+   "problems": [
+    "no source from IND"
+   ],
+   "question": "How has India spoken about cross-border terrorism?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "country",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "RUS"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "russia-nato",
+   "problems": [
+    "no source from RUS"
+   ],
+   "question": "What has the Russian Federation said about NATO enlargement?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "country",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "IRN"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "iran-nuclear",
+   "problems": [
+    "no source from IRN"
+   ],
+   "question": "What has Iran said about its nuclear programme and the JCPOA?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "country",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "ZAF"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "south-africa-gaza",
+   "problems": [
+    "no source from ZAF"
+   ],
+   "question": "What has South Africa said about Gaza?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "country",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "TUV"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "tuvalu-sea-level",
+   "problems": [],
+   "question": "What has Tuvalu said about sea-level rise and statehood?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "country",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "ETH"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "ethiopia-gerd",
+   "problems": [
+    "no source from ETH"
+   ],
+   "question": "What has Ethiopia said about the Grand Ethiopian Renaissance Dam?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "countries",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "CHN",
+     "USA"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "us-china-taiwan",
+   "problems": [],
+   "question": "How do the United States and China differ on Taiwan?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "countries",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "ARM",
+     "AZE"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "armenia-azerbaijan",
+   "problems": [
+    "no source from ARM, AZE"
+   ],
+   "question": "What have Armenia and Azerbaijan said about Nagorno-Karabakh?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "countries",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "IND",
+     "PAK"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "india-pakistan-kashmir",
+   "problems": [
+    "no source from PAK"
+   ],
+   "question": "How have India and Pakistan spoken about Kashmir?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "group",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [
+     "sids"
+    ],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "sids-climate",
+   "problems": [],
+   "question": "How have small island developing States spoken about climate finance?",
+   "records": 1,
+   "votes": 0
+  },
+  {
+   "category": "group",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [
+     "au"
+    ],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "au-reform",
+   "problems": [],
+   "question": "What have African Union members said about the Ezulwini Consensus?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "group",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [
+     "p5"
+    ],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "p5-veto",
+   "problems": [],
+   "question": "How have the permanent members explained their vetoes?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "group",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [
+     "eu"
+    ],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "eu-ukraine",
+   "problems": [],
+   "question": "What have EU member states said about Russia's invasion of Ukraine?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "group",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [
+     "ldc"
+    ],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "ldc-graduation",
+   "problems": [],
+   "question": "What have the least developed countries said about graduating from LDC status?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "group",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [
+     "lldc"
+    ],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "landlocked-transit",
+   "problems": [],
+   "question": "How have landlocked developing countries described their transit problems?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "group",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [
+     "council_elected"
+    ],
+    "sources": [
+     "sc"
+    ],
+    "wants_votes": false
+   },
+   "id": "elected-members",
+   "problems": [],
+   "question": "What have elected members of the Security Council said about the Council's working methods?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "group",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [
+     "g77"
+    ],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "g77-debt",
+   "problems": [],
+   "question": "What has the Group of 77 said about sovereign debt and the international financial architecture?",
+   "records": 2,
+   "votes": 0
+  },
+  {
+   "category": "group",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [
+     "oic"
+    ],
+    "sources": [
+     "sc"
+    ],
+    "wants_votes": false
+   },
+   "id": "oic-gaza",
+   "problems": [],
+   "question": "How have members of the Organisation of Islamic Cooperation spoken about Gaza in the Security Council?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "group",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [
+     "nam"
+    ],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "nam-coercive",
+   "problems": [],
+   "question": "What have Non-Aligned Movement members said about unilateral coercive measures?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "body",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [
+     "gd"
+    ],
+    "wants_votes": false
+   },
+   "id": "gd-multilateralism",
+   "problems": [],
+   "question": "What have leaders said about multilateralism in the General Debate?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "body",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [
+     "sc"
+    ],
+    "wants_votes": false
+   },
+   "id": "sc-sudan",
+   "problems": [],
+   "question": "How has the Security Council discussed the war in Sudan?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "body",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [
+     "sc"
+    ],
+    "wants_votes": false
+   },
+   "id": "sc-haiti",
+   "problems": [],
+   "question": "What have Security Council members said about the multinational security support mission in Haiti?",
+   "records": 2,
+   "votes": 0
+  },
+  {
+   "category": "body",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [
+     "gd"
+    ],
+    "wants_votes": false
+   },
+   "id": "gd-reply",
+   "problems": [],
+   "question": "Which countries used their right of reply in the General Debate to respond to criticism?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "dates",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2003,
+    "date_to": 2003,
+    "groups": [],
+    "sources": [
+     "sc"
+    ],
+    "wants_votes": false
+   },
+   "id": "iraq-2003",
+   "problems": [],
+   "question": "What did Security Council members say about Iraq in 2003?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "dates",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2011,
+    "date_to": 2011,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "libya-2011",
+   "problems": [],
+   "question": "How did countries justify their positions on Libya in 2011?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "dates",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 1994,
+    "date_to": 1994,
+    "groups": [],
+    "sources": [
+     "sc"
+    ],
+    "wants_votes": false
+   },
+   "id": "rwanda-1994",
+   "problems": [],
+   "question": "What was said in the Security Council about Rwanda in 1994?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "dates",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2020,
+    "date_to": 2021,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "covid",
+   "problems": [],
+   "question": "What did countries say about COVID-19 vaccine equity in 2020 and 2021?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "dates",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2022,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "since-2022-ukraine",
+   "problems": [],
+   "question": "How has the war in Ukraine been described since 2022?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "dates",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2013,
+    "date_to": 2013,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "syria-2013-chemical",
+   "problems": [],
+   "question": "What did countries say about chemical weapons in Syria in 2013?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "combined",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2015,
+    "date_to": null,
+    "groups": [
+     "au"
+    ],
+    "sources": [
+     "gd"
+    ],
+    "wants_votes": false
+   },
+   "id": "au-sc-since-2015",
+   "problems": [],
+   "question": "How have African Union members spoken about Security Council reform in the General Debate since 2015?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "combined",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": 2016,
+    "groups": [
+     "p5"
+    ],
+    "sources": [
+     "sc"
+    ],
+    "wants_votes": false
+   },
+   "id": "p5-syria-2016",
+   "problems": [],
+   "question": "What did the permanent members say in the Security Council about Aleppo in 2016?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "combined",
+   "evidence_ok": false,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "FRA"
+    ],
+    "date_from": 2013,
+    "date_to": 2022,
+    "groups": [],
+    "sources": [
+     "sc"
+    ],
+    "wants_votes": false
+   },
+   "id": "france-mali-sc",
+   "problems": [
+    "no source from FRA"
+   ],
+   "question": "What did France say in the Security Council about Mali between 2013 and 2022?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "votes",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": true
+   },
+   "id": "votes-cuba-embargo",
+   "problems": [],
+   "question": "How have countries voted on ending the United States embargo against Cuba?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "votes",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2022,
+    "date_to": 2022,
+    "groups": [],
+    "sources": [
+     "gd"
+    ],
+    "wants_votes": true
+   },
+   "id": "votes-ukraine-2022",
+   "problems": [],
+   "question": "How did countries vote on the General Assembly resolutions on Ukraine in 2022?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "sparse",
+   "evidence_ok": true,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "TUV"
+    ],
+    "date_from": 1995,
+    "date_to": 1995,
+    "groups": [],
+    "sources": [
+     "sc"
+    ],
+    "wants_votes": false
+   },
+   "id": "none-tuvalu-1995",
+   "problems": [],
+   "question": "What did Tuvalu say in the Security Council in 1995?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "sparse",
+   "evidence_ok": true,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "SSD"
+    ],
+    "date_from": 2005,
+    "date_to": 2005,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "none-south-sudan-2005",
+   "problems": [],
+   "question": "What did South Sudan say at the United Nations in 2005?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "sparse",
+   "evidence_ok": true,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 1985,
+    "date_to": 1985,
+    "groups": [],
+    "sources": [
+     "sc"
+    ],
+    "wants_votes": false
+   },
+   "id": "none-sc-1985",
+   "problems": [],
+   "question": "What was said in the Security Council about apartheid in 1985?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "sparse",
+   "evidence_ok": true,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2030,
+    "date_to": 2030,
+    "groups": [],
+    "sources": [
+     "gd"
+    ],
+    "wants_votes": false
+   },
+   "id": "none-future",
+   "problems": [],
+   "question": "What did countries say in the General Debate in 2030?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "sparse",
+   "evidence_ok": true,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [],
+    "wants_votes": false
+   },
+   "id": "none-quidditch",
+   "problems": [],
+   "question": "What has been said about Quidditch?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "sparse",
+   "evidence_ok": true,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "MNE"
+    ],
+    "date_from": 1999,
+    "date_to": 1999,
+    "groups": [],
+    "sources": [
+     "gd"
+    ],
+    "wants_votes": false
+   },
+   "id": "none-montenegro-1999",
+   "problems": [],
+   "question": "What did Montenegro say in the General Debate in 1999?",
+   "records": 0,
+   "votes": 0
+  },
+  {
+   "category": "votes",
+   "evidence_ok": null,
+   "fields": {
+    "countries": true,
+    "date_from": true,
+    "date_to": true,
+    "groups": true,
+    "sources": true,
+    "wants_votes": true
+   },
+   "got": {
+    "countries": [
+     "VAT"
+    ],
+    "date_from": 2016,
+    "date_to": null,
+    "groups": [],
+    "sources": [
+     "gd"
+    ],
+    "wants_votes": true
+   },
+   "id": "vatican-vote",
+   "problems": [],
+   "question": "How has the Holy See voted on General Assembly resolutions?",
+   "records": 0,
+   "votes": 0
+  }
+ ],
+ "summary": {
+  "by_category": {
+   "body": {
+    "plans_right": 4,
+    "questions": 4
+   },
+   "combined": {
+    "plans_right": 3,
+    "questions": 3
+   },
+   "countries": {
+    "plans_right": 3,
+    "questions": 3
+   },
+   "country": {
+    "plans_right": 10,
+    "questions": 10
+   },
+   "dates": {
+    "plans_right": 6,
+    "questions": 6
+   },
+   "group": {
+    "plans_right": 10,
+    "questions": 10
+   },
+   "sparse": {
+    "plans_right": 6,
+    "questions": 6
+   },
+   "topic": {
+    "plans_right": 10,
+    "questions": 10
+   },
+   "votes": {
+    "plans_right": 3,
+    "questions": 3
+   }
+  },
+  "evidence_checked": 18,
+  "evidence_right": 6,
+  "fields": 330,
+  "fields_right": 330,
+  "plans_right": 55,
+  "questions": 55
+ }
+}

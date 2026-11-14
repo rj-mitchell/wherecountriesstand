@@ -1,0 +1,10 @@
+[Unit]
+Description=Where Countries Stand: the weekly report, every Monday
+
+[Timer]
+# UTC, Monday morning, once the week before is whole and after the night's backup and the morning's update
+OnCalendar=Mon *-*-* 07:07:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

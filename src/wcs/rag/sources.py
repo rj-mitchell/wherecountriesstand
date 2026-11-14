@@ -12,6 +12,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
 
+from wts_core.ports import Document
+
 from wcs.rank.evidence import GROUP_LABELS, evidence_group
 from wcs.reference.roles import ROLE_LABEL
 
@@ -33,14 +35,9 @@ class Source:
     blocks: list[str]           # citable text, verbatim from the record
     meta: dict[str, Any] = field(default_factory=dict)
 
-    def search_result(self) -> dict[str, Any]:
-        return {
-            "type": "search_result",
-            "source": self.url,
-            "title": self.title,
-            "content": [{"type": "text", "text": b} for b in self.blocks],
-            "citations": {"enabled": True},
-        }
+    def document(self) -> Document:
+        """This source as the model is given it: its address, its title and its citable passages."""
+        return Document(number=self.n, title=self.title, source=self.url, passages=tuple(self.blocks))
 
     def card(self) -> dict[str, Any]:
         return {"n": self.n, "kind": self.kind, "title": self.title, "url": self.url, **self.meta}

@@ -19,10 +19,11 @@ fi
 cd "$DIR/deploy"
 [[ -f .env ]] || { echo "No settings yet: cp .env.example .env, fill it in, and run this again (docs/DEPLOY.md)."; exit 1; }
 
-echo "==> Refreshing the update and backup timers"
-cp wcs-update.service wcs-update.timer wcs-backup.service wcs-backup.timer /etc/systemd/system/
+echo "==> Refreshing the update, backup and weekly report timers"
+cp wcs-update.service wcs-update.timer wcs-backup.service wcs-backup.timer \
+  wcs-weekly-report.service wcs-weekly-report.timer /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now wcs-update.timer wcs-backup.timer >/dev/null
+systemctl enable --now wcs-update.timer wcs-backup.timer wcs-weekly-report.timer >/dev/null
 
 echo "==> Rebuilding the site"
 mkdir -p backups

@@ -9,14 +9,19 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Callable, Collection
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from datetime import date
 from typing import Any
 
+from wts_core.adapters.lancedb import date_lit, sql_list, sql_str
+from wts_core.briefing import current_stages
+from wts_core.ports import Embedder, IndexOutOfDate
+
+from wcs.adapters import get_embedder
 from wcs.config import Settings
-from wcs.embed.base import Embedder, get_embedder
-from wcs.index.lance import SearchIndex, date_lit, sql_list, sql_str
+from wcs.index.lance import open_index
 from wcs.rank.composite import Candidate, RankParams, Scored, rank
 from wcs.rank.evidence import GROUP_BY, evidence_summary, select_evidence
 from wcs.reference.countries import Countries, countries
@@ -87,11 +92,16 @@ class Engine:
     def __init__(self, settings: Settings, embedder: Embedder | None = None, today: date | None = None,
                  reference: Countries | None = None):
         self.settings = settings
-        self.index = SearchIndex(settings.index_dir, int(settings.embedding.get("dim", 384)))
+        self.index = open_index(settings.index_dir)  # as it stands: search by words needs no embedding model
         self.countries = reference or countries()
         self._embedder = embedder
         self.today = today
         self._has_vectors = False
+        self._meaning: bool | None = None  # whether the index was built with this embedder; None: not yet asked
+        self._embedded_checked: tuple[bool, float] | None = None  # mostly_embedded's answer, and when it was given
+        # the ids of records to leave out of every search for now (set by the web app: a record hidden while a
+        # concern about it is decided); None: nothing is
+        self.hidden_records: Callable[[], Collection[str]] | None = None
 
     def has_vectors(self) -> bool:
         if not self._has_vectors:
@@ -102,10 +112,26 @@ class Engine:
         """Whether nearly every passage has been embedded for meaning search (checked every ten minutes): only then
         can "nothing close in meaning" be trusted to mean nothing relevant."""
         now = time.monotonic()
-        if getattr(self, "_embedded_checked", (None, 0.0))[1] < now - 600:
+        if self._embedded_checked is None or self._embedded_checked[1] < now - 600:
             st = self.index.stats()
             self._embedded_checked = (st["passages"] > 0 and st["vectors"] >= share * st["passages"], now)
         return self._embedded_checked[0]
+
+    def meaning_search(self) -> bool:
+        """Whether search by meaning can be used: there are vectors, the embedding model loads, and the index was
+        built with that model (the shared adapter records which, and refuses another: a question embedded by one
+        model cannot be compared with passages embedded by another). If not, search is by words alone, as it is
+        while nothing has been embedded."""
+        if not self.has_vectors() or self.embedder is None:
+            return False
+        if self._meaning is None:
+            try:
+                self.index = open_index(self.settings.index_dir, self.embedder)
+                self._meaning = True
+            except IndexOutOfDate as exc:
+                log.warning("meaning search is off: %s (run `wcs index --re-embed`)", exc)
+                self._meaning = False
+        return self._meaning
 
     @property
     def embedder(self) -> Embedder | None:
@@ -123,6 +149,9 @@ class Engine:
         f = filters or Filters()
         r = self.settings.ranking
         where = build_where(f)
+        hidden = sorted(self.hidden_records()) if self.hidden_records is not None else []
+        if hidden:
+            where += f" AND record_id NOT IN ({', '.join(sql_str(r) for r in hidden)})"
         timings: dict[str, float] = {}
         clock = time.perf_counter()
 
@@ -133,21 +162,22 @@ class Engine:
             clock = now
 
         def keyword() -> list[dict[str, Any]]:
-            return self.index.bm25(query, where, int(r.get("candidates_bm25", 300)))
+            return self.index.search_words(query, where, int(r.get("candidates_bm25", 300)))
 
+        semantic = self.meaning_search()
         with ThreadPoolExecutor(max_workers=1) as pool:
             by_keyword = pool.submit(keyword)
             vec_hits: list[dict[str, Any]] = []
-            semantic = self.has_vectors() and self.embedder is not None
             if semantic:
                 vec = self.embedder.embed_query(query)
                 lap("embed")
-                vec_hits = self.index.vector(vec, where, int(r.get("candidates_vector", 300)),
-                                             nprobes=r.get("vector_nprobes"),
-                                             refine_factor=r.get("vector_refine_factor"))
+                vec_hits = self.index.search_meaning(vec, where, int(r.get("candidates_vector", 300)),
+                                                     nprobes=r.get("vector_nprobes"),
+                                                     refine_factor=r.get("vector_refine_factor"))
                 lap("meaning")
             bm = by_keyword.result()
             lap("keyword")
+        current_stages().mark("searched")  # for the record of the briefing being written, if one is
 
         cands: dict[str, Candidate] = {}
 
@@ -212,6 +242,7 @@ class Engine:
         else:
             top = scored[:limit]
         lap("select")
+        current_stages().mark("ranked")
         records = self.records_for(top) if top else []
         lap("records")
         return SearchResult(top, records, no_records, len(cands), semantic, where,

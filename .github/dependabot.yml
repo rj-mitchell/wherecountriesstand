@@ -43,6 +43,10 @@ updates:
       actions:
         patterns:
           - "*"
+    ignore:
+      # The shared workflows are called at the tag of the wts-core release in pyproject.toml, and the two are raised
+      # together, by hand, in one change (wts-core docs/UPGRADING.md).
+      - dependency-name: "rj-mitchell/wts-core*"
 
   # The base image in the Dockerfile: newer releases of Python 3.12 only (see the note at the top)
   - package-ecosystem: "docker"

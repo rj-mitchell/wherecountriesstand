@@ -6,4 +6,7 @@ __pycache__/
 .ruff_cache/
 deploy/.env
 deploy/backups/
-eval/runs/
+# Evaluation runs are kept on the computer that made them, but for the note of each run that passed, which the
+# server must have (it is what allows a version of the method to be tried side by side: wts-core docs/adr/0012).
+eval/runs/*
+!eval/runs/passed.jsonl

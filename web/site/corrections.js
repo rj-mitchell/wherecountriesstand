@@ -1,4 +1,5 @@
-// Where Countries Stand: the report form and the list of withdrawn briefings (corrections.html).
+// Where Countries Stand: the report form and the corrections log (corrections.html): withdrawn briefings, and what
+// the site has said publicly of a correction made after a report.
 // The form offers the family's three routes (the impartiality policy, section 7.1): "Something is wrong" and "You've
 // been characterised unfairly" are sent as reports (/api/report), and "Add a statement in your own words" as a
 // statement under the right of reply (/api/statements). ?kind= picks the route (error, unfair, statement, takedown,
@@ -40,8 +41,11 @@ function words(text) {
 async function loadCorrections() {
   const list = await fetch("/api/corrections").then((r) => r.json()).catch(() => null);
   if (!list || !list.length) return;
-  $("corrections").replaceChildren(el("ul", {}, ...list.map((c) =>
-    el("li", {}, el("strong", {}, c.question), ` (written ${fmtDate(c.at)}; withdrawn ${fmtDate(c.withdrawn_at)}): `,
+  // A withdrawn briefing: its question, when it was written and withdrawn, and why. Anything else in the log is a
+  // correction the site has made after a report, in the words the site chose to publish, with its date.
+  $("corrections").replaceChildren(el("ul", {}, ...list.map((c) => c.kind && c.kind !== "withdrawn"
+    ? el("li", {}, el("strong", {}, "Corrected"), ` (${fmtDate(c.date)}): `, c.note)
+    : el("li", {}, el("strong", {}, c.question), ` (written ${fmtDate(c.at)}; withdrawn ${fmtDate(c.withdrawn_at)}): `,
        c.reason || "withdrawn"))));
 }
 

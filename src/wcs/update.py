@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any
 
 import duckdb
+from wts_core.ports import SYSTEM_CLOCK, Clock
 
 from wcs.config import Settings
 from wcs.reference.countries import Countries, countries
@@ -471,30 +472,64 @@ def health(report: Report, today: date | None = None) -> None:
 
 def spending(settings: Settings, report: Report) -> None:
     """The site's spending and failed briefings, from its own database (the site and the updater share the data
-    folder), so the update report is the one place to look. Also deletes statements' confirming addresses that are
-    due to go (``wcs.api.statements.forget_emails``)."""
-    path = settings.data_dir / "state.db"
-    if not path.exists():
+    folder), so the update report is the one place to look. Also does the right of reply's housekeeping: the
+    confirming addresses of statements that ended three months ago are deleted, and what nobody decided in three
+    months lapses (``wcs.replies``; ``wcs tidy`` does the same each night)."""
+    if not settings.state_db.exists():
         return
-    from wcs.api import statements, usage
+    from wts_core.usage import BriefingArchive, token_id
+
+    from wcs import spending as spent
+    from wcs.replies import open_replies
+    from wcs.state import open_state
 
     try:
-        state = usage.StateDB(path)
-        report.warnings += usage.warnings(usage.summary(state, settings.usage, days=1))
+        db = open_state(settings)
+        report.warnings += spent.warnings(spent.summary(settings, db, days=1))
+        replies = open_replies(db, BriefingArchive(db, new_id=lambda: token_id(8)))
         # the privacy notice: a statement's confirming address goes three months after it is withdrawn or declined
-        statements.forget_emails(state)
+        replies.forget_old_emails()
+        replies.lapse_undecided()
     except Exception as exc:  # the report itself matters more
-        report.warnings.append(f"spending: could not read {path} ({type(exc).__name__}: {exc})")
+        report.warnings.append(f"spending: could not read {settings.state_db} ({type(exc).__name__}: {exc})")
+
+
+def briefings(settings: Settings, report: Report, clock: Clock = SYSTEM_CLOCK) -> None:
+    """Whether briefings have got worse over the last day than the owner's thresholds allow (``[alerts]``: slower,
+    more errors, more failed checks, dearer). Each figure over its threshold is an error in the report, so the
+    scheduled run exits 1 and the email goes. With no thresholds set, as at first, nothing is said."""
+    thresholds = settings.section("alerts")
+    if not thresholds or not settings.state_db.exists():
+        return
+    from datetime import timedelta
+
+    from wts_core.observe import SqliteBriefingLog, stats, tripped
+
+    from wcs.state import open_state
+
+    try:
+        figures = stats(SqliteBriefingLog(open_state(settings, clock), clock=clock), since=timedelta(days=1),
+                        clock=clock)
+        report.errors += [f"briefings: {said}" for said in tripped(figures, thresholds)]
+    except Exception as exc:  # the report itself matters more
+        report.warnings.append(f"briefings: could not check the alerts ({type(exc).__name__}: {exc})")
 
 
 def backups(report: Report, folder: Path | None = None) -> None:
-    """Whether the nightly backup and its off-site copy are still being made (``offsite.backup_alerts``). The update
-    runs every day in the same container as the backup, with the backups' folder (``/backups``, or
-    ``WCS_BACKUP_DIR``), so a backup timer that has stopped is noticed here."""
-    from wcs.offsite import backup_alerts
+    """Whether the nightly backup and its off-site copy are still being made (the shared package's
+    ``ops.backup_alerts``, in this site's words). The update runs every day in the same container as the backup,
+    with the backups' folder (``/backups``, or ``WCS_BACKUP_DIR``), so a backup timer that has stopped is noticed
+    here."""
+    from wts_core.adapters import b2
+    from wts_core.ops import backup_alerts
+
+    from wcs.config import SITE
+    from wcs.state import BACKUP_ALERTS, BACKUPS
 
     try:
-        report.backups = backup_alerts(Path(folder or os.environ.get("WCS_BACKUP_DIR") or "/backups"))
+        found = backup_alerts(Path(folder or os.environ.get("WCS_BACKUP_DIR") or "/backups"), BACKUPS,
+                              offsite_set_up=b2.configured(SITE) is not None, wording=BACKUP_ALERTS)
+        report.backups = [{"level": alert.level, "text": alert.text} for alert in found]
     except Exception as exc:  # the report itself matters more
         report.backups = [{"level": "error", "text": f"could not check the backups ({type(exc).__name__}: {exc})"}]
 
@@ -504,21 +539,35 @@ def update_index(settings: Settings, ref: Countries, changed: dict[str, set[int]
     """Re-index the years that changed, embed passages still waiting, and merge what was written into the search
     indices. A run that changed nothing writes nothing to the index (each write would leave a new version of it on
     disk until the next clean-up)."""
-    from wcs.index.build import Indexer, refresh_indices
+    from wts_core.ports import IndexOutOfDate
 
-    idx = Indexer(settings, ref)
+    from wcs.adapters import get_embedder
+    from wcs.index.build import Indexer, embed_pending, refresh_indices
+    from wcs.index.lance import open_index
+
+    embedder = None
+    try:
+        embedder = get_embedder(settings)
+    except Exception as exc:  # keyword search still works; embedding resumes when the model can be loaded
+        if embed_seconds:
+            report.warnings.append(f"embedding: {type(exc).__name__}: {exc}")
+    try:
+        idx = Indexer(settings, ref, embedder=embedder)
+    except IndexOutOfDate as exc:
+        # The index was built with another embedding model: its vectors cannot be added to or searched with this
+        # one. Search by words carries on (the site falls back to it), and the report says what to do.
+        report.warnings.append(f"meaning search is off: {exc}. Search by words carries on. To embed the record "
+                               "again with the model now in the settings, run `wcs index --re-embed`, then `wcs "
+                               "embed`")
+        idx, embedder = Indexer(settings, ref, open_index(settings.index_dir), keep_vectors=False), None
     for source, ys in changed.items():
         for year in sorted(ys):
             report.indexed += idx.index_year(source, year)
     # passages still waiting for meaning search (a first load takes hours) are embedded on every run, changes or
     # not, within the time allowed
-    if embed_seconds and idx.state.unembedded():
-        from wcs.embed.base import get_embedder
-        from wcs.index.build import embed_pending
-
+    if embed_seconds and embedder is not None and idx.state.unembedded():
         try:
-            report.embedded = embed_pending(settings, idx.index, idx.state, get_embedder(settings),
-                                            max_seconds=embed_seconds)
+            report.embedded = embed_pending(settings, idx.index, idx.state, embedder, max_seconds=embed_seconds)
         except Exception as exc:  # keyword search still works; embedding resumes next run
             report.warnings.append(f"embedding: {type(exc).__name__}: {exc}")
     # rows an earlier run added but did not merge (it was stopped) are merged too
@@ -556,6 +605,7 @@ def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd:
         update_index(settings, ref, changed, report, embed_seconds)
     health(report)
     spending(settings, report)
+    briefings(settings, report)
     backups(report)
     report.finished = datetime.now(UTC).isoformat(timespec="seconds")
     write_report(settings, report)

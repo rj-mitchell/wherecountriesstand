@@ -1,0 +1,1300 @@
+{
+ "after": [
+  {
+   "case": "the published statement beside its briefing",
+   "json": {
+    "note": "In their own words. Not checked or endorsed by Where Countries Stand.",
+    "statements": [
+     {
+      "country": "FJI",
+      "id": 1,
+      "link": "",
+      "name": "Amina B. Example",
+      "page": "/b/Briefing01",
+      "role": "Ambassador",
+      "shown_on": "2026-11-16",
+      "text": "New words, as the author sent them."
+     }
+    ]
+   },
+   "status": 200
+  },
+  {
+   "case": "the same by the briefing's full address",
+   "json": {
+    "note": "In their own words. Not checked or endorsed by Where Countries Stand.",
+    "statements": [
+     {
+      "country": "FJI",
+      "id": 1,
+      "link": "",
+      "name": "Amina B. Example",
+      "page": "/b/Briefing01",
+      "role": "Ambassador",
+      "shown_on": "2026-11-16",
+      "text": "New words, as the author sent them."
+     }
+    ]
+   },
+   "status": 200
+  },
+  {
+   "case": "a country's statements",
+   "json": {
+    "note": "In their own words. Not checked or endorsed by Where Countries Stand.",
+    "statements": [
+     {
+      "country": "FJI",
+      "id": 1,
+      "link": "",
+      "name": "Amina B. Example",
+      "page": "/b/Briefing01",
+      "role": "Ambassador",
+      "shown_on": "2026-11-16",
+      "text": "New words, as the author sent them."
+     }
+    ]
+   },
+   "status": 200
+  },
+  {
+   "case": "another country's",
+   "json": {
+    "note": "In their own words. Not checked or endorsed by Where Countries Stand.",
+    "statements": []
+   },
+   "status": 200
+  },
+  {
+   "case": "a briefing with no statement shown",
+   "json": {
+    "note": "In their own words. Not checked or endorsed by Where Countries Stand.",
+    "statements": []
+   },
+   "status": 200
+  },
+  {
+   "case": "the corrections log, with two withdrawn",
+   "json": [
+    {
+     "at": "2026-11-13T12:01:00+00:00",
+     "id": "Briefing02",
+     "question": "And what did the small island States say?",
+     "reason": "It misattributed a statement.",
+     "withdrawn_at": "2026-11-16T12:03:00+00:00"
+    },
+    {
+     "at": "2026-11-13T12:02:00+00:00",
+     "id": "Withdrawn1",
+     "question": "An older question?",
+     "reason": "It quoted the wrong meeting.",
+     "withdrawn_at": "2026-11-13T12:03:00+00:00"
+    }
+   ],
+   "status": 200
+  },
+  {
+   "case": "the briefing withdrawn just now",
+   "json": {
+    "detail": "This briefing has been withdrawn: It misattributed a statement."
+   },
+   "status": 410
+  }
+ ],
+ "cli": [
+  {
+   "args": [
+    "reports"
+   ],
+   "case": "the open reports",
+   "exit": 0,
+   "output": "#7  2026-11-13T21:03:00+00:00  error  -\n    \n#6  2026-11-13T18:03:00+00:00  other  -\n    A thought.\n#5  2026-11-13T17:03:00+00:00  takedown  https://wherecountriesstand.com/b/Briefing02\n    Please remove my name.\n    reply to: named@example.org\n#4  2026-11-13T16:03:00+00:00  problem  -\n    From an old link.\n#3  2026-11-13T15:03:00+00:00  unfair  -\n    A loaded word.\n#2  2026-11-13T14:03:00+00:00  error  -\n    Something is wrong.\n#1  2026-11-13T13:03:00+00:00  error  /b/Briefing01\n    The date is wrong.\n    reply to: reader@example.org\n"
+  },
+  {
+   "args": [
+    "close-report",
+    "1"
+   ],
+   "case": "close a report",
+   "exit": 0,
+   "output": "closed\n"
+  },
+  {
+   "args": [
+    "close-report",
+    "1"
+   ],
+   "case": "close it again",
+   "exit": 1,
+   "output": "no open report with that number\n"
+  },
+  {
+   "args": [
+    "close-report",
+    "99"
+   ],
+   "case": "close a report there is not",
+   "exit": 1,
+   "output": "no open report with that number\n"
+  },
+  {
+   "args": [
+    "reports",
+    "--all"
+   ],
+   "case": "every report",
+   "exit": 0,
+   "output": "#7  2026-11-13T21:03:00+00:00  error  -\n    \n#6  2026-11-13T18:03:00+00:00  other  -\n    A thought.\n#5  2026-11-13T17:03:00+00:00  takedown  https://wherecountriesstand.com/b/Briefing02\n    Please remove my name.\n    reply to: named@example.org\n#4  2026-11-13T16:03:00+00:00  problem  -\n    From an old link.\n#3  2026-11-13T15:03:00+00:00  unfair  -\n    A loaded word.\n#2  2026-11-13T14:03:00+00:00  error  -\n    Something is wrong.\n#1  2026-11-13T13:03:00+00:00  error  /b/Briefing01  (closed)\n    The date is wrong.\n"
+  },
+  {
+   "args": [
+    "statements"
+   ],
+   "case": "the statements waiting or shown",
+   "exit": 0,
+   "output": "#3  2026-11-14T03:03:00+00:00  pending  /b/Briefing02\n    from: Third Sender, Permanent Representative of Kenya to the United Nations\n    confirm with: mission@example.org\n    Our delegation spoke on behalf of the group, and the record of the meeting shows the whole statement.\n    Second paragraph.\n    (20 words)\n#2  2026-11-14T02:03:00+00:00  pending  /b/Briefing01\n    from: Second Sender, Permanent Representative of Kenya to the United Nations\n    confirm with: mission@example.org\n    record: https://undocs.org/en/S/PV.9000\n    One word.\n    (2 words)\n#1  2026-11-14T01:03:00+00:00  pending  /b/Briefing01\n    from: Amina Example, Permanent Representative of Kenya to the United Nations\n    confirm with: mission@example.org\n    Our delegation spoke on behalf of the group, and the record of the meeting shows the whole statement.\n    Second paragraph.\n    (20 words)\n"
+  },
+  {
+   "args": [
+    "publish-statement",
+    "1"
+   ],
+   "case": "publish with nothing said of how the sender was confirmed",
+   "exit": 2,
+   "output": "Missing option '--checked'."
+  },
+  {
+   "args": [
+    "publish-statement",
+    "1",
+    "--checked",
+    "  "
+   ],
+   "case": "publish with an empty note",
+   "exit": 1,
+   "output": "error: Say how you confirmed who sent it (--checked), for the log.\n"
+  },
+  {
+   "args": [
+    "publish-statement",
+    "1",
+    "--checked",
+    "Reply from the mission's published address.",
+    "--country",
+    "Kenya"
+   ],
+   "case": "publish for a country that is not a code",
+   "exit": 1,
+   "output": "error: A country is given by its three-letter code, such as KEN.\n"
+  },
+  {
+   "args": [
+    "publish-statement",
+    "1",
+    "--checked",
+    "Reply  from the mission's published address, 14 November.",
+    "--country",
+    "ken"
+   ],
+   "case": "publish",
+   "exit": 0,
+   "output": "published\n"
+  },
+  {
+   "args": [
+    "publish-statement",
+    "1",
+    "--checked",
+    "Again."
+   ],
+   "case": "publish it again",
+   "exit": 1,
+   "output": "no waiting statement with that number\n"
+  },
+  {
+   "args": [
+    "publish-statement",
+    "99",
+    "--checked",
+    "x"
+   ],
+   "case": "publish one there is not",
+   "exit": 1,
+   "output": "no waiting statement with that number\n"
+  },
+  {
+   "args": [
+    "decline-statement",
+    "2",
+    "--reason",
+    "It is about another delegation's conduct."
+   ],
+   "case": "decline",
+   "exit": 0,
+   "output": "declined\n"
+  },
+  {
+   "args": [
+    "decline-statement",
+    "3"
+   ],
+   "case": "decline with no reason",
+   "exit": 2,
+   "output": "Missing option '--reason'."
+  },
+  {
+   "args": [
+    "decline-statement",
+    "2",
+    "--reason",
+    "Again."
+   ],
+   "case": "decline one already declined",
+   "exit": 1,
+   "output": "no waiting statement with that number\n"
+  },
+  {
+   "args": [
+    "update-statement",
+    "1",
+    "--text",
+    "New words, as the author sent them."
+   ],
+   "case": "update the words of a published statement",
+   "exit": 0,
+   "output": "updated\n"
+  },
+  {
+   "args": [
+    "update-statement",
+    "1",
+    "--text",
+    "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word"
+   ],
+   "case": "update with too many words",
+   "exit": 1,
+   "output": "error: A statement can be up to 150 words; this one is 151.\n"
+  },
+  {
+   "args": [
+    "update-statement",
+    "1",
+    "--name",
+    "Amina B. Example",
+    "--role",
+    "Ambassador",
+    "--link",
+    "https://undocs.org/en/S/PV.9001",
+    "--country",
+    "FJI"
+   ],
+   "case": "update the name, the role, the link and the country",
+   "exit": 0,
+   "output": "updated\n"
+  },
+  {
+   "args": [
+    "update-statement",
+    "1",
+    "--link",
+    "ftp://example.org/x"
+   ],
+   "case": "update with a bad link",
+   "exit": 1,
+   "output": "error: The link to the record must be a web address starting https:// (or leave it empty).\n"
+  },
+  {
+   "args": [
+    "update-statement",
+    "1",
+    "--link",
+    ""
+   ],
+   "case": "take the link off",
+   "exit": 0,
+   "output": "updated\n"
+  },
+  {
+   "args": [
+    "update-statement",
+    "1"
+   ],
+   "case": "update with nothing to change",
+   "exit": 1,
+   "output": "nothing changed: no waiting or published statement with that number, or no change\n"
+  },
+  {
+   "args": [
+    "update-statement",
+    "2",
+    "--name",
+    "Someone Else"
+   ],
+   "case": "update a declined statement",
+   "exit": 1,
+   "output": "nothing changed: no waiting or published statement with that number, or no change\n"
+  },
+  {
+   "args": [
+    "publish-statement",
+    "3",
+    "--checked",
+    "Telephoned the mission."
+   ],
+   "case": "publish the third",
+   "exit": 0,
+   "output": "published\n"
+  },
+  {
+   "args": [
+    "withdraw-statement",
+    "3"
+   ],
+   "case": "withdraw a statement, at its author's request",
+   "exit": 0,
+   "output": "withdrawn\n"
+  },
+  {
+   "args": [
+    "withdraw-statement",
+    "3"
+   ],
+   "case": "withdraw it again",
+   "exit": 1,
+   "output": "no waiting or published statement with that number\n"
+  },
+  {
+   "args": [
+    "statements"
+   ],
+   "case": "the statements waiting or shown, now",
+   "exit": 0,
+   "output": "#1  2026-11-14T01:03:00+00:00  published  /b/Briefing01  (speaks for FJI)\n    from: Amina B. Example, Ambassador\n    confirm with: mission@example.org\n    New words, as the author sent them.\n    sender confirmed: Reply from the mission's published address, 14 November.\n    (7 words; shown from 2026-11-16)\n"
+  },
+  {
+   "args": [
+    "statements",
+    "--all"
+   ],
+   "case": "every statement",
+   "exit": 0,
+   "output": "#3  2026-11-14T03:03:00+00:00  withdrawn  /b/Briefing02\n    from: Third Sender, Permanent Representative of Kenya to the United Nations\n    confirm with: mission@example.org\n    Our delegation spoke on behalf of the group, and the record of the meeting shows the whole statement.\n    Second paragraph.\n    sender confirmed: Telephoned the mission.\n    (20 words; withdrawn: Withdrawn by its author.)\n#2  2026-11-14T02:03:00+00:00  declined  /b/Briefing01\n    from: Second Sender, Permanent Representative of Kenya to the United Nations\n    confirm with: mission@example.org\n    record: https://undocs.org/en/S/PV.9000\n    One word.\n    (2 words; declined: It is about another delegation's conduct.)\n#1  2026-11-14T01:03:00+00:00  published  /b/Briefing01  (speaks for FJI)\n    from: Amina B. Example, Ambassador\n    confirm with: mission@example.org\n    New words, as the author sent them.\n    sender confirmed: Reply from the mission's published address, 14 November.\n    (7 words; shown from 2026-11-16)\n"
+  },
+  {
+   "args": [
+    "list-statements",
+    "--all"
+   ],
+   "case": "the same under the sister site's name",
+   "exit": 0,
+   "output": "#3  2026-11-14T03:03:00+00:00  withdrawn  /b/Briefing02\n    from: Third Sender, Permanent Representative of Kenya to the United Nations\n    confirm with: mission@example.org\n    Our delegation spoke on behalf of the group, and the record of the meeting shows the whole statement.\n    Second paragraph.\n    sender confirmed: Telephoned the mission.\n    (20 words; withdrawn: Withdrawn by its author.)\n#2  2026-11-14T02:03:00+00:00  declined  /b/Briefing01\n    from: Second Sender, Permanent Representative of Kenya to the United Nations\n    confirm with: mission@example.org\n    record: https://undocs.org/en/S/PV.9000\n    One word.\n    (2 words; declined: It is about another delegation's conduct.)\n#1  2026-11-14T01:03:00+00:00  published  /b/Briefing01  (speaks for FJI)\n    from: Amina B. Example, Ambassador\n    confirm with: mission@example.org\n    New words, as the author sent them.\n    sender confirmed: Reply from the mission's published address, 14 November.\n    (7 words; shown from 2026-11-16)\n"
+  },
+  {
+   "args": [
+    "withdraw",
+    "Briefing02",
+    "--reason",
+    "It misattributed a statement."
+   ],
+   "case": "withdraw a briefing",
+   "exit": 0,
+   "output": "withdrawn\n"
+  },
+  {
+   "args": [
+    "withdraw",
+    "NoSuch0001",
+    "--reason",
+    "x"
+   ],
+   "case": "withdraw a briefing there is not",
+   "exit": 1,
+   "output": "no briefing with that id\n"
+  },
+  {
+   "args": [
+    "withdraw",
+    "Briefing01"
+   ],
+   "case": "withdraw a briefing with no reason",
+   "exit": 2,
+   "output": "Missing option '--reason'."
+  }
+ ],
+ "http": [
+  {
+   "case": "a report of an error",
+   "json": {
+    "id": 1,
+    "ok": true
+   },
+   "status": 200
+  },
+  {
+   "case": "a report with no kind is an error",
+   "json": {
+    "id": 2,
+    "ok": true
+   },
+   "status": 200
+  },
+  {
+   "case": "a report of unfairness",
+   "json": {
+    "id": 3,
+    "ok": true
+   },
+   "status": 200
+  },
+  {
+   "case": "a report under the old kind",
+   "json": {
+    "id": 4,
+    "ok": true
+   },
+   "status": 200
+  },
+  {
+   "case": "a takedown request",
+   "json": {
+    "id": 5,
+    "ok": true
+   },
+   "status": 200
+  },
+  {
+   "case": "another kind of report",
+   "json": {
+    "id": 6,
+    "ok": true
+   },
+   "status": 200
+  },
+  {
+   "case": "a report of a kind there is not",
+   "json": {
+    "detail": [
+     {
+      "ctx": {
+       "expected": "'error', 'unfair', 'problem', 'takedown' or 'other'"
+      },
+      "input": "praise",
+      "loc": [
+       "body",
+       "kind"
+      ],
+      "msg": "Input should be 'error', 'unfair', 'problem', 'takedown' or 'other'",
+      "type": "literal_error"
+     }
+    ]
+   },
+   "status": 422
+  },
+  {
+   "case": "a report too short",
+   "json": {
+    "detail": [
+     {
+      "ctx": {
+       "min_length": 5
+      },
+      "input": "No",
+      "loc": [
+       "body",
+       "message"
+      ],
+      "msg": "String should have at least 5 characters",
+      "type": "string_too_short"
+     }
+    ]
+   },
+   "status": 422
+  },
+  {
+   "case": "a report of spaces",
+   "json": {
+    "id": 7,
+    "ok": true
+   },
+   "status": 200
+  },
+  {
+   "case": "a report too long",
+   "json": {
+    "detail": [
+     {
+      "ctx": {
+       "max_length": 4000
+      },
+      "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "loc": [
+       "body",
+       "message"
+      ],
+      "msg": "String should have at most 4000 characters",
+      "type": "string_too_long"
+     }
+    ]
+   },
+   "status": 422
+  },
+  {
+   "case": "a report with a contact too long",
+   "json": {
+    "detail": [
+     {
+      "ctx": {
+       "max_length": 200
+      },
+      "input": "ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "loc": [
+       "body",
+       "contact"
+      ],
+      "msg": "String should have at most 200 characters",
+      "type": "string_too_long"
+     }
+    ]
+   },
+   "status": 422
+  },
+  {
+   "case": "a report with a page too long",
+   "json": {
+    "detail": [
+     {
+      "ctx": {
+       "max_length": 300
+      },
+      "input": "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+      "loc": [
+       "body",
+       "page"
+      ],
+      "msg": "String should have at most 300 characters",
+      "type": "string_too_long"
+     }
+    ]
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement",
+   "json": {
+    "id": 1,
+    "ok": true
+   },
+   "status": 200
+  },
+  {
+   "case": "a statement by the briefing's full address, with a link",
+   "json": {
+    "id": 2,
+    "ok": true
+   },
+   "status": 200
+  },
+  {
+   "case": "a statement by the test server's own address",
+   "json": {
+    "id": 3,
+    "ok": true
+   },
+   "status": 200
+  },
+  {
+   "case": "a statement with no address",
+   "json": {
+    "detail": "Give the address of the briefing the statement is about."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement beside another site's page",
+   "json": {
+    "detail": "The address must be a briefing on wherecountriesstand.com."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement beside something that is not a briefing",
+   "json": {
+    "detail": "The address must be a briefing on this site, such as https://wherecountriesstand.com/b/…"
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement beside a briefing there is not",
+   "json": {
+    "detail": "There is no briefing at that address. Check the address of the briefing the statement is about."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement beside a withdrawn briefing",
+   "json": {
+    "detail": "There is no briefing at that address. Check the address of the briefing the statement is about."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement with no name",
+   "json": {
+    "detail": "Give your name, as it should be shown."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement with no role",
+   "json": {
+    "detail": "Give your role, such as Permanent Representative of Kenya to the United Nations."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement with no words",
+   "json": {
+    "detail": "Write the statement."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement of 151 words",
+   "json": {
+    "detail": "A statement can be up to 150 words; this one is 151."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement within 150 words and too many characters",
+   "json": {
+    "detail": [
+     {
+      "ctx": {
+       "max_length": 1600
+      },
+      "input": "extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily extraordinarily",
+      "loc": [
+       "body",
+       "text"
+      ],
+      "msg": "String should have at most 1600 characters",
+      "type": "string_too_long"
+     }
+    ]
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement with a link that is not a web address",
+   "json": {
+    "detail": "The link to the record must be a web address starting https:// (or leave it empty)."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement with a link with a quote in it",
+   "json": {
+    "detail": "The link to the record must be a web address starting https:// (or leave it empty)."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement with no email address",
+   "json": {
+    "detail": "Give an email address we can use to confirm who you are."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement with two things wrong: the address and the words",
+   "json": {
+    "detail": "The address must be a briefing on this site, such as https://wherecountriesstand.com/b/…"
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement with two things wrong: the name and the words",
+   "json": {
+    "detail": "Give your name, as it should be shown."
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement with a name too long for the form",
+   "json": {
+    "detail": [
+     {
+      "ctx": {
+       "max_length": 200
+      },
+      "input": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+      "loc": [
+       "body",
+       "name"
+      ],
+      "msg": "String should have at most 200 characters",
+      "type": "string_too_long"
+     }
+    ]
+   },
+   "status": 422
+  },
+  {
+   "case": "a statement with a field missing",
+   "json": {
+    "detail": [
+     {
+      "input": {
+       "link": "",
+       "name": "  Amina   Example ",
+       "page": "/b/Briefing01",
+       "role": "Permanent Representative of Kenya to the United Nations",
+       "text": "  Our delegation spoke on behalf of the group, and the record of the meeting shows the whole statement.\r\n\r\n\r\nSecond paragraph.  "
+      },
+      "loc": [
+       "body",
+       "email"
+      ],
+      "msg": "Field required",
+      "type": "missing"
+     }
+    ]
+   },
+   "status": 422
+  },
+  {
+   "case": "no statement is shown while it waits",
+   "json": {
+    "note": "In their own words. Not checked or endorsed by Where Countries Stand.",
+    "statements": []
+   },
+   "status": 200
+  },
+  {
+   "case": "statements asked for with nothing said",
+   "json": {
+    "detail": "Give the address of a briefing (page) or a country's code (country)."
+   },
+   "status": 422
+  },
+  {
+   "case": "statements of a country that is not a code",
+   "json": {
+    "detail": "A country is given by its three-letter code, such as KEN."
+   },
+   "status": 422
+  },
+  {
+   "case": "statements beside something that is not a briefing",
+   "json": {
+    "detail": "The address must be a briefing on this site, such as https://wherecountriesstand.com/b/…"
+   },
+   "status": 422
+  },
+  {
+   "case": "a saved briefing",
+   "json": {
+    "at": "2026-11-13T12:00:00+00:00",
+    "events": [
+     {
+      "plan": {
+       "question": "What has been said about climate finance since 2020?"
+      },
+      "type": "plan",
+      "usage": null
+     },
+     {
+      "sources": [
+       {
+        "group": "FJI",
+        "n": 2,
+        "title": "General Assembly, 79th session"
+       },
+       {
+        "group": "KEN",
+        "n": 3,
+        "title": "Security Council, 9001st meeting"
+       }
+      ],
+      "type": "sources"
+     },
+     {
+      "text": "Kenya said that climate finance was \"too slow\".",
+      "type": "text"
+     },
+     {
+      "answer": {
+       "citations_invalid": 0,
+       "citations_total": 2,
+       "grounded_ratio": 0.624,
+       "loaded_words": 0,
+       "markdown": "Kenya said that climate finance was “too slow”. In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.",
+       "no_records": false,
+       "quotes_total": 1,
+       "quotes_unverified": 0,
+       "segments": [
+        {
+         "cited": [
+          {
+           "n": 1,
+           "text": "climate finance for adaptation is too slow"
+          }
+         ],
+         "loaded": [],
+         "misquotes": [],
+         "sources": [
+          1
+         ],
+         "status": "cited",
+         "text": "Kenya said that climate finance was “too slow”."
+        },
+        {
+         "cited": [],
+         "loaded": [],
+         "misquotes": [],
+         "sources": [],
+         "status": "connective",
+         "text": " In the debate that followed:"
+        },
+        {
+         "cited": [
+          {
+           "n": 2,
+           "text": "climate finance must reach small islands"
+          }
+         ],
+         "loaded": [],
+         "misquotes": [],
+         "sources": [
+          2
+         ],
+         "status": "cited",
+         "text": " Fiji warned that finance must reach small islands."
+        },
+        {
+         "cited": [],
+         "loaded": [],
+         "misquotes": [],
+         "sources": [],
+         "status": "unsupported",
+         "text": " This was a turning point for every delegation in the room."
+        }
+       ],
+       "unsupported_segments": 1
+      },
+      "model": "claude-sonnet-5-5",
+      "stop_reason": "end_turn",
+      "type": "final",
+      "usage": null
+     }
+    ],
+    "id": "Briefing01",
+    "options": {
+     "mode": "summary"
+    },
+    "question": "What has been said about climate finance since 2020?"
+   },
+   "status": 200
+  },
+  {
+   "case": "a withdrawn briefing",
+   "json": {
+    "detail": "This briefing has been withdrawn: It quoted the wrong meeting."
+   },
+   "status": 410
+  },
+  {
+   "case": "a briefing there is not",
+   "json": {
+    "detail": "There is no briefing at this address."
+   },
+   "status": 404
+  },
+  {
+   "case": "the corrections log",
+   "json": [
+    {
+     "at": "2026-11-13T12:02:00+00:00",
+     "id": "Withdrawn1",
+     "question": "An older question?",
+     "reason": "It quoted the wrong meeting.",
+     "withdrawn_at": "2026-11-13T12:03:00+00:00"
+    }
+   ],
+   "status": 200
+  },
+  {
+   "case": "a saved briefing's page",
+   "noindex": true,
+   "og_title": [
+    "<meta property=\"og:title\" content=\"What has been said about climate finance since 2020?\">"
+   ],
+   "status": 200,
+   "title": "<title>What has been said about climate finance since 2020? · Where Countries Stand</title>"
+  },
+  {
+   "case": "a withdrawn briefing's page",
+   "noindex": true,
+   "og_title": [
+    "<meta property=\"og:title\" content=\"An older question?\">"
+   ],
+   "status": 200,
+   "title": "<title>An older question? · Where Countries Stand</title>"
+  },
+  {
+   "case": "the page of a briefing there is not",
+   "noindex": false,
+   "og_title": [
+    "<meta property=\"og:title\" content=\"Where Countries Stand\">"
+   ],
+   "status": 404,
+   "title": "<title>Where Countries Stand</title>"
+  }
+ ],
+ "kept": {
+  "briefings": [
+   {
+    "at": "2026-11-13T12:00:00+00:00",
+    "id": "Briefing01",
+    "question": "What has been said about climate finance since 2020?",
+    "withdrawn_at": null,
+    "withdrawn_reason": null
+   },
+   {
+    "at": "2026-11-13T12:01:00+00:00",
+    "id": "Briefing02",
+    "question": "And what did the small island States say?",
+    "withdrawn_at": "2026-11-16T12:03:00+00:00",
+    "withdrawn_reason": "It misattributed a statement."
+   },
+   {
+    "at": "2026-11-13T12:02:00+00:00",
+    "id": "Withdrawn1",
+    "question": "An older question?",
+    "withdrawn_at": "2026-11-13T12:03:00+00:00",
+    "withdrawn_reason": "It quoted the wrong meeting."
+   }
+  ],
+  "reports": [
+   {
+    "at": "2026-11-13T13:03:00+00:00",
+    "closed_at": "2026-11-15T09:03:00+00:00",
+    "contact": "",
+    "id": 1,
+    "kind": "error",
+    "message": "The date is wrong.",
+    "page": "/b/Briefing01"
+   },
+   {
+    "at": "2026-11-13T14:03:00+00:00",
+    "closed_at": null,
+    "contact": "",
+    "id": 2,
+    "kind": "error",
+    "message": "Something is wrong.",
+    "page": ""
+   },
+   {
+    "at": "2026-11-13T15:03:00+00:00",
+    "closed_at": null,
+    "contact": "",
+    "id": 3,
+    "kind": "unfair",
+    "message": "A loaded word.",
+    "page": ""
+   },
+   {
+    "at": "2026-11-13T16:03:00+00:00",
+    "closed_at": null,
+    "contact": "",
+    "id": 4,
+    "kind": "problem",
+    "message": "From an old link.",
+    "page": ""
+   },
+   {
+    "at": "2026-11-13T17:03:00+00:00",
+    "closed_at": null,
+    "contact": "named@example.org",
+    "id": 5,
+    "kind": "takedown",
+    "message": "Please remove my name.",
+    "page": "https://wherecountriesstand.com/b/Briefing02"
+   },
+   {
+    "at": "2026-11-13T18:03:00+00:00",
+    "closed_at": null,
+    "contact": "",
+    "id": 6,
+    "kind": "other",
+    "message": "A thought.",
+    "page": ""
+   },
+   {
+    "at": "2026-11-13T21:03:00+00:00",
+    "closed_at": null,
+    "contact": "",
+    "id": 7,
+    "kind": "error",
+    "message": "",
+    "page": ""
+   }
+  ],
+  "statements": [
+   {
+    "at": "2026-11-14T01:03:00+00:00",
+    "country": "FJI",
+    "email": "mission@example.org",
+    "ended_at": null,
+    "id": 1,
+    "link": "",
+    "log": [
+     {
+      "action": "received",
+      "at": "2026-11-14T01:03:00+00:00"
+     },
+     {
+      "action": "published",
+      "at": "2026-11-15T17:03:00+00:00",
+      "note": "Reply from the mission's published address, 14 November."
+     },
+     {
+      "action": "updated",
+      "at": "2026-11-15T23:03:00+00:00",
+      "note": "shown_on, text"
+     },
+     {
+      "action": "updated",
+      "at": "2026-11-16T01:03:00+00:00",
+      "note": "country, link, name, role, shown_on"
+     },
+     {
+      "action": "updated",
+      "at": "2026-11-16T03:03:00+00:00",
+      "note": "link, shown_on"
+     }
+    ],
+    "name": "Amina B. Example",
+    "page": "/b/Briefing01",
+    "reason": null,
+    "role": "Ambassador",
+    "shown_on": "2026-11-16",
+    "status": "published",
+    "text": "New words, as the author sent them."
+   },
+   {
+    "at": "2026-11-14T02:03:00+00:00",
+    "country": null,
+    "email": "mission@example.org",
+    "ended_at": "2026-11-15T20:03:00+00:00",
+    "id": 2,
+    "link": "https://undocs.org/en/S/PV.9000",
+    "log": [
+     {
+      "action": "received",
+      "at": "2026-11-14T02:03:00+00:00"
+     },
+     {
+      "action": "declined",
+      "at": "2026-11-15T20:03:00+00:00",
+      "note": "It is about another delegation's conduct."
+     }
+    ],
+    "name": "Second Sender",
+    "page": "/b/Briefing01",
+    "reason": "It is about another delegation's conduct.",
+    "role": "Permanent Representative of Kenya to the United Nations",
+    "shown_on": null,
+    "status": "declined",
+    "text": "One word."
+   },
+   {
+    "at": "2026-11-14T03:03:00+00:00",
+    "country": null,
+    "email": "mission@example.org",
+    "ended_at": "2026-11-16T07:03:00+00:00",
+    "id": 3,
+    "link": "",
+    "log": [
+     {
+      "action": "received",
+      "at": "2026-11-14T03:03:00+00:00"
+     },
+     {
+      "action": "published",
+      "at": "2026-11-16T06:03:00+00:00",
+      "note": "Telephoned the mission."
+     },
+     {
+      "action": "withdrawn",
+      "at": "2026-11-16T07:03:00+00:00",
+      "note": "Withdrawn by its author."
+     }
+    ],
+    "name": "Third Sender",
+    "page": "/b/Briefing02",
+    "reason": "Withdrawn by its author.",
+    "role": "Permanent Representative of Kenya to the United Nations",
+    "shown_on": "2026-11-16",
+    "status": "withdrawn",
+    "text": "Our delegation spoke on behalf of the group, and the record of the meeting shows the whole statement.\r\n\r\n\r\nSecond paragraph."
+   }
+  ]
+ },
+ "kept_after_the_forms": {
+  "briefings": [
+   {
+    "at": "2026-11-13T12:00:00+00:00",
+    "id": "Briefing01",
+    "question": "What has been said about climate finance since 2020?",
+    "withdrawn_at": null,
+    "withdrawn_reason": null
+   },
+   {
+    "at": "2026-11-13T12:01:00+00:00",
+    "id": "Briefing02",
+    "question": "And what did the small island States say?",
+    "withdrawn_at": null,
+    "withdrawn_reason": null
+   },
+   {
+    "at": "2026-11-13T12:02:00+00:00",
+    "id": "Withdrawn1",
+    "question": "An older question?",
+    "withdrawn_at": "2026-11-13T12:03:00+00:00",
+    "withdrawn_reason": "It quoted the wrong meeting."
+   }
+  ],
+  "reports": [
+   {
+    "at": "2026-11-13T13:03:00+00:00",
+    "closed_at": null,
+    "contact": "reader@example.org",
+    "id": 1,
+    "kind": "error",
+    "message": "The date is wrong.",
+    "page": "/b/Briefing01"
+   },
+   {
+    "at": "2026-11-13T14:03:00+00:00",
+    "closed_at": null,
+    "contact": "",
+    "id": 2,
+    "kind": "error",
+    "message": "Something is wrong.",
+    "page": ""
+   },
+   {
+    "at": "2026-11-13T15:03:00+00:00",
+    "closed_at": null,
+    "contact": "",
+    "id": 3,
+    "kind": "unfair",
+    "message": "A loaded word.",
+    "page": ""
+   },
+   {
+    "at": "2026-11-13T16:03:00+00:00",
+    "closed_at": null,
+    "contact": "",
+    "id": 4,
+    "kind": "problem",
+    "message": "From an old link.",
+    "page": ""
+   },
+   {
+    "at": "2026-11-13T17:03:00+00:00",
+    "closed_at": null,
+    "contact": "named@example.org",
+    "id": 5,
+    "kind": "takedown",
+    "message": "Please remove my name.",
+    "page": "https://wherecountriesstand.com/b/Briefing02"
+   },
+   {
+    "at": "2026-11-13T18:03:00+00:00",
+    "closed_at": null,
+    "contact": "",
+    "id": 6,
+    "kind": "other",
+    "message": "A thought.",
+    "page": ""
+   },
+   {
+    "at": "2026-11-13T21:03:00+00:00",
+    "closed_at": null,
+    "contact": "",
+    "id": 7,
+    "kind": "error",
+    "message": "",
+    "page": ""
+   }
+  ],
+  "statements": [
+   {
+    "at": "2026-11-14T01:03:00+00:00",
+    "country": null,
+    "email": "mission@example.org",
+    "ended_at": null,
+    "id": 1,
+    "link": "",
+    "log": [
+     {
+      "action": "received",
+      "at": "2026-11-14T01:03:00+00:00"
+     }
+    ],
+    "name": "Amina Example",
+    "page": "/b/Briefing01",
+    "reason": null,
+    "role": "Permanent Representative of Kenya to the United Nations",
+    "shown_on": null,
+    "status": "pending",
+    "text": "Our delegation spoke on behalf of the group, and the record of the meeting shows the whole statement.\r\n\r\n\r\nSecond paragraph."
+   },
+   {
+    "at": "2026-11-14T02:03:00+00:00",
+    "country": null,
+    "email": "mission@example.org",
+    "ended_at": null,
+    "id": 2,
+    "link": "https://undocs.org/en/S/PV.9000",
+    "log": [
+     {
+      "action": "received",
+      "at": "2026-11-14T02:03:00+00:00"
+     }
+    ],
+    "name": "Second Sender",
+    "page": "/b/Briefing01",
+    "reason": null,
+    "role": "Permanent Representative of Kenya to the United Nations",
+    "shown_on": null,
+    "status": "pending",
+    "text": "One word."
+   },
+   {
+    "at": "2026-11-14T03:03:00+00:00",
+    "country": null,
+    "email": "mission@example.org",
+    "ended_at": null,
+    "id": 3,
+    "link": "",
+    "log": [
+     {
+      "action": "received",
+      "at": "2026-11-14T03:03:00+00:00"
+     }
+    ],
+    "name": "Third Sender",
+    "page": "/b/Briefing02",
+    "reason": null,
+    "role": "Permanent Representative of Kenya to the United Nations",
+    "shown_on": null,
+    "status": "pending",
+    "text": "Our delegation spoke on behalf of the group, and the record of the meeting shows the whole statement.\r\n\r\n\r\nSecond paragraph."
+   }
+  ]
+ }
+}

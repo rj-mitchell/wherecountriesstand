@@ -7,20 +7,25 @@ so a web page can show each step; ``answer_once`` collects them into one result 
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
 
+from wts_core.briefing import current_stages
+from wts_core.checks import curl_event, to_british
+from wts_core.events import Completed, blocks_as_today, to_reader
+from wts_core.ports import ModelClient
+
+from wcs.adapters import has_model, model_client
 from wcs.config import Settings
 from wcs.engine import Engine
-from wcs.rag.british import britishise_segments, to_british
-from wcs.rag.neutral import flag_loaded
+from wcs.messages import MESSAGES, NO_MODEL
+from wcs.rag.answer import briefing_request
+from wcs.rag.checks import checked
 from wcs.rag.prompts import NO_RECORDS
 from wcs.rag.query_parse import QueryPlan, parse_offline, parse_with_model
 from wcs.rag.sources import build_sources
-from wcs.rag.typography import curl_answer, curl_event
-from wcs.rag.verify import check_quotes, drop_preambles, verify
 from wcs.votes import VoteFinder
 
 log = logging.getLogger(__name__)
@@ -58,7 +63,12 @@ VOTES_ASKED = 6  # resolutions shown when a question asks about votes
 
 
 class Pipeline:
-    def __init__(self, settings: Settings, engine: Engine | None = None, client=None, today: date | None = None):
+    """Where Countries Stand's pipeline. ``client`` is the model that reads questions and writes briefings (the
+    shared package's ``ports.ModelClient``); left out, it is made from the settings when first needed and kept for
+    the life of the process."""
+
+    def __init__(self, settings: Settings, engine: Engine | None = None, client: ModelClient | None = None,
+                 today: date | None = None):
         self.settings = settings
         self.engine = engine or Engine(settings, today=today)
         self.votes = VoteFinder(settings, self.engine.countries)
@@ -66,21 +76,14 @@ class Pipeline:
         self.today = today
 
     @property
-    def client(self):
+    def client(self) -> ModelClient:
         if self._client is None:
-            from wcs.rag.answer import make_client
-
-            self._client = make_client()
+            self._client = model_client(self.settings)
         return self._client
 
     def has_model(self) -> bool:
-        if self._client is not None:
-            return True
-        import os
-
-        from wcs.rag.answer import api_key
-
-        return bool(api_key() or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
+        """Whether briefings can be written at all: a model was given, or an API key is set."""
+        return self._client is not None or has_model(self.settings)
 
     def make_plan(self, req: AskRequest) -> tuple[QueryPlan, dict[str, int] | None]:
         if req.plan:
@@ -91,11 +94,9 @@ class Pipeline:
         if not self.has_model():
             return offline, None
         try:
-            from wcs.rag.answer import usage_dict
-
             plan, usage = parse_with_model(self.client, self.settings, req.question, self.engine.countries, today)
             plan.interpretation = to_british(plan.interpretation)
-            return plan, usage_dict(usage)
+            return plan, usage.as_stored()
         except Exception as exc:
             log.warning("model query parsing failed (%s); using offline rules", exc)
             offline.parse_error = f"{type(exc).__name__}: {exc}"
@@ -119,7 +120,10 @@ class Pipeline:
                 self.votes.find(plan.search_text, plan.filters, n, strict)
         return result, votes, build_sources(result.records, votes, plan.group_by)
 
-    def run(self, req: AskRequest) -> Iterator[dict[str, Any]]:
+    def run(self, req: AskRequest, keep: Callable[..., None] | None = None) -> Iterator[dict[str, Any]]:
+        """The events of one briefing. ``keep``, if given, is handed what the model was sent and what it wrote back
+        (the documents, the finished blocks and each source's heading): how an evaluation run keeps a briefing, so
+        that the checks can be run over it again later without the model."""
         plan, parse_usage = self.make_plan(req)
         ev: dict[str, Any] = {"type": "plan", "plan": plan.to_dict(), "usage": parse_usage}
         if plan.parse_error:
@@ -135,35 +139,37 @@ class Pipeline:
                    "grounded_ratio": 1.0, "unsupported_segments": 0}, "usage": None}
             return
         if not self.has_model():
-            yield {"type": "final", "answer": None, "usage": None,
-                   "note": "Showing the evidence only (no Anthropic API key set)."}
+            yield {"type": "final", "answer": None, "usage": None, "note": NO_MODEL}
             return
-        from wcs.rag.answer import Answerer
-
-        final = None
-        for event in Answerer(self.settings, self.client).stream(
-                plan.question, sources, req.mode, plan_note(plan, self.engine), req.history,
-                self.today or date.today(), plan.group_by):
-            if event["type"] == "final":
-                final = event
-            else:
-                yield event
-        if final is None:
+        request = briefing_request(self.settings, plan.question, sources, req.mode, plan_note(plan, self.engine),
+                                   req.history, self.today or date.today(), plan.group_by)
+        done: Completed | None = None
+        stream = self.client.stream(request)
+        try:
+            for event in stream:
+                if isinstance(event, Completed):
+                    done = event
+                else:
+                    yield to_reader(event)  # text and citations, as they are written
+        finally:
+            stream.close()  # if the reader has gone, this stops the model: nothing more is written or paid for
+        current_stages().mark("written")
+        if done is None:
             raise RuntimeError("the model returned no answer")
-        if final.get("stop_reason") == "refusal":
+        if done.stop_reason == "refusal":
             # the model declined: an error for the reader, never an empty briefing shown as fully grounded (as Where
             # MPs Stand). The call was still paid for, so its token counts go with the event to be recorded.
-            yield {"type": "error", "message": "The model declined to answer this question.",
-                   "usage": final["usage"], "model": final.get("model")}
+            yield {"type": "error", "message": MESSAGES.model_declined, "usage": done.usage.as_stored(),
+                   "model": done.model}
             return
-        report = verify(final["blocks"], sources)
-        drop_preambles(report.segments)       # "Across the records retrieved, ..." openers
-        britishise_segments(report.segments)  # the model's own words only; quotations stay verbatim
-        loaded = flag_loaded(report.segments)  # judgemental words in its own voice are highlighted, not hidden
-        check_quotes(report, sources)         # quotations not found word for word in their sources are marked
-        # curly quotes and apostrophes, last, once the checks have read the text as the model wrote it
-        yield {"type": "final", "answer": curl_answer({**report.to_dict(), "loaded_words": loaded}),
-               "usage": final["usage"], "model": final.get("model"), "stop_reason": final.get("stop_reason")}
+        # Every check, in the one order: citations, openers about the records dropped, the model's own words made
+        # British (quotations stay verbatim), judgemental words in its own voice highlighted (not hidden),
+        # quotations not found word for word marked; then curly quotes and apostrophes, last, once the checks have
+        # read the text as the model wrote it (wcs.rag.checks).
+        if keep is not None:
+            keep(request.documents, done.blocks, tuple(str(s.meta.get("heading") or "") for s in sources))
+        yield {"type": "final", "answer": checked(blocks_as_today(done), sources),
+               "usage": done.usage.as_stored(), "model": done.model, "stop_reason": done.stop_reason}
 
 
 def answer_once(pipeline: Pipeline, req: AskRequest) -> dict[str, Any]:

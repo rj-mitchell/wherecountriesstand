@@ -8,6 +8,10 @@
     wcs backup --to /backups               # copy the state database (scheduled)
     wcs restore /backups/wcs-state-<day>.sqlite.gz   # put a backup back (with the site stopped)
     wcs reports && wcs statements          # problem reports, and statements under the right of reply
+    wcs waiting                            # what is waiting for a decision, and for how long
+    wcs briefing-stats --since 7d          # how briefings went: speed, cost, what the checks found (weekly: scheduled)
+    wcs tidy                               # the nightly housekeeping (scheduled)
+    wcs evaluate && wcs eval run           # the test questions: how each is read (free); each briefing written (paid)
     wcs search "climate finance" --group sids
     wcs ask "How have small island States spoken about climate change since 2015?"
 """
@@ -16,13 +20,36 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Mapping
 from datetime import date
+from typing import Any
 
 import typer
+from wts_core.cli import (
+    BackupWords,
+    OpsWording,
+    RepliesCommands,
+    RepliesWording,
+    RestoreWords,
+    StatsNames,
+    eval_commands,
+    ops_commands,
+    replies_commands,
+    replies_tidy,
+    stats_commands,
+)
+from wts_core.observe import config_id
+from wts_core.ports import SYSTEM_CLOCK, Clock, Embedder
+from wts_core.replies import Replies, word_count
+from wts_core.state import StateDB
+from wts_core.usage import BriefingArchive, PriceTable, token_id
 
-from wcs.config import load_settings
+from wcs.config import SITE, Settings, load_settings
+from wcs.state import BACKUPS
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
+# the clock the owner's commands read: a test stands its own in here
+CLOCK: Clock = SYSTEM_CLOCK
 
 
 def _years(spec: str | None) -> set[int] | None:
@@ -47,10 +74,13 @@ def serve(host: str = "127.0.0.1", port: int = 8000,
     """Run the site and its API."""
     import uvicorn
 
-    from wcs.api.app import create_app
+    from wcs.api.app import create_app, start_logging
 
-    # requests are not logged: the privacy notice (web/site/privacy.html) says so
-    uvicorn.run(create_app(load_settings(), behind_proxy=behind_proxy), host=host, port=port, access_log=False,
+    settings = load_settings()
+    # Requests are not logged: the privacy notice (web/site/privacy.html) says so. What is logged is the site's own
+    # work on each briefing (the stages it reached and how it ended), with nothing of the reader's in it.
+    start_logging(settings)
+    uvicorn.run(create_app(settings, behind_proxy=behind_proxy), host=host, port=port, access_log=False,
                 proxy_headers=behind_proxy, forwarded_allow_ips="*" if behind_proxy else None)
 
 
@@ -193,58 +223,37 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
         raise typer.Exit(1)
 
 
-@app.command()
-def backup(to: str = typer.Option(..., help="folder for the backups"),
-           keep: int = typer.Option(14, help="how many to keep")) -> None:
-    """Copy the state database (spending, saved briefings, reports): the one thing that cannot be rebuilt. The copy
-    also goes to a Backblaze B2 bucket when one is set up (WCS_B2_* in deploy/.env)."""
-    from pathlib import Path
+# ---- backups (wts-core, ``wts_core.cli.ops_commands``): `wcs backup`, `wcs restore`, `wcs offsite` ----------------
+#
+# The copy, the checks before a restore and the off-site store are the Where They Stand sites' shared ones
+# (``wts_core.ops``); what the backups are called and hold is ``wcs.state.BACKUPS``, and every line printed is this
+# site's, as it was.
 
-    from wcs.backup import make_backup
-    from wcs.offsite import OffsiteError, send
+OPS_WORDING = OpsWording(
+    backup=BackupWords(
+        folder=None, keep=BACKUPS.keep,
+        nothing_to_back_up="nothing to back up yet (no state database)", backed_up="backup: {archive}", failed=None,
+        offsite_stored="Off-site copy: stored in {bucket} ({stored} kept there)",
+        offsite_not_set_up="Off-site copy: not set up", offsite_failed="The off-site copy failed: {error}",
+        help="Copy the state database (spending, saved briefings, reports): the one thing that cannot be rebuilt. "
+             "The copy also goes to a Backblaze B2 bucket when one is set up (WCS_B2_* in deploy/.env).",
+        to_help="folder for the backups", keep_help="how many to keep"),
+    restore=RestoreWords(
+        archive_must_exist=False, says_aborted=False,
+        confirm="Replace {state_db} with {archive}? Stop the site first.",
+        restored="restored {state_db} from {archive}", replaced="; the database it replaced is {kept}",
+        not_restored="Not restored: {error}",
+        help="Put a backup of the state database back (spending, saved briefings, reports). Stop the site first "
+             "(docs/DEPLOY.md, \"Backups\"). The backup is checked before anything is replaced, and the database it "
+             "replaces is kept as data/state.db.before-restore. A kept copy from an earlier restore is never "
+             "written over: move or delete it first.",
+        archive_help="a backup: /backups/wcs-state-YYYY-MM-DD.sqlite.gz", yes_help="don't ask first"),
+    backup_check=None,  # a stopped backup is noticed by `wcs update`, which runs every day and is emailed
+    errors_to_stderr=True,
+    offsite_help="Check the off-site backup bucket: whether the key works, and how many of this site's backups are "
+                 "there.")
 
-    out = make_backup(load_settings().data_dir / "state.db", Path(to), keep)
-    if not out:
-        typer.echo("nothing to back up yet (no state database)")
-        return
-    typer.echo(f"backup: {out}")
-    try:
-        sent = send(out)
-    except OffsiteError as exc:
-        typer.echo(f"The off-site copy failed: {exc}", err=True)
-        raise typer.Exit(1) from exc
-    typer.echo("Off-site copy: " + (f"stored in {sent['bucket']} ({sent['stored']} kept there)"
-                                    if sent.get("ok") else sent["offsite"]))
-
-
-@app.command()
-def restore(archive: str = typer.Argument(..., help="a backup: /backups/wcs-state-YYYY-MM-DD.sqlite.gz"),
-            yes: bool = typer.Option(False, "--yes", help="don't ask first")) -> None:
-    """Put a backup of the state database back (spending, saved briefings, reports). Stop the site first
-    (docs/DEPLOY.md, "Backups"). The backup is checked before anything is replaced, and the database it replaces is
-    kept as data/state.db.before-restore. A kept copy from an earlier restore is never written over: move or delete
-    it first."""
-    from pathlib import Path
-
-    from wcs.backup import restore_backup
-
-    state_db = load_settings().data_dir / "state.db"
-    if not yes and not typer.confirm(f"Replace {state_db} with {archive}? Stop the site first."):
-        raise typer.Exit(1)
-    try:
-        kept = restore_backup(Path(archive), state_db)
-    except (OSError, RuntimeError) as exc:
-        typer.echo(f"Not restored: {exc}", err=True)
-        raise typer.Exit(1) from exc
-    typer.echo(f"restored {state_db} from {archive}" + (f"; the database it replaced is {kept}" if kept else ""))
-
-
-@app.command()
-def offsite() -> None:
-    """Check the off-site backup bucket: whether the key works, and how many of this site's backups are there."""
-    from wcs.offsite import check
-
-    typer.echo(json.dumps(check(), indent=2))
+app.add_typer(ops_commands(SITE, load_settings, BACKUPS, OPS_WORDING, clock=lambda: CLOCK))
 
 
 @app.command()
@@ -252,14 +261,13 @@ def usage(days: int = typer.Option(7, help="list daily spend and failures for th
           as_json: bool = typer.Option(False, "--json")) -> None:
     """Spending on briefings today and this month against the caps, and briefings that failed (from data/state.db).
     Exits 1 when spending is at 80% of a cap or more, or a briefing failed in the last day."""
-    from wcs.api.usage import StateDB, summary, warnings
+    from wcs.spending import summary, warnings
 
     s = load_settings()
-    path = s.data_dir / "state.db"
-    if not path.exists():
-        typer.echo(f"no spending recorded yet ({path} does not exist)")
+    if not s.state_db.exists():
+        typer.echo(f"no spending recorded yet ({s.state_db} does not exist)")
         return
-    report = summary(StateDB(path), s.usage, days=days)
+    report = summary(s, _state(s), _clock(), days=days)
     alerts = warnings(report)
     if as_json:
         typer.echo(json.dumps({**report, "warnings": alerts}, indent=1))
@@ -281,40 +289,51 @@ def usage(days: int = typer.Option(7, help="list daily spend and failures for th
         raise typer.Exit(1)
 
 
-def _done(ok: bool, done: str, failed: str) -> None:
-    """Say what an owner's command on reports, statements or briefings did. One that did nothing (no such number, or
-    not in a state to be changed) exits 1, as the sister sites' commands do, so it cannot be taken for done."""
-    typer.echo(done if ok else failed)
-    if not ok:
-        raise typer.Exit(1)
+# ---- reports, statements under the right of reply, and hidden items (decision 16) ------------------------------
+#
+# The commands are the Where They Stand sites' shared ones (wts-core, ``wts_core.cli.replies_commands``), in the one
+# shape every site has: `wcs reports list|show|close`, `wcs statements list|show|publish|decline|update|withdraw|
+# remove|log`, `wcs hide`, `wcs unhide`, `wcs hidden`, `wcs waiting`. Every line they print is this site's, below.
+# The names the site had before (`wcs reports`, `wcs close-report 3`, `wcs statements`, `wcs publish-statement 3`…)
+# still work, for this release: the two listings as each group's own action when no command is given, the rest as
+# further names for the same commands.
+
+def _clock() -> Clock:
+    return CLOCK
 
 
-@app.command("reports")
-def list_reports(all_: bool = typer.Option(False, "--all", help="include reports already dealt with")) -> None:
-    """Problems and takedown requests sent through the site's form (newest first)."""
-    from wcs.api.usage import StateDB, reports
+def _state(settings: Settings | None = None) -> StateDB:
+    from wcs.state import open_state
 
-    for r in reports(StateDB(load_settings().data_dir / "state.db"), open_only=not all_):
-        typer.echo(f"#{r['id']}  {r['at']}  {r['kind']}  {r['page'] or '-'}{'  (closed)' if r['closed_at'] else ''}")
-        typer.echo(f"    {r['message']}")
-        if r["contact"]:
-            typer.echo(f"    reply to: {r['contact']}")
+    return open_state(settings or load_settings(), _clock())
 
 
-@app.command("close-report")
-def close_report_cmd(report_id: int) -> None:
-    """Mark a report dealt with. Its contact address is deleted (the privacy notice says so)."""
-    from wcs.api.usage import StateDB, close_report
-
-    ok = close_report(StateDB(load_settings().data_dir / "state.db"), report_id)
-    _done(ok, "closed", "no open report with that number")
+def _briefings(db: StateDB) -> BriefingArchive:
+    return BriefingArchive(db, new_id=lambda: token_id(8), clock=_clock())
 
 
-def _statement_lines(st: dict) -> list[str]:
-    from wcs.api.statements import word_count
+def _replies() -> Replies:
+    from wcs.replies import open_replies
 
-    lines = [f"#{st['id']}  {st['at']}  {st['status']}  {st['page']}"
-             + (f"  (speaks for {st['country']})" if st["country"] else ""),
+    db = _state()
+    return open_replies(db, _briefings(db), _clock())
+
+
+def _report_lines(r: Mapping[str, Any]) -> list[str]:
+    lines = [f"#{r['id']}  {r['at']}  {r['kind']}  {r['page'] or '-'}{'  (closed)' if r['closed_at'] else ''}",
+             f"    {r['message']}"]
+    if r["contact"]:
+        lines.append(f"    reply to: {r['contact']}")
+    if r["closed_at"] and (r["resolution"] or r["public_note"]):
+        lines.append(f"    {r['status']}" + (f": {r['resolution']}" if r["resolution"] else "")
+                     + (f" (said publicly: {r['public_note']})" if r["public_note"] else ""))
+    return lines
+
+
+def _statement_lines(st: Mapping[str, Any]) -> list[str]:
+    shown_from = max(st["published_at"] or "", st["updated_at"] or "")[:10]  # the date of the words now shown
+    lines = [f"#{st['id']}  {st['at']}  {st['status']}  {st['item']}"
+             + (f"  (speaks for {st['about']})" if st["about"] else ""),
              f"    from: {st['name']}, {st['role']}"]
     if st["email"]:
         lines.append(f"    confirm with: {st['email']}")
@@ -322,123 +341,200 @@ def _statement_lines(st: dict) -> list[str]:
         lines.append(f"    record: {st['link']}")
     lines += [f"    {para}" for para in st["text"].splitlines() if para.strip()]
     # the owner's note of how the sender was confirmed, from the log's entry for the publishing
-    lines += [f"    sender confirmed: {e['note']}" for e in st["log"] if e["action"] == "published" and e.get("note")]
-    lines.append(f"    ({word_count(st['text'])} words"
-                 + (f"; shown from {st['shown_on']}" if st["status"] == "published" else "")
+    lines += [f"    sender confirmed: {e['note']}" for e in st["log"] if e["action"] == "published" and e["note"]]
+    lines.append(f"    ({st['words']} words"
+                 + (f"; shown from {shown_from}" if st["status"] == "published" else "")
                  + (f"; {st['status']}: {st['reason']}" if st["reason"] else "") + ")")
     return lines
 
 
-def _statements_state():
-    """The state database, with the confirming addresses of statements that ended three months ago deleted first
-    (the privacy notice)."""
-    from wcs.api.statements import forget_emails
-    from wcs.api.usage import StateDB
-
-    state = StateDB(load_settings().data_dir / "state.db")
-    forget_emails(state)
-    return state
-
-
-def _country(code: str | None) -> str | None:
-    from wcs.api.statements import check_country
-
-    try:
-        return check_country(code)
-    except ValueError as exc:
-        typer.echo(f"error: {exc}", err=True)
-        raise typer.Exit(1) from exc
-
-
-@app.command("statements")
-def list_statements(all_: bool = typer.Option(False, "--all", help="include declined and withdrawn statements")) -> None:
-    """Statements under the right of reply sent through the site, newest first: those waiting for a decision and
-    those shown. Confirm who sent one (reply to its address, ideally a mission's or government's) before publishing."""
-    from wcs.api.statements import statements
-
-    for st in statements(_statements_state(), open_only=not all_):
-        typer.echo("\n".join(_statement_lines(st)))
-
-
-# the same command under Where Councils Stand's name for it, so the owner's habit works on either site
-app.command("list-statements", hidden=True)(list_statements)
-
-
-@app.command("publish-statement")
-def publish_statement_cmd(statement_id: int, checked: str = typer.Option(
-        ..., help="how you confirmed who sent it, for the log (never shown on the site), e.g. 'Reply from the "
-                  "mission's published address, 14 November.' Do not put the sender's email address in it: the "
-                  "privacy notice promises that address is deleted"),
-        country: str = typer.Option(
-        None, help="the country it speaks for (ISO alpha-3, e.g. KEN), for that country's page once there is one")) \
-        -> None:
-    """Show a waiting statement beside its briefing, dated today, as written (never edited), once you have confirmed
-    who sent it: --checked says how."""
-    from wcs.api.statements import publish_statement
-
-    try:
-        ok = publish_statement(_statements_state(), statement_id, _country(country), checked=checked)
-    except ValueError as exc:
-        typer.echo(f"error: {exc}", err=True)
-        raise typer.Exit(1) from exc
-    _done(ok, "published", "no waiting statement with that number")
-
-
-@app.command("decline-statement")
-def decline_statement_cmd(statement_id: int, reason: str = typer.Option(
-        ..., help="for the author and the log, e.g. 'It is about another delegation's conduct.'")) -> None:
-    """Decline a waiting statement, with the reason (tell its author). Its address is deleted three months later."""
-    from wcs.api.statements import decline_statement
-
-    ok = decline_statement(_statements_state(), statement_id, reason)
-    _done(ok, "declined", "no waiting statement with that number")
+REPLIES_COMMANDS = RepliesCommands(
+    listed=("pending", "published"),
+    about_option="--country",
+    withdraw_note="Withdrawn by its author.",
+    outcome="resolved",  # how `reports close` records a report when --outcome is not given
+    tidy=None,  # the nightly housekeeping is a step of `wcs tidy`
+    # the names these commands had before, kept out of the help
+    also={"close-report": "reports_close", "list-statements": "statements_list",
+          "publish-statement": "statements_publish", "decline-statement": "statements_decline",
+          "update-statement": "statements_update", "withdraw-statement": "statements_withdraw"},
+    help={
+        "reports": "Problems and takedown requests sent through the site's form. With no command, those still open.",
+        "statements": "Statements under the right of reply sent through the site. With no command, those waiting "
+                      "for a decision and those shown.",
+        "reports_list": "Problems and takedown requests sent through the site's form: takedown requests first, "
+                        "then newest first.",
+        "reports_close": "Mark a report dealt with. Its contact address is deleted (the privacy notice says so).",
+        "statements_list": "Statements under the right of reply sent through the site, newest first: those waiting "
+                           "for a decision and those shown. Confirm who sent one (reply to its address, ideally a "
+                           "mission's or government's) before publishing.",
+        "statements_publish": "Show a waiting statement beside its briefing, dated today, as written (never "
+                              "edited), once you have confirmed who sent it: --checked says how.",
+        "statements_publish.checked": "how you confirmed who sent it, for the log (never shown on the site), e.g. "
+                                      "'Reply from the mission's published address, 14 November.' Do not put the "
+                                      "sender's email address in it: the privacy notice promises that address is "
+                                      "deleted",
+        "statements_publish.about": "the country it speaks for (ISO alpha-3, e.g. KEN), for that country's page "
+                                    "once there is one",
+        "statements_decline": "Decline a waiting statement, with the reason (tell its author). Its address is "
+                              "deleted three months later.",
+        "statements_decline.reason": "for the author and the log, e.g. 'It is about another delegation's conduct.'",
+        "statements_update": "Change a statement at its author's request (confirmed from their address). A "
+                             "published one with new words is dated afresh.",
+        "statements_update.text": "the author's new wording, as sent",
+        "statements_update.text_file": "the new wording, from a file",
+        "statements_update.link": "the link to the record ('' for none)",
+        "statements_update.about": "the country it speaks for (ISO alpha-3)",
+        "statements_withdraw": "Take a statement down at its author's request. Its address is deleted three months "
+                               "later.",
+        "statements_remove": "Take a published statement down because it breaks the rules (policy 7.2: say why). "
+                             "Its address is deleted three months later.",
+        "hide": "Hide an item while a concern about it is decided: a saved briefing (/b/<id>), or a record of the "
+                "archive (record:<its id, from its source card>). The note is shown in its place.",
+    },
+)
+REPLIES_WORDING = RepliesWording(
+    report=_report_lines,
+    statement=_statement_lines,
+    log_entry=lambda e: [f"    {e['at']}  {e['action']}" + (f": {e['note']}" if e["note"] else "")],
+    hidden_item=lambda h: [f"{h['item']}  hidden since {h['at'][:10]}", f"    shown in its place: {h['note']}"],
+    waiting="waiting for a decision: {reports} reports, {statements} statements; hidden for now: {hidden} items; "
+            "the oldest has waited {oldest_working_days} working days",
+    published="published", declined="declined", updated="updated", withdrawn="withdrawn", removed="removed",
+    closed="closed", hid="hidden: {item}", unhid="shown again: {item}",
+    tidied="right of reply: {lapsed} statements lapsed undecided, {emails} confirming addresses deleted, "
+           "{contacts} old reports' contact details deleted, {counts} old daily counts deleted",
+    not_done="error: {message}", refused="error: {message}", errors_to_stderr=True,
+)
 
 
-@app.command("update-statement")
-def update_statement_cmd(statement_id: int, text: str = typer.Option(None, help="the author's new wording, as sent"),
-                         text_file: str = typer.Option(None, help="the new wording, from a file"),
-                         name: str = typer.Option(None), role: str = typer.Option(None),
-                         link: str = typer.Option(None, help="the link to the record ('' for none)"),
-                         country: str = typer.Option(None, help="the country it speaks for (ISO alpha-3)")) -> None:
-    """Change a statement at its author's request (confirmed from their address). A published one with new words is
-    dated afresh."""
-    from pathlib import Path
+def _country(code: str) -> str:
+    from wcs.replies import check_country
 
-    from wcs.api.statements import check_line, check_link, check_text, update_statement
-
-    try:
-        new_text = check_text(Path(text_file).read_text(encoding="utf-8") if text_file else text) \
-            if (text or text_file) else None
-        new_name = check_line(name, "a name") if name is not None else None
-        new_role = check_line(role, "a role") if role is not None else None
-        new_link = check_link(link) if link is not None else None
-    except ValueError as exc:
-        typer.echo(f"error: {exc}", err=True)
-        raise typer.Exit(1) from exc
-    ok = update_statement(_statements_state(), statement_id, text=new_text, name=new_name, role=new_role,
-                          link=new_link, country=_country(country))
-    _done(ok, "updated", "nothing changed: no waiting or published statement with that number, or no change")
+    return check_country(code) or ""
 
 
-@app.command("withdraw-statement")
-def withdraw_statement_cmd(statement_id: int, reason: str = typer.Option(
-        "Withdrawn by its author.", help="if the site removes it, why (policy 7.2: say why)")) -> None:
-    """Take a statement down, at its author's request or because it breaks the rules. Its address is deleted three
-    months later."""
-    from wcs.api.statements import withdraw_statement
+reports_app = typer.Typer(help=REPLIES_COMMANDS.help["reports"])
+statements_app = typer.Typer(help=REPLIES_COMMANDS.help["statements"])
 
-    ok = withdraw_statement(_statements_state(), statement_id, reason)
-    _done(ok, "withdrawn", "no waiting or published statement with that number")
+
+@reports_app.callback(invoke_without_command=True)
+def list_reports(ctx: typer.Context,
+                 all_: bool = typer.Option(False, "--all", help="include reports already dealt with")) -> None:
+    if ctx.invoked_subcommand is not None:
+        return  # one of the commands was asked for: nothing to do here
+    for r in _replies().reports(open_only=not all_):  # `wcs reports`, as it always was
+        typer.echo("\n".join(_report_lines(r)))
+
+
+@statements_app.callback(invoke_without_command=True)
+def list_statements(ctx: typer.Context, all_: bool = typer.Option(
+        False, "--all", help="include declined, withdrawn and removed statements")) -> None:
+    if ctx.invoked_subcommand is not None:
+        return
+    desk = _replies()  # `wcs statements`, as it always was
+    for st in desk.statements():
+        if all_ or st["status"] in REPLIES_COMMANDS.listed:
+            typer.echo("\n".join(_statement_lines({**st, "words": word_count(st["text"]), "log": desk.log(st["id"])})))
+
+
+app.add_typer(replies_commands(_replies, REPLIES_COMMANDS, REPLIES_WORDING, about=_country,
+                               groups={"reports": reports_app, "statements": statements_app}))
+
+
+# ---- how briefings went: statistics, the weekly report, the nightly tidy (wts-core docs/adr/0012) ---------------
+#
+# `wcs briefing-stats --since 7d` (and --json, --themes, --check), `wcs weekly-report`, `wcs tidy`: the Where They
+# Stand sites' shared commands (``wts_core.cli.stats_commands``) over the record of each briefing. The statistics
+# command is the family's `stats` under another name, because `wcs stats` already says what is loaded and indexed.
+# `wcs tidy` is the one command the nightly timer runs: it deletes what the privacy notice says is deleted in time
+# (a briefing's record after 13 months, the question of a failed one after 90 days, a visitor's code after its day,
+# weekly reports after 13 months, the copy of the database made before the move once it is older than the backups),
+# then does the right of reply's housekeeping (a statement's confirming address three months after it ends, what
+# nobody decided in three months).
+
+def _prices() -> PriceTable:
+    s = load_settings()
+    return PriceTable.from_settings(s.usage, file=s.config_path)
+
+
+def _embedder() -> Embedder:
+    from wcs.adapters import get_embedder
+
+    return get_embedder(load_settings())
+
+
+app.add_typer(stats_commands(
+    SITE, _state,
+    thresholds=lambda: load_settings().section("alerts"),
+    folder=lambda: load_settings().reports_dir,
+    # readers' questions are grouped into themes by meaning with the site's own embedding model, on the server
+    embedder=lambda: _embedder(), similarity=lambda: float(load_settings().embedding["theme_similarity"]),
+    pricing=_prices,
+    names=StatsNames(stats="briefing-stats", weekly_report="weekly-report", tidy="tidy"),
+    backup_days=BACKUPS.keep_offsite,  # nothing that holds old rows outlives the backups
+    also_tidy=[replies_tidy(_replies, REPLIES_WORDING)],
+    clock=lambda: CLOCK))
+
+
+# ---- the test questions with each briefing written (wts-core, ``wts_core.cli.eval_commands``) -----------------
+#
+# `wcs eval run` asks every question in eval/questions.toml of the real pipeline, each briefing written (it spends
+# money: no more than [eval] max_cost_usd unless --max-cost says otherwise), saves the run under eval/runs/ and
+# holds it to [eval.thresholds]; `wcs eval compare` sets two saved runs side by side; `wcs eval replay` runs the
+# checks again over briefings a run kept (--record-fixtures), free and with no model. `wcs evaluate`, above, stays:
+# it scores how questions are read and what evidence is found, with no briefing.
+
+def _eval_site() -> Any:
+    from wcs.evaluate import CountriesEval
+
+    return CountriesEval(load_settings())
+
+
+def _configuration() -> Mapping[str, Any]:
+    """What an evaluation run is a run of: the configuration the settings give as they stand, with the same id the
+    record of briefings gives it. Nothing is kept by asking (a run is not a reader's briefing)."""
+    from wcs.api.app import configuration
+
+    return configuration(load_settings(), None).settings
+
+
+def _checks(name: str) -> Any:
+    from wcs.rag import checks
+
+    return getattr(checks, name)
+
+
+def _runs() -> Any:
+    from wcs.evaluate import RUNS
+
+    return RUNS
+
+
+app.add_typer(eval_commands(
+    lambda: _eval_site(),  # looked up when a command runs, so a test can stand another in its place
+    config=_configuration, config_id=config_id,  # the id the record of briefings gives the same parts
+    pricing=_prices,
+    thresholds=lambda: load_settings().section("eval")["thresholds"],
+    runs=lambda: _runs(),
+    max_cost_usd=lambda: float(load_settings().section("eval")["max_cost_usd"]),  # no run starts without a limit
+    verifier=lambda: _checks("VERIFIER"), loaded_words=lambda: _checks("LOADED_WORDS"), curled=True,
+    clock=lambda: CLOCK))
 
 
 @app.command()
 def withdraw(briefing_id: str, reason: str = typer.Option(..., help="shown at its address and on the corrections "
                                                                    "page, e.g. 'It misattributed a statement.'")) -> None:
     """Withdraw a saved briefing (/b/<id>): its address then says why, and the corrections page lists it."""
-    from wcs.api.usage import StateDB, withdraw_briefing
+    from wts_core.observe import SqliteBriefingLog
 
-    ok = withdraw_briefing(StateDB(load_settings().data_dir / "state.db"), briefing_id, reason)
-    _done(ok, "withdrawn", "no briefing with that id")
+    db = _state()
+    ok = _briefings(db).withdraw(briefing_id, reason)
+    if ok:
+        SqliteBriefingLog(db, clock=_clock()).mark(briefing_id, corrected=True)  # on that briefing's record
+    typer.echo("withdrawn" if ok else "no briefing with that id")
+    if not ok:
+        raise typer.Exit(1)
 
 
 @app.command("gd-website")
@@ -575,8 +671,17 @@ def index(years: str = typer.Option(None), source: list[str] = typer.Option(None
     from wcs.reference.countries import countries
 
     s = load_settings()
-    n = Indexer(s, countries(), keep_vectors=not re_embed).index_all(tuple(source) if source else SOURCES,
-                                                                      _years(years))
+    index = None
+    if re_embed:
+        # The index records which embedding model made its vectors, and is not opened for another: the vectors are
+        # thrown away and the model now in the settings recorded, before anything is written.
+        from wcs.adapters import get_embedder
+        from wcs.index.lance import open_index
+
+        index = open_index(s.index_dir)
+        index.start_again(get_embedder(s))
+    n = Indexer(s, countries(), index, keep_vectors=not re_embed).index_all(tuple(source) if source else SOURCES,
+                                                                             _years(years))
     typer.echo(f"{n} passages indexed")
 
 
@@ -584,12 +689,11 @@ def index(years: str = typer.Option(None), source: list[str] = typer.Option(None
 def optimize() -> None:
     """Merge rows waiting outside the search indices, compact small files, and delete versions of the index over an
     hour old (each update does this itself; this is for a one-off clean-up)."""
-    from wcs.index.lance import SearchIndex
+    from wcs.index.lance import open_index
 
-    s = load_settings()
-    idx = SearchIndex(s.index_dir, int(s.embedding.get("dim", 384)))
+    idx = open_index(load_settings().index_dir)
     before = idx.versions()
-    idx.optimize()
+    idx.tidy()
     typer.echo(f"Done: table versions {before} -> {idx.versions()}")
 
 
@@ -607,14 +711,15 @@ def regroup() -> None:
 @app.command()
 def embed(max_seconds: float = typer.Option(None, help="stop after about this long (resumable)")) -> None:
     """Embed indexed passages for meaning search, newest years first."""
-    from wcs.embed.base import get_embedder
+    from wcs.adapters import get_embedder
     from wcs.index.build import State, embed_pending, refresh_indices
-    from wcs.index.lance import SearchIndex
+    from wcs.index.lance import open_index
 
     s = load_settings()
-    idx = SearchIndex(s.index_dir, int(s.embedding.get("dim", 384)))
+    embedder = get_embedder(s)
+    idx = open_index(s.index_dir, embedder)
     state = State(s.index_dir / "state.json")
-    n = embed_pending(s, idx, state, get_embedder(s), max_seconds=max_seconds)
+    n = embed_pending(s, idx, state, embedder, max_seconds=max_seconds)
     if n:
         refresh_indices(idx, state)
     typer.echo(f"{n} passages embedded")
@@ -623,7 +728,7 @@ def embed(max_seconds: float = typer.Option(None, help="stop after about this lo
 @app.command()
 def stats() -> None:
     """What is loaded and indexed."""
-    from wcs.index.lance import SearchIndex
+    from wcs.index.lance import open_index
     from wcs.store.parquet import votes_path, years
 
     s = load_settings()
@@ -631,7 +736,7 @@ def stats() -> None:
         ys = years(s.parquet_dir, src)
         typer.echo(f"{src}: {len(ys)} years" + (f" ({ys[0]}-{ys[-1]})" if ys else ""))
     typer.echo(f"votes: {'loaded' if votes_path(s.parquet_dir).exists() else 'not loaded'}")
-    typer.echo(f"index: {SearchIndex(s.index_dir, int(s.embedding.get('dim', 384))).stats()}")
+    typer.echo(f"index: {open_index(s.index_dir).stats()}")
 
 
 @app.command()

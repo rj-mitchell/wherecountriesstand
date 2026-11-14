@@ -1,6 +1,7 @@
 # Where Countries Stand on the charity's shared server: the site and its API. Where MPs Stand's web server is the
 # front door (HTTPS, Cloudflare): it passes this site's visitors to the app over the shared "sites" network.
-# Updates and backups run on a timer, each in a one-off container (deploy/wcs-update.timer, deploy/wcs-backup.timer).
+# Updates, backups (with the nightly housekeeping) and the weekly report run on timers, each in a one-off container
+# (deploy/wcs-update.timer, deploy/wcs-backup.timer, deploy/wcs-weekly-report.timer).
 # Install or update with: bash /opt/wherecountriesstand/deploy/update.sh (docs/DEPLOY.md)
 
 # Its own name: every site keeps this file in a folder called "deploy", and Compose would otherwise mix them up

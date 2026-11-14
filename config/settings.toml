@@ -80,6 +80,9 @@ comprehensive_effort = "high"
 query_parse_effort = "low"
 max_tokens = 16000
 use_fallbacks = true
+# How the instructions to the model are kept in the provider's prompt cache between requests: "short" (a few
+# minutes, as always), "long" (an hour, which costs more to write) or "off".
+cache_instructions = "short"
 
 [embedding]
 # "fastembed" (local ONNX model; weights fetched once from Hugging Face and pinned)
@@ -89,6 +92,10 @@ model = "snowflake/snowflake-arctic-embed-xs"
 dim = 384
 passage_words = 250
 batch_size = 8
+# How alike two questions must be to count as one theme in the weekly report (cosine similarity, for this model,
+# which scores unrelated text around 0.5 and a strong match around 0.85). A first figure, to be looked at again
+# once there are a few weeks' worth of questions.
+theme_similarity = 0.8
 
 [usage]
 # The site is public; each new model-written briefing costs money (docs/DECISIONS.md, 9). When a cap is reached the
@@ -121,3 +128,28 @@ dir = ""
 # The site's public address, for robots.txt, the sitemap and link previews (default: WCS_SITE_URL, or https://
 # and DOMAIN, or the address it was reached at).
 url = ""
+
+[logs]
+# The structured log of briefings (data/logs/briefings.jsonl): one line for each stage a briefing reaches and one
+# for how it ended, never a reader's words. Kept for 14 days or 50 MB, whichever is less (wts-core docs/adr/0012).
+max_bytes = 3000000
+keep = 15
+days = 14
+
+[alerts]
+# What the weekly report, `wcs briefing-stats --check` and each update warn about. Thresholds start unset: the first
+# weekly report proposes them from that week's figures, and the owner writes them here (or in
+# data/settings.local.toml). The names are p95_full_briefing_ms, error_rate, check_failure_rate, not_useful_rate
+# and daily_cost_usd. An alert never comes from a number nobody chose.
+
+[eval]
+# The most a run of the test questions may spend on the model, in US dollars (`wcs eval run`, which has each
+# briefing written): no run starts without a limit, and it stops cleanly once spending reaches it.
+max_cost_usd = 3.0
+
+[eval.thresholds]
+# What a run is held to (a threshold is min_ or max_ and the name of a figure). Citations and quotations must all
+# check and nothing may fail; the rest are left until the first run on the server's record gives a baseline.
+max_invalid_citations = 0
+max_unverified_quotations = 0
+max_errors = 0

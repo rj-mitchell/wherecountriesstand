@@ -3,15 +3,20 @@
 import json
 
 import pytest
+from conftest import model_of
 from fastapi.testclient import TestClient
 from test_pipeline import TODAY, FakeClient, RefusingClient, indexed  # noqa: F401  (the fixture)
+from wts_core.adapters.hashing import HashingEmbedder
+from wts_core.ports import Usage
+from wts_core.testing import FixedClock
+from wts_core.usage import Failures, PriceTable, network_of, visitor_code
 
 from wcs.api.app import SITE_DIR as SITE
 from wcs.api.app import create_app
-from wcs.api.usage import StateDB, cost_usd, network_of, visitor_key
-from wcs.embed.base import HashingEmbedder
 from wcs.engine import Engine
 from wcs.rag.pipeline import Pipeline
+from wcs.spending import spending_record, summary, warnings
+from wcs.state import open_state
 
 QUESTION = {"question": "What has been said about climate finance since 2020?"}
 
@@ -28,9 +33,14 @@ def events(response) -> list[dict]:
 def make(settings, client=None, **usage):
     settings.raw["usage"] = {**settings.raw.get("usage", {}), **usage}
     eng = Engine(settings, embedder=HashingEmbedder(64), today=TODAY)
-    pipe = Pipeline(settings, eng, client=client, today=TODAY)
-    state = StateDB(settings.data_dir / "state.db")
+    pipe = Pipeline(settings, eng, client=model_of(client), today=TODAY)
+    state = open_state(settings)
     return TestClient(create_app(settings, pipeline=pipe, state=state)), state
+
+
+def cost(settings, usage, model):
+    """What the site's prices make of one call's token counts."""
+    return PriceTable.from_settings(settings.usage).cost(Usage.from_mapping(usage), model)
 
 
 def test_meta_and_lists(indexed):  # noqa: F811
@@ -84,9 +94,9 @@ def test_ask_streams_records_spend_and_caches(indexed):  # noqa: F811
     assert [e["type"] for e in evs][:2] == ["plan", "sources"] and evs[-1]["type"] == "final"
     assert any(e["type"] == "text" for e in evs) and evs[-1]["answer"]["citations_total"] == 1
     with state.connect() as con:
-        kind, cost = con.execute("SELECT kind, cost_usd FROM usage").fetchone()
-    assert kind == "answer" and cost == pytest.approx(cost_usd({"input_tokens": 1000, "output_tokens": 200},
-                                                               indexed.usage, "claude-sonnet-5-5"))
+        kind, spent = con.execute("SELECT kind, cost_usd FROM wts_spending").fetchone()
+    assert kind == "answer" and spent == pytest.approx(cost(indexed, {"input_tokens": 1000, "output_tokens": 200},
+                                                            "claude-sonnet-5-5"))
     again = events(api.post("/api/ask", json=QUESTION))
     assert again[-1]["cached"] is True and len(client.calls) == 1   # answered from the cache
 
@@ -100,13 +110,13 @@ def test_a_refusal_is_an_error_and_nothing_is_saved_or_cached(indexed):  # noqa:
     assert [e["type"] for e in evs] == ["plan", "sources", "error"]
     assert evs[-1] == {"type": "error", "message": "The model declined to answer this question."}
     with state.connect() as con:
-        assert con.execute("SELECT count(*) FROM briefings").fetchone()[0] == 0
-        assert con.execute("SELECT count(*) FROM answer_cache").fetchone()[0] == 0
-        assert con.execute("SELECT question, error FROM failures WHERE kind = 'briefing'").fetchall() == [
-            (QUESTION["question"], "The model declined to answer this question.")]
-        kind, cost = con.execute("SELECT kind, cost_usd FROM usage").fetchone()
-    assert kind == "answer" and cost == pytest.approx(cost_usd({"input_tokens": 1000, "output_tokens": 200},
-                                                               indexed.usage, "claude-sonnet-5-5"))
+        assert con.execute("SELECT count(*) FROM wts_briefings").fetchone()[0] == 0
+        assert con.execute("SELECT count(*) FROM wts_answer_cache").fetchone()[0] == 0
+        assert [tuple(r) for r in con.execute("SELECT question, error FROM wts_failures WHERE kind = 'briefing'")] \
+            == [(QUESTION["question"], "The model declined to answer this question.")]
+        kind, spent = con.execute("SELECT kind, cost_usd FROM wts_spending").fetchone()
+    assert kind == "answer" and spent == pytest.approx(cost(indexed, {"input_tokens": 1000, "output_tokens": 200},
+                                                            "claude-sonnet-5-5"))
     again = events(api.post("/api/ask", json=QUESTION))
     assert again[-1]["type"] == "error" and len(client.calls) == 2   # asked afresh: nothing was kept to replay
 
@@ -132,9 +142,9 @@ def test_without_an_api_key(indexed, monkeypatch):  # noqa: F811
     assert evs[-1]["answer"] is None and "no Anthropic API key" in evs[-1]["note"]
 
 
-def test_visitor_codes_change_daily(tmp_path):
-    state = StateDB(tmp_path / "s.db")
-    a, b = visitor_key(state, "203.0.113.5", "2026-10-24"), visitor_key(state, "203.0.113.5", "2026-10-25")
+def test_visitor_codes_change_daily(settings):
+    state = open_state(settings)
+    a, b = visitor_code(state, "203.0.113.5", day="2026-10-24"), visitor_code(state, "203.0.113.5", day="2026-10-25")
     assert a != b and "203.0.113.5" not in a
 
 
@@ -148,11 +158,11 @@ def test_ipv6_visitors_are_counted_by_their_64():
     assert network_of(None) == "-" and network_of("testclient") == "testclient"
 
 
-def test_visitor_codes_group_an_ipv6_64(tmp_path):
-    state = StateDB(tmp_path / "s.db")
+def test_visitor_codes_group_an_ipv6_64(settings):
+    state = open_state(settings)
     day = "2026-11-06"
-    assert visitor_key(state, "2001:db8::1", day) == visitor_key(state, "2001:db8::abcd:1", day)
-    assert visitor_key(state, "2001:db8::1", day) != visitor_key(state, "2001:db8:0:1::1", day)
+    assert visitor_code(state, "2001:db8::1", day=day) == visitor_code(state, "2001:db8::abcd:1", day=day)
+    assert visitor_code(state, "2001:db8::1", day=day) != visitor_code(state, "2001:db8:0:1::1", day=day)
 
 
 def test_question_length_is_checked(indexed):  # noqa: F811
@@ -187,13 +197,14 @@ def test_reading_a_question_is_priced_as_the_model_that_read_it(indexed):  # noq
         api, state = make(indexed, client)
         assert events(api.post("/api/ask", json=QUESTION))[0]["plan"]["parser"] == "model"
         with state.connect() as con:
-            return con.execute("SELECT model, cost_usd FROM usage WHERE kind = 'parse' ORDER BY id DESC").fetchone()
+            return tuple(con.execute("SELECT model, cost_usd FROM wts_spending WHERE kind = 'parse' ORDER BY id "
+                                     "DESC").fetchone())
 
     client = ReadingClient()
     assert parse_row(client) == ("claude-haiku-5-5", pytest.approx(0.1)) and client.read_with == "claude-haiku-5-5"
     indexed.raw["answer"] = {**indexed.raw["answer"], "query_parse_model": ""}
-    with StateDB(indexed.data_dir / "state.db").connect() as con:
-        con.execute("DELETE FROM answer_cache")
+    with open_state(indexed).connect() as con:
+        con.execute("DELETE FROM wts_answer_cache")
     client = ReadingClient()
     assert parse_row(client) == ("claude-sonnet-5-5", pytest.approx(3.0)) and client.read_with == "claude-sonnet-5-5"
 
@@ -209,7 +220,7 @@ def test_an_edited_plan_has_a_size_limit(indexed):  # noqa: F811
         r = api.post(path, json={**QUESTION, "plan": huge})
         assert r.status_code == 422 and "the search plan is too large" in r.text
     with state.connect() as con:
-        assert con.execute("SELECT count(*) FROM briefings").fetchone()[0] == 0
+        assert con.execute("SELECT count(*) FROM wts_briefings").fetchone()[0] == 0
     assert client.calls == []
 
 
@@ -234,40 +245,42 @@ def test_pages_robots_sitemap_and_link_previews(indexed, monkeypatch):  # noqa: 
     assert api.get("/styles.css").status_code == 200
 
 
-def test_failures_are_kept_for_90_days(tmp_path):
-    from wcs.api.usage import record_failure
-    state = StateDB(tmp_path / "s.db")
+def test_failures_are_kept_for_90_days(settings):
+    """The privacy notice says so; the notes are the shared package's, made by the briefing desk."""
+    state = open_state(settings)
     with state.connect() as con:
-        con.execute("INSERT INTO failures (at, kind, question, error) VALUES ('2020-01-01T00:00:00+00:00', 'x', "
+        con.execute("INSERT INTO wts_failures (at, kind, question, error) VALUES ('2020-01-01T00:00:00+00:00', 'x', "
                     "'old', 'e')")
-    record_failure(state, "briefing", "new", "e")
+    Failures(state).note("briefing", "new", "e")
     with state.connect() as con:
-        assert [r[0] for r in con.execute("SELECT question FROM failures")] == ["new"]
+        assert [r[0] for r in con.execute("SELECT question FROM wts_failures")] == ["new"]
 
 
-def test_usage_report_warns_near_a_cap(tmp_path):
-    from datetime import UTC, datetime
-
-    from wcs.api.usage import record_failure, record_usage, summary, warnings
-    state = StateDB(tmp_path / "s.db")
-    limits = {"daily_spend_cap_usd": 1.0, "monthly_spend_cap_usd": 50.0, "price_input_per_mtok": 2.0,
-              "price_output_per_mtok": 10.0}
-    record_usage(state, "answer", "m", {"input_tokens": 300_000, "output_tokens": 10_000}, limits, "v1")  # $0.70
-    report = summary(state, limits, datetime.now(UTC))
+def test_usage_report_warns_near_a_cap(settings):
+    settings.raw["usage"] = {**settings.raw["usage"], "daily_spend_cap_usd": 1.0, "monthly_spend_cap_usd": 50.0,
+                             "price_input_per_mtok": 2.0, "price_output_per_mtok": 10.0}
+    state = open_state(settings)
+    spending = spending_record(settings, state)
+    spending.add("answer", "m", {"input_tokens": 300_000, "output_tokens": 10_000}, visitor="v1")  # $0.70
+    report = summary(settings, state)
     assert report["today"]["briefings"] == 1 and report["today"]["spent_usd"] == 0.7 and warnings(report) == []
-    record_usage(state, "answer", "m", {"input_tokens": 50_000}, limits, "v2")                             # $0.80
-    assert warnings(summary(state, limits)) == ["spending: today's cap of $1.00 80% used ($0.80 spent)"]
-    record_usage(state, "answer", "m", {"input_tokens": 100_000}, limits, "v2")
-    record_failure(state, "briefing", "q", "APIError: overloaded")
-    alerts = warnings(summary(state, limits))
+    spending.add("answer", "m", {"input_tokens": 50_000}, visitor="v2")                              # $0.80
+    assert warnings(summary(settings, state)) == ["spending: today's cap of $1.00 80% used ($0.80 spent)"]
+    spending.add("answer", "m", {"input_tokens": 100_000}, visitor="v2")
+    Failures(state).note("briefing", "q", "APIError: overloaded")
+    alerts = warnings(summary(settings, state))
     assert "reached: new briefings are paused" in alerts[0] and "APIError: overloaded" in alerts[1]
-    assert summary(state, limits)["today"]["visitors"] == 2
+    assert summary(settings, state)["today"]["visitors"] == 2
 
 
 def test_briefings_are_saved_shared_and_withdrawn(indexed, monkeypatch):  # noqa: F811
-    from wcs.api.usage import close_report, reports, withdraw_briefing
     monkeypatch.setenv("WCS_SITE_URL", "https://countries.example")
-    api, state = make(indexed, FakeClient())
+    clock = FixedClock()
+    state = open_state(indexed, clock)
+    api = TestClient(create_app(indexed, pipeline=Pipeline(
+        indexed, Engine(indexed, embedder=HashingEmbedder(64), today=TODAY), client=model_of(FakeClient()),
+        today=TODAY), state=state, clock=clock))
+    briefings, replies = api.app.state.parts.archive, api.app.state.replies
     final = events(api.post("/api/ask", json=QUESTION))[-1]
     bid = final["briefing_id"]
     saved = api.get(f"/api/briefings/{bid}").json()
@@ -278,21 +291,31 @@ def test_briefings_are_saved_shared_and_withdrawn(indexed, monkeypatch):  # noqa
     assert f"<title>{QUESTION['question']} · Where Countries Stand</title>" in page
     assert f'<link rel="canonical" href="https://countries.example/b/{bid}">' in page and "noindex" in page
     assert api.get("/b/nosuchbriefing").status_code == 404 and api.get("/api/briefings/nope99").status_code == 404
-    assert withdraw_briefing(state, bid, "It misread a statement.")
+    assert api.get("/api/corrections").json() == []
+    assert briefings.withdraw(bid, "It misread a statement.")
     gone = api.get(f"/api/briefings/{bid}")
     assert gone.status_code == 410 and "It misread a statement." in gone.json()["detail"]
+    clock.advance(61)  # the corrections log is worked out again after a minute
     assert api.get("/api/corrections").json()[0]["reason"] == "It misread a statement."
     assert api.post("/api/report", json={"message": "x"}).status_code == 422
     r = api.post("/api/report", json={"kind": "problem", "page": f"/b/{bid}", "message": "A quotation is wrong.",
                                       "contact": "reader@example.org"}).json()
-    assert reports(state)[0]["contact"] == "reader@example.org" and close_report(state, r["id"])
-    assert reports(state) == [] and reports(state, open_only=False)[0]["contact"] == ""
+    assert replies.reports()[0]["contact"] == "reader@example.org"
+    assert replies.reports()[0]["briefing_id"] == bid  # the report names the briefing it is about
+    replies.close(r["id"], outcome="resolved")
+    assert replies.reports() == [] and replies.reports(open_only=False)[0]["contact"] is None
+    # what happened next is on that briefing's record: it was reported
+    with state.connect() as con:
+        assert con.execute("SELECT reported FROM wts_briefing_log WHERE briefing_id = ? AND outcome = 'completed'",
+                           (bid,)).fetchone()[0] == 1
 
 
 def test_a_briefing_whose_id_is_taken_is_kept_under_another(indexed, monkeypatch):  # noqa: F811
     """As Where MPs Stand: a clash of ids (64 random bits) once lost a briefing that had been written and paid for.
     It is kept under a new id, which the reader, the saved copy and the cached copy all carry."""
-    monkeypatch.setattr("wcs.api.app.new_briefing_id", lambda: "SAMEid11")
+    ids = iter(["SAMEid11", "SAMEid11"])
+    real = __import__("wcs.api.app", fromlist=["new_briefing_id"]).new_briefing_id
+    monkeypatch.setattr("wcs.api.app.new_briefing_id", lambda chance: next(ids, None) or real(chance))
     api, state = make(indexed, FakeClient())
     first = events(api.post("/api/ask", json=QUESTION))[-1]
     assert first["briefing_id"] == "SAMEid11"
@@ -305,8 +328,8 @@ def test_a_briefing_whose_id_is_taken_is_kept_under_another(indexed, monkeypatch
     assert api.get("/api/briefings/SAMEid11").json()["question"] == QUESTION["question"]   # the first is untouched
     assert events(api.post("/api/ask", json=other))[-1]["briefing_id"] == bid                # and the cached copy
     with state.connect() as con:
-        assert con.execute("SELECT count(*) FROM briefings").fetchone()[0] == 2
-        assert con.execute("SELECT count(*) FROM failures WHERE kind = 'briefing'").fetchone()[0] == 0
+        assert con.execute("SELECT count(*) FROM wts_briefings").fetchone()[0] == 2
+        assert con.execute("SELECT count(*) FROM wts_failures WHERE kind = 'briefing'").fetchone()[0] == 0
 
 
 def test_pages_use_absolute_paths(indexed):  # noqa: F811
@@ -364,18 +387,20 @@ def test_stream_stops_when_the_reader_leaves():
     assert len(made) == n  # nothing more is written
 
 
-def test_briefings_in_progress_count_against_the_caps(tmp_path):
-    from wcs.api.usage import InFlight, check_caps, record_usage
-    state = StateDB(tmp_path / "s.db")
-    limits = {"daily_spend_cap_usd": 1.0, "monthly_spend_cap_usd": 50.0, "price_input_per_mtok": 2.0}
-    record_usage(state, "answer", "m", {"input_tokens": 300_000}, limits, "v1")      # $0.60 spent
-    flight = InFlight(per_key=2, total=3, estimate_usd=0.25)
+def test_briefings_in_progress_count_against_the_caps(indexed):  # noqa: F811
+    api, _ = make(indexed, FakeClient(), daily_spend_cap_usd=1.0, monthly_spend_cap_usd=50.0,
+                  price_input_per_mtok=2.0, briefings_at_once_per_visitor=2, briefings_at_once=3,
+                  briefing_estimate_usd=0.25)
+    parts = api.app.state.parts
+    parts.spending.add("answer", "m", {"input_tokens": 300_000}, visitor="v1")      # $0.60 spent
+    flight = parts.in_progress
     assert flight.start("a") is None and flight.start("a") is None
-    assert "already being written" in flight.start("a")
-    assert flight.start("b") is None and "Many briefings" in flight.start("c")
+    assert flight.start("a").reason == "visitor"
+    assert flight.start("b") is None and flight.start("c").reason == "site"
     assert flight.pending_usd(besides=1) == 0.5
-    assert check_caps(state, limits, "v2") is None                                     # $0.60 alone is under $1
-    assert "budget" in check_caps(state, limits, "v2", flight.pending_usd(besides=1))  # with $0.50 more on the way
+    assert parts.caps.refusal(visitor="v2") is None                                  # $0.60 alone is under $1
+    late = parts.caps.refusal(visitor="v2", pending_usd=flight.pending_usd(besides=1))  # with $0.50 more on the way
+    assert "budget" in late.message
     flight.finish("a"), flight.finish("a"), flight.finish("b")
     assert flight.running == {} and flight.pending_usd() == 0
 
@@ -414,7 +439,6 @@ def test_a_second_briefing_at_once_waits_its_turn(indexed):  # noqa: F811
 def test_saved_briefings_are_shown_with_flags_judged_again(indexed):  # noqa: F811
     """A mark made by an older rule that has since been corrected (a lead-in taken for an unsupported claim, a
     neutral "claimed" taken for a loaded word) is not shown on a briefing saved before the correction."""
-    from wcs.api.usage import save_briefing
     api, state = make(indexed, FakeClient())
     answer = {"markdown": "Kenya said climate finance is slow. The savings claimed were large.",
               "segments": [{"text": "Kenya said ", "status": "unsupported"},
@@ -422,7 +446,7 @@ def test_saved_briefings_are_shown_with_flags_judged_again(indexed):  # noqa: F8
                            {"text": " The savings claimed were large.", "status": "cited", "sources": [1],
                             "loaded": [{"start": 13, "end": 20, "word": "claimed"}]}],
               "unsupported_segments": 1, "grounded_ratio": 0.5, "loaded_words": 1}
-    save_briefing(state, "OldOne12", QUESTION["question"], {}, [{"type": "final", "answer": answer}])
+    api.app.state.parts.archive.save(QUESTION["question"], {}, [{"type": "final", "answer": answer}], id="OldOne12")
     shown = api.get("/api/briefings/OldOne12").json()["events"][-1]["answer"]
     assert shown["segments"][0]["status"] == "connective" and shown["unsupported_segments"] == 0
     assert shown["loaded_words"] == 0 and shown["segments"][2]["loaded"] == []
@@ -430,12 +454,11 @@ def test_saved_briefings_are_shown_with_flags_judged_again(indexed):  # noqa: F8
 
 def test_saved_briefings_are_shown_with_curly_quotes(indexed):  # noqa: F811
     """A briefing saved before quotes were curled is shown with them curled, its marks where they were."""
-    from wcs.api.usage import save_briefing
     api, state = make(indexed, FakeClient())
     text = 'Kenya called it "too slow" and the Council\'s regime was mentioned.'
     mark = {"start": text.index("regime"), "end": text.index("regime") + 6, "word": "regime"}
     answer = {"segments": [{"text": text, "status": "cited", "sources": [1], "loaded": [mark]}], "loaded_words": 1}
-    save_briefing(state, "Quoted12", QUESTION["question"], {}, [{"type": "final", "answer": answer}])
+    api.app.state.parts.archive.save(QUESTION["question"], {}, [{"type": "final", "answer": answer}], id="Quoted12")
     shown = api.get("/api/briefings/Quoted12").json()["events"][-1]["answer"]["segments"][0]
     assert shown["text"] == "Kenya called it “too slow” and the Council’s regime was mentioned."
     assert shown["loaded"] == [mark] and shown["text"][mark["start"]:mark["end"]] == "regime"
@@ -444,14 +467,14 @@ def test_saved_briefings_are_shown_with_curly_quotes(indexed):  # noqa: F811
 def test_a_saved_curled_briefing_keeps_its_points_to_check(indexed):  # noqa: F811
     """The recheck reads a briefing saved with curly quotes as it read the straight ones: a sentence that ends in a
     closing quote is still a claim of its own, not a lead-in to the quotation after it."""
-    from wcs.api.usage import save_briefing
-    from wcs.rag.typography import curl_answer
+    from wts_core.checks import curl_answer
+
     api, state = make(indexed, FakeClient())
     answer = {"segments": [{"text": 'He said "no." Mr Smith said ', "status": "unsupported"},
                            {"text": "we will act", "status": "cited", "sources": [1]}],
               "unsupported_segments": 1}
     for bid, saved in (("Straight1", answer), ("Curled12", curl_answer(answer))):
-        save_briefing(state, bid, QUESTION["question"], {}, [{"type": "final", "answer": saved}])
+        api.app.state.parts.archive.save(QUESTION["question"], {}, [{"type": "final", "answer": saved}], id=bid)
         shown = api.get(f"/api/briefings/{bid}").json()["events"][-1]["answer"]["segments"][0]
         assert shown["status"] == "unsupported", bid
         assert shown["text"] == "He said “no.” Mr Smith said ", bid
@@ -589,47 +612,27 @@ def test_a_briefing_links_to_sister_sites(indexed):  # noqa: F811
     assert 'const LIVES = "https://wherelivesstand.com/country/";' in script
 
 
-def test_cost_copes_with_the_sdks_own_names_and_records_cache_writes(tmp_path):
+def test_cost_copes_with_the_sdks_own_names_and_records_cache_writes(settings):
     """Token counts in the SDK's own names cost the same as the site's (whose input includes the cache writes), and
     cache writes are recorded (as Where Councils Stand does)."""
-    from wcs.api.usage import record_usage, token_counts
-
-    prices = {"price_input_per_mtok": 4.0, "price_output_per_mtok": 20.0, "price_cache_read_per_mtok": 0.4}
+    settings.raw["usage"] = {**settings.raw["usage"], "price_input_per_mtok": 4.0, "price_output_per_mtok": 20.0,
+                             "price_cache_read_per_mtok": 0.4, "models": {}}
     ours = {"input_tokens": 1500, "output_tokens": 200, "cache_read_tokens": 3000, "cache_write_tokens": 500}
     raw = {"input_tokens": 1000, "output_tokens": 200, "cache_read_input_tokens": 3000,
            "cache_creation_input_tokens": 500}
-    assert token_counts(raw) == ours
-    assert cost_usd(raw, prices) == cost_usd(ours, prices) == pytest.approx(
+    assert cost(settings, raw, "m") == cost(settings, ours, "m") == pytest.approx(
         1000 / 1e6 * 4 + 500 / 1e6 * 4 * 1.25 + 200 / 1e6 * 20 + 3000 / 1e6 * 0.4)
-    assert cost_usd({"input_tokens": 1000, "cache_read_input_tokens": None}, prices) == pytest.approx(0.004)
-    state = StateDB(tmp_path / "s.db")
-    record_usage(state, "answer", "m", raw, prices, "v1")
+    assert cost(settings, {"input_tokens": 1000, "cache_read_input_tokens": None}, "m") == pytest.approx(0.004)
+    state = open_state(settings)
+    spending_record(settings, state).add("answer", "m", raw, visitor="v1")
     with state.connect() as con:
-        row = con.execute("SELECT input_tokens, cache_read_tokens, cache_write_tokens FROM usage").fetchone()
-    assert row == (1500, 3000, 500)
-
-
-def test_an_older_state_database_gains_the_cache_writes_column(tmp_path):
-    import sqlite3
-
-    path = tmp_path / "old.db"
-    con = sqlite3.connect(path)
-    con.execute("CREATE TABLE usage (id INTEGER PRIMARY KEY, visitor TEXT, at TEXT, kind TEXT, model TEXT, "
-                "input_tokens INTEGER, output_tokens INTEGER, cache_read_tokens INTEGER, cost_usd REAL)")
-    con.execute("INSERT INTO usage (visitor, at, kind, input_tokens, cost_usd) VALUES ('v', '2026-01-01', 'answer', "
-                "10, 0.5)")
-    con.commit()
-    con.close()
-    state = StateDB(path)
-    with state.connect() as con:
-        assert con.execute("SELECT cache_write_tokens, cost_usd FROM usage").fetchone() == (0, 0.5)
+        row = con.execute("SELECT input_tokens, cache_read_tokens, cache_write_tokens FROM wts_spending").fetchone()
+    assert tuple(row) == (1500, 3000, 500)
 
 
 def test_status_says_when_briefings_are_paused_or_unavailable(indexed, monkeypatch):  # noqa: F811
-    from wcs.api.usage import record_usage
-
     api, state = make(indexed, FakeClient(), daily_spend_cap_usd=0.5)
-    record_usage(state, "answer", "m", {"input_tokens": 300_000}, {"price_input_per_mtok": 2.0}, "v1")
+    api.app.state.parts.spending.add("answer", "m", {"input_tokens": 300_000}, visitor="v1")
     st = api.get("/api/status").json()
     assert st["briefings"] == "paused" and "Today's budget" in st["briefings_note"]
     for name in ("WCS_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"):

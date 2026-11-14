@@ -1,10 +1,21 @@
 from __future__ import annotations
 
-from datetime import date
+import os
 
-import pytest
+# A test that reads a command's help must have Typer's colours off before Typer is imported: GitHub Actions makes
+# Typer colour its help, which splits an option's name in two.
+os.environ["_TYPER_FORCE_DISABLE_TERMINAL"] = "1"
+os.environ["NO_COLOR"] = "1"
 
-from wcs.config import load_settings
+import sys  # noqa: E402
+from datetime import date  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+import pytest  # noqa: E402
+
+from wcs.config import load_settings  # noqa: E402
+
+sys.path.insert(0, str(Path(__file__).parent / "golden"))  # tests/golden/shared.py: the scenarios the goldens hold
 
 
 @pytest.fixture
@@ -30,3 +41,10 @@ def speech(record_id: str, d: date, code: str | None, text: str, **kw) -> dict:
         "on_behalf_of": kw.pop("behalf", None), "language": kw.pop("language", None), "ocr": False,
         "text": text, "url": "https://undocs.org/en/S/PV.9000", **kw,
     }
+
+
+def model_of(sdk):
+    """The site's model client over a faked Anthropic SDK (``None`` stays ``None``: no model at all)."""
+    from wts_core.adapters.anthropic import BASE_URL, AnthropicClient
+
+    return None if sdk is None else AnthropicClient("test-key", base_url=BASE_URL, client=sdk)

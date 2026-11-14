@@ -1,0 +1,693 @@
+{
+ "after": {
+  "files": [
+   "state.db"
+  ],
+  "state.db": {
+   "briefings": [],
+   "usage": [
+    [
+     1,
+     2.5
+    ]
+   ]
+  }
+ },
+ "alerts": [
+  {
+   "alerts": [],
+   "case": "no backups folder"
+  },
+  {
+   "alerts": [
+    {
+     "level": "warning",
+     "text": "no backups have been made yet"
+    },
+    {
+     "level": "warning",
+     "text": "backups are kept on this server only: no off-site copy is set up"
+    }
+   ],
+   "case": "an empty folder, no off-site copy set up"
+  },
+  {
+   "alerts": [
+    {
+     "level": "warning",
+     "text": "no backups have been made yet"
+    }
+   ],
+   "case": "an empty folder, off-site set up"
+  },
+  {
+   "alerts": [
+    {
+     "level": "error",
+     "text": "the last backup was made over two days ago (wcs-state-2026-11-01.sqlite.gz): is wcs-backup.timer running?"
+    },
+    {
+     "level": "warning",
+     "text": "no off-site copy has been made yet; one is made with the next backup"
+    }
+   ],
+   "case": "a backup three days old, no off-site copy yet"
+  },
+  {
+   "alerts": [
+    {
+     "level": "error",
+     "text": "the last backup was made over two days ago (wcs-state-2026-11-01.sqlite.gz): is wcs-backup.timer running?"
+    },
+    {
+     "level": "warning",
+     "text": "backups are kept on this server only: no off-site copy is set up"
+    }
+   ],
+   "case": "a backup three days old, on this server only"
+  },
+  {
+   "alerts": [
+    {
+     "level": "warning",
+     "text": "no off-site copy has been made yet; one is made with the next backup"
+    }
+   ],
+   "case": "a backup exactly fifty hours old"
+  },
+  {
+   "alerts": [
+    {
+     "level": "error",
+     "text": "the last off-site copy failed (2026-11-06T03:00): Backblaze did not accept the key"
+    }
+   ],
+   "case": "the last off-site copy failed"
+  },
+  {
+   "alerts": [
+    {
+     "level": "error",
+     "text": "the last off-site copy was over two days ago (2026-11-02)"
+    }
+   ],
+   "case": "the last off-site copy is four days old"
+  },
+  {
+   "alerts": [],
+   "case": "all is well"
+  },
+  {
+   "alerts": [
+    {
+     "level": "warning",
+     "text": "no off-site copy has been made yet; one is made with the next backup"
+    }
+   ],
+   "case": "a record of the off-site copy that cannot be read"
+  }
+ ],
+ "commands": [
+  {
+   "args": [
+    "backup",
+    "--to",
+    "<tmp>/backups"
+   ],
+   "backups": [],
+   "case": "a new site has nothing to back up",
+   "exit": 0,
+   "output": "nothing to back up yet (no state database)\n"
+  },
+  {
+   "args": [
+    "offsite"
+   ],
+   "backups": [],
+   "case": "the off-site check, not set up",
+   "exit": 0,
+   "output": "{\n  \"ok\": false,\n  \"error\": \"not set up: add WCS_B2_BUCKET, WCS_B2_KEY_ID and WCS_B2_APPLICATION_KEY to deploy/.env\"\n}\n"
+  },
+  {
+   "args": [
+    "backup",
+    "--to",
+    "<tmp>/backups",
+    "--keep",
+    "2"
+   ],
+   "backups": [
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        0.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-01.sqlite.gz"
+    }
+   ],
+   "case": "a backup on 2026-11-01, keeping two",
+   "exit": 0,
+   "output": "backup: <tmp>/backups/wcs-state-2026-11-01.sqlite.gz\nOff-site copy: not set up\n"
+  },
+  {
+   "args": [
+    "backup",
+    "--to",
+    "<tmp>/backups",
+    "--keep",
+    "2"
+   ],
+   "backups": [
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        0.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-01.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        1.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    }
+   ],
+   "case": "a backup on 2026-11-02, keeping two",
+   "exit": 0,
+   "output": "backup: <tmp>/backups/wcs-state-2026-11-02.sqlite.gz\nOff-site copy: not set up\n"
+  },
+  {
+   "args": [
+    "backup",
+    "--to",
+    "<tmp>/backups",
+    "--keep",
+    "2"
+   ],
+   "backups": [
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        0.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-01.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        2.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    }
+   ],
+   "case": "a backup on 2026-11-02, keeping two",
+   "exit": 0,
+   "output": "backup: <tmp>/backups/wcs-state-2026-11-02.sqlite.gz\nOff-site copy: not set up\n"
+  },
+  {
+   "args": [
+    "backup",
+    "--to",
+    "<tmp>/backups",
+    "--keep",
+    "2"
+   ],
+   "backups": [
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        2.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        3.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-03.sqlite.gz"
+    }
+   ],
+   "case": "a backup on 2026-11-03, keeping two",
+   "exit": 0,
+   "output": "backup: <tmp>/backups/wcs-state-2026-11-03.sqlite.gz\nOff-site copy: not set up\n"
+  },
+  {
+   "args": [
+    "backup",
+    "--to",
+    "<tmp>/backups"
+   ],
+   "backups": [
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        2.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        3.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-03.sqlite.gz"
+    }
+   ],
+   "case": "a backup with nothing said of how many to keep",
+   "exit": 0,
+   "output": "backup: <tmp>/backups/wcs-state-2026-11-03.sqlite.gz\nOff-site copy: not set up\n"
+  },
+  {
+   "args": [
+    "restore",
+    "<tmp>/backups/wcs-state-2026-11-02.sqlite.gz"
+   ],
+   "backups": [
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        2.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        3.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-03.sqlite.gz"
+    }
+   ],
+   "case": "restore, refused at the question",
+   "exit": 1,
+   "output": "Replace <tmp>/data/state.db with <tmp>/backups/wcs-state-2026-11-02.sqlite.gz? Stop the site first. [y/N]:Aborted.\n "
+  },
+  {
+   "args": [
+    "restore",
+    "<tmp>/backups/wcs-state-2026-11-02.sqlite.gz",
+    "--yes"
+   ],
+   "backups": [
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        2.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        3.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-03.sqlite.gz"
+    }
+   ],
+   "case": "restore a backup",
+   "exit": 0,
+   "output": "restored <tmp>/data/state.db from <tmp>/backups/wcs-state-2026-11-02.sqlite.gz; the database it replaced is <tmp>/data/state.db.before-restore\n"
+  },
+  {
+   "args": [
+    "restore",
+    "<tmp>/backups/wcs-state-2026-11-03.sqlite.gz",
+    "--yes"
+   ],
+   "backups": [
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        2.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        3.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-03.sqlite.gz"
+    }
+   ],
+   "case": "a second restore never writes over the kept copy",
+   "exit": 1,
+   "output": "Not restored: <tmp>/data/state.db.before-restore is still there from an earlier restore: move or delete it first\n"
+  },
+  {
+   "args": [
+    "restore",
+    "<tmp>/backups/missing.sqlite.gz",
+    "--yes"
+   ],
+   "backups": [
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        2.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        3.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-03.sqlite.gz"
+    }
+   ],
+   "case": "a backup that is not there",
+   "exit": 1,
+   "output": "Not restored: missing.sqlite.gz could not be read: [Errno 2] No such file or directory: '<tmp>/backups/missing.sqlite.gz'\n"
+  },
+  {
+   "args": [
+    "restore",
+    "<tmp>/backups/damaged.sqlite.gz",
+    "--yes"
+   ],
+   "backups": [
+    {
+     "holds": "BadGzipFile",
+     "mode": "0o644",
+     "name": "damaged.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        2.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        3.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-03.sqlite.gz"
+    }
+   ],
+   "case": "a damaged backup",
+   "exit": 1,
+   "output": "Not restored: damaged.sqlite.gz could not be read: Not a gzipped file (b'no')\n"
+  },
+  {
+   "args": [
+    "restore",
+    "<tmp>/backups/text.sqlite.gz",
+    "--yes"
+   ],
+   "backups": [
+    {
+     "holds": "BadGzipFile",
+     "mode": "0o644",
+     "name": "damaged.sqlite.gz"
+    },
+    {
+     "holds": "DatabaseError",
+     "mode": "0o644",
+     "name": "text.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        2.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        3.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-03.sqlite.gz"
+    }
+   ],
+   "case": "a backup that is not a database",
+   "exit": 1,
+   "output": "Not restored: text.sqlite.gz is not a database: file is not a database\n"
+  },
+  {
+   "args": [
+    "restore",
+    "<tmp>/backups/foreign.sqlite.gz",
+    "--yes"
+   ],
+   "backups": [
+    {
+     "holds": "BadGzipFile",
+     "mode": "0o644",
+     "name": "damaged.sqlite.gz"
+    },
+    {
+     "holds": {
+      "something": []
+     },
+     "mode": "0o644",
+     "name": "foreign.sqlite.gz"
+    },
+    {
+     "holds": "DatabaseError",
+     "mode": "0o644",
+     "name": "text.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        2.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        3.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-03.sqlite.gz"
+    }
+   ],
+   "case": "another database altogether",
+   "exit": 1,
+   "output": "Not restored: foreign.sqlite.gz is not a backup of this site's state database\n"
+  },
+  {
+   "args": [
+    "restore",
+    "<tmp>/other.db",
+    "--yes"
+   ],
+   "backups": [
+    {
+     "holds": "BadGzipFile",
+     "mode": "0o644",
+     "name": "damaged.sqlite.gz"
+    },
+    {
+     "holds": {
+      "something": []
+     },
+     "mode": "0o644",
+     "name": "foreign.sqlite.gz"
+    },
+    {
+     "holds": "DatabaseError",
+     "mode": "0o644",
+     "name": "text.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        2.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-02.sqlite.gz"
+    },
+    {
+     "holds": {
+      "briefings": [],
+      "usage": [
+       [
+        1,
+        3.5
+       ]
+      ]
+     },
+     "mode": "0o600",
+     "name": "wcs-state-2026-11-03.sqlite.gz"
+    }
+   ],
+   "case": "an uncompressed database is taken too",
+   "exit": 1,
+   "output": "Not restored: other.db is not a backup of this site's state database\n"
+  }
+ ],
+ "restored": {
+  "files": [
+   "state.db",
+   "state.db.before-restore"
+  ],
+  "kept": {
+   "briefings": [],
+   "usage": [
+    [
+     1,
+     99.0
+    ]
+   ]
+  },
+  "state.db": {
+   "briefings": [],
+   "usage": [
+    [
+     1,
+     2.5
+    ]
+   ]
+  }
+ }
+}

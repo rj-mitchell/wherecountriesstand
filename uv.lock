@@ -1885,6 +1885,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "typer" },
     { name = "uvicorn", extra = ["standard"] },
+    { name = "wts-core", extra = ["ai", "cli", "duckdb", "offsite"] },
 ]
 
 [package.optional-dependencies]
@@ -1914,6 +1915,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.8" },
     { name = "typer", specifier = ">=0.12" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+    { name = "wts-core", extras = ["cli", "offsite", "duckdb", "ai"], url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.2.0/wts_core-0.2.0-py3-none-any.whl" },
 ]
 provides-extras = ["embed"]
 
@@ -2067,3 +2069,42 @@ sdist = { url = "https://files.pythonhosted.org/packages/b3/8f/705086c9d734d3b66
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e1/07/c6fe3ad3e685340704d314d765b7912993bcb8dc198f0e7a89382d37974b/win32_setctime-1.2.0-py3-none-any.whl", hash = "sha256:95d644c4e708aba81dc3704a116d8cbc974d70b3bdb8be1d150e36be6e9d1390", size = 4083, upload-time = "2024-12-07T15:28:26.465Z" },
 ]
+
+[[package]]
+name = "wts-core"
+version = "0.2.0"
+source = { url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.2.0/wts_core-0.2.0-py3-none-any.whl" }
+wheels = [
+    { url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.2.0/wts_core-0.2.0-py3-none-any.whl", hash = "sha256:460bd523d0862590309b86aba3f8a59ce1d4e2a7aa0e91b907461f75873f6c8a" },
+]
+
+[package.optional-dependencies]
+ai = [
+    { name = "anthropic" },
+    { name = "fastembed" },
+    { name = "lancedb" },
+    { name = "numpy" },
+    { name = "pyarrow" },
+]
+cli = [
+    { name = "typer" },
+]
+duckdb = [
+    { name = "duckdb" },
+]
+offsite = [
+    { name = "httpx" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "anthropic", marker = "extra == 'ai'", specifier = ">=2.3,<3" },
+    { name = "duckdb", marker = "extra == 'duckdb'", specifier = ">=2.0,<3" },
+    { name = "fastembed", marker = "extra == 'ai'", specifier = ">=0.9,<1" },
+    { name = "httpx", marker = "extra == 'offsite'", specifier = ">=0.28" },
+    { name = "lancedb", marker = "extra == 'ai'", specifier = ">=0.40,<1" },
+    { name = "numpy", marker = "extra == 'ai'", specifier = ">=2.5" },
+    { name = "pyarrow", marker = "extra == 'ai'", specifier = ">=26" },
+    { name = "typer", marker = "extra == 'cli'", specifier = ">=0.27" },
+]
+provides-extras = ["ai", "cli", "duckdb", "offsite"]

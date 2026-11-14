@@ -18,6 +18,11 @@ dependencies = [
     "pydantic>=2.8",
     "typer>=0.12",
     "uvicorn[standard]>=0.30",
+    # The Where They Stand sites' shared package, as the wheel of its release, by its address (its docs/adr/0006):
+    # uv.lock holds the file's SHA-256, and nothing is fetched with git. Its extras: the shared commands, off-site
+    # copies of backups, the thread-safe DuckDB connection, and the libraries behind the model, the embedder and
+    # the index.
+    "wts-core[cli,offsite,duckdb,ai] @ https://github.com/rj-mitchell/wts-core/releases/download/v0.2.0/wts_core-0.2.0-py3-none-any.whl",
 ]
 
 [project.optional-dependencies]
@@ -38,6 +43,10 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+# wts-core is named by the address of its wheel, which hatchling refuses unless told it is meant
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wcs"]

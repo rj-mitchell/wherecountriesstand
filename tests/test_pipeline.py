@@ -2,9 +2,9 @@ from datetime import date
 from types import SimpleNamespace as NS
 
 import pytest
-from conftest import speech
+from conftest import model_of, speech
+from wts_core.adapters.hashing import HashingEmbedder
 
-from wcs.embed.base import HashingEmbedder
 from wcs.engine import Engine
 from wcs.index.build import Indexer, embed_pending
 from wcs.rag.pipeline import AskRequest, Pipeline, answer_once
@@ -79,7 +79,7 @@ def indexed(settings):
 def test_pipeline_end_to_end_is_grounded(indexed):
     client = FakeClient()
     eng = Engine(indexed, embedder=HashingEmbedder(64), today=TODAY)
-    out = answer_once(Pipeline(indexed, eng, client=client, today=TODAY),
+    out = answer_once(Pipeline(indexed, eng, client=model_of(client), today=TODAY),
                       AskRequest("What has been said about climate finance since 2020?"))
     plan = out["plan"]["plan"]
     assert plan["parser"] == "offline" and plan["filters"]["date_from"] == "2020-01-01"
@@ -113,7 +113,7 @@ class QuotingClient(FakeClient):
 
 def test_briefings_are_written_with_curly_quotes(indexed):
     eng = Engine(indexed, embedder=HashingEmbedder(64), today=TODAY)
-    out = answer_once(Pipeline(indexed, eng, client=QuotingClient(), today=TODAY),
+    out = answer_once(Pipeline(indexed, eng, client=model_of(QuotingClient()), today=TODAY),
                       AskRequest("What has Kenya said about climate finance?"))
     final = out["final"]["answer"]
     text = "".join(s["text"] for s in final["segments"])
@@ -132,7 +132,7 @@ class RefusingClient(FakeClient):
 def test_pipeline_reports_refusals_instead_of_answering(indexed):
     """As Where MPs Stand: the model declining is an error, not an empty briefing with nothing to mark."""
     eng = Engine(indexed, embedder=HashingEmbedder(64), today=TODAY)
-    out = answer_once(Pipeline(indexed, eng, client=RefusingClient(), today=TODAY),
+    out = answer_once(Pipeline(indexed, eng, client=model_of(RefusingClient()), today=TODAY),
                       AskRequest("What has been said about climate finance since 2020?"))
     assert "final" not in out and len(out["sources"]["sources"]) == 2
     assert out["error"]["message"] == "The model declined to answer this question."

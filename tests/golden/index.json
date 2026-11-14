@@ -1,0 +1,1173 @@
+{
+ "embedded_ids": [
+  "sc:S/PV.8005:0005#0",
+  "sc:S/PV.8015:0006#0",
+  "sc:S/PV.8025:0007#0",
+  "sc:S/PV.8035:0008#0",
+  "sc:S/PV.8045:0000#0",
+  "sc:S/PV.8055:0001#0",
+  "sc:S/PV.8065:0002#0",
+  "sc:S/PV.8075:0003#0",
+  "sc:S/PV.8085:0004#0",
+  "sc:S/PV.8095:0005#0",
+  "sc:S/PV.8105:0006#0",
+  "sc:S/PV.8115:0007#0",
+  "sc:S/PV.8125:0008#0",
+  "sc:S/PV.8135:0000#0",
+  "sc:S/PV.8145:0001#0",
+  "sc:S/PV.8155:0002#0",
+  "sc:S/PV.8165:0003#0",
+  "sc:S/PV.8175:0004#0",
+  "sc:S/PV.8185:0005#0",
+  "sc:S/PV.8195:0006#0",
+  "sc:S/PV.8205:0007#0",
+  "sc:S/PV.8215:0008#0",
+  "sc:S/PV.8225:0000#0",
+  "sc:S/PV.8235:0001#0",
+  "sc:S/PV.8245:0002#0",
+  "sc:S/PV.8255:0003#0",
+  "sc:S/PV.8265:0004#0",
+  "sc:S/PV.8275:0005#0",
+  "sc:S/PV.8285:0006#0",
+  "sc:S/PV.8295:0007#0"
+ ],
+ "engine": [
+  {
+   "candidates": 120,
+   "countries": [],
+   "query": "climate finance for small islands",
+   "records": [
+    [
+     "sc:S/PV.8188:0008",
+     0.4497
+    ],
+    [
+     "sc:S/PV.8159:0006",
+     0.433
+    ],
+    [
+     "sc:S/PV.8248:0005",
+     0.4183
+    ],
+    [
+     "sc:S/PV.8078:0006",
+     0.401
+    ],
+    [
+     "sc:S/PV.8295:0007",
+     0.3589
+    ],
+    [
+     "sc:S/PV.8133:0007",
+     0.321
+    ]
+   ],
+   "semantic": true
+  },
+  {
+   "candidates": 15,
+   "countries": [
+    "FJI",
+    "KEN"
+   ],
+   "query": "climate finance for small islands",
+   "records": [
+    [
+     "sc:S/PV.8000:0000",
+     0.3239
+    ],
+    [
+     "sc:S/PV.8091:0001",
+     0.3016
+    ],
+    [
+     "sc:S/PV.8031:0004",
+     0.3014
+    ],
+    [
+     "sc:S/PV.8240:0006",
+     0.2848
+    ]
+   ],
+   "semantic": true
+  },
+  {
+   "candidates": 281,
+   "countries": [],
+   "query": "nuclear disarmament treaty",
+   "records": [
+    [
+     "sc:S/PV.8169:0007",
+     0.6893
+    ],
+    [
+     "sc:S/PV.8229:0004",
+     0.6825
+    ],
+    [
+     "sc:S/PV.8188:0008",
+     0.6821
+    ],
+    [
+     "sc:S/PV.8208:0001",
+     0.6668
+    ],
+    [
+     "sc:S/PV.8067:0004",
+     0.64
+    ],
+    [
+     "sc:S/PV.8258:0006",
+     0.6132
+    ]
+   ],
+   "semantic": true
+  },
+  {
+   "candidates": 40,
+   "countries": [
+    "FJI",
+    "KEN"
+   ],
+   "query": "nuclear disarmament treaty",
+   "records": [
+    [
+     "sc:S/PV.8255:0003",
+     0.5999
+    ],
+    [
+     "sc:S/PV.8075:0003",
+     0.5984
+    ],
+    [
+     "sc:S/PV.8136:0001",
+     0.5439
+    ],
+    [
+     "sc:S/PV.8016:0007",
+     0.5371
+    ],
+    [
+     "sc:S/PV.8226:0001",
+     0.2651
+    ],
+    [
+     "sc:S/PV.8165:0003",
+     0.2332
+    ]
+   ],
+   "semantic": true
+  },
+  {
+   "candidates": 297,
+   "countries": [],
+   "query": "food and water",
+   "records": [
+    [
+     "sc:S/PV.8069:0006",
+     0.8175
+    ],
+    [
+     "sc:S/PV.8129:0003",
+     0.8
+    ],
+    [
+     "sc:S/PV.8268:0007",
+     0.7417
+    ],
+    [
+     "sc:S/PV.8236:0002",
+     0.698
+    ],
+    [
+     "sc:S/PV.8257:0005",
+     0.683
+    ],
+    [
+     "sc:S/PV.8207:0000",
+     0.6826
+    ]
+   ],
+   "semantic": true
+  },
+  {
+   "candidates": 39,
+   "countries": [
+    "FJI",
+    "KEN"
+   ],
+   "query": "food and water",
+   "records": [
+    [
+     "sc:S/PV.8046:0001",
+     0.5931
+    ],
+    [
+     "sc:S/PV.8255:0003",
+     0.5753
+    ],
+    [
+     "sc:S/PV.8135:0000",
+     0.548
+    ],
+    [
+     "sc:S/PV.8181:0001",
+     0.5128
+    ],
+    [
+     "sc:S/PV.8225:0000",
+     0.2025
+    ],
+    [
+     "sc:S/PV.8106:0007",
+     0.2018
+    ]
+   ],
+   "semantic": true
+  },
+  {
+   "candidates": 0,
+   "countries": [],
+   "query": "peacekeeping",
+   "records": [],
+   "semantic": true
+  },
+  {
+   "candidates": 0,
+   "countries": [
+    "FJI",
+    "KEN"
+   ],
+   "query": "peacekeeping",
+   "records": [],
+   "semantic": true
+  }
+ ],
+ "group_rows": [
+  [
+   "sc:S/PV.8000:0000#0",
+   [
+    "au",
+    "council_guest",
+    "g77",
+    "income:low",
+    "nam",
+    "region:africa",
+    "ungroup:african"
+   ]
+  ],
+  [
+   "sc:S/PV.8001:0001#0",
+   [
+    "council_elected",
+    "g77",
+    "income:middle",
+    "income:upper_middle",
+    "nam",
+    "region:oceania",
+    "sids",
+    "ungroup:asia_pacific"
+   ]
+  ],
+  [
+   "sc:S/PV.8002:0002#0",
+   [
+    "eu",
+    "income:high",
+    "nato",
+    "p5",
+    "region:europe",
+    "ungroup:western_european_other"
+   ]
+  ],
+  [
+   "sc:S/PV.8003:0003#0",
+   [
+    "income:high",
+    "nato",
+    "p5",
+    "region:americas",
+    "ungroup:western_european_other"
+   ]
+  ],
+  [
+   "sc:S/PV.8004:0004#0",
+   [
+    "council_guest",
+    "income:middle",
+    "income:upper_middle",
+    "p5",
+    "region:asia",
+    "ungroup:asia_pacific"
+   ]
+  ],
+  [
+   "sc:S/PV.8005:0005#0",
+   [
+    "council_elected",
+    "g77",
+    "income:middle",
+    "income:upper_middle",
+    "region:americas",
+    "ungroup:latin_american_caribbean"
+   ]
+  ],
+  [
+   "sc:S/PV.8006:0006#0",
+   [
+    "council_elected",
+    "g77",
+    "income:lower_middle",
+    "income:middle",
+    "nam",
+    "region:asia",
+    "ungroup:asia_pacific"
+   ]
+  ],
+  [
+   "sc:S/PV.8007:0007#0",
+   [
+    "au",
+    "council_elected",
+    "g77",
+    "income:middle",
+    "income:upper_middle",
+    "nam",
+    "region:africa",
+    "ungroup:african"
+   ]
+  ],
+  [
+   "sc:S/PV.8008:0008#0",
+   [
+    "council_guest",
+    "eu",
+    "income:high",
+    "nato",
+    "region:europe",
+    "ungroup:western_european_other"
+   ]
+  ],
+  [
+   "sc:S/PV.8009:0000#0",
+   [
+    "council_elected",
+    "income:high",
+    "region:asia",
+    "ungroup:asia_pacific"
+   ]
+  ],
+  [
+   "sc:S/PV.8010:0001#0",
+   [
+    "au",
+    "council_elected",
+    "g77",
+    "income:lower_middle",
+    "income:middle",
+    "nam",
+    "oic",
+    "region:africa",
+    "ungroup:african"
+   ]
+  ],
+  [
+   "sc:S/PV.8011:0002#0",
+   [
+    "council_elected",
+    "income:middle",
+    "income:upper_middle",
+    "region:americas",
+    "ungroup:latin_american_caribbean"
+   ]
+  ],
+  [
+   "sc:S/PV.8012:0003#0",
+   [
+    "au",
+    "council_guest",
+    "g77",
+    "income:lower_middle",
+    "income:middle",
+    "nam",
+    "oic",
+    "region:africa",
+    "ungroup:african"
+   ]
+  ],
+  [
+   "sc:S/PV.8013:0004#0",
+   [
+    "council_elected",
+    "income:middle",
+    "income:upper_middle",
+    "ldc",
+    "region:oceania",
+    "sids",
+    "ungroup:asia_pacific"
+   ]
+  ],
+  [
+   "sc:S/PV.8014:0005#0",
+   [
+    "eu",
+    "income:high",
+    "nato",
+    "p5",
+    "region:europe",
+    "ungroup:western_european_other"
+   ]
+  ],
+  [
+   "sc:S/PV.8015:0006#0",
+   [
+    "au",
+    "council_elected",
+    "g77",
+    "income:lower_middle",
+    "income:middle",
+    "nam",
+    "region:africa",
+    "ungroup:african"
+   ]
+  ],
+  [
+   "sc:S/PV.8016:0007#0",
+   [
+    "council_guest",
+    "g77",
+    "income:middle",
+    "income:upper_middle",
+    "nam",
+    "region:oceania",
+    "sids",
+    "ungroup:asia_pacific"
+   ]
+  ],
+  [
+   "sc:S/PV.8017:0008#0",
+   [
+    "eu",
+    "income:high",
+    "nato",
+    "p5",
+    "region:europe",
+    "ungroup:western_european_other"
+   ]
+  ],
+  [
+   "sc:S/PV.8018:0000#0",
+   [
+    "income:high",
+    "nato",
+    "p5",
+    "region:americas",
+    "ungroup:western_european_other"
+   ]
+  ],
+  [
+   "sc:S/PV.8019:0001#0",
+   [
+    "income:middle",
+    "income:upper_middle",
+    "p5",
+    "region:asia",
+    "ungroup:asia_pacific"
+   ]
+  ]
+ ],
+ "has_vector_index": true,
+ "has_word_index": true,
+ "meaning": [
+  {
+   "hits": [
+    [
+     "sc:S/PV.8094:0004#0",
+     0.874
+    ],
+    [
+     "sc:S/PV.8064:0001#0",
+     0.8811
+    ],
+    [
+     "sc:S/PV.8139:0004#0",
+     0.8824
+    ],
+    [
+     "sc:S/PV.8000:0000#0",
+     0.916
+    ],
+    [
+     "sc:S/PV.8004:0004#0",
+     0.9199
+    ],
+    [
+     "sc:S/PV.8034:0007#0",
+     0.9199
+    ],
+    [
+     "sc:S/PV.8186:0006#0",
+     0.9208
+    ]
+   ],
+   "query": "climate finance for small islands",
+   "where": null
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8000:0000#0",
+     0.916
+    ],
+    [
+     "sc:S/PV.8045:0000#0",
+     0.9224
+    ],
+    [
+     "sc:S/PV.8105:0006#0",
+     0.9616
+    ],
+    [
+     "sc:S/PV.8255:0003#0",
+     0.9644
+    ]
+   ],
+   "query": "climate finance for small islands",
+   "where": "country_code = 'KEN'"
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8008:0008#0",
+     0.9262
+    ],
+    [
+     "sc:S/PV.8188:0008#0",
+     0.9569
+    ],
+    [
+     "sc:S/PV.8288:0000#0",
+     0.9608
+    ],
+    [
+     "sc:S/PV.8196:0007#0",
+     0.9624
+    ],
+    [
+     "sc:S/PV.8168:0006#0",
+     0.9631
+    ],
+    [
+     "sc:S/PV.8208:0001#0",
+     0.9656
+    ],
+    [
+     "sc:S/PV.8128:0002#0",
+     1.0
+    ],
+    [
+     "sc:S/PV.8268:0007#0",
+     1.0338
+    ]
+   ],
+   "query": "climate finance for small islands",
+   "where": "year >= 2020 AND participant = 'guest'"
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8000:0000#0",
+     0.538
+    ],
+    [
+     "sc:S/PV.8094:0004#0",
+     0.538
+    ],
+    [
+     "sc:S/PV.8004:0004#0",
+     0.5593
+    ],
+    [
+     "sc:S/PV.8124:0007#0",
+     0.5593
+    ],
+    [
+     "sc:S/PV.8255:0003#0",
+     0.5733
+    ],
+    [
+     "sc:S/PV.8273:0003#0",
+     0.5734
+    ],
+    [
+     "sc:S/PV.8075:0003#0",
+     0.5771
+    ]
+   ],
+   "query": "nuclear disarmament treaty",
+   "where": null
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8000:0000#0",
+     0.538
+    ],
+    [
+     "sc:S/PV.8255:0003#0",
+     0.5733
+    ],
+    [
+     "sc:S/PV.8075:0003#0",
+     0.5771
+    ],
+    [
+     "sc:S/PV.8150:0006#0",
+     0.5863
+    ],
+    [
+     "sc:S/PV.8030:0003#0",
+     0.6038
+    ],
+    [
+     "sc:S/PV.8165:0003#0",
+     0.6122
+    ],
+    [
+     "sc:S/PV.8105:0006#0",
+     0.6162
+    ],
+    [
+     "sc:S/PV.8060:0006#0",
+     0.6173
+    ]
+   ],
+   "query": "nuclear disarmament treaty",
+   "where": "country_code = 'KEN'"
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8188:0008#0",
+     0.6123
+    ],
+    [
+     "sc:S/PV.8208:0001#0",
+     0.622
+    ],
+    [
+     "sc:S/PV.8056:0002#0",
+     0.6648
+    ],
+    [
+     "sc:S/PV.8216:0000#0",
+     0.7021
+    ],
+    [
+     "sc:S/PV.8228:0003#0",
+     0.7021
+    ],
+    [
+     "sc:S/PV.8248:0005#0",
+     0.7023
+    ],
+    [
+     "sc:S/PV.8036:0000#0",
+     0.7077
+    ],
+    [
+     "sc:S/PV.8136:0001#0",
+     0.7077
+    ]
+   ],
+   "query": "nuclear disarmament treaty",
+   "where": "year >= 2020 AND participant = 'guest'"
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8163:0001#0",
+     0.453
+    ],
+    [
+     "sc:S/PV.8223:0007#0",
+     0.4758
+    ],
+    [
+     "sc:S/PV.8236:0002#0",
+     0.486
+    ],
+    [
+     "sc:S/PV.8069:0006#0",
+     0.4906
+    ],
+    [
+     "sc:S/PV.8176:0005#0",
+     0.4906
+    ],
+    [
+     "sc:S/PV.8035:0008#0",
+     0.5005
+    ],
+    [
+     "sc:S/PV.8103:0004#0",
+     0.5039
+    ],
+    [
+     "sc:S/PV.8116:0008#0",
+     0.5039
+    ]
+   ],
+   "query": "food and water",
+   "where": null
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8270:0000#0",
+     0.5199
+    ],
+    [
+     "sc:S/PV.8210:0003#0",
+     0.5244
+    ],
+    [
+     "sc:S/PV.8150:0006#0",
+     0.5995
+    ],
+    [
+     "sc:S/PV.8255:0003#0",
+     0.6214
+    ],
+    [
+     "sc:S/PV.8030:0003#0",
+     0.625
+    ],
+    [
+     "sc:S/PV.8225:0000#0",
+     0.6634
+    ],
+    [
+     "sc:S/PV.8090:0000#0",
+     0.6644
+    ],
+    [
+     "sc:S/PV.8135:0000#0",
+     0.6664
+    ]
+   ],
+   "query": "food and water",
+   "where": "country_code = 'KEN'"
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8236:0002#0",
+     0.486
+    ],
+    [
+     "sc:S/PV.8176:0005#0",
+     0.4906
+    ],
+    [
+     "sc:S/PV.8116:0008#0",
+     0.5039
+    ],
+    [
+     "sc:S/PV.8056:0002#0",
+     0.5153
+    ],
+    [
+     "sc:S/PV.8268:0007#0",
+     0.52
+    ],
+    [
+     "sc:S/PV.8296:0008#0",
+     0.5363
+    ],
+    [
+     "sc:S/PV.8208:0001#0",
+     0.5528
+    ],
+    [
+     "sc:S/PV.8228:0003#0",
+     0.5593
+    ]
+   ],
+   "query": "food and water",
+   "where": "year >= 2020 AND participant = 'guest'"
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8133:0007#0",
+     1.212
+    ],
+    [
+     "sc:S/PV.8081:0000#0",
+     1.2309
+    ],
+    [
+     "sc:S/PV.8055:0001#0",
+     1.2873
+    ],
+    [
+     "sc:S/PV.8264:0003#0",
+     1.2873
+    ],
+    [
+     "sc:S/PV.8008:0008#0",
+     1.2928
+    ],
+    [
+     "sc:S/PV.8266:0005#0",
+     1.2928
+    ]
+   ],
+   "query": "peacekeeping",
+   "where": null
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8240:0006#0",
+     1.3015
+    ],
+    [
+     "sc:S/PV.8180:0000#0",
+     1.318
+    ],
+    [
+     "sc:S/PV.8000:0000#0",
+     1.3333
+    ],
+    [
+     "sc:S/PV.8060:0006#0",
+     1.3375
+    ],
+    [
+     "sc:S/PV.8120:0003#0",
+     1.3464
+    ],
+    [
+     "sc:S/PV.8210:0003#0",
+     1.3867
+    ],
+    [
+     "sc:S/PV.8270:0000#0",
+     1.3904
+    ]
+   ],
+   "query": "peacekeeping",
+   "where": "country_code = 'KEN'"
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8008:0008#0",
+     1.2928
+    ],
+    [
+     "sc:S/PV.8196:0007#0",
+     1.2985
+    ],
+    [
+     "sc:S/PV.8068:0005#0",
+     1.3111
+    ],
+    [
+     "sc:S/PV.8256:0004#0",
+     1.3111
+    ],
+    [
+     "sc:S/PV.8288:0000#0",
+     1.3111
+    ],
+    [
+     "sc:S/PV.8048:0003#0",
+     1.318
+    ],
+    [
+     "sc:S/PV.8128:0002#0",
+     1.318
+    ],
+    [
+     "sc:S/PV.8248:0005#0",
+     1.3375
+    ]
+   ],
+   "query": "peacekeeping",
+   "where": "year >= 2020 AND participant = 'guest'"
+  }
+ ],
+ "rows_for_keys": [
+  "sc:S/PV.8005:0005#0",
+  "sc:S/PV.8015:0006#0",
+  "sc:S/PV.8025:0007#0",
+  "sc:S/PV.8035:0008#0",
+  "sc:S/PV.8045:0000#0",
+  "sc:S/PV.8055:0001#0",
+  "sc:S/PV.8065:0002#0",
+  "sc:S/PV.8075:0003#0",
+  "sc:S/PV.8085:0004#0",
+  "sc:S/PV.8095:0005#0",
+  "sc:S/PV.8105:0006#0",
+  "sc:S/PV.8115:0007#0",
+  "sc:S/PV.8125:0008#0",
+  "sc:S/PV.8135:0000#0",
+  "sc:S/PV.8145:0001#0",
+  "sc:S/PV.8155:0002#0",
+  "sc:S/PV.8165:0003#0",
+  "sc:S/PV.8175:0004#0",
+  "sc:S/PV.8185:0005#0",
+  "sc:S/PV.8195:0006#0",
+  "sc:S/PV.8205:0007#0",
+  "sc:S/PV.8215:0008#0",
+  "sc:S/PV.8225:0000#0",
+  "sc:S/PV.8235:0001#0",
+  "sc:S/PV.8245:0002#0",
+  "sc:S/PV.8255:0003#0",
+  "sc:S/PV.8265:0004#0",
+  "sc:S/PV.8275:0005#0",
+  "sc:S/PV.8285:0006#0",
+  "sc:S/PV.8295:0007#0"
+ ],
+ "stats": {
+  "passages": 300,
+  "vectors": 300
+ },
+ "trained_on": 300,
+ "words": [
+  {
+   "hits": [],
+   "query": "climate finance for small islands",
+   "where": null
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8000:0000#0",
+     3.3256
+    ],
+    [
+     "sc:S/PV.8060:0006#0",
+     3.3256
+    ],
+    [
+     "sc:S/PV.8120:0003#0",
+     3.3256
+    ],
+    [
+     "sc:S/PV.8180:0000#0",
+     3.3256
+    ],
+    [
+     "sc:S/PV.8240:0006#0",
+     3.3256
+    ]
+   ],
+   "query": "climate finance for small islands",
+   "where": "country_code = 'KEN'"
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8188:0008#0",
+     3.3256
+    ],
+    [
+     "sc:S/PV.8248:0005#0",
+     3.3256
+    ],
+    [
+     "sc:S/PV.8128:0002#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8168:0006#0",
+     1.6295
+    ],
+    [
+     "sc:S/PV.8228:0003#0",
+     1.6295
+    ],
+    [
+     "sc:S/PV.8288:0000#0",
+     1.6295
+    ]
+   ],
+   "query": "climate finance for small islands",
+   "where": "year >= 2020 AND participant = 'guest'"
+  },
+  {
+   "hits": [],
+   "query": "nuclear disarmament treaty",
+   "where": null
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8030:0003#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8090:0000#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8150:0006#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8210:0003#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8270:0000#0",
+     1.6715
+    ]
+   ],
+   "query": "nuclear disarmament treaty",
+   "where": "country_code = 'KEN'"
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8056:0002#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8116:0008#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8176:0005#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8236:0002#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8296:0008#0",
+     1.6715
+    ]
+   ],
+   "query": "nuclear disarmament treaty",
+   "where": "year >= 2020 AND participant = 'guest'"
+  },
+  {
+   "hits": [],
+   "query": "food and water",
+   "where": null
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8015:0006#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8075:0003#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8135:0000#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8195:0006#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8255:0003#0",
+     1.6715
+    ],
+    [
+     "sc:S/PV.8150:0006#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8210:0003#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8270:0000#0",
+     1.6541
+    ]
+   ],
+   "query": "food and water",
+   "where": "country_code = 'KEN'"
+  },
+  {
+   "hits": [],
+   "query": "food and water",
+   "where": "year >= 2020 AND participant = 'guest'"
+  },
+  {
+   "hits": [],
+   "query": "peacekeeping",
+   "where": null
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8000:0000#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8060:0006#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8120:0003#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8180:0000#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8240:0006#0",
+     1.6541
+    ]
+   ],
+   "query": "peacekeeping",
+   "where": "country_code = 'KEN'"
+  },
+  {
+   "hits": [
+    [
+     "sc:S/PV.8008:0008#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8068:0005#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8128:0002#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8188:0008#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8196:0007#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8248:0005#0",
+     1.6541
+    ],
+    [
+     "sc:S/PV.8256:0004#0",
+     1.6541
+    ]
+   ],
+   "query": "peacekeeping",
+   "where": "year >= 2020 AND participant = 'guest'"
+  }
+ ]
+}

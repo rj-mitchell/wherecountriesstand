@@ -14,6 +14,7 @@ from datetime import date
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+from wts_core.ports import ModelClient, ModelRequest, Usage
 
 from wcs.engine import Filters
 from wcs.rank.evidence import GROUP_BY
@@ -311,23 +312,18 @@ def parse_model(settings) -> str:
     return settings.answer.get("query_parse_model") or settings.answer.get("model", "claude-sonnet-5-5")
 
 
-def parse_with_model(client, settings, question: str, countries: Countries,
-                     today: date | None = None) -> tuple[QueryPlan, Any]:
-    from wcs.rag.answer import cached_system
-
+def parse_with_model(client: ModelClient, settings, question: str, countries: Countries,
+                     today: date | None = None) -> tuple[QueryPlan, Usage]:
+    """The question as the model reads it, and what the reading cost. A refusal, or an answer with nothing in it,
+    raises (the shared model client's ``structured``), and the caller falls back to the built-in rules."""
     today = today or date.today()
     default_years = int(settings.archive.get("default_years", 10))
-    resp = client.messages.parse(
-        model=parse_model(settings),
-        max_tokens=2000,
-        system=cached_system(system_prompt(today, settings.start_date, settings.archive_start, default_years)),
-        messages=[{"role": "user", "content": f"Question: {question}"}],
-        output_config={"effort": settings.answer.get("query_parse_effort", "low")},
-        output_format=ParsedQuery,
-    )
-    if resp.stop_reason == "refusal" or resp.parsed_output is None:
-        raise RuntimeError(f"query parser returned no output (stop_reason={resp.stop_reason})")
-    p: ParsedQuery = resp.parsed_output
+    request = ModelRequest(
+        model=parse_model(settings), max_tokens=2000,
+        instructions=system_prompt(today, settings.start_date, settings.archive_start, default_years),
+        question=f"Question: {question}", effort=settings.answer.get("query_parse_effort", "low"),
+        cache_instructions=settings.answer.get("cache_instructions", "short"))
+    p, usage = client.structured(request, ParsedQuery)
     codes, unresolved = [], []
     for name in p.countries:
         code = countries.resolve(name)
@@ -345,7 +341,7 @@ def parse_with_model(client, settings, question: str, countries: Countries,
         group_by=p.group_by,
         unresolved_countries=unresolved,
     )
-    return plan, resp.usage
+    return plan, usage
 
 
 def plan_json(plan: QueryPlan) -> str:

@@ -1,0 +1,322 @@
+{
+ "in_progress": {
+  "estimate_usd": 0.25,
+  "per_key": 2,
+  "total": 3
+ },
+ "in_progress_script": [
+  [
+   "start",
+   "a"
+  ],
+  [
+   "start",
+   "a"
+  ],
+  [
+   "start",
+   "a"
+  ],
+  [
+   "pending",
+   0
+  ],
+  [
+   "pending",
+   1
+  ],
+  [
+   "start",
+   "b"
+  ],
+  [
+   "start",
+   "c"
+  ],
+  [
+   "pending",
+   1
+  ],
+  [
+   "finish",
+   "a"
+  ],
+  [
+   "start",
+   "c"
+  ],
+  [
+   "start",
+   "d"
+  ],
+  [
+   "finish",
+   "a"
+  ],
+  [
+   "finish",
+   "b"
+  ],
+  [
+   "finish",
+   "c"
+  ],
+  [
+   "pending",
+   0
+  ],
+  [
+   "pending",
+   5
+  ],
+  [
+   "start",
+   "d"
+  ],
+  [
+   "finish",
+   "d"
+  ]
+ ],
+ "limits": {
+  "daily_spend_cap_usd": 1.0,
+  "monthly_spend_cap_usd": 2.0,
+  "per_visitor_daily_questions": 2
+ },
+ "places": [
+  null,
+  null,
+  "A briefing is already being written for you; please wait for it to finish.",
+  0.5,
+  0.25,
+  null,
+  "Many briefings are being written at the moment; please try again in a minute.",
+  0.5,
+  {
+   "a": 1,
+   "b": 1
+  },
+  null,
+  "Many briefings are being written at the moment; please try again in a minute.",
+  {
+   "b": 1,
+   "c": 1
+  },
+  {
+   "c": 1
+  },
+  {},
+  0.0,
+  0.0,
+  null,
+  {}
+ ],
+ "said": [
+  2.0,
+  0.9,
+  0.1,
+  null,
+  0.2,
+  null,
+  0.01,
+  null,
+  0.2,
+  "You have reached today's limit for new briefings. It resets at midnight UTC; briefings others have already asked for still load.",
+  null,
+  null,
+  null,
+  "Today's budget for new briefings has been used up. It resets at midnight UTC.",
+  0.59,
+  "Today's budget for new briefings has been used up. It resets at midnight UTC.",
+  0.01,
+  "Today's budget for new briefings has been used up. It resets at midnight UTC.",
+  "This month's budget for new briefings has been used up.",
+  "This month's budget for new briefings has been used up.",
+  "This month's budget for new briefings has been used up.",
+  0.4,
+  "This month's budget for new briefings has been used up.",
+  null
+ ],
+ "script": [
+  [
+   "2026-10-31T23:59:59+00:00",
+   "spend",
+   "answer",
+   "claude-sonnet-5-5",
+   {
+    "input_tokens": 1000000
+   },
+   "old"
+  ],
+  [
+   "2026-11-01T00:00:00+00:00",
+   "spend",
+   "answer",
+   "claude-sonnet-5-5",
+   {
+    "input_tokens": 450000
+   },
+   "v0"
+  ],
+  [
+   "2026-11-12T23:59:59+00:00",
+   "spend",
+   "answer",
+   "claude-sonnet-5-5",
+   {
+    "input_tokens": 50000
+   },
+   "v1"
+  ],
+  [
+   "2026-11-13T00:00:00+00:00",
+   "check",
+   "v1",
+   0.0
+  ],
+  [
+   "2026-11-13T00:00:00+00:00",
+   "spend",
+   "answer",
+   "claude-sonnet-5-5",
+   {
+    "input_tokens": 100000
+   },
+   "v1"
+  ],
+  [
+   "2026-11-13T00:00:01+00:00",
+   "check",
+   "v1",
+   0.0
+  ],
+  [
+   "2026-11-13T09:00:00+00:00",
+   "spend",
+   "parse",
+   "claude-haiku-5-5",
+   {
+    "input_tokens": 100000
+   },
+   "v1"
+  ],
+  [
+   "2026-11-13T09:00:01+00:00",
+   "check",
+   "v1",
+   0.0
+  ],
+  [
+   "2026-11-13T09:00:02+00:00",
+   "spend",
+   "answer",
+   "claude-sonnet-5-5",
+   {
+    "input_tokens": 100000
+   },
+   "v1"
+  ],
+  [
+   "2026-11-13T09:00:03+00:00",
+   "check",
+   "v1",
+   0.0
+  ],
+  [
+   "2026-11-13T09:00:03+00:00",
+   "check",
+   "v2",
+   0.0
+  ],
+  [
+   "2026-11-13T09:00:03+00:00",
+   "check",
+   null,
+   0.0
+  ],
+  [
+   "2026-11-13T09:00:03+00:00",
+   "check",
+   "v2",
+   0.58
+  ],
+  [
+   "2026-11-13T09:00:03+00:00",
+   "check",
+   "v2",
+   0.59
+  ],
+  [
+   "2026-11-13T09:00:04+00:00",
+   "spend",
+   "answer",
+   "claude-sonnet-5-5",
+   {
+    "input_tokens": 295000
+   },
+   "v3"
+  ],
+  [
+   "2026-11-13T09:00:05+00:00",
+   "check",
+   "v2",
+   0.0
+  ],
+  [
+   "2026-11-13T09:00:06+00:00",
+   "spend",
+   "answer",
+   "claude-sonnet-5-5",
+   {
+    "input_tokens": 5000
+   },
+   "v3"
+  ],
+  [
+   "2026-11-13T09:00:07+00:00",
+   "check",
+   "v2",
+   0.0
+  ],
+  [
+   "2026-11-14T00:00:00+00:00",
+   "check",
+   "v1",
+   0.0
+  ],
+  [
+   "2026-11-14T00:00:00+00:00",
+   "check",
+   "v1",
+   0.39
+  ],
+  [
+   "2026-11-14T00:00:00+00:00",
+   "check",
+   "v1",
+   0.4
+  ],
+  [
+   "2026-11-14T00:00:01+00:00",
+   "spend",
+   "answer",
+   "claude-sonnet-5-5",
+   {
+    "input_tokens": 200000
+   },
+   "v9"
+  ],
+  [
+   "2026-11-14T00:00:02+00:00",
+   "check",
+   "v1",
+   0.0
+  ],
+  [
+   "2026-12-01T00:00:00+00:00",
+   "check",
+   "v1",
+   0.0
+  ]
+ ]
+}

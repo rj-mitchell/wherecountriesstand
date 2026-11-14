@@ -67,7 +67,7 @@ Based on S/PV.7565 (20 November 2015):
 - **Source Serif 4**, the family's typeface, sets the headings (`h1`–`h6`) only, as on every family
   site (decision 1 of the family plan). The site's name in the masthead stays in Tinos.
 - **Quotation marks and apostrophes are curly** (“ ” ‘ ’), as the record prints them. The model writes straight
-  ones, which are curled once a briefing has been checked (`wcs.rag.typography`); those inside a web address,
+  ones, which are curled once a briefing has been checked (`wcs.rag.checks`, with the shared package's `curl_quotes`); those inside a web address,
   `code` or an HTML tag are left as they are.
 - All three fonts are bundled with the site, not loaded from Google: Tinos and Roboto in
   `web/site/fonts/`, Source Serif 4 in the family kit's `web/site/family/fonts/`.

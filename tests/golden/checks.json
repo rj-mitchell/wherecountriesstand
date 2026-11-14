@@ -1,0 +1,989 @@
+{
+ "shown_again": [
+  {
+   "events": [
+    {
+     "plan": {
+      "interpretation": "The Council’s debates on “climate”.",
+      "question": "What has been said about climate finance since 2020?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "n": 1,
+       "title": "Kenya's \"statement\""
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said \"no\".",
+     "type": "text"
+    },
+    {
+     "answer": {
+      "grounded_ratio": 1.0,
+      "loaded_words": 0,
+      "markdown": "Kenya said climate finance is slow. The savings claimed were large.",
+      "segments": [
+       {
+        "status": "connective",
+        "text": "Kenya said "
+       },
+       {
+        "sources": [
+         1
+        ],
+        "status": "cited",
+        "text": "climate finance is slow."
+       },
+       {
+        "loaded": [],
+        "sources": [
+         1
+        ],
+        "status": "cited",
+        "text": " The savings claimed were large."
+       }
+      ],
+      "unsupported_segments": 0
+     },
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "name": "marks made by rules since corrected"
+  },
+  {
+   "events": [
+    {
+     "plan": {
+      "interpretation": "The Council’s debates on “climate”.",
+      "question": "What has been said about climate finance since 2020?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "n": 1,
+       "title": "Kenya's \"statement\""
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said \"no\".",
+     "type": "text"
+    },
+    {
+     "answer": {
+      "loaded_words": 1,
+      "segments": [
+       {
+        "loaded": [
+         {
+          "end": 51,
+          "start": 45,
+          "word": "regime"
+         }
+        ],
+        "sources": [
+         1
+        ],
+        "status": "cited",
+        "text": "Kenya called it “too slow” and the Council’s regime was mentioned."
+       }
+      ]
+     },
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "name": "saved before quotes were curled, with a mark that stands"
+  },
+  {
+   "events": [
+    {
+     "plan": {
+      "interpretation": "The Council’s debates on “climate”.",
+      "question": "What has been said about climate finance since 2020?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "n": 1,
+       "title": "Kenya's \"statement\""
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said \"no\".",
+     "type": "text"
+    },
+    {
+     "answer": {
+      "segments": [
+       {
+        "status": "unsupported",
+        "text": "He said “no.” Mr Smith said "
+       },
+       {
+        "sources": [
+         1
+        ],
+        "status": "cited",
+        "text": "we will act"
+       }
+      ],
+      "unsupported_segments": 1
+     },
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "name": "a claim before a quotation, saved straight"
+  },
+  {
+   "events": [
+    {
+     "plan": {
+      "interpretation": "The Council’s debates on “climate”.",
+      "question": "What has been said about climate finance since 2020?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "n": 1,
+       "title": "Kenya's \"statement\""
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said \"no\".",
+     "type": "text"
+    },
+    {
+     "answer": {
+      "segments": [
+       {
+        "status": "unsupported",
+        "text": "He said “no.” Mr Smith said "
+       },
+       {
+        "sources": [
+         1
+        ],
+        "status": "cited",
+        "text": "we will act"
+       }
+      ],
+      "unsupported_segments": 1
+     },
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "name": "a claim before a quotation, saved curled"
+  },
+  {
+   "events": [
+    {
+     "plan": {
+      "interpretation": "The Council’s debates on “climate”.",
+      "question": "What has been said about climate finance since 2020?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "n": 1,
+       "title": "Kenya's \"statement\""
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said \"no\".",
+     "type": "text"
+    },
+    {
+     "answer": {
+      "grounded_ratio": 0.6,
+      "segments": [
+       {
+        "status": "unsupported",
+        "text": "Kenya agreed."
+       },
+       {
+        "sources": [
+         2
+        ],
+        "status": "cited",
+        "text": " Fiji said so too."
+       }
+      ],
+      "unsupported_segments": 1
+     },
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "name": "a short claim stays a point to check"
+  },
+  {
+   "events": [
+    {
+     "plan": {
+      "interpretation": "The Council’s debates on “climate”.",
+      "question": "What has been said about climate finance since 2020?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "n": 1,
+       "title": "Kenya's \"statement\""
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said \"no\".",
+     "type": "text"
+    },
+    {
+     "answer": {
+      "citations_invalid": 0,
+      "citations_total": 2,
+      "grounded_ratio": 0.624,
+      "loaded_words": 0,
+      "markdown": "Kenya said that climate finance was “too slow”. In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.",
+      "no_records": false,
+      "quotes_total": 1,
+      "quotes_unverified": 0,
+      "segments": [
+       {
+        "cited": [
+         {
+          "n": 1,
+          "text": "climate finance for adaptation is too slow"
+         }
+        ],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [
+         1
+        ],
+        "status": "cited",
+        "text": "Kenya said that climate finance was “too slow”."
+       },
+       {
+        "cited": [],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [],
+        "status": "connective",
+        "text": " In the debate that followed:"
+       },
+       {
+        "cited": [
+         {
+          "n": 2,
+          "text": "climate finance must reach small islands"
+         }
+        ],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [
+         2
+        ],
+        "status": "cited",
+        "text": " Fiji warned that finance must reach small islands."
+       },
+       {
+        "cited": [],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [],
+        "status": "unsupported",
+        "text": " This was a turning point for every delegation in the room."
+       }
+      ],
+      "unsupported_segments": 1
+     },
+     "briefing_id": "briefing001",
+     "model": "claude-sonnet-5-5",
+     "stop_reason": "end_turn",
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "name": "the scripted briefing"
+  },
+  {
+   "events": [
+    {
+     "plan": {
+      "interpretation": "The Council’s debates on “climate”.",
+      "question": "What has been said about climate finance since 2020?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "n": 1,
+       "title": "Kenya's \"statement\""
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said \"no\".",
+     "type": "text"
+    },
+    {
+     "answer": {
+      "citations_invalid": 0,
+      "citations_total": 0,
+      "grounded_ratio": 1.0,
+      "markdown": "No records found.",
+      "no_records": true,
+      "segments": [
+       {
+        "cited": [],
+        "sources": [],
+        "status": "connective",
+        "text": "No records found. The archive contains no records matching this question and these filters."
+       }
+      ],
+      "unsupported_segments": 0
+     },
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "name": "no records"
+  },
+  {
+   "events": [
+    {
+     "plan": {
+      "interpretation": "The Council’s debates on “climate”.",
+      "question": "What has been said about climate finance since 2020?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "n": 1,
+       "title": "Kenya's \"statement\""
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said \"no\".",
+     "type": "text"
+    },
+    {
+     "answer": null,
+     "note": "Sources only: no briefing was written.",
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "name": "no briefing was written"
+  },
+  {
+   "events": [
+    {
+     "plan": {
+      "interpretation": "The Council’s debates on “climate”.",
+      "question": "What has been said about climate finance since 2020?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "n": 1,
+       "title": "Kenya's \"statement\""
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said \"no\".",
+     "type": "text"
+    },
+    {
+     "answer": {
+      "markdown": "x",
+      "segments": []
+     },
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "name": "an answer with no segments"
+  }
+ ],
+ "written": [
+  {
+   "answer": {
+    "citations_invalid": 0,
+    "citations_total": 1,
+    "grounded_ratio": 1.0,
+    "loaded_words": 0,
+    "markdown": "Kenya said that climate finance for adaptation is too slow. [Source 1] This was a turning point for the Council.",
+    "no_records": false,
+    "quotes_total": 0,
+    "quotes_unverified": 0,
+    "segments": [
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "connective",
+      "text": "Kenya said that "
+     },
+     {
+      "cited": [
+       {
+        "cited_text": "Kenya says climate finance for adaptation is too slow. We call on the developed countries to honour their pledges.",
+        "source": 1
+       }
+      ],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [
+       1
+      ],
+      "status": "cited",
+      "text": "climate finance for adaptation is too slow."
+     },
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "connective",
+      "text": " This was a turning point for the Council."
+     }
+    ],
+    "unsupported_segments": 0
+   },
+   "name": "a cited claim, a lead-in and an uncited claim"
+  },
+  {
+   "answer": {
+    "citations_invalid": 0,
+    "citations_total": 2,
+    "grounded_ratio": 1.0,
+    "loaded_words": 0,
+    "markdown": "Kenya’s delegate called it “too slow” [Source 1] and Fiji said it was “a moral outrage”. [Source 2]",
+    "no_records": false,
+    "quotes_total": 1,
+    "quotes_unverified": 1,
+    "segments": [
+     {
+      "cited": [
+       {
+        "cited_text": "Kenya says climate finance for adaptation is too slow. We call on the developed countries to honour their pledges.",
+        "source": 1
+       }
+      ],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [
+       1
+      ],
+      "status": "cited",
+      "text": "Kenya’s delegate called it “too slow”"
+     },
+     {
+      "cited": [
+       {
+        "cited_text": "Fiji warns that climate finance must reach small islands. The organization of this work has been slow.",
+        "source": 2
+       }
+      ],
+      "loaded": [],
+      "misquotes": [
+       {
+        "end": 39,
+        "start": 22,
+        "text": "a moral outrage"
+       }
+      ],
+      "sources": [
+       2
+      ],
+      "status": "cited",
+      "text": " and Fiji said it was “a moral outrage”."
+     }
+    ],
+    "unsupported_segments": 0
+   },
+   "name": "a quotation found word for word, and one that is not"
+  },
+  {
+   "answer": {
+    "citations_invalid": 1,
+    "citations_total": 2,
+    "grounded_ratio": 0.611,
+    "loaded_words": 0,
+    "markdown": "Tuvalu agreed. Fiji warned of delay. [Source 2]",
+    "no_records": false,
+    "quotes_total": 0,
+    "quotes_unverified": 0,
+    "segments": [
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "invalid",
+      "text": "Tuvalu agreed."
+     },
+     {
+      "cited": [
+       {
+        "cited_text": "Fiji warns that climate finance must reach small islands. The organization of this work has been slow.",
+        "source": 2
+       }
+      ],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [
+       2
+      ],
+      "status": "cited",
+      "text": " Fiji warned of delay."
+     }
+    ],
+    "unsupported_segments": 0
+   },
+   "name": "a citation to a source that is not there"
+  },
+  {
+   "answer": {
+    "citations_invalid": 0,
+    "citations_total": 2,
+    "grounded_ratio": 0.485,
+    "loaded_words": 4,
+    "markdown": "Kenya slammed the regime, and the West was blamed. [Source 1] Farms in the west of the country were mentioned. Kenya claimed that it was “a scandal”. The benefits claimed were large. [Source 2]",
+    "no_records": false,
+    "quotes_total": 0,
+    "quotes_unverified": 0,
+    "segments": [
+     {
+      "cited": [
+       {
+        "cited_text": "Kenya says climate finance for adaptation is too slow. We call on the developed countries to honour their pledges.",
+        "source": 1
+       }
+      ],
+      "loaded": [
+       {
+        "end": 13,
+        "start": 6,
+        "word": "slammed"
+       },
+       {
+        "end": 24,
+        "start": 18,
+        "word": "regime"
+       },
+       {
+        "end": 38,
+        "start": 30,
+        "word": "the West"
+       }
+      ],
+      "misquotes": [],
+      "sources": [
+       1
+      ],
+      "status": "cited",
+      "text": "Kenya slammed the regime, and the West was blamed."
+     },
+     {
+      "cited": [],
+      "loaded": [
+       {
+        "end": 63,
+        "start": 56,
+        "word": "claimed"
+       }
+      ],
+      "misquotes": [],
+      "sources": [],
+      "status": "unsupported",
+      "text": " Farms in the west of the country were mentioned. Kenya claimed that it was “a scandal”."
+     },
+     {
+      "cited": [
+       {
+        "cited_text": "Fiji warns that climate finance must reach small islands. The organization of this work has been slow.",
+        "source": 2
+       }
+      ],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [
+       2
+      ],
+      "status": "cited",
+      "text": " The benefits claimed were large."
+     }
+    ],
+    "unsupported_segments": 1
+   },
+   "name": "judgemental words in the site's own voice, and inside a quotation"
+  },
+  {
+   "answer": {
+    "citations_invalid": 0,
+    "citations_total": 1,
+    "grounded_ratio": 1.0,
+    "loaded_words": 0,
+    "markdown": "Fiji criticised the organisation of the work, saying “The organization of this work has been slow.” [Source 2]",
+    "no_records": false,
+    "quotes_total": 1,
+    "quotes_unverified": 0,
+    "segments": [
+     {
+      "cited": [
+       {
+        "cited_text": "Fiji warns that climate finance must reach small islands. The organization of this work has been slow.",
+        "source": 2
+       }
+      ],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [
+       2
+      ],
+      "status": "cited",
+      "text": "Fiji criticised the organisation of the work, saying “The organization of this work has been slow.”"
+     }
+    ],
+    "unsupported_segments": 0
+   },
+   "name": "American spelling in the site's words, and in a quotation"
+  },
+  {
+   "answer": {
+    "citations_invalid": 0,
+    "citations_total": 1,
+    "grounded_ratio": 1.0,
+    "loaded_words": 0,
+    "markdown": "Two positions emerge. Kenya wants faster finance. [Source 1]",
+    "no_records": false,
+    "quotes_total": 0,
+    "quotes_unverified": 0,
+    "segments": [
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "connective",
+      "text": "Two positions emerge. "
+     },
+     {
+      "cited": [
+       {
+        "cited_text": "Kenya says climate finance for adaptation is too slow. We call on the developed countries to honour their pledges.",
+        "source": 1
+       }
+      ],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [
+       1
+      ],
+      "status": "cited",
+      "text": "Kenya wants faster finance."
+     }
+    ],
+    "unsupported_segments": 0
+   },
+   "name": "an opener about the records, then the briefing"
+  },
+  {
+   "answer": {
+    "citations_invalid": 0,
+    "citations_total": 1,
+    "grounded_ratio": 1.0,
+    "loaded_words": 0,
+    "markdown": "Kenya wants faster finance. [Source 1] Gas was supplied to two million homes. The votes on the resolution were not supplied. No vote records were retrieved for 2021. Only two records were retrieved. The minister said that aid was supplied late.",
+    "no_records": false,
+    "quotes_total": 0,
+    "quotes_unverified": 0,
+    "segments": [
+     {
+      "cited": [
+       {
+        "cited_text": "Kenya says climate finance for adaptation is too slow. We call on the developed countries to honour their pledges.",
+        "source": 1
+       }
+      ],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [
+       1
+      ],
+      "status": "cited",
+      "text": "Kenya wants faster finance."
+     },
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "connective",
+      "text": " Gas was supplied to two million homes. The votes on the resolution were not supplied. No vote records were retrieved for 2021. Only two records were retrieved. The minister said that aid was supplied late."
+     }
+    ],
+    "unsupported_segments": 0
+   },
+   "name": "notes about the evidence, wide and narrow"
+  },
+  {
+   "answer": {
+    "citations_invalid": 0,
+    "citations_total": 1,
+    "grounded_ratio": 1.0,
+    "loaded_words": 0,
+    "markdown": "Mr. Kimani said the developed countries should honour their pledges. [Source 1] Dr. Prasad disagreed. St. Lucia was not heard.",
+    "no_records": false,
+    "quotes_total": 0,
+    "quotes_unverified": 0,
+    "segments": [
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "connective",
+      "text": "Mr. Kimani said "
+     },
+     {
+      "cited": [
+       {
+        "cited_text": "Kenya says climate finance for adaptation is too slow. We call on the developed countries to honour their pledges.",
+        "source": 1
+       }
+      ],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [
+       1
+      ],
+      "status": "cited",
+      "text": "the developed countries should honour their pledges."
+     },
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "connective",
+      "text": " Dr. Prasad disagreed. St. Lucia was not heard."
+     }
+    ],
+    "unsupported_segments": 0
+   },
+   "name": "an honorific's full stop ends no sentence"
+  },
+  {
+   "answer": {
+    "citations_invalid": 0,
+    "citations_total": 2,
+    "grounded_ratio": 1.0,
+    "loaded_words": 0,
+    "markdown": "## African States\n\n- Kenya: finance is too slow [Source 1]\n- Fiji: finance must reach small islands [Source 2]\n\nIn short:",
+    "no_records": false,
+    "quotes_total": 0,
+    "quotes_unverified": 0,
+    "segments": [
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "connective",
+      "text": "## African States\n\n"
+     },
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "connective",
+      "text": "- Kenya: "
+     },
+     {
+      "cited": [
+       {
+        "cited_text": "Kenya says climate finance for adaptation is too slow. We call on the developed countries to honour their pledges.",
+        "source": 1
+       }
+      ],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [
+       1
+      ],
+      "status": "cited",
+      "text": "finance is too slow"
+     },
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "connective",
+      "text": "\n- Fiji: "
+     },
+     {
+      "cited": [
+       {
+        "cited_text": "Fiji warns that climate finance must reach small islands. The organization of this work has been slow.",
+        "source": 2
+       }
+      ],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [
+       2
+      ],
+      "status": "cited",
+      "text": "finance must reach small islands"
+     },
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "connective",
+      "text": "\n\nIn short:"
+     }
+    ],
+    "unsupported_segments": 0
+   },
+   "name": "headings, a list and a lead-in in pieces"
+  },
+  {
+   "answer": {
+    "citations_invalid": 0,
+    "citations_total": 0,
+    "grounded_ratio": 0.0,
+    "loaded_words": 0,
+    "markdown": "No records found. The archive holds nothing on this subject between those dates.",
+    "no_records": true,
+    "quotes_total": 0,
+    "quotes_unverified": 0,
+    "segments": [
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "unsupported",
+      "text": "No records found. The archive holds nothing on this subject between those dates."
+     }
+    ],
+    "unsupported_segments": 1
+   },
+   "name": "no records"
+  },
+  {
+   "answer": {
+    "citations_invalid": 0,
+    "citations_total": 0,
+    "grounded_ratio": 1.0,
+    "loaded_words": 0,
+    "markdown": "",
+    "no_records": false,
+    "quotes_total": 0,
+    "quotes_unverified": 0,
+    "segments": [],
+    "unsupported_segments": 0
+   },
+   "name": "nothing at all"
+  },
+  {
+   "answer": {
+    "citations_invalid": 0,
+    "citations_total": 1,
+    "grounded_ratio": 0.592,
+    "loaded_words": 0,
+    "markdown": "Kenya’s delegate said “climate finance for adaptation is too slow [Source 1]” in 2023, and it’s ‘urgent’.",
+    "no_records": false,
+    "quotes_total": 1,
+    "quotes_unverified": 0,
+    "segments": [
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "connective",
+      "text": "Kenya’s delegate said “"
+     },
+     {
+      "cited": [
+       {
+        "cited_text": "Kenya says climate finance for adaptation is too slow. We call on the developed countries to honour their pledges.",
+        "source": 1
+       }
+      ],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [
+       1
+      ],
+      "status": "cited",
+      "text": "climate finance for adaptation is too slow"
+     },
+     {
+      "cited": [],
+      "loaded": [],
+      "misquotes": [],
+      "sources": [],
+      "status": "unsupported",
+      "text": "” in 2023, and it’s ‘urgent’."
+     }
+    ],
+    "unsupported_segments": 1
+   },
+   "name": "quotes and apostrophes to curl"
+  }
+ ]
+}
