@@ -11,11 +11,12 @@ import re
 from datetime import date
 from typing import Any
 
+from wts_core.adapters.duckdb import shared
+
 from wcs.config import Settings
 from wcs.engine import Filters
 from wcs.reference.countries import Countries, countries
 from wcs.store.parquet import votes_path
-from wcs.store.shared import shared
 
 STOP = set("""a an and are as at be been by did do does for from had has have how in into is it its of on or over
 said say says the their them they this those to was were what when where which who why will with would about
