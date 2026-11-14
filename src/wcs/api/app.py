@@ -16,7 +16,10 @@ Endpoints:
   unfairly", a takedown request, or something else).
 * ``POST /api/statements``: a statement under the right of reply, held until the owner has confirmed who sent it;
   ``GET /api/statements?page=/b/<id>`` (or ``?country=KEN``): the published statements beside a briefing (or a
-  country's). They are never part of the record (``wcs.api.statements``).
+  country's). They are never part of the record (``wcs.replies``).
+* ``GET /api/briefings/<id>``: a saved briefing; ``GET /api/corrections``: the public log of what has been put right.
+* ``GET /api/check``: counts and ages for the charity's nightly check of its sites, to whoever holds the check
+  token (``WCS_CHECK_TOKEN`` in deploy/.env; wts-core docs/adr/0010). With no token set, the address isn't there.
 * ``GET /api/countries``, ``GET /api/groups``: for the filters.
 * ``GET /api/health``.
 * ``GET /robots.txt``, ``GET /sitemap.xml``, and the pages, with the site's address filled in for link previews
@@ -25,28 +28,28 @@ Endpoints:
   Where They Stand family kit's ``web/site/family/shelf.html`` (see ``render_page``).
 
 Spending is capped per day and per month (``[usage]``), each visitor has a daily limit and a per-minute rate limit,
-and identical questions are answered from a cache until the data changes (``wcs.api.usage``).
+and identical questions are answered from a cache until the data changes. The flow of a question, from its
+arrival to its last event, is the Where They Stand sites' shared briefing desk (wts-core, ``wts_core.briefing``;
+its docs/adr/0009): the route here describes the request (``Ask``) and streams what the desk gives back. What is
+this site's own in that flow is in ``SiteHooks``, ``answer_key`` and ``sources_only`` below.
 """
 
 from __future__ import annotations
 
 import hashlib
+import hmac
 import html
 import json
 import logging
 import mimetypes
 import os
-import queue
 import re
-import threading
-import time
 from collections.abc import Callable, Iterator
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlsplit
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import (
@@ -60,37 +63,43 @@ from fastapi.responses import (
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from wts_core.briefing import Ask, Hooks, TooManyRequests, desk_parts, sse
+from wts_core.cli import backup_ages, check_route, last_day_figures
+from wts_core.events import Event
+from wts_core.observe import LOGGER, SqliteBriefingLog, briefing_config, json_logging
+from wts_core.ports import SYSTEM_CLOCK, SYSTEM_RANDOM, BriefingConfig, Clock, Random
+from wts_core.replies import Item, Refused
+from wts_core.state import StateDB
+from wts_core.usage import cache_key, client_address, token_id, visitor_code
 
-from wcs.api import statements
-from wcs.api.usage import (
-    InFlight,
-    RateLimiter,
-    StateDB,
-    add_report,
-    cache_key,
-    cached_events,
-    check_caps,
-    new_briefing_id,
-    record_failure,
-    record_usage,
-    save_briefing,
-    saved_briefing,
-    store_events,
-    visitor_key,
-    withdrawn_briefings,
-)
-from wcs.config import INSTRUCTIONS_VERSION, REPO_ROOT, Settings, load_settings
+from wcs import adapters
+from wcs.config import INSTRUCTIONS_VERSION, REPO_ROOT, SITE, Settings, load_settings
+from wcs.messages import MESSAGES
 from wcs.rag.checks import rechecked
 from wcs.rag.pipeline import AskRequest, Pipeline
 from wcs.rag.query_parse import parse_model
+from wcs.replies import (
+    MAX_CHARS,
+    NOT_ENDORSED,
+    RECORD,
+    BriefingItems,
+    as_shown,
+    briefing_id,
+    check_country,
+    open_replies,
+)
 from wcs.sources import gadebate
+from wcs.state import BACKUPS, open_state
 
 log = logging.getLogger(__name__)
 mimetypes.add_type("font/woff2", ".woff2")  # missing from slim images' MIME lists
 
 SITE_DIR = REPO_ROOT / "web" / "site"
 PARTIALS_DIR = REPO_ROOT / "web" / "partials"
-KEEP_ALIVE_SECONDS = 15
+# so that a proxy passes each event on as it is written
+STREAM_HEADERS = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+# How many visitors the per-minute limiter holds before it forgets the idle ones.
+FORGET_IDLE_VISITORS_OVER = 50_000
 # Pages carry this in place of the site's address (in canonical links and link previews); it is filled in as they
 # are served.
 SITE_MARK = "__SITE__"
@@ -113,6 +122,9 @@ class AskBody(BaseModel):
     role_weight: float | None = Field(default=None, ge=1, le=2)
     history: list[Turn] = Field(default_factory=list, max_length=4)
     sources_only: bool = False
+    # The saved briefing a follow-up question follows on from, so that briefing's record can note that it was
+    # followed up (a yes or no on it; the two questions are not linked). Not part of what an answer depends on.
+    follows: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{6,20}$")
 
     @field_validator("plan")
     @classmethod
@@ -132,56 +144,19 @@ class ReportBody(BaseModel):
     page: str = Field(default="", max_length=300)
     message: str = Field(min_length=5, max_length=4000)
     contact: str = Field(default="", max_length=200)
+    website: str = Field(default="", max_length=200)  # a trap: no form of the site's has it, so people leave it empty
 
 
 class StatementBody(BaseModel):
-    """A statement under the right of reply (``wcs.api.statements``): checked again in the handler, with words for
-    the reader."""
+    """A statement under the right of reply (``wcs.replies``): checked again in the handler, with words for the
+    reader."""
     page: str = Field(max_length=300)
     name: str = Field(max_length=200)
     role: str = Field(max_length=200)
-    text: str = Field(max_length=statements.MAX_CHARS + 100)
+    text: str = Field(max_length=MAX_CHARS + 100)
     link: str = Field(default="", max_length=500)
     email: str = Field(max_length=200)
-
-
-def sse(events: Iterator[dict[str, Any]], keep_alive: float = KEEP_ALIVE_SECONDS) -> Iterator[bytes]:
-    """Server-sent events, with a comment line after a few seconds of silence (while the model is thinking): proxies
-    close a response that sends nothing for too long. The events are worked out in a thread of their own, which stops
-    at the next event once the reader has gone, and closes them, so a briefing nobody is reading stops being written
-    (and paid for)."""
-    q: queue.Queue = queue.Queue()
-    gone = threading.Event()
-    end = object()
-
-    def work() -> None:
-        try:
-            for ev in events:
-                q.put(ev)
-                if gone.is_set():
-                    break
-        except Exception as exc:  # passed on, to be raised where the response is being sent
-            q.put(exc)
-        finally:
-            if hasattr(events, "close"):
-                events.close()  # here, in the thread that ran it: the model's stream is closed with it
-            q.put(end)
-
-    threading.Thread(target=work, name="sse", daemon=True).start()
-    try:
-        while True:
-            try:
-                ev = q.get(timeout=keep_alive)
-            except queue.Empty:
-                yield b": still working\n\n"
-                continue
-            if ev is end:
-                return
-            if isinstance(ev, Exception):
-                raise ev
-            yield f"event: {ev['type']}\ndata: {json.dumps(ev, default=str)}\n\n".encode()
-    finally:
-        gone.set()
+    website: str = Field(default="", max_length=200)  # a trap, as on a report
 
 
 # Browsers and Cloudflare may keep these for a year without asking again: a stylesheet's or script's address
@@ -336,47 +311,172 @@ def question_page(page: str, question: str, base: str, query: str, path: str = "
     return page.replace("</head>", '  <meta name="robots" content="noindex">\n</head>', 1).replace(SITE_MARK, base)
 
 
+def new_briefing_id(chance: Random) -> str:
+    """A saved briefing's id, for its address (/b/<id>): eleven characters from the source of chance."""
+    return token_id(8, random=chance)
+
+
+def answer_key(settings: Settings, body: AskBody, *, model: bool, cache_hours: float) -> str | None:
+    """The answer cache's key for a question: everything an answer depends on. The question (its case and spacing
+    apart), what the reader chose, the model, the data's stamp and the version of the instructions: change any of
+    them and an answer written before is not served again. None when nothing is to be cached or looked for: there
+    is no model or no cache, or the question follows on from another (its answer depends on what came before)."""
+    if not model or cache_hours <= 0 or body.history:
+        return None
+    return cache_key({"q": " ".join(body.question.lower().split()), **body.model_dump(exclude={"question", "follows"}),
+                      "model": settings.answer.get("model"), "data": data_stamp(settings),
+                      "instructions": INSTRUCTIONS_VERSION}, length=64)
+
+
+def filters_set(body: AskBody) -> tuple[str, ...]:
+    """Which choices the reader made beyond the question, for the record of the briefing: their names, never their
+    values."""
+    chosen = [k for k, v in ((body.plan or {}).get("filters") or {}).items() if v not in (None, [], "", True)]
+    chosen += [name for name in ("recency", "role_weight") if getattr(body, name) is not None]
+    return tuple(sorted(chosen))
+
+
+def configuration(settings: Settings, log: SqliteBriefingLog | None) -> BriefingConfig:
+    """Everything that could change a briefing, and the short id of it all: what goes into each briefing's record,
+    so a figure can be compared before and after a change. Never a key, and nothing about a reader. Given the record
+    of briefings, the same call keeps the settings behind the id there."""
+    answer, embedding = settings.answer, settings.embedding
+    return briefing_config(
+        log=log, model=str(answer.get("model")), parse_model=parse_model(settings),
+        instructions=SITE.instructions_version, site_version=SITE.version,
+        also={"ranking": dict(settings.ranking),
+              "embedding": {k: embedding.get(k) for k in ("backend", "model", "dim", "passage_words")},
+              "answer": {k: answer.get(k) for k in ("summary_sources", "comprehensive_sources", "summary_effort",
+                                                    "comprehensive_effort", "query_parse_effort", "max_tokens",
+                                                    "use_fallbacks", "cache_instructions")}})
+
+
+def start_logging(settings: Settings, clock: Clock = SYSTEM_CLOCK) -> logging.Handler:
+    """Turn the structured log on for this process: one line of JSON for each stage a briefing reaches and one for
+    how it ended, in data/logs/briefings.jsonl. A line holds the record's id, a stage's name, milliseconds and an
+    error's class name, and nothing else: never a question, an address or a visitor's code (wts-core
+    docs/adr/0012). Kept for 14 days or 50 MB, whichever is less (``[logs]``)."""
+    logs = settings.section("logs")
+    handler = json_logging(settings.logs_dir / "briefings.jsonl", site=SITE, max_bytes=int(logs["max_bytes"]),
+                           keep=int(logs["keep"]), days=int(logs["days"]), clock=clock)
+    lines = logging.getLogger(LOGGER)
+    lines.addHandler(handler)
+    lines.setLevel(logging.INFO)
+    lines.propagate = False
+    return handler
+
+
+def hidden_records(hidden: list[dict[str, Any]]) -> dict[str, str]:
+    """Of the items hidden now, the records of the archive: each record's id and the note shown in its place."""
+    return {h["item"].removeprefix(RECORD): h["note"] for h in hidden if h["item"].startswith(RECORD)}
+
+
+def without_hidden(events: list[Event], hidden: dict[str, str]) -> list[Event]:
+    """A saved or cached briefing's events with each source that is hidden now replaced by the note shown in its
+    place: its number stays, so the briefing's references still point somewhere, and nothing else of it is sent."""
+    if not hidden:
+        return events
+    return [{**e, "sources": [{"n": card.get("n"), "kind": "hidden", "note": hidden[card["record_id"]]}
+                              if card.get("record_id") in hidden else card for card in e.get("sources") or []]}
+            if e.get("type") == "sources" else e for e in events]
+
+
+class SiteHooks(Hooks):
+    """This site's own steps in the flow of a briefing (``wts_core.briefing.Hooks``)."""
+
+    def __init__(self, hidden: Callable[[], list[dict[str, Any]]]) -> None:
+        self._hidden = hidden  # the items hidden now, while a concern about each is decided
+
+    def on_cached(self, ask: Ask, events: list[Event]) -> list[Event]:
+        """A cached briefing as shown today: its points to check and its judgemental-word marks judged again by
+        the current rules, and its quotes curled (``rechecked``). If the briefing itself is hidden while a concern
+        about it is decided, the note is sent in its place, with the sources; a source that is hidden is replaced
+        by its note."""
+        hidden = self._hidden()
+        notes = {h["item"]: h["note"] for h in hidden}
+        final = next((e for e in events if e.get("type") == "final"), {})
+        note = notes.get(f"/b/{final.get('briefing_id')}")
+        events = without_hidden(events, hidden_records(hidden))
+        if note is not None:
+            return [*(e for e in events if e.get("type") in ("plan", "sources")),
+                    {"type": "final", "answer": None, "usage": None, "note": note}]
+        return rechecked(events)
+
+    def on_event(self, ask: Ask, event: Event) -> Event | None:
+        """An error is sent to the reader as its message and nothing else, as it always was here: whatever else
+        the pipeline put in the event (the token counts of a call the model declined) is for the spending record,
+        which has it by now."""
+        if event.get("type") == "error":
+            return {"type": "error", "message": event.get("message", "")}
+        return event
+
+
 def create_app(settings: Settings | None = None, pipeline: Pipeline | None = None, state: StateDB | None = None,
-               behind_proxy: bool = False) -> FastAPI:
+               behind_proxy: bool = False, *, clock: Clock = SYSTEM_CLOCK, random: Random = SYSTEM_RANDOM) -> FastAPI:
     settings = settings or load_settings()
-    state = state or StateDB(settings.data_dir / "state.db")
-    limits = settings.usage
-    limiter = RateLimiter(int(limits.get("requests_per_minute", 20)))
-    cache_hours = float(limits.get("answer_cache_hours", 168))
-    inflight = InFlight(int(limits.get("briefings_at_once_per_visitor", 2)), int(limits.get("briefings_at_once", 8)),
-                        float(limits.get("briefing_estimate_usd", 0.10)))
+    db = state or open_state(settings, clock)
+    # Everything the flow of a briefing is made of, from [usage]: prices, limits, the spending record, the caps,
+    # the per-minute limiter, the places in progress, the answer cache, saved briefings and the notes of failed
+    # briefings (kept 90 days, as the privacy notice says), on the one clock. This is also the start-up check:
+    # every limit, price and message the flow needs, with whatever is missing named together in one error.
+    parts = desk_parts(settings, db, MESSAGES, new_id=lambda chance: new_briefing_id(chance),
+                       at_once_per_visitor="briefings_at_once_per_visitor", forget_over=FORGET_IDLE_VISITORS_OVER,
+                       keep_failures=True, clock=clock, random=random)
+    record = SqliteBriefingLog(db, clock=clock)  # one record for each question asked (wts-core docs/adr/0012)
+    replies = open_replies(db, parts.archive, clock)
+    desk = parts.desk(configuration(settings, record), log=record, hooks=SiteHooks(replies.all_hidden),
+                      group_of=lambda card: card.get("group"))  # the record counts each briefing's sources by group
     # No generated API pages: Swagger's page loads its script from a CDN and runs inline code, which the site's
     # content security policy blocks, so it showed a blank page. The endpoints are listed at the top of this file.
     app = FastAPI(title="Where Countries Stand", docs_url=None, redoc_url=None, openapi_url=None)
+    app.state.parts, app.state.replies, app.state.record, app.state.db = parts, replies, record, db
     holder: dict[str, Any] = {"pipeline": pipeline}
     memo: dict[str, tuple[float, Any]] = {}
+    check_token = SITE.env("CHECK_TOKEN")
 
     def get_pipeline() -> Pipeline:
         if holder["pipeline"] is None:
             holder["pipeline"] = Pipeline(settings)
-        return holder["pipeline"]
+        p = holder["pipeline"]
+        engine = getattr(p, "engine", None)
+        if engine is not None and getattr(engine, "hidden_records", None) is None:
+            # a record hidden while a concern about it is decided is left out of every search, and so of every
+            # new briefing's sources (the engine is told the ids, and knows nothing of why)
+            engine.hidden_records = lambda: hidden_records(replies.all_hidden())
+        return p
 
     def remembered(key: str, compute: Callable[[], Any], ttl: float = 600.0) -> Any:
         hit = memo.get(key)
-        if hit and time.monotonic() - hit[0] < ttl:
+        if hit and clock.monotonic() - hit[0] < ttl:
             return hit[1]
         value = compute()
-        memo[key] = (time.monotonic(), value)
+        memo[key] = (clock.monotonic(), value)
         return value
 
     def visitor(request: Request) -> str:
-        address = request.client.host if request.client else None
-        if behind_proxy:
-            forwarded = request.headers.get("x-forwarded-for", "")
-            address = forwarded.split(",")[0].strip() or address
-        code = visitor_key(state, address)
-        if not limiter.allow(code):
-            raise HTTPException(429, "Too many requests. Please wait a minute and try again.")
+        """The day's code for this visitor, counted against the per-minute limit. The address itself is never
+        stored or logged."""
+        address = client_address(request.headers, request.client.host if request.client else None,
+                                 behind_proxy=behind_proxy, trust_forwarded_first=True)
+        code = visitor_code(db, address, clock=clock, random=random)
+        try:
+            desk.allow(code)
+        except TooManyRequests as exc:
+            raise HTTPException(429, exc.message) from None
         return code
 
     def request_for(body: AskBody) -> AskRequest:
         return AskRequest(question=body.question, mode=body.mode, plan=body.plan, recency=body.recency,
                           role_weight=body.role_weight, history=[t.model_dump() for t in body.history])
+
+    def is_the_nightly_check(request: Request) -> bool:
+        """Whether the request carries the family's check token (wts-core docs/adr/0010). Such a question skips
+        the answer cache, or it would prove nothing on six nights in seven, and its record is kept apart from
+        readers'."""
+        wanted = (check_token or "").strip()
+        scheme, _, presented = request.headers.get("authorization", "").partition(" ")
+        return bool(wanted) and scheme.lower() == "bearer" and hmac.compare_digest(presented.strip().encode(),
+                                                                                  wanted.encode())
 
     @app.get("/api/health")
     def health():
@@ -389,68 +489,82 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
 
     @app.get("/api/briefings/{bid}")
     def briefing(bid: str):
-        b = saved_briefing(state, bid)
+        b = parts.archive.get(bid)
         if b is None:
             raise HTTPException(404, "There is no briefing at this address.")
-        if b["withdrawn_at"]:
-            raise HTTPException(410, f"This briefing has been withdrawn: {b['withdrawn_reason']}")
-        return {**{k: b[k] for k in ("id", "at", "question", "options")}, "events": rechecked(b["events"])}
+        if b.withdrawn_at:
+            raise HTTPException(410, f"This briefing has been withdrawn: {b.withdrawn_reason}")
+        hidden = replies.all_hidden()
+        note = next((h["note"] for h in hidden if h["item"] == f"/b/{b.id}"), None)
+        if note is not None:  # hidden while a concern about it is decided: the note is shown in its place
+            raise HTTPException(423, note)
+        return {"id": b.id, "at": b.created_at, "question": b.question, "options": b.options,
+                "events": rechecked(without_hidden(b.events, hidden_records(hidden)))}
 
     @app.get("/api/corrections")
     def corrections():
-        return remembered("corrections", lambda: withdrawn_briefings(state), ttl=60)
+        """The public log of what has been put right, newest first: briefings withdrawn, with the reason (the
+        question, not the briefing), and what the owner chose to say publicly when closing a report."""
+        def build() -> list[dict[str, Any]]:
+            withdrawn = [{"date": w.withdrawn_at, "briefing_id": w.id, "question": w.question,
+                          "note": w.withdrawn_reason,
+                          # under the names the corrections page has always read
+                          "id": w.id, "at": w.created_at, "withdrawn_at": w.withdrawn_at, "reason": w.withdrawn_reason}
+                         for w in parts.archive.withdrawn()]
+            return replies.corrections(withdrawn=withdrawn)
+        return remembered("corrections", build, ttl=60)
 
     @app.post("/api/report")
     def report(body: ReportBody, request: Request):
         visitor(request)  # the rate limit
-        return {"ok": True, "id": add_report(state, body.kind, body.page.strip(), body.message.strip(),
-                                             body.contact.strip())}
+        about = briefing_id(body.page)
+        try:
+            rid = replies.report(kind=body.kind, page=body.page, message=body.message, contact=body.contact,
+                                 briefing_id=about, trap=body.website)
+        except Refused as exc:
+            raise HTTPException(422, str(exc)) from None
+        if about and rid is not None:
+            record.mark(about, reported=True)  # what happened next, on that briefing's record
+        return {"ok": True, "id": rid}
 
     # ---- statements under the right of reply (decision 16) ------------------------------------------------------
 
     def site_hosts(request: Request) -> tuple[str, ...]:
         own = (urlsplit(site_url(settings, request)).hostname or "").lower()
-        return (*statements.SITE_HOSTS, *([own] if own else []), (request.url.hostname or "").lower())
+        return (*SITE.hosts, *([own] if own else []), (request.url.hostname or "").lower())
 
     @app.post("/api/statements")
     def add_statement(body: StatementBody, request: Request):
         """A statement as sent: held until the owner has confirmed who sent it, then published or declined."""
         visitor(request)  # the rate limit
         try:
-            page = statements.item_address(body.page, site_hosts(request))
-            name = statements.check_line(body.name, "your name, as it should be shown")
-            role = statements.check_line(body.role, "your role, such as Permanent Representative of Kenya to the "
-                                                    "United Nations")
-            text = statements.check_text(body.text)
-            link = statements.check_link(body.link)
-            email = statements.check_email(body.email)
-        except ValueError as exc:
-            raise HTTPException(422, str(exc)) from exc
-        b = saved_briefing(state, page.removeprefix("/b/"))
-        if b is None or b["withdrawn_at"]:
-            raise HTTPException(422, "There is no briefing at that address. Check the address of the briefing the "
-                                     "statement is about.")
-        return {"ok": True, "id": statements.add_statement(state, page, name, role, text, link, email)}
+            beside = Item(address=BriefingItems.address(body.page, site_hosts(request)))
+            sid = replies.submit(item=beside, name=body.name, role=body.role, text=body.text, link=body.link,
+                                 email=body.email, trap=body.website)
+        except Refused as exc:
+            raise HTTPException(422, str(exc)) from None
+        return {"ok": True, "id": sid}
 
     @app.get("/api/statements")
     def published_statements(page: str = "", country: str = ""):
         """The published statements beside one briefing (``page``, its address) or of one country (``country``)."""
         try:
-            item = statements.item_address(page) if page else None
-            code = statements.check_country(country)
-        except ValueError as exc:
+            item = BriefingItems.address(page) if page else None
+            code = check_country(country)
+        except ValueError as exc:  # Refused is one
             raise HTTPException(422, str(exc)) from exc
         if not item and not code:
             raise HTTPException(422, "Give the address of a briefing (page) or a country's code (country).")
-        return {"statements": statements.published_statements(state, item, code), "note": statements.NOT_ENDORSED}
+        found = replies.published(items=[Item(address=item)] if item else [], about=code)
+        if item and code:  # both asked for: the statements beside that briefing that speak for that country
+            found = [s for s in found if s["item"] == item and s["about"] == code]
+        return {"statements": [as_shown(s) for s in found], "note": NOT_ENDORSED}
 
     def model_available() -> bool:
         """Whether briefings can be written at all (an API key is set), without loading the search engine."""
         if holder["pipeline"] is not None:
             return holder["pipeline"].has_model()
-        from wcs.adapters import has_model
-
-        return has_model(settings)
+        return adapters.has_model(settings)
 
     @app.get("/api/status")
     def status():
@@ -459,11 +573,25 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         source, and whether new briefings are being written, or paused because a spending cap is reached."""
         def build() -> dict[str, Any]:
             on = model_available()
-            paused = check_caps(state, limits) if on else None
-            return {**update_status(settings), "checked_at": datetime.now(UTC).isoformat(timespec="seconds"),
+            paused = parts.caps.site_paused() if on else None
+            return {**update_status(settings), "checked_at": clock.now().isoformat(timespec="seconds"),
                     "briefings": "unavailable" if not on else "paused" if paused else "available",
-                    "briefings_note": paused, "coverage": remembered("coverage", lambda: coverage(settings))}
+                    "briefings_note": paused.message if paused else None,
+                    "coverage": remembered("coverage", lambda: coverage(settings))}
         return remembered("status", build, ttl=60)
+
+    # Counts and ages for whoever holds the family's check token, and for no one else: 404 with no token set on
+    # this site (as any address of the API that isn't there), 401 for a wrong one. Never a question, a name or a
+    # word of a report.
+    check = check_route(SITE, token=check_token, replies=replies,
+                        backups=lambda: backup_ages(Path(os.environ.get("WCS_BACKUP_DIR") or "/backups"), BACKUPS,
+                                                    clock=clock),
+                        figures=lambda: last_day_figures(record, clock=clock), clock=clock)
+
+    @app.get("/api/check")
+    def api_check(authorization: str | None = Header(None)):
+        status_code, answer = check(authorization)
+        return JSONResponse(answer, status_code=status_code)
 
     @app.get("/api/countries")
     def countries_list():
@@ -480,6 +608,8 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         return [{"key": k, "label": v} for k, v in c.group_labels.items()]
 
     def sources_only(body: AskBody, note: str) -> Iterator[dict[str, Any]]:
+        """The plan and the sources, and no briefing, ending with ``note`` for the reader. The question is always
+        read by the built-in rules here, whoever asks and whatever stopped the briefing: it costs nothing."""
         p = get_pipeline()
         req = request_for(body)
         from wcs.rag.query_parse import QueryPlan
@@ -515,88 +645,25 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         who = visitor(request)
         p = get_pipeline()
         model_on = p.has_model()
-        key = None
-        if model_on and cache_hours > 0 and not body.history:
-            key = cache_key({"q": " ".join(body.question.lower().split()), **body.model_dump(exclude={"question"}),
-                             "model": settings.answer.get("model"), "data": data_stamp(settings),
-                             "instructions": INSTRUCTIONS_VERSION})
-        hit = cached_events(state, key, cache_hours) if key and not body.sources_only else None
-        blocked = check_caps(state, limits, who) if model_on and hit is None and not body.sources_only else None
-
-        def events() -> Iterator[dict[str, Any]]:
-            if hit is not None:
-                yield from rechecked(hit)
-                return
-            if body.sources_only:
-                yield from sources_only(body, "Sources only: no briefing was written.")
-                return
-            if blocked:
-                yield from sources_only(body, f"{blocked} The sources found are shown below.")
-                return
-            kept: list[dict[str, Any]] = []
-            text: list[str] = []
-            try:
-                for ev in p.run(request_for(body)):
-                    if ev["type"] == "plan":
-                        if ev.get("parse_error"):
-                            record_failure(state, "question reading", body.question, ev.pop("parse_error"))
-                        if ev.get("usage"):
-                            # priced as the model that read it (the briefing's own when no other is set)
-                            record_usage(state, "parse", parse_model(settings), ev["usage"], limits, who)
-                    if ev["type"] == "error":
-                        # the model declined to answer: noted for the owner, and its call still counted as spent
-                        record_failure(state, "briefing", body.question, ev.get("message", ""))
-                        if ev.get("usage"):
-                            record_usage(state, "answer", ev.get("model"), ev["usage"], limits, who)
-                        ev = {"type": "error", "message": ev.get("message", "")}
-                    if ev["type"] == "final" and ev.get("usage"):
-                        record_usage(state, "answer", ev.get("model"), ev["usage"], limits, who)
-                    if ev["type"] == "final" and ev.get("answer") and not ev["answer"].get("no_records"):
-                        # kept at its own address, /b/<id>, to share and to check complaints against
-                        ev = {**ev, "briefing_id": new_briefing_id()}
-                        saved = [e for e in kept if e["type"] in ("plan", "sources")]
-                        saved += [{"type": "text", "text": "".join(text)}, {**ev, "usage": None}]
-                        # the id it was kept under: another, in the rare case that the first was taken
-                        ev["briefing_id"] = save_briefing(state, ev["briefing_id"], body.question,
-                                                          body.model_dump(exclude={"question", "history"}), saved)
-                    if ev["type"] == "text":
-                        text.append(ev["text"])
-                    elif ev["type"] != "citation":
-                        kept.append(ev)
-                    yield ev
-            except Exception as exc:  # never leave the reader hanging
-                log.exception("ask failed")
-                record_failure(state, "briefing", body.question, f"{type(exc).__name__}: {exc}")
-                yield {"type": "error", "message": "The briefing could not be written just now. The sources found "
-                                                   "are shown above; please try again later."}
-                return
-            final = kept[-1] if kept else {}
-            if key and final.get("type") == "final" and final.get("answer"):
-                replay = [e for e in kept if e["type"] in ("plan", "sources")]
-                replay += [{"type": "text", "text": "".join(text)}, {**final, "usage": None, "cached": True}]
-                store_events(state, key, replay, cache_hours)
-
-        def guarded() -> Iterator[dict[str, Any]]:
-            """A briefing about to be written is reserved at its estimated cost while it runs, and the caps are
-            checked again counting the others in progress, so many questions at once cannot all slip past them."""
-            if hit is not None or body.sources_only or blocked or not model_on:
-                yield from events()
-                return
-            refused = inflight.start(who)
-            if refused:
-                yield from sources_only(body, f"{refused} The sources found are shown below.")
-                return
-            try:
-                late = check_caps(state, limits, who, inflight.pending_usd(besides=1))
-                if late:
-                    yield from sources_only(body, f"{late} The sources found are shown below.")
-                    return
-                yield from events()
-            finally:
-                inflight.finish(who)
-
-        return StreamingResponse(sse(guarded()), media_type="text/event-stream",
-                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+        nightly = is_the_nightly_check(request)
+        if body.follows and body.history:
+            record.mark(body.follows, followed_up=True)  # on the earlier briefing's record: a yes, and no link
+        events = desk.handle(Ask(
+            question=body.question,
+            visitor=who,
+            write=lambda: p.run(request_for(body)),
+            sources_only=lambda note, free: sources_only(body, note),  # always the built-in rules, free or not
+            # a follow-up has no key (answer_key), and neither has the nightly check's question
+            cache_key=None if nightly else answer_key(settings, body, model=model_on, cache_hours=parts.cache_hours),
+            only_sources=body.sources_only,
+            model_available=model_on,
+            follow_up=bool(body.history),
+            mode=body.mode,
+            filters_set=filters_set(body),
+            kind="check" if nightly else "reader",
+            options=body.model_dump(exclude={"question", "history", "follows"}),  # saved with the briefing
+        ))
+        return StreamingResponse(sse(events), media_type="text/event-stream", headers=STREAM_HEADERS)
 
     site = Path(settings.section("site").get("dir") or SITE_DIR)
     partials = Path(settings.section("site").get("partials") or PARTIALS_DIR)
@@ -646,11 +713,14 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     @app.get("/b/{bid}", include_in_schema=False)
     def shared_briefing(request: Request, bid: str):
         """A saved briefing: the home page, which loads it, with the question as its title and link preview."""
-        b = saved_briefing(state, bid) if re.fullmatch(r"[A-Za-z0-9_-]{6,20}", bid) else None
+        b = parts.archive.get(bid) if re.fullmatch(r"[A-Za-z0-9_-]{6,20}", bid) else None
         text, base = rendered["index"], site_url(settings, request)
         if b is None:
             return html_page(text.replace(SITE_MARK, base), status_code=404)
-        return html_page(question_page(text, b["question"], base, "", f"/b/{bid}"))
+        if replies.hidden(f"/b/{b.id}"):  # hidden for now: the page says so (its script asks), and names nothing
+            return html_page(text.replace(SITE_MARK, base).replace(
+                "</head>", '  <meta name="robots" content="noindex">\n</head>', 1))
+        return html_page(question_page(text, b.question, base, "", f"/b/{bid}"))
 
     @app.exception_handler(StarletteHTTPException)
     async def not_found(request: Request, exc: StarletteHTTPException):

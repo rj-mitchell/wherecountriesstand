@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Callable, Collection
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from datetime import date
@@ -98,6 +99,9 @@ class Engine:
         self._has_vectors = False
         self._meaning: bool | None = None  # whether the index was built with this embedder; None: not yet asked
         self._embedded_checked: tuple[bool, float] | None = None  # mostly_embedded's answer, and when it was given
+        # the ids of records to leave out of every search for now (set by the web app: a record hidden while a
+        # concern about it is decided); None: nothing is
+        self.hidden_records: Callable[[], Collection[str]] | None = None
 
     def has_vectors(self) -> bool:
         if not self._has_vectors:
@@ -145,6 +149,9 @@ class Engine:
         f = filters or Filters()
         r = self.settings.ranking
         where = build_where(f)
+        hidden = sorted(self.hidden_records()) if self.hidden_records is not None else []
+        if hidden:
+            where += f" AND record_id NOT IN ({', '.join(sql_str(r) for r in hidden)})"
         timings: dict[str, float] = {}
         clock = time.perf_counter()
 

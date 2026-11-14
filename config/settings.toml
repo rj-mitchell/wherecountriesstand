@@ -124,3 +124,10 @@ dir = ""
 # The site's public address, for robots.txt, the sitemap and link previews (default: WCS_SITE_URL, or https://
 # and DOMAIN, or the address it was reached at).
 url = ""
+
+[logs]
+# The structured log of briefings (data/logs/briefings.jsonl): one line for each stage a briefing reaches and one
+# for how it ended, never a reader's words. Kept for 14 days or 50 MB, whichever is less (wts-core docs/adr/0012).
+max_bytes = 3000000
+keep = 15
+days = 14

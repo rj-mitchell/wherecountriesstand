@@ -150,3 +150,144 @@ def test_a_new_site_has_nothing_to_import_and_keeps_no_copy(settings):
 def test_the_database_is_marked_as_this_sites(old):
     db = open_state(old, FixedClock(NOW))
     assert db.get("site") == "wcs"
+
+
+# ---- the site's own figures are the same after the import as before -----------------------------------------------
+
+
+@pytest.fixture
+def site(old, monkeypatch):
+    """The site as it is now, opened on the old database at the moment the old code's figures were read."""
+    from fastapi.testclient import TestClient
+
+    from wcs import cli
+    from wcs.api.app import create_app
+    from wcs.reference.countries import countries
+
+    clock = FixedClock(NOW)
+    monkeypatch.setattr(cli, "CLOCK", clock)
+    pipeline = shared.ScriptedPipeline(clock.advance, old.answer["model"], countries())
+    api = TestClient(create_app(old, pipeline=pipeline, state=open_state(old, clock), clock=clock))
+    api.clock, api.settings = clock, old
+    return api
+
+
+def run(*args):
+    from typer.testing import CliRunner
+
+    from wcs import cli
+
+    result = CliRunner().invoke(cli.app, list(args))
+    return [result.exit_code, result.output]
+
+
+def test_spending_today_and_this_month_and_each_visitors_count_are_what_they_were(site):
+    from wcs.spending import summary, warnings
+
+    parts = site.app.state.parts
+    assert parts.spending.spent_since(shared.DAY) == pytest.approx(GOLDEN["spent_today"], abs=1e-9)
+    assert parts.spending.spent_since(shared.DAY[:7]) == pytest.approx(GOLDEN["spent_this_month"], abs=1e-9)
+    for visitor, asked in GOLDEN["briefings_today"].items():
+        assert parts.spending.briefings_today(visitor=visitor) == asked, visitor
+    # a visitor at their daily limit before the move is at it after: the same words, for the same visitors
+    limited = type(parts.caps)(parts.spending, type(parts.limits)(2, None, parts.limits.daily_cap_usd,
+                                                                   parts.limits.monthly_cap_usd), parts.messages,
+                               site.clock)
+    for visitor, said in GOLDEN["refused"].items():
+        refusal = limited.refusal(visitor=visitor)
+        assert (refusal.message if refusal else None) == said, visitor
+    # `wcs usage`: the same report, the same warnings, the same lines printed
+    report = summary(site.settings, site.app.state.db, site.clock)
+    assert report == GOLDEN["summary"] and warnings(report) == GOLDEN["warnings"]
+    assert shared.plain(run("usage"), tmp=site.settings.data_dir.parent) == GOLDEN["usage_command"]
+    assert shared.plain(run("usage", "--json"), tmp=site.settings.data_dir.parent) == GOLDEN["usage_command_json"]
+    # the day's visitor secret came across, so a visitor's code today is what it was this morning
+    assert site.app.state.db.get(f"visitor_salt:{shared.DAY}") == GOLDEN["salt"]
+
+
+def test_cached_answers_are_still_served_and_too_old_ones_are_not(site):
+    cache = site.app.state.parts.cache
+    for key, events in GOLDEN["cached"].items():
+        assert cache.get(key, 168) == events, key
+    assert sum(1 for events in GOLDEN["cached"].values() if events) == 1
+
+
+def test_saved_briefings_still_open_at_their_addresses(site):
+    for bid, was in GOLDEN["briefings"].items():
+        r = site.get(f"/api/briefings/{bid}")
+        if was is None:
+            assert r.status_code == 404
+        elif was["withdrawn_at"]:
+            assert r.status_code == 410 and r.json()["detail"].endswith(was["withdrawn_reason"])
+        else:
+            from wcs.rag.checks import rechecked
+
+            assert r.status_code == 200
+            assert r.json() == {**{k: was[k] for k in ("id", "at", "question", "options")},
+                                "events": rechecked(was["events"])}
+            assert site.get(f"/b/{bid}").status_code == 200
+    log = site.get("/api/corrections").json()
+    assert [{k: entry[k] for k in ("id", "at", "question", "withdrawn_at", "reason")} for entry in log] == \
+        GOLDEN["withdrawn"]
+
+
+def test_statements_are_still_shown_and_reports_still_listed(site):
+    for where, was in GOLDEN["published"].items():
+        params = {"country": where} if len(where) == 3 else {"page": where}
+        assert site.get("/api/statements", params=params).json()["statements"] == was, where
+    # the owner's listings: every report, with the takedown request first now; every statement, line for line but
+    # for what is said of the three below
+    code, text = run("reports", "--all")
+    was_code, was_text = GOLDEN["reports_command"]
+
+    def blocks(listing):
+        return ["#" + block for block in ("\n" + listing).split("\n#") if block]
+
+    assert code == was_code == 0
+    now_blocks, was_blocks = blocks(text), blocks(was_text)
+    assert now_blocks[0].startswith("#3 ") and "takedown" in now_blocks[0]
+    # report 1 had waited more than three months unanswered: its contact address is gone (below)
+    assert [b for b in now_blocks if not b.startswith("#1 ")] == [
+        b for b in [was_blocks[3], *was_blocks[:3], *was_blocks[4:]] if not b.startswith("#1 ")]
+
+
+def test_what_has_waited_too_long_lapses_at_the_first_write_and_its_address_goes(site):
+    """wts-core docs/AS-BUILT.md, "replies", "At adoption": the first write or listing after the import applies the
+    three months to rows the old code never applied them to. On this database: a statement declined by hand with no
+    closing time (the old code judged by the closing time, so its sender's address would have been kept for ever),
+    a statement nobody decided since July, and a report open since July."""
+    replies = site.app.state.replies
+    before = {s["id"]: s for s in GOLDEN["statements"]}
+    assert before[6]["status"] == "declined" and before[6]["ended_at"] is None and before[6]["email"]
+    assert before[7]["status"] == "pending" and before[7]["email"] == "waiting@example.org"
+    now = {s["id"]: s for s in replies.statements()}  # the owner's listing tidies first, as every write does
+    assert now[6]["email"] is None  # judged by when it was sent: gone
+    assert now[7]["status"] == "declined" and now[7]["email"] is None
+    assert now[7]["reason"] == "No decision was made in time; please send it again."
+    assert replies.log(7)[-1]["action"] == "lapsed"
+    # everything else is as it was: who, what, where, and the addresses still within their three months
+    for sid, was in before.items():
+        if sid in (6, 7):
+            continue
+        s = now[sid]
+        # statement 4 was withdrawn on 1 August, more than three months ago: its address is due to go, as it was
+        # under the old code at its next tidying
+        email = None if sid == 4 else (was["email"] or None)
+        assert (s["status"], s["email"], s["item"], s["about"], s["name"], s["text"], s["reason"]) == (
+            was["status"], email, was["page"], was["country"], was["name"], was["text"], was["reason"]), sid
+    assert now[5]["email"] == "mission@example.org"  # withdrawn on 6 November: kept until February
+    reports = {r["id"]: r for r in replies.reports(open_only=False)}
+    assert reports[1]["contact"] is None and reports[1]["closed_at"] is None  # still open; its address deleted
+    assert reports[2]["contact"] == "reader@example.org"
+    assert replies.waiting().statements == 1 and replies.waiting().reports == 5
+    # the old tables still hold what they held: going back loses nothing
+    assert rows(site.settings.state_db, "SELECT email FROM statements WHERE id IN (6, 7) ORDER BY id") == [
+        ("mission@example.org",), ("waiting@example.org",)]
+
+
+def test_new_rows_are_numbered_on_from_the_old_ones(site):
+    r = site.post("/api/report", json={"kind": "error", "message": "A new report."})
+    assert r.json() == {"ok": True, "id": 7}
+    r = site.post("/api/statements", json={"page": "/b/Briefing01", "name": "New Sender", "role": "Ambassador",
+                                           "text": "New words.", "email": "new@example.org"})
+    assert r.json() == {"ok": True, "id": 8}

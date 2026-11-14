@@ -471,20 +471,26 @@ def health(report: Report, today: date | None = None) -> None:
 
 def spending(settings: Settings, report: Report) -> None:
     """The site's spending and failed briefings, from its own database (the site and the updater share the data
-    folder), so the update report is the one place to look. Also deletes statements' confirming addresses that are
-    due to go (``wcs.api.statements.forget_emails``)."""
-    path = settings.data_dir / "state.db"
-    if not path.exists():
+    folder), so the update report is the one place to look. Also does the right of reply's housekeeping: the
+    confirming addresses of statements that ended three months ago are deleted, and what nobody decided in three
+    months lapses (``wcs.replies``; ``wcs tidy`` does the same each night)."""
+    if not settings.state_db.exists():
         return
-    from wcs.api import statements, usage
+    from wts_core.usage import BriefingArchive, token_id
+
+    from wcs import spending as spent
+    from wcs.replies import open_replies
+    from wcs.state import open_state
 
     try:
-        state = usage.StateDB(path)
-        report.warnings += usage.warnings(usage.summary(state, settings.usage, days=1))
+        db = open_state(settings)
+        report.warnings += spent.warnings(spent.summary(settings, db, days=1))
+        replies = open_replies(db, BriefingArchive(db, new_id=lambda: token_id(8)))
         # the privacy notice: a statement's confirming address goes three months after it is withdrawn or declined
-        statements.forget_emails(state)
+        replies.forget_old_emails()
+        replies.lapse_undecided()
     except Exception as exc:  # the report itself matters more
-        report.warnings.append(f"spending: could not read {path} ({type(exc).__name__}: {exc})")
+        report.warnings.append(f"spending: could not read {settings.state_db} ({type(exc).__name__}: {exc})")
 
 
 def backups(report: Report, folder: Path | None = None) -> None:

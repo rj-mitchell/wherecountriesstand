@@ -16,10 +16,12 @@ older than the backups are kept. docs/OPERATIONS.md, "The state database", says 
 
 from __future__ import annotations
 
+import sqlite3
+
 from wts_core import observe, replies, usage
 from wts_core.ops import BackupSpec
 from wts_core.ports import SYSTEM_CLOCK, Clock
-from wts_core.state import Import, Migration, StateDB
+from wts_core.state import Import, Migration, StateDB, columns
 
 from wcs.config import SITE, Settings
 
@@ -50,16 +52,23 @@ def migrations() -> tuple[Migration, ...]:
 # statement with no link, a report with no page and anything with no address had an empty text and now has none.
 # A closed report is recorded as resolved: the old table had no outcome. The day's visitor secret comes across
 # under its own name, so a visitor's count for today carries on.
+def _bring_spending(con: sqlite3.Connection) -> list[str]:
+    """The spending rows. A database from before cache writes were recorded (the oldest backups) has no such
+    column in ``usage``: those rows had none."""
+    writes = "coalesce(cache_write_tokens, 0)" if "cache_write_tokens" in columns(con, "usage") else "0"
+    return ["INSERT INTO wts_spending (id, at, kind, model, visitor, input_tokens, output_tokens, cache_read_tokens, "
+            "cache_write_tokens, cost_usd) SELECT id, coalesce(at, ''), coalesce(kind, ''), model, visitor, "
+            f"coalesce(input_tokens, 0), coalesce(output_tokens, 0), coalesce(cache_read_tokens, 0), {writes}, "
+            "coalesce(cost_usd, 0) FROM usage"]
+
+
 IMPORTS = (
     Import(
         name="wcs-state",
         statements=(
             "INSERT OR IGNORE INTO wts_kv (key, value) SELECT key, value FROM kv "
             "WHERE key LIKE 'visitor_salt:%' AND value IS NOT NULL",
-            "INSERT INTO wts_spending (id, at, kind, model, visitor, input_tokens, output_tokens, cache_read_tokens, "
-            "cache_write_tokens, cost_usd) SELECT id, coalesce(at, ''), coalesce(kind, ''), model, visitor, "
-            "coalesce(input_tokens, 0), coalesce(output_tokens, 0), coalesce(cache_read_tokens, 0), "
-            "coalesce(cache_write_tokens, 0), coalesce(cost_usd, 0) FROM usage",
+            _bring_spending,
             "INSERT OR IGNORE INTO wts_answer_cache (key, created_at, events) SELECT key, created_at, events "
             "FROM answer_cache WHERE created_at IS NOT NULL AND events IS NOT NULL",
             "INSERT INTO wts_failures (id, at, kind, question, error) SELECT id, coalesce(at, ''), "

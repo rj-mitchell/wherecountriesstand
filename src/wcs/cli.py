@@ -8,6 +8,7 @@
     wcs backup --to /backups               # copy the state database (scheduled)
     wcs restore /backups/wcs-state-<day>.sqlite.gz   # put a backup back (with the site stopped)
     wcs reports && wcs statements          # problem reports, and statements under the right of reply
+    wcs waiting                            # what is waiting for a decision, and for how long
     wcs search "climate finance" --group sids
     wcs ask "How have small island States spoken about climate change since 2015?"
 """
@@ -16,13 +17,22 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Mapping
 from datetime import date
+from typing import Any
 
 import typer
+from wts_core.cli import RepliesCommands, RepliesWording, replies_commands
+from wts_core.ports import SYSTEM_CLOCK, Clock
+from wts_core.replies import Replies, word_count
+from wts_core.state import StateDB
+from wts_core.usage import BriefingArchive, token_id
 
-from wcs.config import load_settings
+from wcs.config import Settings, load_settings
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
+# the clock the owner's commands read: a test stands its own in here
+CLOCK: Clock = SYSTEM_CLOCK
 
 
 def _years(spec: str | None) -> set[int] | None:
@@ -47,10 +57,13 @@ def serve(host: str = "127.0.0.1", port: int = 8000,
     """Run the site and its API."""
     import uvicorn
 
-    from wcs.api.app import create_app
+    from wcs.api.app import create_app, start_logging
 
-    # requests are not logged: the privacy notice (web/site/privacy.html) says so
-    uvicorn.run(create_app(load_settings(), behind_proxy=behind_proxy), host=host, port=port, access_log=False,
+    settings = load_settings()
+    # Requests are not logged: the privacy notice (web/site/privacy.html) says so. What is logged is the site's own
+    # work on each briefing (the stages it reached and how it ended), with nothing of the reader's in it.
+    start_logging(settings)
+    uvicorn.run(create_app(settings, behind_proxy=behind_proxy), host=host, port=port, access_log=False,
                 proxy_headers=behind_proxy, forwarded_allow_ips="*" if behind_proxy else None)
 
 
@@ -252,14 +265,13 @@ def usage(days: int = typer.Option(7, help="list daily spend and failures for th
           as_json: bool = typer.Option(False, "--json")) -> None:
     """Spending on briefings today and this month against the caps, and briefings that failed (from data/state.db).
     Exits 1 when spending is at 80% of a cap or more, or a briefing failed in the last day."""
-    from wcs.api.usage import StateDB, summary, warnings
+    from wcs.spending import summary, warnings
 
     s = load_settings()
-    path = s.data_dir / "state.db"
-    if not path.exists():
-        typer.echo(f"no spending recorded yet ({path} does not exist)")
+    if not s.state_db.exists():
+        typer.echo(f"no spending recorded yet ({s.state_db} does not exist)")
         return
-    report = summary(StateDB(path), s.usage, days=days)
+    report = summary(s, _state(s), _clock(), days=days)
     alerts = warnings(report)
     if as_json:
         typer.echo(json.dumps({**report, "warnings": alerts}, indent=1))
@@ -281,40 +293,51 @@ def usage(days: int = typer.Option(7, help="list daily spend and failures for th
         raise typer.Exit(1)
 
 
-def _done(ok: bool, done: str, failed: str) -> None:
-    """Say what an owner's command on reports, statements or briefings did. One that did nothing (no such number, or
-    not in a state to be changed) exits 1, as the sister sites' commands do, so it cannot be taken for done."""
-    typer.echo(done if ok else failed)
-    if not ok:
-        raise typer.Exit(1)
+# ---- reports, statements under the right of reply, and hidden items (decision 16) ------------------------------
+#
+# The commands are the Where They Stand sites' shared ones (wts-core, ``wts_core.cli.replies_commands``), in the one
+# shape every site has: `wcs reports list|show|close`, `wcs statements list|show|publish|decline|update|withdraw|
+# remove|log`, `wcs hide`, `wcs unhide`, `wcs hidden`, `wcs waiting`. Every line they print is this site's, below.
+# The names the site had before (`wcs reports`, `wcs close-report 3`, `wcs statements`, `wcs publish-statement 3`…)
+# still work, for this release: the two listings as each group's own action when no command is given, the rest as
+# further names for the same commands.
+
+def _clock() -> Clock:
+    return CLOCK
 
 
-@app.command("reports")
-def list_reports(all_: bool = typer.Option(False, "--all", help="include reports already dealt with")) -> None:
-    """Problems and takedown requests sent through the site's form (newest first)."""
-    from wcs.api.usage import StateDB, reports
+def _state(settings: Settings | None = None) -> StateDB:
+    from wcs.state import open_state
 
-    for r in reports(StateDB(load_settings().data_dir / "state.db"), open_only=not all_):
-        typer.echo(f"#{r['id']}  {r['at']}  {r['kind']}  {r['page'] or '-'}{'  (closed)' if r['closed_at'] else ''}")
-        typer.echo(f"    {r['message']}")
-        if r["contact"]:
-            typer.echo(f"    reply to: {r['contact']}")
+    return open_state(settings or load_settings(), _clock())
 
 
-@app.command("close-report")
-def close_report_cmd(report_id: int) -> None:
-    """Mark a report dealt with. Its contact address is deleted (the privacy notice says so)."""
-    from wcs.api.usage import StateDB, close_report
-
-    ok = close_report(StateDB(load_settings().data_dir / "state.db"), report_id)
-    _done(ok, "closed", "no open report with that number")
+def _briefings(db: StateDB) -> BriefingArchive:
+    return BriefingArchive(db, new_id=lambda: token_id(8), clock=_clock())
 
 
-def _statement_lines(st: dict) -> list[str]:
-    from wcs.api.statements import word_count
+def _replies() -> Replies:
+    from wcs.replies import open_replies
 
-    lines = [f"#{st['id']}  {st['at']}  {st['status']}  {st['page']}"
-             + (f"  (speaks for {st['country']})" if st["country"] else ""),
+    db = _state()
+    return open_replies(db, _briefings(db), _clock())
+
+
+def _report_lines(r: Mapping[str, Any]) -> list[str]:
+    lines = [f"#{r['id']}  {r['at']}  {r['kind']}  {r['page'] or '-'}{'  (closed)' if r['closed_at'] else ''}",
+             f"    {r['message']}"]
+    if r["contact"]:
+        lines.append(f"    reply to: {r['contact']}")
+    if r["closed_at"] and (r["resolution"] or r["public_note"]):
+        lines.append(f"    {r['status']}" + (f": {r['resolution']}" if r["resolution"] else "")
+                     + (f" (said publicly: {r['public_note']})" if r["public_note"] else ""))
+    return lines
+
+
+def _statement_lines(st: Mapping[str, Any]) -> list[str]:
+    shown_from = max(st["published_at"] or "", st["updated_at"] or "")[:10]  # the date of the words now shown
+    lines = [f"#{st['id']}  {st['at']}  {st['status']}  {st['item']}"
+             + (f"  (speaks for {st['about']})" if st["about"] else ""),
              f"    from: {st['name']}, {st['role']}"]
     if st["email"]:
         lines.append(f"    confirm with: {st['email']}")
@@ -322,123 +345,120 @@ def _statement_lines(st: dict) -> list[str]:
         lines.append(f"    record: {st['link']}")
     lines += [f"    {para}" for para in st["text"].splitlines() if para.strip()]
     # the owner's note of how the sender was confirmed, from the log's entry for the publishing
-    lines += [f"    sender confirmed: {e['note']}" for e in st["log"] if e["action"] == "published" and e.get("note")]
-    lines.append(f"    ({word_count(st['text'])} words"
-                 + (f"; shown from {st['shown_on']}" if st["status"] == "published" else "")
+    lines += [f"    sender confirmed: {e['note']}" for e in st["log"] if e["action"] == "published" and e["note"]]
+    lines.append(f"    ({st['words']} words"
+                 + (f"; shown from {shown_from}" if st["status"] == "published" else "")
                  + (f"; {st['status']}: {st['reason']}" if st["reason"] else "") + ")")
     return lines
 
 
-def _statements_state():
-    """The state database, with the confirming addresses of statements that ended three months ago deleted first
-    (the privacy notice)."""
-    from wcs.api.statements import forget_emails
-    from wcs.api.usage import StateDB
-
-    state = StateDB(load_settings().data_dir / "state.db")
-    forget_emails(state)
-    return state
-
-
-def _country(code: str | None) -> str | None:
-    from wcs.api.statements import check_country
-
-    try:
-        return check_country(code)
-    except ValueError as exc:
-        typer.echo(f"error: {exc}", err=True)
-        raise typer.Exit(1) from exc
-
-
-@app.command("statements")
-def list_statements(all_: bool = typer.Option(False, "--all", help="include declined and withdrawn statements")) -> None:
-    """Statements under the right of reply sent through the site, newest first: those waiting for a decision and
-    those shown. Confirm who sent one (reply to its address, ideally a mission's or government's) before publishing."""
-    from wcs.api.statements import statements
-
-    for st in statements(_statements_state(), open_only=not all_):
-        typer.echo("\n".join(_statement_lines(st)))
-
-
-# the same command under Where Councils Stand's name for it, so the owner's habit works on either site
-app.command("list-statements", hidden=True)(list_statements)
-
-
-@app.command("publish-statement")
-def publish_statement_cmd(statement_id: int, checked: str = typer.Option(
-        ..., help="how you confirmed who sent it, for the log (never shown on the site), e.g. 'Reply from the "
-                  "mission's published address, 14 November.' Do not put the sender's email address in it: the "
-                  "privacy notice promises that address is deleted"),
-        country: str = typer.Option(
-        None, help="the country it speaks for (ISO alpha-3, e.g. KEN), for that country's page once there is one")) \
-        -> None:
-    """Show a waiting statement beside its briefing, dated today, as written (never edited), once you have confirmed
-    who sent it: --checked says how."""
-    from wcs.api.statements import publish_statement
-
-    try:
-        ok = publish_statement(_statements_state(), statement_id, _country(country), checked=checked)
-    except ValueError as exc:
-        typer.echo(f"error: {exc}", err=True)
-        raise typer.Exit(1) from exc
-    _done(ok, "published", "no waiting statement with that number")
-
-
-@app.command("decline-statement")
-def decline_statement_cmd(statement_id: int, reason: str = typer.Option(
-        ..., help="for the author and the log, e.g. 'It is about another delegation's conduct.'")) -> None:
-    """Decline a waiting statement, with the reason (tell its author). Its address is deleted three months later."""
-    from wcs.api.statements import decline_statement
-
-    ok = decline_statement(_statements_state(), statement_id, reason)
-    _done(ok, "declined", "no waiting statement with that number")
+REPLIES_COMMANDS = RepliesCommands(
+    listed=("pending", "published"),
+    about_option="--country",
+    withdraw_note="Withdrawn by its author.",
+    outcome="resolved",  # how `reports close` records a report when --outcome is not given
+    tidy=None,  # the nightly housekeeping is a step of `wcs tidy`
+    # the names these commands had before, kept out of the help
+    also={"close-report": "reports_close", "list-statements": "statements_list",
+          "publish-statement": "statements_publish", "decline-statement": "statements_decline",
+          "update-statement": "statements_update", "withdraw-statement": "statements_withdraw"},
+    help={
+        "reports": "Problems and takedown requests sent through the site's form. With no command, those still open.",
+        "statements": "Statements under the right of reply sent through the site. With no command, those waiting "
+                      "for a decision and those shown.",
+        "reports_list": "Problems and takedown requests sent through the site's form: takedown requests first, "
+                        "then newest first.",
+        "reports_close": "Mark a report dealt with. Its contact address is deleted (the privacy notice says so).",
+        "statements_list": "Statements under the right of reply sent through the site, newest first: those waiting "
+                           "for a decision and those shown. Confirm who sent one (reply to its address, ideally a "
+                           "mission's or government's) before publishing.",
+        "statements_publish": "Show a waiting statement beside its briefing, dated today, as written (never "
+                              "edited), once you have confirmed who sent it: --checked says how.",
+        "statements_publish.checked": "how you confirmed who sent it, for the log (never shown on the site), e.g. "
+                                      "'Reply from the mission's published address, 14 November.' Do not put the "
+                                      "sender's email address in it: the privacy notice promises that address is "
+                                      "deleted",
+        "statements_publish.about": "the country it speaks for (ISO alpha-3, e.g. KEN), for that country's page "
+                                    "once there is one",
+        "statements_decline": "Decline a waiting statement, with the reason (tell its author). Its address is "
+                              "deleted three months later.",
+        "statements_decline.reason": "for the author and the log, e.g. 'It is about another delegation's conduct.'",
+        "statements_update": "Change a statement at its author's request (confirmed from their address). A "
+                             "published one with new words is dated afresh.",
+        "statements_update.text": "the author's new wording, as sent",
+        "statements_update.text_file": "the new wording, from a file",
+        "statements_update.link": "the link to the record ('' for none)",
+        "statements_update.about": "the country it speaks for (ISO alpha-3)",
+        "statements_withdraw": "Take a statement down at its author's request. Its address is deleted three months "
+                               "later.",
+        "statements_remove": "Take a published statement down because it breaks the rules (policy 7.2: say why). "
+                             "Its address is deleted three months later.",
+        "hide": "Hide an item while a concern about it is decided: a saved briefing (/b/<id>), or a record of the "
+                "archive (record:<its id, from its source card>). The note is shown in its place.",
+    },
+)
+REPLIES_WORDING = RepliesWording(
+    report=_report_lines,
+    statement=_statement_lines,
+    log_entry=lambda e: [f"    {e['at']}  {e['action']}" + (f": {e['note']}" if e["note"] else "")],
+    hidden_item=lambda h: [f"{h['item']}  hidden since {h['at'][:10]}", f"    shown in its place: {h['note']}"],
+    waiting="waiting for a decision: {reports} reports, {statements} statements; hidden for now: {hidden} items; "
+            "the oldest has waited {oldest_working_days} working days",
+    published="published", declined="declined", updated="updated", withdrawn="withdrawn", removed="removed",
+    closed="closed", hid="hidden: {item}", unhid="shown again: {item}",
+    tidied="right of reply: {lapsed} statements lapsed undecided, {emails} confirming addresses deleted, "
+           "{contacts} old reports' contact details deleted, {counts} old daily counts deleted",
+    not_done="error: {message}", refused="error: {message}", errors_to_stderr=True,
+)
 
 
-@app.command("update-statement")
-def update_statement_cmd(statement_id: int, text: str = typer.Option(None, help="the author's new wording, as sent"),
-                         text_file: str = typer.Option(None, help="the new wording, from a file"),
-                         name: str = typer.Option(None), role: str = typer.Option(None),
-                         link: str = typer.Option(None, help="the link to the record ('' for none)"),
-                         country: str = typer.Option(None, help="the country it speaks for (ISO alpha-3)")) -> None:
-    """Change a statement at its author's request (confirmed from their address). A published one with new words is
-    dated afresh."""
-    from pathlib import Path
+def _country(code: str) -> str:
+    from wcs.replies import check_country
 
-    from wcs.api.statements import check_line, check_link, check_text, update_statement
-
-    try:
-        new_text = check_text(Path(text_file).read_text(encoding="utf-8") if text_file else text) \
-            if (text or text_file) else None
-        new_name = check_line(name, "a name") if name is not None else None
-        new_role = check_line(role, "a role") if role is not None else None
-        new_link = check_link(link) if link is not None else None
-    except ValueError as exc:
-        typer.echo(f"error: {exc}", err=True)
-        raise typer.Exit(1) from exc
-    ok = update_statement(_statements_state(), statement_id, text=new_text, name=new_name, role=new_role,
-                          link=new_link, country=_country(country))
-    _done(ok, "updated", "nothing changed: no waiting or published statement with that number, or no change")
+    return check_country(code) or ""
 
 
-@app.command("withdraw-statement")
-def withdraw_statement_cmd(statement_id: int, reason: str = typer.Option(
-        "Withdrawn by its author.", help="if the site removes it, why (policy 7.2: say why)")) -> None:
-    """Take a statement down, at its author's request or because it breaks the rules. Its address is deleted three
-    months later."""
-    from wcs.api.statements import withdraw_statement
+reports_app = typer.Typer(help=REPLIES_COMMANDS.help["reports"])
+statements_app = typer.Typer(help=REPLIES_COMMANDS.help["statements"])
 
-    ok = withdraw_statement(_statements_state(), statement_id, reason)
-    _done(ok, "withdrawn", "no waiting or published statement with that number")
+
+@reports_app.callback(invoke_without_command=True)
+def list_reports(ctx: typer.Context,
+                 all_: bool = typer.Option(False, "--all", help="include reports already dealt with")) -> None:
+    if ctx.invoked_subcommand is not None:
+        return  # one of the commands was asked for: nothing to do here
+    for r in _replies().reports(open_only=not all_):  # `wcs reports`, as it always was
+        typer.echo("\n".join(_report_lines(r)))
+
+
+@statements_app.callback(invoke_without_command=True)
+def list_statements(ctx: typer.Context, all_: bool = typer.Option(
+        False, "--all", help="include declined, withdrawn and removed statements")) -> None:
+    if ctx.invoked_subcommand is not None:
+        return
+    desk = _replies()  # `wcs statements`, as it always was
+    for st in desk.statements():
+        if all_ or st["status"] in REPLIES_COMMANDS.listed:
+            typer.echo("\n".join(_statement_lines({**st, "words": word_count(st["text"]), "log": desk.log(st["id"])})))
+
+
+app.add_typer(replies_commands(_replies, REPLIES_COMMANDS, REPLIES_WORDING, about=_country,
+                               groups={"reports": reports_app, "statements": statements_app}))
 
 
 @app.command()
 def withdraw(briefing_id: str, reason: str = typer.Option(..., help="shown at its address and on the corrections "
                                                                    "page, e.g. 'It misattributed a statement.'")) -> None:
     """Withdraw a saved briefing (/b/<id>): its address then says why, and the corrections page lists it."""
-    from wcs.api.usage import StateDB, withdraw_briefing
+    from wts_core.observe import SqliteBriefingLog
 
-    ok = withdraw_briefing(StateDB(load_settings().data_dir / "state.db"), briefing_id, reason)
-    _done(ok, "withdrawn", "no briefing with that id")
+    db = _state()
+    ok = _briefings(db).withdraw(briefing_id, reason)
+    if ok:
+        SqliteBriefingLog(db, clock=_clock()).mark(briefing_id, corrected=True)  # on that briefing's record
+    typer.echo("withdrawn" if ok else "no briefing with that id")
+    if not ok:
+        raise typer.Exit(1)
 
 
 @app.command("gd-website")
