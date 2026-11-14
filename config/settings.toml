@@ -141,3 +141,15 @@ days = 14
 # weekly report proposes them from that week's figures, and the owner writes them here (or in
 # data/settings.local.toml). The names are p95_full_briefing_ms, error_rate, check_failure_rate, not_useful_rate
 # and daily_cost_usd. An alert never comes from a number nobody chose.
+
+[eval]
+# The most a run of the test questions may spend on the model, in US dollars (`wcs eval run`, which has each
+# briefing written): no run starts without a limit, and it stops cleanly once spending reaches it.
+max_cost_usd = 3.0
+
+[eval.thresholds]
+# What a run is held to (a threshold is min_ or max_ and the name of a figure). Citations and quotations must all
+# check and nothing may fail; the rest are left until the first run on the server's record gives a baseline.
+max_invalid_citations = 0
+max_unverified_quotations = 0
+max_errors = 0

@@ -31,6 +31,9 @@ ADDED = {
     ("logs", "max_bytes"): 3000000, ("logs", "keep"): 15, ("logs", "days"): 14,
     # for the weekly report's themes: how alike two questions must be, for this embedding model
     ("embedding", "theme_similarity"): 0.8,
+    # what an evaluation run with each briefing written may spend, and what it is held to
+    ("eval", "max_cost_usd"): 3.0,
+    ("eval", "thresholds"): {"max_invalid_citations": 0, "max_unverified_quotations": 0, "max_errors": 0},
 }
 
 

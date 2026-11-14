@@ -7,7 +7,7 @@ so a web page can show each step; ``answer_once`` collects them into one result 
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
@@ -120,7 +120,10 @@ class Pipeline:
                 self.votes.find(plan.search_text, plan.filters, n, strict)
         return result, votes, build_sources(result.records, votes, plan.group_by)
 
-    def run(self, req: AskRequest) -> Iterator[dict[str, Any]]:
+    def run(self, req: AskRequest, keep: Callable[..., None] | None = None) -> Iterator[dict[str, Any]]:
+        """The events of one briefing. ``keep``, if given, is handed what the model was sent and what it wrote back
+        (the documents, the finished blocks and each source's heading): how an evaluation run keeps a briefing, so
+        that the checks can be run over it again later without the model."""
         plan, parse_usage = self.make_plan(req)
         ev: dict[str, Any] = {"type": "plan", "plan": plan.to_dict(), "usage": parse_usage}
         if plan.parse_error:
@@ -163,6 +166,8 @@ class Pipeline:
         # British (quotations stay verbatim), judgemental words in its own voice highlighted (not hidden),
         # quotations not found word for word marked; then curly quotes and apostrophes, last, once the checks have
         # read the text as the model wrote it (wcs.rag.checks).
+        if keep is not None:
+            keep(request.documents, done.blocks, tuple(str(s.meta.get("heading") or "") for s in sources))
         yield {"type": "final", "answer": checked(blocks_as_today(done), sources),
                "usage": done.usage.as_stored(), "model": done.model, "stop_reason": done.stop_reason}
 

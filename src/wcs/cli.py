@@ -11,6 +11,7 @@
     wcs waiting                            # what is waiting for a decision, and for how long
     wcs briefing-stats --since 7d          # how briefings went: speed, cost, what the checks found (weekly: scheduled)
     wcs tidy                               # the nightly housekeeping (scheduled)
+    wcs evaluate && wcs eval run           # the test questions: how each is read (free); each briefing written (paid)
     wcs search "climate finance" --group sids
     wcs ask "How have small island States spoken about climate change since 2015?"
 """
@@ -31,11 +32,13 @@ from wts_core.cli import (
     RepliesWording,
     RestoreWords,
     StatsNames,
+    eval_commands,
     ops_commands,
     replies_commands,
     replies_tidy,
     stats_commands,
 )
+from wts_core.observe import config_id
 from wts_core.ports import SYSTEM_CLOCK, Clock, Embedder
 from wts_core.replies import Replies, word_count
 from wts_core.state import StateDB
@@ -471,6 +474,51 @@ app.add_typer(stats_commands(
     names=StatsNames(stats="briefing-stats", weekly_report="weekly-report", tidy="tidy"),
     backup_days=BACKUPS.keep_offsite,  # nothing that holds old rows outlives the backups
     also_tidy=[replies_tidy(_replies, REPLIES_WORDING)],
+    clock=lambda: CLOCK))
+
+
+# ---- the test questions with each briefing written (wts-core, ``wts_core.cli.eval_commands``) -----------------
+#
+# `wcs eval run` asks every question in eval/questions.toml of the real pipeline, each briefing written (it spends
+# money: no more than [eval] max_cost_usd unless --max-cost says otherwise), saves the run under eval/runs/ and
+# holds it to [eval.thresholds]; `wcs eval compare` sets two saved runs side by side; `wcs eval replay` runs the
+# checks again over briefings a run kept (--record-fixtures), free and with no model. `wcs evaluate`, above, stays:
+# it scores how questions are read and what evidence is found, with no briefing.
+
+def _eval_site() -> Any:
+    from wcs.evaluate import CountriesEval
+
+    return CountriesEval(load_settings())
+
+
+def _configuration() -> Mapping[str, Any]:
+    """What an evaluation run is a run of: the configuration the settings give as they stand, with the same id the
+    record of briefings gives it. Nothing is kept by asking (a run is not a reader's briefing)."""
+    from wcs.api.app import configuration
+
+    return configuration(load_settings(), None).settings
+
+
+def _checks(name: str) -> Any:
+    from wcs.rag import checks
+
+    return getattr(checks, name)
+
+
+def _runs() -> Any:
+    from wcs.evaluate import RUNS
+
+    return RUNS
+
+
+app.add_typer(eval_commands(
+    lambda: _eval_site(),  # looked up when a command runs, so a test can stand another in its place
+    config=_configuration, config_id=config_id,  # the id the record of briefings gives the same parts
+    pricing=_prices,
+    thresholds=lambda: load_settings().section("eval")["thresholds"],
+    runs=lambda: _runs(),
+    max_cost_usd=lambda: float(load_settings().section("eval")["max_cost_usd"]),  # no run starts without a limit
+    verifier=lambda: _checks("VERIFIER"), loaded_words=lambda: _checks("LOADED_WORDS"), curled=True,
     clock=lambda: CLOCK))
 
 
