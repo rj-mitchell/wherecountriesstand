@@ -1,0 +1,783 @@
+{
+ "briefings": {
+  "Briefing01": {
+   "at": "2026-10-25T12:00:00+00:00",
+   "events": [
+    {
+     "plan": {
+      "question": "What has been said about climate finance since 2020?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "group": "FJI",
+       "n": 2,
+       "title": "General Assembly, 79th session"
+      },
+      {
+       "group": "KEN",
+       "n": 3,
+       "title": "Security Council, 9001st meeting"
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said that climate finance was \"too slow\".",
+     "type": "text"
+    },
+    {
+     "answer": {
+      "citations_invalid": 0,
+      "citations_total": 2,
+      "grounded_ratio": 0.5,
+      "loaded_words": 1,
+      "markdown": "Kenya said that climate finance was \"too slow\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.",
+      "no_records": false,
+      "quotes_total": 1,
+      "quotes_unverified": 0,
+      "segments": [
+       {
+        "cited": [
+         {
+          "n": 1,
+          "text": "climate finance for adaptation is too slow"
+         }
+        ],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [
+         1
+        ],
+        "status": "cited",
+        "text": "Kenya said that climate finance was \"too slow\"."
+       },
+       {
+        "cited": [],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [],
+        "status": "unsupported",
+        "text": " In the debate that followed:"
+       },
+       {
+        "cited": [
+         {
+          "n": 2,
+          "text": "climate finance must reach small islands"
+         }
+        ],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [
+         2
+        ],
+        "status": "cited",
+        "text": " Fiji warned that finance must reach small islands."
+       },
+       {
+        "cited": [],
+        "loaded": [
+         {
+          "end": 19,
+          "start": 12,
+          "word": "turning"
+         }
+        ],
+        "misquotes": [],
+        "sources": [],
+        "status": "unsupported",
+        "text": " This was a turning point for every delegation in the room."
+       }
+      ],
+      "unsupported_segments": 2
+     },
+     "model": "claude-sonnet-5-5",
+     "stop_reason": "end_turn",
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "id": "Briefing01",
+   "options": {
+    "mode": "summary",
+    "plan": null,
+    "recency": null,
+    "role_weight": null,
+    "sources_only": false
+   },
+   "question": "What has been said about climate finance since 2020?",
+   "withdrawn_at": null,
+   "withdrawn_reason": null
+  },
+  "Briefing02": {
+   "at": "2026-11-05T12:00:00+00:00",
+   "events": [
+    {
+     "plan": {
+      "question": "And what did the small island States say?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "group": "FJI",
+       "n": 2,
+       "title": "General Assembly, 79th session"
+      },
+      {
+       "group": "KEN",
+       "n": 3,
+       "title": "Security Council, 9001st meeting"
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said that climate finance was \"too slow\".",
+     "type": "text"
+    },
+    {
+     "answer": {
+      "citations_invalid": 0,
+      "citations_total": 2,
+      "grounded_ratio": 0.5,
+      "loaded_words": 1,
+      "markdown": "Kenya said that climate finance was \"too slow\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.",
+      "no_records": false,
+      "quotes_total": 1,
+      "quotes_unverified": 0,
+      "segments": [
+       {
+        "cited": [
+         {
+          "n": 1,
+          "text": "climate finance for adaptation is too slow"
+         }
+        ],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [
+         1
+        ],
+        "status": "cited",
+        "text": "Kenya said that climate finance was \"too slow\"."
+       },
+       {
+        "cited": [],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [],
+        "status": "unsupported",
+        "text": " In the debate that followed:"
+       },
+       {
+        "cited": [
+         {
+          "n": 2,
+          "text": "climate finance must reach small islands"
+         }
+        ],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [
+         2
+        ],
+        "status": "cited",
+        "text": " Fiji warned that finance must reach small islands."
+       },
+       {
+        "cited": [],
+        "loaded": [
+         {
+          "end": 19,
+          "start": 12,
+          "word": "turning"
+         }
+        ],
+        "misquotes": [],
+        "sources": [],
+        "status": "unsupported",
+        "text": " This was a turning point for every delegation in the room."
+       }
+      ],
+      "unsupported_segments": 2
+     },
+     "model": "claude-sonnet-5-5",
+     "stop_reason": "end_turn",
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "id": "Briefing02",
+   "options": {
+    "mode": "comprehensive"
+   },
+   "question": "And what did the small island States say?",
+   "withdrawn_at": null,
+   "withdrawn_reason": null
+  },
+  "NoSuch0001": null,
+  "Withdrawn1": {
+   "at": "2026-11-06T12:00:00+00:00",
+   "events": [
+    {
+     "plan": {
+      "question": "An older question?"
+     },
+     "type": "plan",
+     "usage": null
+    },
+    {
+     "sources": [
+      {
+       "group": "FJI",
+       "n": 2,
+       "title": "General Assembly, 79th session"
+      },
+      {
+       "group": "KEN",
+       "n": 3,
+       "title": "Security Council, 9001st meeting"
+      }
+     ],
+     "type": "sources"
+    },
+    {
+     "text": "Kenya said that climate finance was \"too slow\".",
+     "type": "text"
+    },
+    {
+     "answer": {
+      "citations_invalid": 0,
+      "citations_total": 2,
+      "grounded_ratio": 0.5,
+      "loaded_words": 1,
+      "markdown": "Kenya said that climate finance was \"too slow\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.",
+      "no_records": false,
+      "quotes_total": 1,
+      "quotes_unverified": 0,
+      "segments": [
+       {
+        "cited": [
+         {
+          "n": 1,
+          "text": "climate finance for adaptation is too slow"
+         }
+        ],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [
+         1
+        ],
+        "status": "cited",
+        "text": "Kenya said that climate finance was \"too slow\"."
+       },
+       {
+        "cited": [],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [],
+        "status": "unsupported",
+        "text": " In the debate that followed:"
+       },
+       {
+        "cited": [
+         {
+          "n": 2,
+          "text": "climate finance must reach small islands"
+         }
+        ],
+        "loaded": [],
+        "misquotes": [],
+        "sources": [
+         2
+        ],
+        "status": "cited",
+        "text": " Fiji warned that finance must reach small islands."
+       },
+       {
+        "cited": [],
+        "loaded": [
+         {
+          "end": 19,
+          "start": 12,
+          "word": "turning"
+         }
+        ],
+        "misquotes": [],
+        "sources": [],
+        "status": "unsupported",
+        "text": " This was a turning point for every delegation in the room."
+       }
+      ],
+      "unsupported_segments": 2
+     },
+     "model": "claude-sonnet-5-5",
+     "stop_reason": "end_turn",
+     "type": "final",
+     "usage": null
+    }
+   ],
+   "id": "Withdrawn1",
+   "options": {},
+   "question": "An older question?",
+   "withdrawn_at": "2026-11-07T09:00:00+00:00",
+   "withdrawn_reason": "It quoted the wrong meeting."
+  }
+ },
+ "briefings_today": {
+  "a1a1a1a1a1a1a1a1a1a1a1a1": 2,
+  "b2b2b2b2b2b2b2b2b2b2b2b2": 2,
+  "nobody": 0
+ },
+ "cached": {
+  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": [
+   {
+    "plan": {
+     "question": "What has been said about climate finance since 2020?"
+    },
+    "type": "plan",
+    "usage": null
+   },
+   {
+    "sources": [
+     {
+      "group": "FJI",
+      "n": 2,
+      "title": "General Assembly, 79th session"
+     },
+     {
+      "group": "KEN",
+      "n": 3,
+      "title": "Security Council, 9001st meeting"
+     }
+    ],
+    "type": "sources"
+   },
+   {
+    "text": "Kenya said that climate finance was \"too slow\".",
+    "type": "text"
+   },
+   {
+    "answer": {
+     "citations_invalid": 0,
+     "citations_total": 2,
+     "grounded_ratio": 0.5,
+     "loaded_words": 1,
+     "markdown": "Kenya said that climate finance was \"too slow\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.",
+     "no_records": false,
+     "quotes_total": 1,
+     "quotes_unverified": 0,
+     "segments": [
+      {
+       "cited": [
+        {
+         "n": 1,
+         "text": "climate finance for adaptation is too slow"
+        }
+       ],
+       "loaded": [],
+       "misquotes": [],
+       "sources": [
+        1
+       ],
+       "status": "cited",
+       "text": "Kenya said that climate finance was \"too slow\"."
+      },
+      {
+       "cited": [],
+       "loaded": [],
+       "misquotes": [],
+       "sources": [],
+       "status": "unsupported",
+       "text": " In the debate that followed:"
+      },
+      {
+       "cited": [
+        {
+         "n": 2,
+         "text": "climate finance must reach small islands"
+        }
+       ],
+       "loaded": [],
+       "misquotes": [],
+       "sources": [
+        2
+       ],
+       "status": "cited",
+       "text": " Fiji warned that finance must reach small islands."
+      },
+      {
+       "cited": [],
+       "loaded": [
+        {
+         "end": 19,
+         "start": 12,
+         "word": "turning"
+        }
+       ],
+       "misquotes": [],
+       "sources": [],
+       "status": "unsupported",
+       "text": " This was a turning point for every delegation in the room."
+      }
+     ],
+     "unsupported_segments": 2
+    },
+    "briefing_id": "Briefing01",
+    "cached": true,
+    "model": "claude-sonnet-5-5",
+    "stop_reason": "end_turn",
+    "type": "final",
+    "usage": null
+   }
+  ],
+  "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": null
+ },
+ "published": {
+  "/b/Briefing01": [
+   {
+    "country": "KEN",
+    "id": 1,
+    "link": "https://undocs.org/en/S/PV.9000",
+    "name": "Amina Example",
+    "page": "/b/Briefing01",
+    "role": "Permanent Representative",
+    "shown_on": "2026-11-10",
+    "text": "New words, as the author sent them."
+   }
+  ],
+  "/b/Briefing02": [],
+  "KEN": [
+   {
+    "country": "KEN",
+    "id": 1,
+    "link": "https://undocs.org/en/S/PV.9000",
+    "name": "Amina Example",
+    "page": "/b/Briefing01",
+    "role": "Permanent Representative",
+    "shown_on": "2026-11-10",
+    "text": "New words, as the author sent them."
+   }
+  ]
+ },
+ "refused": {
+  "a1a1a1a1a1a1a1a1a1a1a1a1": "You have reached today's limit for new briefings. It resets at midnight UTC; briefings others have already asked for still load.",
+  "b2b2b2b2b2b2b2b2b2b2b2b2": "You have reached today's limit for new briefings. It resets at midnight UTC; briefings others have already asked for still load.",
+  "nobody": null
+ },
+ "reports": [
+  {
+   "at": "2026-11-13T08:00:00+00:00",
+   "closed_at": null,
+   "contact": null,
+   "id": 6,
+   "kind": "error",
+   "message": "No page and no contact.",
+   "page": null
+  },
+  {
+   "at": "2026-11-12T10:00:00+00:00",
+   "closed_at": "2026-11-12T15:00:00+00:00",
+   "contact": "",
+   "id": 5,
+   "kind": "other",
+   "message": "Closed the same day.",
+   "page": ""
+  },
+  {
+   "at": "2026-11-12T09:00:00+00:00",
+   "closed_at": null,
+   "contact": "",
+   "id": 4,
+   "kind": "unfair",
+   "message": "A loaded word.",
+   "page": ""
+  },
+  {
+   "at": "2026-11-11T09:00:00+00:00",
+   "closed_at": null,
+   "contact": "named@example.org",
+   "id": 3,
+   "kind": "takedown",
+   "message": "Please remove my name.",
+   "page": "https://wherecountriesstand.com/b/Briefing02"
+  },
+  {
+   "at": "2026-11-10T09:00:00+00:00",
+   "closed_at": null,
+   "contact": "reader@example.org",
+   "id": 2,
+   "kind": "error",
+   "message": "The date is wrong.",
+   "page": "/b/Briefing01"
+  },
+  {
+   "at": "2026-07-01T09:00:00+00:00",
+   "closed_at": null,
+   "contact": "old@example.org",
+   "id": 1,
+   "kind": "problem",
+   "message": "An old report, never closed.",
+   "page": "/b/Briefing01"
+  }
+ ],
+ "reports_command": [
+  0,
+  "#6  2026-11-13T08:00:00+00:00  error  -\n    No page and no contact.\n#5  2026-11-12T10:00:00+00:00  other  -  (closed)\n    Closed the same day.\n#4  2026-11-12T09:00:00+00:00  unfair  -\n    A loaded word.\n#3  2026-11-11T09:00:00+00:00  takedown  https://wherecountriesstand.com/b/Briefing02\n    Please remove my name.\n    reply to: named@example.org\n#2  2026-11-10T09:00:00+00:00  error  /b/Briefing01\n    The date is wrong.\n    reply to: reader@example.org\n#1  2026-07-01T09:00:00+00:00  problem  /b/Briefing01\n    An old report, never closed.\n    reply to: old@example.org\n"
+ ],
+ "salt": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+ "spent_this_month": 0.485646,
+ "spent_today": 0.06136,
+ "statements": [
+  {
+   "at": "2026-07-01T09:00:00+00:00",
+   "country": null,
+   "email": "waiting@example.org",
+   "ended_at": null,
+   "id": 7,
+   "link": "",
+   "log": [
+    {
+     "action": "received",
+     "at": "2026-07-01T09:00:00+00:00"
+    }
+   ],
+   "name": "Waiting Too Long",
+   "page": "/b/Withdrawn1",
+   "reason": null,
+   "role": "Permanent Representative",
+   "shown_on": null,
+   "status": "pending",
+   "text": "Nobody decided this one."
+  },
+  {
+   "at": "2026-06-01T09:00:00+00:00",
+   "country": null,
+   "email": "mission@example.org",
+   "ended_at": null,
+   "id": 6,
+   "link": "",
+   "log": [
+    {
+     "action": "received",
+     "at": "2026-06-01T09:00:00+00:00"
+    }
+   ],
+   "name": "Declined With No Time",
+   "page": "/b/Briefing01",
+   "reason": "Not from the delegation.",
+   "role": "Permanent Representative",
+   "shown_on": null,
+   "status": "declined",
+   "text": "Never shown."
+  },
+  {
+   "at": "2026-07-05T09:00:00+00:00",
+   "country": "FJI",
+   "email": "mission@example.org",
+   "ended_at": "2026-11-06T09:00:00+00:00",
+   "id": 5,
+   "link": "",
+   "log": [
+    {
+     "action": "received",
+     "at": "2026-07-05T09:00:00+00:00"
+    },
+    {
+     "action": "published",
+     "at": "2026-07-06T09:00:00+00:00",
+     "note": "Reply from fiji@example.org's own address."
+    },
+    {
+     "action": "withdrawn",
+     "at": "2026-11-06T09:00:00+00:00",
+     "note": "It broke the rules: it named a private person."
+    }
+   ],
+   "name": "Withdrawn Lately",
+   "page": "/b/Briefing02",
+   "reason": "It broke the rules: it named a private person.",
+   "role": "Permanent Representative",
+   "shown_on": "2026-07-06",
+   "status": "withdrawn",
+   "text": "Shown until last week."
+  },
+  {
+   "at": "2026-07-01T09:00:00+00:00",
+   "country": null,
+   "email": "mission@example.org",
+   "ended_at": "2026-08-01T10:00:00+00:00",
+   "id": 4,
+   "link": "",
+   "log": [
+    {
+     "action": "received",
+     "at": "2026-07-01T09:00:00+00:00"
+    },
+    {
+     "action": "published",
+     "at": "2026-07-02T09:00:00+00:00",
+     "note": "Telephoned the mission."
+    },
+    {
+     "action": "withdrawn",
+     "at": "2026-08-01T10:00:00+00:00",
+     "note": "Withdrawn by its author."
+    }
+   ],
+   "name": "Withdrawn Long Ago",
+   "page": "/b/Briefing02",
+   "reason": "Withdrawn by its author.",
+   "role": "Permanent Representative",
+   "shown_on": "2026-07-02",
+   "status": "withdrawn",
+   "text": "Shown for a while."
+  },
+  {
+   "at": "2026-11-01T09:00:00+00:00",
+   "country": null,
+   "email": "mission@example.org",
+   "ended_at": "2026-11-02T09:00:00+00:00",
+   "id": 3,
+   "link": "",
+   "log": [
+    {
+     "action": "received",
+     "at": "2026-11-01T09:00:00+00:00"
+    },
+    {
+     "action": "declined",
+     "at": "2026-11-02T09:00:00+00:00",
+     "note": "It is about another delegation's conduct."
+    }
+   ],
+   "name": "Declined Lately",
+   "page": "/b/Briefing02",
+   "reason": "It is about another delegation's conduct.",
+   "role": "Permanent Representative",
+   "shown_on": null,
+   "status": "declined",
+   "text": "About another delegation."
+  },
+  {
+   "at": "2026-11-12T09:00:00+00:00",
+   "country": null,
+   "email": "mission@example.org",
+   "ended_at": null,
+   "id": 2,
+   "link": "",
+   "log": [
+    {
+     "action": "received",
+     "at": "2026-11-12T09:00:00+00:00"
+    }
+   ],
+   "name": "Still Waiting",
+   "page": "/b/Briefing01",
+   "reason": null,
+   "role": "Permanent Representative",
+   "shown_on": null,
+   "status": "pending",
+   "text": "A statement not yet decided."
+  },
+  {
+   "at": "2026-11-08T09:00:00+00:00",
+   "country": "KEN",
+   "email": "mission@example.org",
+   "ended_at": null,
+   "id": 1,
+   "link": "https://undocs.org/en/S/PV.9000",
+   "log": [
+    {
+     "action": "received",
+     "at": "2026-11-08T09:00:00+00:00"
+    },
+    {
+     "action": "published",
+     "at": "2026-11-09T09:00:00+00:00",
+     "note": "Reply from the mission's published address, 9 November."
+    },
+    {
+     "action": "updated",
+     "at": "2026-11-10T09:00:00+00:00",
+     "note": "shown_on, text"
+    }
+   ],
+   "name": "Amina Example",
+   "page": "/b/Briefing01",
+   "reason": null,
+   "role": "Permanent Representative",
+   "shown_on": "2026-11-10",
+   "status": "published",
+   "text": "New words, as the author sent them."
+  }
+ ],
+ "statements_command": [
+  0,
+  "#7  2026-07-01T09:00:00+00:00  pending  /b/Withdrawn1\n    from: Waiting Too Long, Permanent Representative\n    confirm with: waiting@example.org\n    Nobody decided this one.\n    (4 words)\n#6  2026-06-01T09:00:00+00:00  declined  /b/Briefing01\n    from: Declined With No Time, Permanent Representative\n    confirm with: mission@example.org\n    Never shown.\n    (2 words; declined: Not from the delegation.)\n#5  2026-07-05T09:00:00+00:00  withdrawn  /b/Briefing02  (speaks for FJI)\n    from: Withdrawn Lately, Permanent Representative\n    confirm with: mission@example.org\n    Shown until last week.\n    sender confirmed: Reply from fiji@example.org's own address.\n    (4 words; withdrawn: It broke the rules: it named a private person.)\n#4  2026-07-01T09:00:00+00:00  withdrawn  /b/Briefing02\n    from: Withdrawn Long Ago, Permanent Representative\n    Shown for a while.\n    sender confirmed: Telephoned the mission.\n    (4 words; withdrawn: Withdrawn by its author.)\n#3  2026-11-01T09:00:00+00:00  declined  /b/Briefing02\n    from: Declined Lately, Permanent Representative\n    confirm with: mission@example.org\n    About another delegation.\n    (3 words; declined: It is about another delegation's conduct.)\n#2  2026-11-12T09:00:00+00:00  pending  /b/Briefing01\n    from: Still Waiting, Permanent Representative\n    confirm with: mission@example.org\n    A statement not yet decided.\n    (5 words)\n#1  2026-11-08T09:00:00+00:00  published  /b/Briefing01  (speaks for KEN)\n    from: Amina Example, Permanent Representative\n    confirm with: mission@example.org\n    record: https://undocs.org/en/S/PV.9000\n    New words, as the author sent them.\n    sender confirmed: Reply from the mission's published address, 9 November.\n    (7 words; shown from 2026-11-10)\n"
+ ],
+ "summary": {
+  "at": "2026-11-13T12:00:00+00:00",
+  "by_day": [
+   {
+    "briefings": 5,
+    "day": "2026-11-13",
+    "spent_usd": 0.0614
+   }
+  ],
+  "days": 7,
+  "failures": [
+   {
+    "at": "2026-11-13T11:30:00+00:00",
+    "error": "The model declined to answer this question.",
+    "kind": "briefing",
+    "question": "And what did the small island States say?"
+   },
+   {
+    "at": "2026-11-12T23:00:00+00:00",
+    "error": "AuthenticationError: bad key",
+    "kind": "question reading",
+    "question": "What has been said about climate finance since 2020?"
+   }
+  ],
+  "month": {
+   "briefings": 6,
+   "cap_usd": 50.0,
+   "spent_usd": 0.4856,
+   "visitors": 3
+  },
+  "today": {
+   "briefings": 5,
+   "cap_usd": 3.0,
+   "spent_usd": 0.0614,
+   "visitors": 2
+  }
+ },
+ "usage_command": [
+  1,
+  "Today (UTC): $0.06 of $3.00 (2%); briefings written: 5; visitors who asked: 2\nThis month: $0.49 of $50.00 (1%); briefings written: 6; visitors who asked: 3\n\nLast 7 days:\n  2026-11-13  $0.06  briefings: 5\n\nFailures in the last 7 days: 2\n  2026-11-13T11:30:00+00:00  briefing: The model declined to answer this question.\n      question: And what did the small island States say?\n  2026-11-12T23:00:00+00:00  question reading: AuthenticationError: bad key\n      question: What has been said about climate finance since 2020?\nwarning: 2 briefing(s) failed in the last 24 hours; the latest: The model declined to answer this question. (wcs usage lists them)\n"
+ ],
+ "usage_command_json": [
+  1,
+  "{\n \"at\": \"2026-11-13T12:00:00+00:00\",\n \"today\": {\n  \"spent_usd\": 0.0614,\n  \"cap_usd\": 3.0,\n  \"briefings\": 5,\n  \"visitors\": 2\n },\n \"month\": {\n  \"spent_usd\": 0.4856,\n  \"cap_usd\": 50.0,\n  \"briefings\": 6,\n  \"visitors\": 3\n },\n \"by_day\": [\n  {\n   \"day\": \"2026-11-13\",\n   \"spent_usd\": 0.0614,\n   \"briefings\": 5\n  }\n ],\n \"failures\": [\n  {\n   \"at\": \"2026-11-13T11:30:00+00:00\",\n   \"kind\": \"briefing\",\n   \"question\": \"And what did the small island States say?\",\n   \"error\": \"The model declined to answer this question.\"\n  },\n  {\n   \"at\": \"2026-11-12T23:00:00+00:00\",\n   \"kind\": \"question reading\",\n   \"question\": \"What has been said about climate finance since 2020?\",\n   \"error\": \"AuthenticationError: bad key\"\n  }\n ],\n \"days\": 7,\n \"warnings\": [\n  \"2 briefing(s) failed in the last 24 hours; the latest: The model declined to answer this question. (wcs usage lists them)\"\n ]\n}\n"
+ ],
+ "warnings": [
+  "2 briefing(s) failed in the last 24 hours; the latest: The model declined to answer this question. (wcs usage lists them)"
+ ],
+ "withdrawn": [
+  {
+   "at": "2026-11-06T12:00:00+00:00",
+   "id": "Withdrawn1",
+   "question": "An older question?",
+   "reason": "It quoted the wrong meeting.",
+   "withdrawn_at": "2026-11-07T09:00:00+00:00"
+  }
+ ]
+}

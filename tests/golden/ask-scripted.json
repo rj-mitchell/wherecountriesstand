@@ -1,0 +1,1311 @@
+{
+ "a follow-up is never cached": {
+  "calls": [
+   "written",
+   "written",
+   "written",
+   "written"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:04+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ],
+    [
+     "briefing002",
+     "2026-11-13T12:00:09+00:00",
+     "And what did the small island States say?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing002\"}]",
+     null,
+     null
+    ],
+    [
+     "briefing003",
+     "2026-11-13T12:00:14+00:00",
+     "And what did the small island States say?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing003\"}]",
+     null,
+     null
+    ],
+    [
+     "briefing004",
+     "2026-11-13T12:00:19+00:00",
+     "And what did the small island States say?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing004\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:04+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ],
+    [
+     "e89a5b08eeadd3a71c7b969c68dca5936e346139d811f8d0b82782c09a89a36c",
+     "2026-11-13T12:00:19+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing004\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ],
+    [
+     "2026-11-13T12:00:05+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:09+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ],
+    [
+     "2026-11-13T12:00:10+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:14+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ],
+    [
+     "2026-11-13T12:00:14+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:19+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing002\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing003\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing004\"}\n\n"
+   ]
+  ]
+ },
+ "a fresh question, and the same again from the cache": {
+  "calls": [
+   "written"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:04+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:04+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\u201cclimate finance\\u201d since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\u201ctoo slow\\u201d.\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"connective\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\u201ctoo slow\\u201d. In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.624, \"unsupported_segments\": 1, \"loaded_words\": 0, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}\n\n"
+   ]
+  ]
+ },
+ "a question the model could not read": {
+  "calls": [
+   "unread"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:04+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:04+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "question reading",
+     "What has been said about climate finance since 2020?",
+     "AuthenticationError: bad key"
+    ]
+   ],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\u201cclimate finance\\u201d since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\u201ctoo slow\\u201d.\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"connective\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\u201ctoo slow\\u201d. In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.624, \"unsupported_segments\": 1, \"loaded_words\": 0, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}\n\n"
+   ]
+  ]
+ },
+ "a question too short, and one too long": {
+  "calls": [],
+  "rows": {
+   "briefings": [],
+   "cache": [],
+   "failures": [],
+   "spending": []
+  },
+  "sent": [
+   [
+    422,
+    "{\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"question\"],\"msg\":\"String should have at least 3 characters\",\"input\":\"Hi\",\"ctx\":{\"min_length\":3}}]}"
+   ],
+   [
+    422,
+    "{\"detail\":[{\"type\":\"string_too_long\",\"loc\":[\"body\",\"question\"],\"msg\":\"String should have at most 500 characters\",\"input\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"ctx\":{\"max_length\":500}}]}"
+   ],
+   [
+    422,
+    "{\"detail\":[{\"type\":\"literal_error\",\"loc\":[\"body\",\"mode\"],\"msg\":\"Input should be 'summary' or 'comprehensive'\",\"input\":\"everything\",\"ctx\":{\"expected\":\"'summary' or 'comprehensive'\"}}]}"
+   ]
+  ]
+ },
+ "a question whose reading failed with nothing said": {
+  "calls": [
+   "unread_empty"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:04+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}, \"parse_error\": \"\"}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:04+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}, \"parse_error\": \"\"}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}, \"parse_error\": \"\"}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ]
+  ]
+ },
+ "an error event with keys of its own": {
+  "calls": [
+   "declined_with_more"
+  ],
+  "rows": {
+   "briefings": [],
+   "cache": [],
+   "failures": [
+    [
+     "2026-11-13T12:00:04+00:00",
+     "briefing",
+     "What has been said about climate finance since 2020?",
+     "The model declined to answer this question."
+    ]
+   ],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: error\ndata: {\"type\": \"error\", \"message\": \"The model declined to answer this question.\"}\n\n"
+   ]
+  ]
+ },
+ "no API key": {
+  "calls": [
+   "written",
+   "written"
+  ],
+  "rows": {
+   "briefings": [],
+   "cache": [],
+   "failures": [],
+   "spending": []
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"offline\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"Showing the evidence only (no Anthropic API key set).\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"offline\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"Showing the evidence only (no Anthropic API key set).\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"search_text\": \"climate finance\", \"filters\": {\"date_from\": \"2020-01-01\", \"date_to\": null, \"sources\": [], \"countries\": [], \"groups\": [], \"kinds\": [], \"group_statements\": true}, \"wants_votes\": false, \"interpretation\": \"Searching from 2020.\", \"parser\": \"offline\", \"group_by\": \"region\", \"unresolved_countries\": []}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"Sources only: no briefing was written.\"}\n\n"
+   ]
+  ]
+ },
+ "no records": {
+  "calls": [
+   "no_records"
+  ],
+  "rows": {
+   "briefings": [],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:00+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"No records found. The archive contains no records matching this question and these filters.\", \"sources\": [], \"cited\": [], \"status\": \"connective\"}], \"markdown\": \"No records found.\", \"no_records\": true, \"citations_total\": 0, \"citations_invalid\": 0, \"grounded_ratio\": 1.0, \"unsupported_segments\": 0}, \"usage\": null, \"cached\": true}]"
+    ]
+   ],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"No records found. The archive contains no records matching this question and these filters.\", \"sources\": [], \"cited\": [], \"status\": \"connective\"}], \"markdown\": \"No records found.\", \"no_records\": true, \"citations_total\": 0, \"citations_invalid\": 0, \"grounded_ratio\": 1.0, \"unsupported_segments\": 0}, \"usage\": null}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\u201cclimate finance\\u201d since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"No records found. The archive contains no records matching this question and these filters.\", \"sources\": [], \"cited\": [], \"status\": \"connective\"}], \"markdown\": \"No records found.\", \"no_records\": true, \"citations_total\": 0, \"citations_invalid\": 0, \"grounded_ratio\": 1.0, \"unsupported_segments\": 0}, \"usage\": null, \"cached\": true}\n\n"
+   ]
+  ]
+ },
+ "one place too many for the site": {
+  "calls": [
+   "held",
+   "written"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:04+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ],
+    [
+     "briefing002",
+     "2026-11-13T12:00:09+00:00",
+     "And what did the small island States say?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing002\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:04+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ],
+    [
+     "e89a5b08eeadd3a71c7b969c68dca5936e346139d811f8d0b82782c09a89a36c",
+     "2026-11-13T12:00:09+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing002\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ],
+    [
+     "2026-11-13T12:00:05+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:09+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"search_text\": \"and what did say\", \"filters\": {\"date_from\": \"2016-01-01\", \"date_to\": null, \"sources\": [], \"countries\": [], \"groups\": [\"sids\"], \"kinds\": [], \"group_statements\": true}, \"wants_votes\": false, \"interpretation\": \"Searching groups: Small island developing States; from 2016.\", \"parser\": \"offline\", \"group_by\": \"region\", \"unresolved_countries\": []}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"Many briefings are being written at the moment; please try again in a minute. The sources found are shown below.\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing002\"}\n\n"
+   ]
+  ]
+ },
+ "one place too many for the visitor": {
+  "calls": [
+   "held",
+   "written"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:04+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ],
+    [
+     "briefing002",
+     "2026-11-13T12:00:09+00:00",
+     "And what did the small island States say?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing002\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:04+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ],
+    [
+     "e89a5b08eeadd3a71c7b969c68dca5936e346139d811f8d0b82782c09a89a36c",
+     "2026-11-13T12:00:09+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing002\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ],
+    [
+     "2026-11-13T12:00:05+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:09+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"search_text\": \"and what did say\", \"filters\": {\"date_from\": \"2016-01-01\", \"date_to\": null, \"sources\": [], \"countries\": [], \"groups\": [\"sids\"], \"kinds\": [], \"group_statements\": true}, \"wants_votes\": false, \"interpretation\": \"Searching groups: Small island developing States; from 2016.\", \"parser\": \"offline\", \"group_by\": \"region\", \"unresolved_countries\": []}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"A briefing is already being written for you; please wait for it to finish. The sources found are shown below.\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing002\"}\n\n"
+   ]
+  ]
+ },
+ "sources only": {
+  "calls": [
+   "written"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:04+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:04+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"search_text\": \"climate finance\", \"filters\": {\"date_from\": \"2020-01-01\", \"date_to\": null, \"sources\": [], \"countries\": [], \"groups\": [], \"kinds\": [], \"group_statements\": true}, \"wants_votes\": false, \"interpretation\": \"Searching from 2020.\", \"parser\": \"offline\", \"group_by\": \"region\", \"unresolved_countries\": []}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"Sources only: no briefing was written.\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"search_text\": \"climate finance\", \"filters\": {\"date_from\": \"2020-01-01\", \"date_to\": null, \"sources\": [], \"countries\": [], \"groups\": [], \"kinds\": [], \"group_statements\": true}, \"wants_votes\": false, \"interpretation\": \"Searching from 2020.\", \"parser\": \"offline\", \"group_by\": \"region\", \"unresolved_countries\": []}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"Sources only: no briefing was written.\"}\n\n"
+   ]
+  ]
+ },
+ "sources only, with the site's budget spent": {
+  "calls": [],
+  "rows": {
+   "briefings": [],
+   "cache": [],
+   "failures": [],
+   "spending": []
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"search_text\": \"climate finance\", \"filters\": {\"date_from\": \"2020-01-01\", \"date_to\": null, \"sources\": [], \"countries\": [], \"groups\": [], \"kinds\": [], \"group_statements\": true}, \"wants_votes\": false, \"interpretation\": \"Searching from 2020.\", \"parser\": \"offline\", \"group_by\": \"region\", \"unresolved_countries\": []}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"Sources only: no briefing was written.\"}\n\n"
+   ]
+  ]
+ },
+ "the daily cap": {
+  "calls": [],
+  "rows": {
+   "briefings": [],
+   "cache": [],
+   "failures": [],
+   "spending": []
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"search_text\": \"climate finance\", \"filters\": {\"date_from\": \"2020-01-01\", \"date_to\": null, \"sources\": [], \"countries\": [], \"groups\": [], \"kinds\": [], \"group_statements\": true}, \"wants_votes\": false, \"interpretation\": \"Searching from 2020.\", \"parser\": \"offline\", \"group_by\": \"region\", \"unresolved_countries\": []}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"Today's budget for new briefings has been used up. It resets at midnight UTC. The sources found are shown below.\"}\n\n"
+   ]
+  ]
+ },
+ "the model refusing": {
+  "calls": [
+   "declined",
+   "written"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:09+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:09+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [
+    [
+     "2026-11-13T12:00:04+00:00",
+     "briefing",
+     "What has been said about climate finance since 2020?",
+     "The model declined to answer this question."
+    ]
+   ],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:09+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: error\ndata: {\"type\": \"error\", \"message\": \"The model declined to answer this question.\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ]
+  ]
+ },
+ "the monthly cap": {
+  "calls": [],
+  "rows": {
+   "briefings": [],
+   "cache": [],
+   "failures": [],
+   "spending": []
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"search_text\": \"climate finance\", \"filters\": {\"date_from\": \"2020-01-01\", \"date_to\": null, \"sources\": [], \"countries\": [], \"groups\": [], \"kinds\": [], \"group_statements\": true}, \"wants_votes\": false, \"interpretation\": \"Searching from 2020.\", \"parser\": \"offline\", \"group_by\": \"region\", \"unresolved_countries\": []}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"This month's budget for new briefings has been used up. The sources found are shown below.\"}\n\n"
+   ]
+  ]
+ },
+ "the pipeline raising mid-stream": {
+  "calls": [
+   "raises",
+   "written"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:07+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:07+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [
+    [
+     "2026-11-13T12:00:02+00:00",
+     "briefing",
+     "What has been said about climate finance since 2020?",
+     "RuntimeError: the model's stream broke"
+    ]
+   ],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:02+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:07+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: error\ndata: {\"type\": \"error\", \"message\": \"The briefing could not be written just now. The sources found are shown above; please try again later.\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ]
+  ]
+ },
+ "the reader leaving while the briefing is written": {
+  "calls": [
+   "left",
+   "written"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:07+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:07+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:02+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:07+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ]
+  ]
+ },
+ "the second check of the caps counts the others in progress": {
+  "calls": [
+   "held"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:04+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:04+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"search_text\": \"and what did say\", \"filters\": {\"date_from\": \"2016-01-01\", \"date_to\": null, \"sources\": [], \"countries\": [], \"groups\": [\"sids\"], \"kinds\": [], \"group_statements\": true}, \"wants_votes\": false, \"interpretation\": \"Searching groups: Small island developing States; from 2016.\", \"parser\": \"offline\", \"group_by\": \"region\", \"unresolved_countries\": []}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"Today's budget for new briefings has been used up. It resets at midnight UTC. The sources found are shown below.\"}\n\n"
+   ]
+  ]
+ },
+ "the visitor's limit stops new briefings, and cached ones still load": {
+  "calls": [
+   "written"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:04+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:04+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"And what did the small island States say?\", \"search_text\": \"and what did say\", \"filters\": {\"date_from\": \"2016-01-01\", \"date_to\": null, \"sources\": [], \"countries\": [], \"groups\": [\"sids\"], \"kinds\": [], \"group_statements\": true}, \"wants_votes\": false, \"interpretation\": \"Searching groups: Small island developing States; from 2016.\", \"parser\": \"offline\", \"group_by\": \"region\", \"unresolved_countries\": []}, \"usage\": null}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": null, \"usage\": null, \"note\": \"You have reached today's limit for new briefings. It resets at midnight UTC; briefings others have already asked for still load. The sources found are shown below.\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\u201cclimate finance\\u201d since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\u201ctoo slow\\u201d.\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"connective\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\u201ctoo slow\\u201d. In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.624, \"unsupported_segments\": 1, \"loaded_words\": 0, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}\n\n"
+   ]
+  ]
+ },
+ "too many requests in a minute": {
+  "calls": [
+   "written"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:04+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [
+    [
+     "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+     "2026-11-13T12:00:04+00:00",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\", \"cached\": true}]"
+    ]
+   ],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ],
+   [
+    429,
+    "{\"detail\":\"Too many requests. Please wait a minute and try again.\"}"
+   ]
+  ]
+ },
+ "with no hours to keep an answer, every question is written afresh": {
+  "calls": [
+   "written",
+   "written"
+  ],
+  "rows": {
+   "briefings": [
+    [
+     "briefing001",
+     "2026-11-13T12:00:04+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}]",
+     null,
+     null
+    ],
+    [
+     "briefing002",
+     "2026-11-13T12:00:09+00:00",
+     "What has been said about climate finance since 2020?",
+     "{\"mode\": \"summary\", \"plan\": null, \"recency\": null, \"role_weight\": null, \"sources_only\": false}",
+     "[{\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}, {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}, {\"type\": \"text\", \"text\": \"Kenya said that climate finance was \\\"too slow\\\". Fiji warned that finance must reach small islands.\"}, {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": null, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing002\"}]",
+     null,
+     null
+    ]
+   ],
+   "cache": [],
+   "failures": [],
+   "spending": [
+    [
+     "2026-11-13T12:00:00+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:04+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ],
+    [
+     "2026-11-13T12:00:05+00:00",
+     "parse",
+     "claude-haiku-5-5",
+     "8477f5602fc12a9348d44ac7",
+     1200,
+     80,
+     0,
+     0,
+     0.00016
+    ],
+    [
+     "2026-11-13T12:00:09+00:00",
+     "answer",
+     "claude-sonnet-5-5",
+     "8477f5602fc12a9348d44ac7",
+     9000,
+     700,
+     3000,
+     2000,
+     0.0266
+    ]
+   ]
+  },
+  "sent": [
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing001\"}\n\n"
+   ],
+   [
+    200,
+    "event: plan\ndata: {\"type\": \"plan\", \"plan\": {\"question\": \"What has been said about climate finance since 2020?\", \"parser\": \"model\", \"filters\": {\"date_from\": \"2020-01-01\"}, \"interpretation\": \"Debates on \\\"climate finance\\\" since 2020.\"}, \"usage\": {\"input_tokens\": 1200, \"output_tokens\": 80, \"cache_read_tokens\": 0, \"cache_write_tokens\": 0}}\n\nevent: sources\ndata: {\"type\": \"sources\", \"sources\": [{\"n\": 1, \"title\": \"Security Council, 9000th meeting\", \"group\": \"KEN\", \"voted_on\": \"2024-12-17\"}, {\"n\": 2, \"title\": \"General Assembly, 79th session\", \"group\": \"FJI\"}, {\"n\": 3, \"title\": \"Security Council, 9001st meeting\", \"group\": \"KEN\"}], \"candidates\": 12, \"semantic\": true, \"evidence\": {\"records\": 3, \"votes\": 1}}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 0, \"cited_text\": \"climate finance for adaptation is too slow\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"Kenya said that climate finance \"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \"was \\\"too slow\\\".\"}\n\nevent: citation\ndata: {\"type\": \"citation\", \"search_result_index\": 1, \"cited_text\": \"climate finance must reach small islands\"}\n\nevent: text\ndata: {\"type\": \"text\", \"text\": \" Fiji warned that finance must reach small islands.\"}\n\nevent: final\ndata: {\"type\": \"final\", \"answer\": {\"segments\": [{\"text\": \"Kenya said that climate finance was \\\"too slow\\\".\", \"sources\": [1], \"cited\": [{\"n\": 1, \"text\": \"climate finance for adaptation is too slow\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" In the debate that followed:\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" Fiji warned that finance must reach small islands.\", \"sources\": [2], \"cited\": [{\"n\": 2, \"text\": \"climate finance must reach small islands\"}], \"status\": \"cited\", \"loaded\": [], \"misquotes\": []}, {\"text\": \" This was a turning point for every delegation in the room.\", \"sources\": [], \"cited\": [], \"status\": \"unsupported\", \"loaded\": [{\"start\": 12, \"end\": 19, \"word\": \"turning\"}], \"misquotes\": []}], \"markdown\": \"Kenya said that climate finance was \\\"too slow\\\". In the debate that followed: Fiji warned that finance must reach small islands. This was a turning point for every delegation in the room.\", \"no_records\": false, \"citations_total\": 2, \"citations_invalid\": 0, \"grounded_ratio\": 0.5, \"unsupported_segments\": 2, \"loaded_words\": 1, \"quotes_total\": 1, \"quotes_unverified\": 0}, \"usage\": {\"input_tokens\": 9000, \"output_tokens\": 700, \"cache_read_tokens\": 3000, \"cache_write_tokens\": 2000}, \"model\": \"claude-sonnet-5-5\", \"stop_reason\": \"end_turn\", \"briefing_id\": \"briefing002\"}\n\n"
+   ]
+  ]
+ }
+}

@@ -1,0 +1,1427 @@
+[
+ {
+  "gives": {
+   "answer": {
+    "comprehensive_effort": "high",
+    "comprehensive_sources": 40,
+    "max_tokens": 16000,
+    "model": "claude-sonnet-5-5",
+    "query_parse_effort": "low",
+    "query_parse_model": "claude-haiku-5-5",
+    "summary_effort": "medium",
+    "summary_sources": 24,
+    "use_fallbacks": true
+   },
+   "archive": {
+    "archive_start_date": "1946-01-01",
+    "born_digital_from": 1994,
+    "default_years": 10,
+    "start_date": "1992-01-01"
+   },
+   "archive_start": "1946-01-01",
+   "born_digital_from": 1994,
+   "config_path": "<root>/config/settings.toml",
+   "data_dir": "<root>/data",
+   "embedding": {
+    "backend": "fastembed",
+    "batch_size": 8,
+    "dim": 384,
+    "model": "snowflake/snowflake-arctic-embed-xs",
+    "passage_words": 250
+   },
+   "index_dir": "<root>/data/index",
+   "models_dir": "<root>/data/models",
+   "no_such_section": {},
+   "overrides": {},
+   "parquet_dir": "<root>/data/parquet",
+   "ranking": {
+    "bm25_weight": 0.5,
+    "candidates_bm25": 300,
+    "candidates_vector": 300,
+    "default_recency": 0.4,
+    "default_role_weight": 1.3,
+    "m_head": 1.0,
+    "m_minister": 0.7,
+    "m_representative": 0.3,
+    "max_per_country": 2,
+    "max_per_speaker": 2,
+    "min_half_life_years": 3.0,
+    "min_relevance_ratio": 0.25,
+    "recency_floor": 0.35,
+    "vector_refine_factor": 5
+   },
+   "raw": {
+    "answer": {
+     "comprehensive_effort": "high",
+     "comprehensive_sources": 40,
+     "max_tokens": 16000,
+     "model": "claude-sonnet-5-5",
+     "query_parse_effort": "low",
+     "query_parse_model": "claude-haiku-5-5",
+     "summary_effort": "medium",
+     "summary_sources": 24,
+     "use_fallbacks": true
+    },
+    "archive": {
+     "archive_start_date": "1946-01-01",
+     "born_digital_from": 1994,
+     "default_years": 10,
+     "start_date": "1992-01-01"
+    },
+    "embedding": {
+     "backend": "fastembed",
+     "batch_size": 8,
+     "dim": 384,
+     "model": "snowflake/snowflake-arctic-embed-xs",
+     "passage_words": 250
+    },
+    "live": {
+     "gd_bundled": "gd_website",
+     "gd_from_session": 79,
+     "gd_website": true,
+     "sc_after_meeting": 9524,
+     "sc_from": "2024-01-01"
+    },
+    "paths": {
+     "data_dir": "data"
+    },
+    "ranking": {
+     "bm25_weight": 0.5,
+     "candidates_bm25": 300,
+     "candidates_vector": 300,
+     "default_recency": 0.4,
+     "default_role_weight": 1.3,
+     "m_head": 1.0,
+     "m_minister": 0.7,
+     "m_representative": 0.3,
+     "max_per_country": 2,
+     "max_per_speaker": 2,
+     "min_half_life_years": 3.0,
+     "min_relevance_ratio": 0.25,
+     "recency_floor": 0.35,
+     "vector_refine_factor": 5
+    },
+    "site": {
+     "dir": "",
+     "url": ""
+    },
+    "sources": {
+     "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+     "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+     "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+     "undocs": "https://undocs.org/en/",
+     "ungd_guestbook": {
+      "institution": "Where They Stand",
+      "position": "Project lead",
+      "purpose": "Research"
+     },
+     "votes_record": "https://digitallibrary.un.org/record/4060887"
+    },
+    "usage": {
+     "answer_cache_hours": 168,
+     "briefing_estimate_usd": 0.1,
+     "briefings_at_once": 8,
+     "briefings_at_once_per_visitor": 2,
+     "cache_write_multiplier": 1.25,
+     "daily_spend_cap_usd": 3.0,
+     "models": {
+      "claude-haiku-5-5": {
+       "price_cache_read_per_mtok": 0.01,
+       "price_input_per_mtok": 0.1,
+       "price_output_per_mtok": 0.5
+      }
+     },
+     "monthly_spend_cap_usd": 50.0,
+     "per_visitor_daily_questions": 40,
+     "price_cache_read_per_mtok": 0.2,
+     "price_input_per_mtok": 2.0,
+     "price_output_per_mtok": 10.0,
+     "requests_per_minute": 20
+    }
+   },
+   "raw_dir": "<root>/data/raw",
+   "site": {
+    "dir": "",
+    "url": ""
+   },
+   "sources": {
+    "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+    "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+    "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+    "undocs": "https://undocs.org/en/",
+    "ungd_guestbook": {
+     "institution": "Where They Stand",
+     "position": "Project lead",
+     "purpose": "Research"
+    },
+    "votes_record": "https://digitallibrary.un.org/record/4060887"
+   },
+   "start_date": "1992-01-01",
+   "usage": {
+    "answer_cache_hours": 168,
+    "briefing_estimate_usd": 0.1,
+    "briefings_at_once": 8,
+    "briefings_at_once_per_visitor": 2,
+    "cache_write_multiplier": 1.25,
+    "daily_spend_cap_usd": 3.0,
+    "models": {
+     "claude-haiku-5-5": {
+      "price_cache_read_per_mtok": 0.01,
+      "price_input_per_mtok": 0.1,
+      "price_output_per_mtok": 0.5
+     }
+    },
+    "monthly_spend_cap_usd": 50.0,
+    "per_visitor_daily_questions": 40,
+    "price_cache_read_per_mtok": 0.2,
+    "price_input_per_mtok": 2.0,
+    "price_output_per_mtok": 10.0,
+    "requests_per_minute": 20
+   }
+  },
+  "name": "the real settings file"
+ },
+ {
+  "gives": {
+   "answer": {
+    "comprehensive_effort": "high",
+    "comprehensive_sources": 40,
+    "max_tokens": 16000,
+    "model": "claude-sonnet-5-5",
+    "query_parse_effort": "low",
+    "query_parse_model": "claude-haiku-5-5",
+    "summary_effort": "medium",
+    "summary_sources": 24,
+    "use_fallbacks": true
+   },
+   "archive": {
+    "archive_start_date": "1946-01-01",
+    "born_digital_from": 1994,
+    "default_years": 10,
+    "start_date": "1992-01-01"
+   },
+   "archive_start": "1946-01-01",
+   "born_digital_from": 1994,
+   "config_path": "<root>/config/settings.toml",
+   "data_dir": "<tmp>/elsewhere",
+   "embedding": {
+    "backend": "fastembed",
+    "batch_size": 8,
+    "dim": 384,
+    "model": "snowflake/snowflake-arctic-embed-xs",
+    "passage_words": 250
+   },
+   "index_dir": "<tmp>/elsewhere/index",
+   "models_dir": "<tmp>/elsewhere/models",
+   "no_such_section": {},
+   "overrides": {},
+   "parquet_dir": "<tmp>/elsewhere/parquet",
+   "ranking": {
+    "bm25_weight": 0.5,
+    "candidates_bm25": 300,
+    "candidates_vector": 300,
+    "default_recency": 0.4,
+    "default_role_weight": 1.3,
+    "m_head": 1.0,
+    "m_minister": 0.7,
+    "m_representative": 0.3,
+    "max_per_country": 2,
+    "max_per_speaker": 2,
+    "min_half_life_years": 3.0,
+    "min_relevance_ratio": 0.25,
+    "recency_floor": 0.35,
+    "vector_refine_factor": 5
+   },
+   "raw": {
+    "answer": {
+     "comprehensive_effort": "high",
+     "comprehensive_sources": 40,
+     "max_tokens": 16000,
+     "model": "claude-sonnet-5-5",
+     "query_parse_effort": "low",
+     "query_parse_model": "claude-haiku-5-5",
+     "summary_effort": "medium",
+     "summary_sources": 24,
+     "use_fallbacks": true
+    },
+    "archive": {
+     "archive_start_date": "1946-01-01",
+     "born_digital_from": 1994,
+     "default_years": 10,
+     "start_date": "1992-01-01"
+    },
+    "embedding": {
+     "backend": "fastembed",
+     "batch_size": 8,
+     "dim": 384,
+     "model": "snowflake/snowflake-arctic-embed-xs",
+     "passage_words": 250
+    },
+    "live": {
+     "gd_bundled": "gd_website",
+     "gd_from_session": 79,
+     "gd_website": true,
+     "sc_after_meeting": 9524,
+     "sc_from": "2024-01-01"
+    },
+    "paths": {
+     "data_dir": "data"
+    },
+    "ranking": {
+     "bm25_weight": 0.5,
+     "candidates_bm25": 300,
+     "candidates_vector": 300,
+     "default_recency": 0.4,
+     "default_role_weight": 1.3,
+     "m_head": 1.0,
+     "m_minister": 0.7,
+     "m_representative": 0.3,
+     "max_per_country": 2,
+     "max_per_speaker": 2,
+     "min_half_life_years": 3.0,
+     "min_relevance_ratio": 0.25,
+     "recency_floor": 0.35,
+     "vector_refine_factor": 5
+    },
+    "site": {
+     "dir": "",
+     "url": ""
+    },
+    "sources": {
+     "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+     "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+     "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+     "undocs": "https://undocs.org/en/",
+     "ungd_guestbook": {
+      "institution": "Where They Stand",
+      "position": "Project lead",
+      "purpose": "Research"
+     },
+     "votes_record": "https://digitallibrary.un.org/record/4060887"
+    },
+    "usage": {
+     "answer_cache_hours": 168,
+     "briefing_estimate_usd": 0.1,
+     "briefings_at_once": 8,
+     "briefings_at_once_per_visitor": 2,
+     "cache_write_multiplier": 1.25,
+     "daily_spend_cap_usd": 3.0,
+     "models": {
+      "claude-haiku-5-5": {
+       "price_cache_read_per_mtok": 0.01,
+       "price_input_per_mtok": 0.1,
+       "price_output_per_mtok": 0.5
+      }
+     },
+     "monthly_spend_cap_usd": 50.0,
+     "per_visitor_daily_questions": 40,
+     "price_cache_read_per_mtok": 0.2,
+     "price_input_per_mtok": 2.0,
+     "price_output_per_mtok": 10.0,
+     "requests_per_minute": 20
+    }
+   },
+   "raw_dir": "<tmp>/elsewhere/raw",
+   "site": {
+    "dir": "",
+    "url": ""
+   },
+   "sources": {
+    "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+    "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+    "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+    "undocs": "https://undocs.org/en/",
+    "ungd_guestbook": {
+     "institution": "Where They Stand",
+     "position": "Project lead",
+     "purpose": "Research"
+    },
+    "votes_record": "https://digitallibrary.un.org/record/4060887"
+   },
+   "start_date": "1992-01-01",
+   "usage": {
+    "answer_cache_hours": 168,
+    "briefing_estimate_usd": 0.1,
+    "briefings_at_once": 8,
+    "briefings_at_once_per_visitor": 2,
+    "cache_write_multiplier": 1.25,
+    "daily_spend_cap_usd": 3.0,
+    "models": {
+     "claude-haiku-5-5": {
+      "price_cache_read_per_mtok": 0.01,
+      "price_input_per_mtok": 0.1,
+      "price_output_per_mtok": 0.5
+     }
+    },
+    "monthly_spend_cap_usd": 50.0,
+    "per_visitor_daily_questions": 40,
+    "price_cache_read_per_mtok": 0.2,
+    "price_input_per_mtok": 2.0,
+    "price_output_per_mtok": 10.0,
+    "requests_per_minute": 20
+   }
+  },
+  "name": "the real file, the data folder from the environment (absolute)"
+ },
+ {
+  "gives": {
+   "answer": {
+    "comprehensive_effort": "high",
+    "comprehensive_sources": 40,
+    "max_tokens": 16000,
+    "model": "claude-sonnet-5-5",
+    "query_parse_effort": "low",
+    "query_parse_model": "claude-haiku-5-5",
+    "summary_effort": "medium",
+    "summary_sources": 24,
+    "use_fallbacks": true
+   },
+   "archive": {
+    "archive_start_date": "1946-01-01",
+    "born_digital_from": 1994,
+    "default_years": 10,
+    "start_date": "1992-01-01"
+   },
+   "archive_start": "1946-01-01",
+   "born_digital_from": 1994,
+   "config_path": "<root>/config/settings.toml",
+   "data_dir": "<root>/other/data",
+   "embedding": {
+    "backend": "fastembed",
+    "batch_size": 8,
+    "dim": 384,
+    "model": "snowflake/snowflake-arctic-embed-xs",
+    "passage_words": 250
+   },
+   "index_dir": "<root>/other/data/index",
+   "models_dir": "<root>/other/data/models",
+   "no_such_section": {},
+   "overrides": {},
+   "parquet_dir": "<root>/other/data/parquet",
+   "ranking": {
+    "bm25_weight": 0.5,
+    "candidates_bm25": 300,
+    "candidates_vector": 300,
+    "default_recency": 0.4,
+    "default_role_weight": 1.3,
+    "m_head": 1.0,
+    "m_minister": 0.7,
+    "m_representative": 0.3,
+    "max_per_country": 2,
+    "max_per_speaker": 2,
+    "min_half_life_years": 3.0,
+    "min_relevance_ratio": 0.25,
+    "recency_floor": 0.35,
+    "vector_refine_factor": 5
+   },
+   "raw": {
+    "answer": {
+     "comprehensive_effort": "high",
+     "comprehensive_sources": 40,
+     "max_tokens": 16000,
+     "model": "claude-sonnet-5-5",
+     "query_parse_effort": "low",
+     "query_parse_model": "claude-haiku-5-5",
+     "summary_effort": "medium",
+     "summary_sources": 24,
+     "use_fallbacks": true
+    },
+    "archive": {
+     "archive_start_date": "1946-01-01",
+     "born_digital_from": 1994,
+     "default_years": 10,
+     "start_date": "1992-01-01"
+    },
+    "embedding": {
+     "backend": "fastembed",
+     "batch_size": 8,
+     "dim": 384,
+     "model": "snowflake/snowflake-arctic-embed-xs",
+     "passage_words": 250
+    },
+    "live": {
+     "gd_bundled": "gd_website",
+     "gd_from_session": 79,
+     "gd_website": true,
+     "sc_after_meeting": 9524,
+     "sc_from": "2024-01-01"
+    },
+    "paths": {
+     "data_dir": "data"
+    },
+    "ranking": {
+     "bm25_weight": 0.5,
+     "candidates_bm25": 300,
+     "candidates_vector": 300,
+     "default_recency": 0.4,
+     "default_role_weight": 1.3,
+     "m_head": 1.0,
+     "m_minister": 0.7,
+     "m_representative": 0.3,
+     "max_per_country": 2,
+     "max_per_speaker": 2,
+     "min_half_life_years": 3.0,
+     "min_relevance_ratio": 0.25,
+     "recency_floor": 0.35,
+     "vector_refine_factor": 5
+    },
+    "site": {
+     "dir": "",
+     "url": ""
+    },
+    "sources": {
+     "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+     "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+     "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+     "undocs": "https://undocs.org/en/",
+     "ungd_guestbook": {
+      "institution": "Where They Stand",
+      "position": "Project lead",
+      "purpose": "Research"
+     },
+     "votes_record": "https://digitallibrary.un.org/record/4060887"
+    },
+    "usage": {
+     "answer_cache_hours": 168,
+     "briefing_estimate_usd": 0.1,
+     "briefings_at_once": 8,
+     "briefings_at_once_per_visitor": 2,
+     "cache_write_multiplier": 1.25,
+     "daily_spend_cap_usd": 3.0,
+     "models": {
+      "claude-haiku-5-5": {
+       "price_cache_read_per_mtok": 0.01,
+       "price_input_per_mtok": 0.1,
+       "price_output_per_mtok": 0.5
+      }
+     },
+     "monthly_spend_cap_usd": 50.0,
+     "per_visitor_daily_questions": 40,
+     "price_cache_read_per_mtok": 0.2,
+     "price_input_per_mtok": 2.0,
+     "price_output_per_mtok": 10.0,
+     "requests_per_minute": 20
+    }
+   },
+   "raw_dir": "<root>/other/data/raw",
+   "site": {
+    "dir": "",
+    "url": ""
+   },
+   "sources": {
+    "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+    "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+    "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+    "undocs": "https://undocs.org/en/",
+    "ungd_guestbook": {
+     "institution": "Where They Stand",
+     "position": "Project lead",
+     "purpose": "Research"
+    },
+    "votes_record": "https://digitallibrary.un.org/record/4060887"
+   },
+   "start_date": "1992-01-01",
+   "usage": {
+    "answer_cache_hours": 168,
+    "briefing_estimate_usd": 0.1,
+    "briefings_at_once": 8,
+    "briefings_at_once_per_visitor": 2,
+    "cache_write_multiplier": 1.25,
+    "daily_spend_cap_usd": 3.0,
+    "models": {
+     "claude-haiku-5-5": {
+      "price_cache_read_per_mtok": 0.01,
+      "price_input_per_mtok": 0.1,
+      "price_output_per_mtok": 0.5
+     }
+    },
+    "monthly_spend_cap_usd": 50.0,
+    "per_visitor_daily_questions": 40,
+    "price_cache_read_per_mtok": 0.2,
+    "price_input_per_mtok": 2.0,
+    "price_output_per_mtok": 10.0,
+    "requests_per_minute": 20
+   }
+  },
+  "name": "the real file, the data folder from the environment (relative)"
+ },
+ {
+  "gives": {
+   "answer": {
+    "comprehensive_effort": "high",
+    "comprehensive_sources": 40,
+    "max_tokens": 16000,
+    "model": "claude-sonnet-5-5",
+    "query_parse_effort": "low",
+    "query_parse_model": "claude-haiku-5-5",
+    "summary_effort": "medium",
+    "summary_sources": 24,
+    "use_fallbacks": true
+   },
+   "archive": {
+    "archive_start_date": "1946-01-01",
+    "born_digital_from": 1994,
+    "default_years": 10,
+    "start_date": "1992-01-01"
+   },
+   "archive_start": "1946-01-01",
+   "born_digital_from": 1994,
+   "config_path": "<root>/config/settings.toml",
+   "data_dir": "<tmp>/local",
+   "embedding": {
+    "backend": "fastembed",
+    "batch_size": 8,
+    "dim": 384,
+    "model": "snowflake/snowflake-arctic-embed-xs",
+    "passage_words": 250
+   },
+   "index_dir": "<tmp>/local/index",
+   "models_dir": "<tmp>/local/models",
+   "no_such_section": {},
+   "overrides": {},
+   "parquet_dir": "<tmp>/local/parquet",
+   "ranking": {
+    "bm25_weight": 0.5,
+    "candidates_bm25": 300,
+    "candidates_vector": 300,
+    "default_recency": 0.4,
+    "default_role_weight": 1.3,
+    "m_head": 1.0,
+    "m_minister": 0.7,
+    "m_representative": 0.3,
+    "max_per_country": 2,
+    "max_per_speaker": 2,
+    "min_half_life_years": 3.0,
+    "min_relevance_ratio": 0.25,
+    "recency_floor": 0.35,
+    "vector_refine_factor": 5
+   },
+   "raw": {
+    "answer": {
+     "comprehensive_effort": "high",
+     "comprehensive_sources": 40,
+     "max_tokens": 16000,
+     "model": "claude-sonnet-5-5",
+     "query_parse_effort": "low",
+     "query_parse_model": "claude-haiku-5-5",
+     "summary_effort": "medium",
+     "summary_sources": 24,
+     "use_fallbacks": true
+    },
+    "archive": {
+     "archive_start_date": "1946-01-01",
+     "born_digital_from": 1994,
+     "default_years": 10,
+     "start_date": "1992-01-01"
+    },
+    "brand_new": {
+     "key": "value"
+    },
+    "embedding": {
+     "backend": "fastembed",
+     "batch_size": 8,
+     "dim": 384,
+     "model": "snowflake/snowflake-arctic-embed-xs",
+     "passage_words": 250
+    },
+    "live": {
+     "gd_bundled": "gd_website",
+     "gd_from_session": 79,
+     "gd_website": true,
+     "sc_after_meeting": 9524,
+     "sc_from": "2024-01-01"
+    },
+    "paths": {
+     "data_dir": "data"
+    },
+    "ranking": {
+     "bm25_weight": 0.5,
+     "candidates_bm25": 300,
+     "candidates_vector": 300,
+     "default_recency": 0.4,
+     "default_role_weight": 1.3,
+     "m_head": 1.0,
+     "m_minister": 0.7,
+     "m_representative": 0.3,
+     "max_per_country": 2,
+     "max_per_speaker": 2,
+     "min_half_life_years": 3.0,
+     "min_relevance_ratio": 0.25,
+     "recency_floor": 0.35,
+     "vector_refine_factor": 5
+    },
+    "site": {
+     "dir": "",
+     "url": "https://example.test"
+    },
+    "sources": {
+     "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+     "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+     "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+     "undocs": "https://undocs.org/en/",
+     "ungd_guestbook": {
+      "institution": "Where They Stand",
+      "position": "Project lead",
+      "purpose": "Research"
+     },
+     "votes_record": "https://digitallibrary.un.org/record/4060887"
+    },
+    "usage": {
+     "answer_cache_hours": 168,
+     "briefing_estimate_usd": 0.1,
+     "briefings_at_once": 8,
+     "briefings_at_once_per_visitor": 2,
+     "cache_write_multiplier": 1.25,
+     "daily_spend_cap_usd": 9.0,
+     "models": {
+      "claude-haiku-5-5": {
+       "price_cache_read_per_mtok": 0.01,
+       "price_input_per_mtok": 0.1,
+       "price_output_per_mtok": 0.5
+      }
+     },
+     "monthly_spend_cap_usd": 50.0,
+     "per_visitor_daily_questions": 7,
+     "price_cache_read_per_mtok": 0.2,
+     "price_input_per_mtok": 2.0,
+     "price_output_per_mtok": 10.0,
+     "requests_per_minute": 20
+    }
+   },
+   "raw_dir": "<tmp>/local/raw",
+   "site": {
+    "dir": "",
+    "url": "https://example.test"
+   },
+   "sources": {
+    "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+    "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+    "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+    "undocs": "https://undocs.org/en/",
+    "ungd_guestbook": {
+     "institution": "Where They Stand",
+     "position": "Project lead",
+     "purpose": "Research"
+    },
+    "votes_record": "https://digitallibrary.un.org/record/4060887"
+   },
+   "start_date": "1992-01-01",
+   "usage": {
+    "answer_cache_hours": 168,
+    "briefing_estimate_usd": 0.1,
+    "briefings_at_once": 8,
+    "briefings_at_once_per_visitor": 2,
+    "cache_write_multiplier": 1.25,
+    "daily_spend_cap_usd": 9.0,
+    "models": {
+     "claude-haiku-5-5": {
+      "price_cache_read_per_mtok": 0.01,
+      "price_input_per_mtok": 0.1,
+      "price_output_per_mtok": 0.5
+     }
+    },
+    "monthly_spend_cap_usd": 50.0,
+    "per_visitor_daily_questions": 7,
+    "price_cache_read_per_mtok": 0.2,
+    "price_input_per_mtok": 2.0,
+    "price_output_per_mtok": 10.0,
+    "requests_per_minute": 20
+   }
+  },
+  "name": "the real file, a local file layered over it"
+ },
+ {
+  "gives": {
+   "answer": {
+    "comprehensive_effort": "high",
+    "comprehensive_sources": 40,
+    "max_tokens": 16000,
+    "model": "claude-sonnet-5-5",
+    "query_parse_effort": "low",
+    "query_parse_model": "claude-haiku-5-5",
+    "summary_effort": "medium",
+    "summary_sources": 24,
+    "use_fallbacks": true
+   },
+   "archive": {
+    "archive_start_date": "1946-01-01",
+    "born_digital_from": 1994,
+    "default_years": 10,
+    "start_date": "1992-01-01"
+   },
+   "archive_start": "1946-01-01",
+   "born_digital_from": 1994,
+   "config_path": "<root>/config/settings.toml",
+   "data_dir": "<tmp>/o",
+   "embedding": {
+    "backend": "hashing",
+    "batch_size": 8,
+    "dim": 64,
+    "model": "snowflake/snowflake-arctic-embed-xs",
+    "passage_words": 250
+   },
+   "index_dir": "<tmp>/o/index",
+   "models_dir": "<tmp>/o/models",
+   "no_such_section": {},
+   "overrides": {
+    "embedding.backend": "hashing",
+    "embedding.dim": 64,
+    "live.gd_bundled": "",
+    "new.key": 1
+   },
+   "parquet_dir": "<tmp>/o/parquet",
+   "ranking": {
+    "bm25_weight": 0.5,
+    "candidates_bm25": 300,
+    "candidates_vector": 300,
+    "default_recency": 0.4,
+    "default_role_weight": 1.3,
+    "m_head": 1.0,
+    "m_minister": 0.7,
+    "m_representative": 0.3,
+    "max_per_country": 2,
+    "max_per_speaker": 2,
+    "min_half_life_years": 3.0,
+    "min_relevance_ratio": 0.25,
+    "recency_floor": 0.35,
+    "vector_refine_factor": 5
+   },
+   "raw": {
+    "answer": {
+     "comprehensive_effort": "high",
+     "comprehensive_sources": 40,
+     "max_tokens": 16000,
+     "model": "claude-sonnet-5-5",
+     "query_parse_effort": "low",
+     "query_parse_model": "claude-haiku-5-5",
+     "summary_effort": "medium",
+     "summary_sources": 24,
+     "use_fallbacks": true
+    },
+    "archive": {
+     "archive_start_date": "1946-01-01",
+     "born_digital_from": 1994,
+     "default_years": 10,
+     "start_date": "1992-01-01"
+    },
+    "embedding": {
+     "backend": "hashing",
+     "batch_size": 8,
+     "dim": 64,
+     "model": "snowflake/snowflake-arctic-embed-xs",
+     "passage_words": 250
+    },
+    "live": {
+     "gd_bundled": "",
+     "gd_from_session": 79,
+     "gd_website": true,
+     "sc_after_meeting": 9524,
+     "sc_from": "2024-01-01"
+    },
+    "new": {
+     "key": 1
+    },
+    "paths": {
+     "data_dir": "data"
+    },
+    "ranking": {
+     "bm25_weight": 0.5,
+     "candidates_bm25": 300,
+     "candidates_vector": 300,
+     "default_recency": 0.4,
+     "default_role_weight": 1.3,
+     "m_head": 1.0,
+     "m_minister": 0.7,
+     "m_representative": 0.3,
+     "max_per_country": 2,
+     "max_per_speaker": 2,
+     "min_half_life_years": 3.0,
+     "min_relevance_ratio": 0.25,
+     "recency_floor": 0.35,
+     "vector_refine_factor": 5
+    },
+    "site": {
+     "dir": "",
+     "url": ""
+    },
+    "sources": {
+     "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+     "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+     "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+     "undocs": "https://undocs.org/en/",
+     "ungd_guestbook": {
+      "institution": "Where They Stand",
+      "position": "Project lead",
+      "purpose": "Research"
+     },
+     "votes_record": "https://digitallibrary.un.org/record/4060887"
+    },
+    "usage": {
+     "answer_cache_hours": 168,
+     "briefing_estimate_usd": 0.1,
+     "briefings_at_once": 8,
+     "briefings_at_once_per_visitor": 2,
+     "cache_write_multiplier": 1.25,
+     "daily_spend_cap_usd": 3.0,
+     "models": {
+      "claude-haiku-5-5": {
+       "price_cache_read_per_mtok": 0.01,
+       "price_input_per_mtok": 0.1,
+       "price_output_per_mtok": 0.5
+      }
+     },
+     "monthly_spend_cap_usd": 50.0,
+     "per_visitor_daily_questions": 40,
+     "price_cache_read_per_mtok": 0.2,
+     "price_input_per_mtok": 2.0,
+     "price_output_per_mtok": 10.0,
+     "requests_per_minute": 20
+    }
+   },
+   "raw_dir": "<tmp>/o/raw",
+   "site": {
+    "dir": "",
+    "url": ""
+   },
+   "sources": {
+    "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+    "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+    "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+    "undocs": "https://undocs.org/en/",
+    "ungd_guestbook": {
+     "institution": "Where They Stand",
+     "position": "Project lead",
+     "purpose": "Research"
+    },
+    "votes_record": "https://digitallibrary.un.org/record/4060887"
+   },
+   "start_date": "1992-01-01",
+   "usage": {
+    "answer_cache_hours": 168,
+    "briefing_estimate_usd": 0.1,
+    "briefings_at_once": 8,
+    "briefings_at_once_per_visitor": 2,
+    "cache_write_multiplier": 1.25,
+    "daily_spend_cap_usd": 3.0,
+    "models": {
+     "claude-haiku-5-5": {
+      "price_cache_read_per_mtok": 0.01,
+      "price_input_per_mtok": 0.1,
+      "price_output_per_mtok": 0.5
+     }
+    },
+    "monthly_spend_cap_usd": 50.0,
+    "per_visitor_daily_questions": 40,
+    "price_cache_read_per_mtok": 0.2,
+    "price_input_per_mtok": 2.0,
+    "price_output_per_mtok": 10.0,
+    "requests_per_minute": 20
+   }
+  },
+  "name": "the real file, overrides as the tests give them"
+ },
+ {
+  "gives": {
+   "answer": {
+    "comprehensive_effort": "high",
+    "comprehensive_sources": 40,
+    "max_tokens": 16000,
+    "model": "claude-sonnet-5-5",
+    "query_parse_effort": "low",
+    "query_parse_model": "claude-haiku-5-5",
+    "summary_effort": "medium",
+    "summary_sources": 24,
+    "use_fallbacks": true
+   },
+   "archive": {
+    "archive_start_date": "1946-01-01",
+    "born_digital_from": 1994,
+    "default_years": 10,
+    "start_date": "1992-01-01"
+   },
+   "archive_start": "1946-01-01",
+   "born_digital_from": 1994,
+   "config_path": "<root>/config/settings.toml",
+   "data_dir": "<tmp>/both",
+   "embedding": {
+    "backend": "fastembed",
+    "batch_size": 8,
+    "dim": 384,
+    "model": "snowflake/snowflake-arctic-embed-xs",
+    "passage_words": 250
+   },
+   "index_dir": "<tmp>/both/index",
+   "models_dir": "<tmp>/both/models",
+   "no_such_section": {},
+   "overrides": {
+    "usage.daily_spend_cap_usd": 0.0
+   },
+   "parquet_dir": "<tmp>/both/parquet",
+   "ranking": {
+    "bm25_weight": 0.5,
+    "candidates_bm25": 300,
+    "candidates_vector": 300,
+    "default_recency": 0.4,
+    "default_role_weight": 1.3,
+    "m_head": 1.0,
+    "m_minister": 0.7,
+    "m_representative": 0.3,
+    "max_per_country": 2,
+    "max_per_speaker": 2,
+    "min_half_life_years": 3.0,
+    "min_relevance_ratio": 0.25,
+    "recency_floor": 0.35,
+    "vector_refine_factor": 5
+   },
+   "raw": {
+    "answer": {
+     "comprehensive_effort": "high",
+     "comprehensive_sources": 40,
+     "max_tokens": 16000,
+     "model": "claude-sonnet-5-5",
+     "query_parse_effort": "low",
+     "query_parse_model": "claude-haiku-5-5",
+     "summary_effort": "medium",
+     "summary_sources": 24,
+     "use_fallbacks": true
+    },
+    "archive": {
+     "archive_start_date": "1946-01-01",
+     "born_digital_from": 1994,
+     "default_years": 10,
+     "start_date": "1992-01-01"
+    },
+    "brand_new": {
+     "key": "value"
+    },
+    "embedding": {
+     "backend": "fastembed",
+     "batch_size": 8,
+     "dim": 384,
+     "model": "snowflake/snowflake-arctic-embed-xs",
+     "passage_words": 250
+    },
+    "live": {
+     "gd_bundled": "gd_website",
+     "gd_from_session": 79,
+     "gd_website": true,
+     "sc_after_meeting": 9524,
+     "sc_from": "2024-01-01"
+    },
+    "paths": {
+     "data_dir": "data"
+    },
+    "ranking": {
+     "bm25_weight": 0.5,
+     "candidates_bm25": 300,
+     "candidates_vector": 300,
+     "default_recency": 0.4,
+     "default_role_weight": 1.3,
+     "m_head": 1.0,
+     "m_minister": 0.7,
+     "m_representative": 0.3,
+     "max_per_country": 2,
+     "max_per_speaker": 2,
+     "min_half_life_years": 3.0,
+     "min_relevance_ratio": 0.25,
+     "recency_floor": 0.35,
+     "vector_refine_factor": 5
+    },
+    "site": {
+     "dir": "",
+     "url": "https://example.test"
+    },
+    "sources": {
+     "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+     "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+     "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+     "undocs": "https://undocs.org/en/",
+     "ungd_guestbook": {
+      "institution": "Where They Stand",
+      "position": "Project lead",
+      "purpose": "Research"
+     },
+     "votes_record": "https://digitallibrary.un.org/record/4060887"
+    },
+    "usage": {
+     "answer_cache_hours": 168,
+     "briefing_estimate_usd": 0.1,
+     "briefings_at_once": 8,
+     "briefings_at_once_per_visitor": 2,
+     "cache_write_multiplier": 1.25,
+     "daily_spend_cap_usd": 0.0,
+     "models": {
+      "claude-haiku-5-5": {
+       "price_cache_read_per_mtok": 0.01,
+       "price_input_per_mtok": 0.1,
+       "price_output_per_mtok": 0.5
+      }
+     },
+     "monthly_spend_cap_usd": 50.0,
+     "per_visitor_daily_questions": 7,
+     "price_cache_read_per_mtok": 0.2,
+     "price_input_per_mtok": 2.0,
+     "price_output_per_mtok": 10.0,
+     "requests_per_minute": 20
+    }
+   },
+   "raw_dir": "<tmp>/both/raw",
+   "site": {
+    "dir": "",
+    "url": "https://example.test"
+   },
+   "sources": {
+    "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+    "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+    "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+    "undocs": "https://undocs.org/en/",
+    "ungd_guestbook": {
+     "institution": "Where They Stand",
+     "position": "Project lead",
+     "purpose": "Research"
+    },
+    "votes_record": "https://digitallibrary.un.org/record/4060887"
+   },
+   "start_date": "1992-01-01",
+   "usage": {
+    "answer_cache_hours": 168,
+    "briefing_estimate_usd": 0.1,
+    "briefings_at_once": 8,
+    "briefings_at_once_per_visitor": 2,
+    "cache_write_multiplier": 1.25,
+    "daily_spend_cap_usd": 0.0,
+    "models": {
+     "claude-haiku-5-5": {
+      "price_cache_read_per_mtok": 0.01,
+      "price_input_per_mtok": 0.1,
+      "price_output_per_mtok": 0.5
+     }
+    },
+    "monthly_spend_cap_usd": 50.0,
+    "per_visitor_daily_questions": 7,
+    "price_cache_read_per_mtok": 0.2,
+    "price_input_per_mtok": 2.0,
+    "price_output_per_mtok": 10.0,
+    "requests_per_minute": 20
+   }
+  },
+  "name": "the real file, a local file and overrides"
+ },
+ {
+  "gives": {
+   "answer": {
+    "model": "sample-model"
+   },
+   "archive": {
+    "default_years": 5,
+    "start_date": "2000-01-01"
+   },
+   "archive_start": "1946-01-01",
+   "born_digital_from": 1994,
+   "config_path": "<tmp>/sample-6.toml",
+   "data_dir": "<tmp>/sample-data",
+   "embedding": {},
+   "index_dir": "<tmp>/sample-data/index",
+   "models_dir": "<tmp>/sample-data/models",
+   "no_such_section": {},
+   "overrides": {},
+   "parquet_dir": "<tmp>/sample-data/parquet",
+   "ranking": {},
+   "raw": {
+    "answer": {
+     "model": "sample-model"
+    },
+    "archive": {
+     "default_years": 5,
+     "start_date": "2000-01-01"
+    },
+    "paths": {
+     "data_dir": "<tmp>/sample-data"
+    },
+    "usage": {
+     "daily_spend_cap_usd": 1.5
+    }
+   },
+   "raw_dir": "<tmp>/sample-data/raw",
+   "site": {},
+   "sources": {},
+   "start_date": "2000-01-01",
+   "usage": {
+    "daily_spend_cap_usd": 1.5
+   }
+  },
+  "name": "a sample file named by WCS_CONFIG"
+ },
+ {
+  "gives": {
+   "answer": {
+    "model": "sample-model"
+   },
+   "archive": {
+    "default_years": 5,
+    "start_date": "2000-01-01"
+   },
+   "archive_start": "1946-01-01",
+   "born_digital_from": 1994,
+   "config_path": "<tmp>/sample-7.toml",
+   "data_dir": "<root>/var/data",
+   "embedding": {},
+   "index_dir": "<root>/var/data/index",
+   "models_dir": "<root>/var/data/models",
+   "no_such_section": {},
+   "overrides": {},
+   "parquet_dir": "<root>/var/data/parquet",
+   "ranking": {},
+   "raw": {
+    "answer": {
+     "model": "sample-model"
+    },
+    "archive": {
+     "default_years": 5,
+     "start_date": "2000-01-01"
+    },
+    "paths": {
+     "data_dir": "var/data"
+    },
+    "usage": {
+     "daily_spend_cap_usd": 1.5
+    }
+   },
+   "raw_dir": "<root>/var/data/raw",
+   "site": {},
+   "sources": {},
+   "start_date": "2000-01-01",
+   "usage": {
+    "daily_spend_cap_usd": 1.5
+   }
+  },
+  "name": "a sample file with a relative data folder"
+ },
+ {
+  "gives": {
+   "answer": {
+    "model": "sample-model"
+   },
+   "archive": {
+    "default_years": 5,
+    "start_date": "2000-01-01"
+   },
+   "archive_start": "1946-01-01",
+   "born_digital_from": 1994,
+   "config_path": "<tmp>/sample-8.toml",
+   "data_dir": "<tmp>/from-env",
+   "embedding": {},
+   "index_dir": "<tmp>/from-env/index",
+   "models_dir": "<tmp>/from-env/models",
+   "no_such_section": {},
+   "overrides": {},
+   "parquet_dir": "<tmp>/from-env/parquet",
+   "ranking": {},
+   "raw": {
+    "answer": {
+     "model": "sample-model"
+    },
+    "archive": {
+     "default_years": 5,
+     "start_date": "2000-01-01"
+    },
+    "paths": {
+     "data_dir": "var/data"
+    },
+    "usage": {
+     "daily_spend_cap_usd": 1.5
+    }
+   },
+   "raw_dir": "<tmp>/from-env/raw",
+   "site": {},
+   "sources": {},
+   "start_date": "2000-01-01",
+   "usage": {
+    "daily_spend_cap_usd": 1.5
+   }
+  },
+  "name": "a sample file given as an argument, the data folder from the environment"
+ },
+ {
+  "gives": {
+   "answer": {
+    "comprehensive_effort": "high",
+    "comprehensive_sources": 40,
+    "max_tokens": 16000,
+    "model": "claude-sonnet-5-5",
+    "query_parse_effort": "low",
+    "query_parse_model": "claude-haiku-5-5",
+    "summary_effort": "medium",
+    "summary_sources": 24,
+    "use_fallbacks": true
+   },
+   "archive": {
+    "archive_start_date": "1946-01-01",
+    "born_digital_from": 1994,
+    "default_years": 10,
+    "start_date": "1992-01-01"
+   },
+   "archive_start": "1946-01-01",
+   "born_digital_from": 1994,
+   "config_path": "<root>/config/settings.toml",
+   "data_dir": "<root>/data",
+   "embedding": {
+    "backend": "fastembed",
+    "batch_size": 8,
+    "dim": 384,
+    "model": "snowflake/snowflake-arctic-embed-xs",
+    "passage_words": 250
+   },
+   "index_dir": "<root>/data/index",
+   "models_dir": "<root>/data/models",
+   "no_such_section": {},
+   "overrides": {},
+   "parquet_dir": "<root>/data/parquet",
+   "ranking": {
+    "bm25_weight": 0.5,
+    "candidates_bm25": 300,
+    "candidates_vector": 300,
+    "default_recency": 0.4,
+    "default_role_weight": 1.3,
+    "m_head": 1.0,
+    "m_minister": 0.7,
+    "m_representative": 0.3,
+    "max_per_country": 2,
+    "max_per_speaker": 2,
+    "min_half_life_years": 3.0,
+    "min_relevance_ratio": 0.25,
+    "recency_floor": 0.35,
+    "vector_refine_factor": 5
+   },
+   "raw": {
+    "answer": {
+     "comprehensive_effort": "high",
+     "comprehensive_sources": 40,
+     "max_tokens": 16000,
+     "model": "claude-sonnet-5-5",
+     "query_parse_effort": "low",
+     "query_parse_model": "claude-haiku-5-5",
+     "summary_effort": "medium",
+     "summary_sources": 24,
+     "use_fallbacks": true
+    },
+    "archive": {
+     "archive_start_date": "1946-01-01",
+     "born_digital_from": 1994,
+     "default_years": 10,
+     "start_date": "1992-01-01"
+    },
+    "embedding": {
+     "backend": "fastembed",
+     "batch_size": 8,
+     "dim": 384,
+     "model": "snowflake/snowflake-arctic-embed-xs",
+     "passage_words": 250
+    },
+    "live": {
+     "gd_bundled": "gd_website",
+     "gd_from_session": 79,
+     "gd_website": true,
+     "sc_after_meeting": 9524,
+     "sc_from": "2024-01-01"
+    },
+    "paths": {
+     "data_dir": "data"
+    },
+    "ranking": {
+     "bm25_weight": 0.5,
+     "candidates_bm25": 300,
+     "candidates_vector": 300,
+     "default_recency": 0.4,
+     "default_role_weight": 1.3,
+     "m_head": 1.0,
+     "m_minister": 0.7,
+     "m_representative": 0.3,
+     "max_per_country": 2,
+     "max_per_speaker": 2,
+     "min_half_life_years": 3.0,
+     "min_relevance_ratio": 0.25,
+     "recency_floor": 0.35,
+     "vector_refine_factor": 5
+    },
+    "site": {
+     "dir": "",
+     "url": ""
+    },
+    "sources": {
+     "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+     "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+     "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+     "undocs": "https://undocs.org/en/",
+     "ungd_guestbook": {
+      "institution": "Where They Stand",
+      "position": "Project lead",
+      "purpose": "Research"
+     },
+     "votes_record": "https://digitallibrary.un.org/record/4060887"
+    },
+    "usage": {
+     "answer_cache_hours": 168,
+     "briefing_estimate_usd": 0.1,
+     "briefings_at_once": 8,
+     "briefings_at_once_per_visitor": 2,
+     "cache_write_multiplier": 1.25,
+     "daily_spend_cap_usd": 3.0,
+     "models": {
+      "claude-haiku-5-5": {
+       "price_cache_read_per_mtok": 0.01,
+       "price_input_per_mtok": 0.1,
+       "price_output_per_mtok": 0.5
+      }
+     },
+     "monthly_spend_cap_usd": 50.0,
+     "per_visitor_daily_questions": 40,
+     "price_cache_read_per_mtok": 0.2,
+     "price_input_per_mtok": 2.0,
+     "price_output_per_mtok": 10.0,
+     "requests_per_minute": 20
+    }
+   },
+   "raw_dir": "<root>/data/raw",
+   "site": {
+    "dir": "",
+    "url": ""
+   },
+   "sources": {
+    "sc_meta": "https://dataverse.harvard.edu/api/access/datafile/10809806",
+    "sc_speakers": "https://dataverse.harvard.edu/api/access/datafile/10809807",
+    "sc_speeches": "https://dataverse.harvard.edu/api/access/datafile/10809805",
+    "undocs": "https://undocs.org/en/",
+    "ungd_guestbook": {
+     "institution": "Where They Stand",
+     "position": "Project lead",
+     "purpose": "Research"
+    },
+    "votes_record": "https://digitallibrary.un.org/record/4060887"
+   },
+   "start_date": "1992-01-01",
+   "usage": {
+    "answer_cache_hours": 168,
+    "briefing_estimate_usd": 0.1,
+    "briefings_at_once": 8,
+    "briefings_at_once_per_visitor": 2,
+    "cache_write_multiplier": 1.25,
+    "daily_spend_cap_usd": 3.0,
+    "models": {
+     "claude-haiku-5-5": {
+      "price_cache_read_per_mtok": 0.01,
+      "price_input_per_mtok": 0.1,
+      "price_output_per_mtok": 0.5
+     }
+    },
+    "monthly_spend_cap_usd": 50.0,
+    "per_visitor_daily_questions": 40,
+    "price_cache_read_per_mtok": 0.2,
+    "price_input_per_mtok": 2.0,
+    "price_output_per_mtok": 10.0,
+    "requests_per_minute": 20
+   }
+  },
+  "name": "an empty WCS_DATA_DIR counts as unset"
+ }
+]
