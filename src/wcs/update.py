@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any
 
 import duckdb
+from wts_core.ports import SYSTEM_CLOCK, Clock
 
 from wcs.config import Settings
 from wcs.reference.countries import Countries, countries
@@ -493,7 +494,7 @@ def spending(settings: Settings, report: Report) -> None:
         report.warnings.append(f"spending: could not read {settings.state_db} ({type(exc).__name__}: {exc})")
 
 
-def briefings(settings: Settings, report: Report) -> None:
+def briefings(settings: Settings, report: Report, clock: Clock = SYSTEM_CLOCK) -> None:
     """Whether briefings have got worse over the last day than the owner's thresholds allow (``[alerts]``: slower,
     more errors, more failed checks, dearer). Each figure over its threshold is an error in the report, so the
     scheduled run exits 1 and the email goes. With no thresholds set, as at first, nothing is said."""
@@ -507,7 +508,8 @@ def briefings(settings: Settings, report: Report) -> None:
     from wcs.state import open_state
 
     try:
-        figures = stats(SqliteBriefingLog(open_state(settings)), since=timedelta(days=1))
+        figures = stats(SqliteBriefingLog(open_state(settings, clock), clock=clock), since=timedelta(days=1),
+                        clock=clock)
         report.errors += [f"briefings: {said}" for said in tripped(figures, thresholds)]
     except Exception as exc:  # the report itself matters more
         report.warnings.append(f"briefings: could not check the alerts ({type(exc).__name__}: {exc})")

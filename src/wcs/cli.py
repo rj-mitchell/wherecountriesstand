@@ -466,7 +466,7 @@ app.add_typer(stats_commands(
     thresholds=lambda: load_settings().section("alerts"),
     folder=lambda: load_settings().reports_dir,
     # readers' questions are grouped into themes by meaning with the site's own embedding model, on the server
-    embedder=_embedder, similarity=lambda: float(load_settings().embedding["theme_similarity"]),
+    embedder=lambda: _embedder(), similarity=lambda: float(load_settings().embedding["theme_similarity"]),
     pricing=_prices,
     names=StatsNames(stats="briefing-stats", weekly_report="weekly-report", tidy="tidy"),
     backup_days=BACKUPS.keep_offsite,  # nothing that holds old rows outlives the backups
