@@ -1,6 +1,7 @@
-"""Curly quotes in the model's text (wcs.rag.typography)."""
+"""Curly quotes in the model's text: this site shows its briefings with them (wcs.rag.checks turns them on; the
+functions are the shared package's, wts_core.checks)."""
 
-from wcs.rag.typography import curl_answer, curl_events, curl_quotes
+from wts_core.checks import curl_answer, curl_events, curl_quotes
 
 
 def test_quotes_and_apostrophes_are_curled():

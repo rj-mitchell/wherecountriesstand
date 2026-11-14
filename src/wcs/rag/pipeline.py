@@ -12,15 +12,14 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
 
+from wts_core.checks import curl_event, to_british
+
 from wcs.config import Settings
 from wcs.engine import Engine
-from wcs.rag.british import britishise_segments, to_british
-from wcs.rag.neutral import flag_loaded
+from wcs.rag.checks import checked
 from wcs.rag.prompts import NO_RECORDS
 from wcs.rag.query_parse import QueryPlan, parse_offline, parse_with_model
 from wcs.rag.sources import build_sources
-from wcs.rag.typography import curl_answer, curl_event
-from wcs.rag.verify import check_quotes, drop_preambles, verify
 from wcs.votes import VoteFinder
 
 log = logging.getLogger(__name__)
@@ -156,13 +155,11 @@ class Pipeline:
             yield {"type": "error", "message": "The model declined to answer this question.",
                    "usage": final["usage"], "model": final.get("model")}
             return
-        report = verify(final["blocks"], sources)
-        drop_preambles(report.segments)       # "Across the records retrieved, ..." openers
-        britishise_segments(report.segments)  # the model's own words only; quotations stay verbatim
-        loaded = flag_loaded(report.segments)  # judgemental words in its own voice are highlighted, not hidden
-        check_quotes(report, sources)         # quotations not found word for word in their sources are marked
-        # curly quotes and apostrophes, last, once the checks have read the text as the model wrote it
-        yield {"type": "final", "answer": curl_answer({**report.to_dict(), "loaded_words": loaded}),
+        # Every check, in the one order: citations, openers about the records dropped, the model's own words made
+        # British (quotations stay verbatim), judgemental words in its own voice highlighted (not hidden),
+        # quotations not found word for word marked; then curly quotes and apostrophes, last, once the checks have
+        # read the text as the model wrote it (wcs.rag.checks).
+        yield {"type": "final", "answer": checked(final["blocks"], sources),
                "usage": final["usage"], "model": final.get("model"), "stop_reason": final.get("stop_reason")}
 
 

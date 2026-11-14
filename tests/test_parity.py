@@ -29,3 +29,56 @@ def test_settings_resolve_as_they_did(tmp_path, monkeypatch):
     assert now.keys() == before.keys() and len(before) == len(shared.SETTINGS_CASES)
     for name in before:
         assert now[name] == before[name], name
+
+
+# ---- the checks on briefings -----------------------------------------------------------------------------------
+
+
+def test_the_checks_report_what_they_reported():
+    """Each test briefing through every check, as the pipeline runs them. One difference, and it is listed
+    (wts-core docs/MIGRATION.md 1.4, docs/AS-BUILT.md "checks"): an answer now carries the version of the checking
+    rules that wrote it, as a new key, ``rules``. Everything else is what it was: never a flag fewer."""
+    from wts_core.checks import RULES_VERSION
+
+    from wcs.rag.checks import checked
+    from wcs.rag.sources import Source
+
+    sources = [Source(**s) for s in shared.SOURCES]
+    before = by_name(shared.read("checks.json")["written"])
+    assert before.keys() == {case["name"] for case in shared.CHECK_CASES}
+    for case in shared.CHECK_CASES:
+        answer = dict(checked(case["blocks"], sources))
+        assert answer.pop("rules") == RULES_VERSION, case["name"]
+        assert answer == before[case["name"]]["answer"], case["name"]
+
+
+def test_saved_briefings_are_shown_again_as_they_were():
+    """Saved and cached briefings from before the move carry no stamp of the rules, so each is judged again when it
+    is shown, with curly quotes: the same statuses, counts and text as the site's own recheck gave."""
+    import json
+
+    from wcs.rag.checks import rechecked
+
+    before = by_name(shared.read("checks.json")["shown_again"])
+    assert before.keys() == {case["name"] for case in shared.SAVED_BRIEFINGS}
+    for case in shared.SAVED_BRIEFINGS:
+        assert rechecked(json.loads(json.dumps(case["events"]))) == before[case["name"]]["events"], case["name"]
+
+
+def test_the_evidence_note_rule_is_the_wide_one_it_was():
+    """This site takes a sentence with "was supplied" or "were retrieved" in it for a note about the evidence, which
+    is loose ("Gas was supplied to two million homes." is not marked). It is kept as it is here, so that nothing
+    changes with the move; narrowing it is a separate change for the owner, with an evaluation run before and
+    after (wts-core docs/ARCHITECTURE.md's table of findings; docs/AS-BUILT.md, "checks")."""
+    from wts_core.checks import EVIDENCE_NOTES_STRICT, EVIDENCE_NOTES_WIDE, Verifier
+
+    from wcs.rag.checks import VERIFIER
+    from wcs.rag.sources import Source
+
+    sources = [Source(**s) for s in shared.SOURCES]
+    case = next(c for c in shared.CHECK_CASES if c["name"] == "notes about the evidence, wide and narrow")
+    wide = Verifier(no_records="No records found.", evidence_notes=EVIDENCE_NOTES_WIDE)
+    strict = Verifier(no_records="No records found.", evidence_notes=EVIDENCE_NOTES_STRICT)
+    ours = VERIFIER.verify(case["blocks"], sources).to_dict()
+    assert ours == wide.verify(case["blocks"], sources).to_dict()
+    assert ours["unsupported_segments"] < strict.verify(case["blocks"], sources).to_dict()["unsupported_segments"]

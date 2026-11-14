@@ -20,8 +20,10 @@ How records are grouped (``group_by``):
 
 from __future__ import annotations
 
-from collections import Counter, defaultdict
+from collections import Counter
 from typing import Any
+
+from wts_core.checks import round_robin
 
 from wcs.rank.composite import Scored
 
@@ -89,48 +91,24 @@ def evidence_group(rec: dict[str, Any], group_by: str = "region") -> str:
 
 def select_evidence(scored: list[Scored], k: int, *, group_by: str = "region", max_per_speaker: int = 2,
                     max_per_country: int = 2, min_relevance_ratio: float = 0.25) -> list[Scored]:
+    """The balanced set: the turn-taking between groups is the Where They Stand sites' shared one (wts-core,
+    ``wts_core.checks.round_robin``); the relevance floor, the grouping and the two caps are this site's."""
     if not scored:
         return []
     best_rel = max(s.relevance for s in scored)
-    pool = [s for s in scored if s.relevance >= best_rel * min_relevance_ratio]
-    groups: dict[str, list[Scored]] = defaultdict(list)
-    for s in pool:  # already in score order
-        groups[evidence_group(s.candidate.data, group_by)].append(s)
-    order = sorted(groups, key=lambda g: -groups[g][0].score)
-    chosen: list[Scored] = []
-    taken: set[str] = set()
-    per_speaker: Counter[str] = Counter()
-    per_country: Counter[str] = Counter()
+    pool = [s for s in scored if s.relevance >= best_rel * min_relevance_ratio]  # already in score order
 
-    def take(s: Scored) -> bool:
+    def who(s: Scored) -> str:
         d = s.candidate.data
-        who = f"{d.get('country_code') or d.get('country_name')}|{d.get('speaker_name')}"
-        country = d.get("on_behalf_of") or d.get("country_code") or d.get("country_name") or s.candidate.record_id
-        if s.candidate.record_id in taken or per_speaker[who] >= max_per_speaker or \
-                per_country[country] >= max_per_country:
-            return False
-        chosen.append(s)
-        taken.add(s.candidate.record_id)
-        per_speaker[who] += 1
-        per_country[country] += 1
-        return True
+        return f"{d.get('country_code') or d.get('country_name')}|{d.get('speaker_name')}"
 
-    progress = True
-    while len(chosen) < k and progress:
-        progress = False
-        for g in order:
-            for s in groups[g]:
-                if take(s):
-                    progress = True
-                    break
-            if len(chosen) >= k:
-                break
-    for s in pool:  # fill by score if the groups ran dry
-        if len(chosen) >= k:
-            break
-        take(s)
-    chosen.sort(key=lambda s: (-s.score, s.candidate.record_id))
-    return chosen
+    def country(s: Scored) -> str:
+        d = s.candidate.data
+        return d.get("on_behalf_of") or d.get("country_code") or d.get("country_name") or s.candidate.record_id
+
+    return round_robin(pool, k, group_of=lambda s: evidence_group(s.candidate.data, group_by),
+                       key_of=lambda s: s.candidate.record_id, score_of=lambda s: s.score,
+                       caps=[(who, max_per_speaker), (country, max_per_country)])
 
 
 def evidence_summary(records: list[dict[str, Any]], group_by: str = "region") -> dict[str, Any]:

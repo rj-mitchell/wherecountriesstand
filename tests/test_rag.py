@@ -3,12 +3,13 @@ from datetime import date
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from wts_core.checks import Segment
+
 from wcs.engine import Filters
-from wcs.rag.neutral import flag_loaded
+from wcs.rag.checks import LOADED_WORDS, VERIFIER
 from wcs.rag.pipeline import AskRequest, Pipeline, answer_once
 from wcs.rag.query_parse import QueryPlan, parse_offline
 from wcs.rag.sources import blocks_for, build_sources, record_source, speaker_label
-from wcs.rag.verify import Segment, verify
 from wcs.reference.countries import countries
 from wcs.store.parquet import VOTE_SCHEMA, votes_path
 from wcs.votes import VoteFinder, terms
@@ -104,12 +105,12 @@ def test_verification_and_loaded_words():
     blocks = [{"text": "France said its action was self-defence", "citations": [
         {"search_result_index": 0, "cited_text": "Our action is self-defence."}]},
         {"text": ", while the regime in question ignored the West.", "citations": []}]
-    report = verify(blocks, sources)
+    report = VERIFIER.verify(blocks, sources)
     assert report.citations_invalid == 0 and report.segments[0].sources == [1]
-    words = [m["word"] for s in report.segments for m in s.loaded] if flag_loaded(report.segments) else []
+    words = [m["word"] for s in report.segments for m in s.loaded] if LOADED_WORDS.flag(report.segments) else []
     assert "regime" in words and "the West" in words
     seg = Segment("Troops moved to the west of the country.")
-    assert flag_loaded([seg]) == 0
+    assert LOADED_WORDS.flag([seg]) == 0
 
 
 def test_votes(settings):
@@ -161,7 +162,7 @@ def test_lead_ins_in_pieces_are_not_claims():
               {"text": '"The use of force is not justified at this time."',
                "citations": [{"search_result_index": 0, "cited_text": "The use of force is not justified at this time."}]},
               {"text": " The United States then voted against every resolution on the subject since 1992. "}]
-    statuses = [s.status for s in verify(blocks, src).segments]
+    statuses = [s.status for s in VERIFIER.verify(blocks, src).segments]
     assert statuses == ["connective", "connective", "cited", "unsupported"]
 
 
@@ -217,42 +218,51 @@ def test_model_client_gives_up_on_a_dead_connection(monkeypatch):
     assert str(client.base_url).startswith("https://api.anthropic.com")
 
 
-def test_a_short_claim_stays_a_point_to_check_when_a_saved_briefing_is_shown_again():
-    from wcs.rag.verify import _classify_uncited, recheck_flags
+def as_saved(blocks, quotation="it has failed"):
+    """A briefing as it was saved before the checking rules were stamped on each answer: the verifier's report on
+    the model's blocks, without the stamp, so that showing it again judges it again."""
+    from wcs.rag.sources import Source
 
+    src = [Source(1, "record", "t", "u", [quotation])]
+    answer = VERIFIER.verify([*({"text": b} for b in blocks),
+                              {"text": f'"{quotation}"',
+                               "citations": [{"search_result_index": 0, "cited_text": quotation}]}], src).to_dict()
+    del answer["rules"]
+    return answer
+
+
+def test_a_short_claim_stays_a_point_to_check_when_a_saved_briefing_is_shown_again():
     # verify() splits a whole sentence off a lead-in and marks it as a claim, however short it is
-    parts = _classify_uncited("Several delegations criticised the draft. France's representative said on 4 May that ", True)
-    assert [p.status for p in parts] == ["unsupported", "connective"]
-    answer = {"segments": [*({"text": p.text, "status": p.status} for p in parts),
-                           {"text": "\"it has failed\"", "status": "cited"}],
-              "unsupported_segments": 1, "grounded_ratio": 0.3}
+    answer = as_saved(["Several delegations criticised the draft. France's representative said on 4 May that "])
+    assert [s["status"] for s in answer["segments"]] == ["unsupported", "connective", "cited"]
     # shown again, it is judged without that knowledge: being short must not clear it
-    assert recheck_flags(answer) is answer
+    assert VERIFIER.recheck(answer, curled=True) is answer
 
 
 def test_saved_briefings_with_a_lead_in_in_pieces_are_cleared():
-    from wcs.rag.verify import recheck_flags
-
     # as Where MPs Stand: short uncited pieces between a lead-in and its quotation do not stop it leading in
     answer = {"segments": [{"text": "- Members of the Council differed sharply on the timetable, as when Mr. ", "status": "unsupported"},
                            {"text": "Delattre said ", "status": "connective"},
                            {"text": "\"it will be delivered\"", "status": "cited"}],
               "unsupported_segments": 1, "grounded_ratio": 0.5}
-    out = recheck_flags(answer)
+    out = VERIFIER.recheck(answer, curled=True)
     assert [s["status"] for s in out["segments"]] == ["connective", "connective", "cited"]
     assert out["unsupported_segments"] == 0 and out["grounded_ratio"] == 1.0
 
 
 def test_a_claim_above_a_lead_in_stays_a_point_to_check_when_shown_again():
-    from wcs.rag.verify import _classify_uncited, recheck_flags
-
     for block in ("- Spending on the scheme rose by 40% under the last administration\n- France's representative said ",
                   "Was the funding cut by 40% in real terms? France's representative said ",
                   "The scheme was cut by 40% in real terms! France's representative said "):
-        parts = _classify_uncited(block, True)
-        assert [p.status for p in parts] == ["unsupported", "connective"], block
-        answer = {"segments": [*({"text": p.text, "status": p.status} for p in parts),
-                               {"text": "\"it has failed\"", "status": "cited"}],
-                  "unsupported_segments": 1, "grounded_ratio": 0.3}
+        answer = as_saved([block])
+        assert [s["status"] for s in answer["segments"]] == ["unsupported", "connective", "cited"], block
         # judged again without the block it was written in, it must not pass for the opening of the quotation
-        assert recheck_flags(answer) is answer, block
+        assert VERIFIER.recheck(answer, curled=True) is answer, block
+
+
+def test_a_briefing_written_under_todays_rules_is_not_judged_again():
+    """New with the shared package (wts-core MIGRATION 1.4): each answer carries the version of the checking rules
+    that wrote it, and one written under the current rules is shown as it was saved."""
+    answer = as_saved(["Several delegations criticised the draft. France's representative said on 4 May that "])
+    stamped = {**answer, "rules": VERIFIER.rules_version}
+    assert VERIFIER.recheck(stamped, curled=True) is stamped

@@ -445,7 +445,7 @@ def test_a_saved_curled_briefing_keeps_its_points_to_check(indexed):  # noqa: F8
     """The recheck reads a briefing saved with curly quotes as it read the straight ones: a sentence that ends in a
     closing quote is still a claim of its own, not a lead-in to the quotation after it."""
     from wcs.api.usage import save_briefing
-    from wcs.rag.typography import curl_answer
+    from wts_core.checks import curl_answer
     api, state = make(indexed, FakeClient())
     answer = {"segments": [{"text": 'He said "no." Mr Smith said ', "status": "unsupported"},
                            {"text": "we will act", "status": "cited", "sources": [1]}],
