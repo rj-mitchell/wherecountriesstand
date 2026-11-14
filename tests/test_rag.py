@@ -2,7 +2,6 @@ from datetime import date
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-
 from wts_core.checks import Segment
 
 from wcs.engine import Filters
