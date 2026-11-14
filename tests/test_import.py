@@ -291,3 +291,57 @@ def test_new_rows_are_numbered_on_from_the_old_ones(site):
     r = site.post("/api/statements", json={"page": "/b/Briefing01", "name": "New Sender", "role": "Ambassador",
                                            "text": "New words.", "email": "new@example.org"})
     assert r.json() == {"ok": True, "id": 8}
+
+
+# ---- going back -----------------------------------------------------------------------------------------------------
+
+
+def test_going_back_writes_the_old_tables_again_with_what_has_come_in_since(site):
+    """deploy/undo-wts-core.sql: after the move and some days of use, the old tables hold everything the old code
+    reads, under its own names and within its own rules (wts-core docs/MIGRATION.md 1.2, "Undoing a deploy")."""
+    import json
+
+    path = site.settings.state_db
+    replies, parts = site.app.state.replies, site.app.state.parts
+    # since the move: a question asked, a report, a statement sent, published and then removed by the site
+    final = [e for e in shared.events_of(site.post("/api/ask", json={"question": "A new question?"}).text)
+             if isinstance(e, dict)][-1]
+    rid = site.post("/api/report", json={"kind": "takedown", "message": "Please remove my name.",
+                                         "contact": "named@example.org"}).json()["id"]
+    sid = site.post("/api/statements", json={"page": f"/b/{final['briefing_id']}", "name": "New Sender",
+                                             "role": "Ambassador", "text": "New words.",
+                                             "email": "new@example.org"}).json()["id"]
+    replies.publish(sid, checked="Telephoned the mission.", about="KEN")
+    replies.remove(sid, "It names a private person.")
+    replies.hide("/b/Briefing01", "Hidden while a concern is looked into.")
+    packages_before = [line for line in dump(path) if "wts_" in line]
+
+    con = sqlite3.connect(path)
+    con.executescript((shared.GOLDEN.parents[1] / "deploy" / "undo-wts-core.sql").read_text(encoding="utf-8"))
+    con.close()
+
+    assert [line for line in dump(path) if "wts_" in line] == packages_before  # the package's tables are untouched
+    # every row the package holds is in the old table, and nothing else is
+    for old, new in (("usage", "wts_spending"), ("answer_cache", "wts_answer_cache"), ("failures", "wts_failures"),
+                     ("briefings", "wts_briefings"), ("reports", "wts_reports"), ("statements", "wts_statements")):
+        assert rows(path, f"SELECT count(*) FROM {old}") == rows(path, f"SELECT count(*) FROM {new}"), old
+    assert rows(path, "SELECT id, at, question, events FROM briefings WHERE id = ?", final["briefing_id"]) == rows(
+        path, "SELECT id, created_at, question, events FROM wts_briefings WHERE id = ?", final["briefing_id"])
+    assert rows(path, "SELECT kind, page, message, contact, closed_at FROM reports WHERE id = ?", rid) == [
+        ("takedown", "", "Please remove my name.", "named@example.org", None)]
+    # spending today and this month are what the package counts, so the caps carry on from where they are
+    assert rows(path, "SELECT round(sum(cost_usd), 6) FROM usage WHERE at >= ?", shared.DAY) == [
+        (round(parts.spending.spent_since(shared.DAY), 6),)]
+    assert rows(path, "SELECT value FROM kv WHERE key = ?", f"visitor_salt:{shared.DAY}") == [(shared.SALT,)]
+    # the statement the site removed is "withdrawn" there, with its reason and its whole log
+    (status, shown_on, reason, country, link, log), = rows(
+        path, "SELECT status, shown_on, reason, country, link, log FROM statements WHERE id = ?", sid)
+    assert (status, shown_on, reason, country, link) == ("withdrawn", shared.DAY, "It names a private person.",
+                                                         "KEN", "")
+    assert [(e["action"], e.get("note")) for e in json.loads(log)] == [
+        ("received", None), ("published", "Telephoned the mission."), ("removed", "It names a private person.")]
+    # the published statement from before the move reads as the old code left it
+    was = next(s for s in GOLDEN["statements"] if s["id"] == 1)
+    assert rows(path, "SELECT page, country, status, shown_on, text, link, email FROM statements WHERE id = 1") == [
+        (was["page"], was["country"], "published", was["shown_on"], was["text"], was["link"], was["email"])]
+    assert json.loads(rows(path, "SELECT log FROM statements WHERE id = 1")[0][0]) == was["log"]

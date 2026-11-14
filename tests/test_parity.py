@@ -639,3 +639,42 @@ def test_off_site_copies_are_what_they_were(tmp_path):
     assert [step["case"] for step in now] == [step["case"] for step in before]
     for step, was in zip(now, before, strict=True):
         assert step == was, step["case"]
+
+
+def test_the_real_pipeline_never_sends_the_three_shapes_the_desk_and_the_old_flow_disagreed_on(small_index, tmp_path,
+                                                                                              monkeypatch):
+    """wts-core's independent review left three event shapes to each site, where the desk and this site's old flow
+    would differ and no pipeline was known to send them. This site's own ``on_event`` deals with one (an ``error``
+    with keys of its own is sent as its message alone: the scripted case above). The other two cannot come from
+    its pipeline, which is checked here on every way it ends: a ``final`` always has its ``usage`` key (the old
+    flow stored ``usage: null`` for one without; the desk would store none), and nothing follows a ``final`` (the
+    old flow cached a briefing whose ``final`` was followed by a ``citation``; the desk would not)."""
+    import shutil
+
+    from conftest import model_of
+    from wts_core.adapters.hashing import HashingEmbedder
+
+    from wcs.engine import Engine
+    from wcs.rag.pipeline import AskRequest, Pipeline
+
+    for key in ("WCS_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"):
+        monkeypatch.delenv(key, raising=False)
+    shutil.copytree(small_index, tmp_path / "shapes")
+    settings = settings_in(tmp_path / "shapes", monkeypatch)
+    engine = Engine(settings, embedder=HashingEmbedder(64), today=shared.TODAY)
+    endings = set()
+    for sdk in (shared.FakeSDK(shared.READING), shared.FakeSDK(None), shared.FakeSDK(shared.READING, refuse=True),
+                None):
+        pipeline = Pipeline(settings, engine, client=model_of(sdk), today=shared.TODAY)
+        for request in (AskRequest(shared.Q), AskRequest(shared.Q_NOTHING, plan=shared.PLAN_NOTHING),
+                        AskRequest(shared.Q2, history=shared.EARLIER)):
+            sent = list(pipeline.run(request))
+            kinds = [e["type"] for e in sent]
+            assert kinds[:2] == ["plan", "sources"] and kinds[-1] in ("final", "error")
+            assert kinds.count("final") + kinds.count("error") == 1  # one ending, and it is the last event
+            if kinds[-1] == "final":
+                assert "usage" in sent[-1]
+            else:
+                assert set(sent[-1]) == {"type", "message", "usage", "model"}
+            endings.add((kinds[-1], bool(sent[-1].get("answer"))))
+    assert endings == {("final", True), ("final", False), ("error", False)}
