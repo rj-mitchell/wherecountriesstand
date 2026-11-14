@@ -4,9 +4,9 @@ are read and written as UTF-8 (as Where Councils Stand's tests/test_evaluate.py)
 import json
 
 from test_pipeline import TODAY, indexed  # noqa: F401  (the fixture)
+from wts_core.adapters.hashing import HashingEmbedder
 
 from wcs import evaluate as ev
-from wcs.embed.base import HashingEmbedder
 from wcs.engine import Engine
 from wcs.rag.pipeline import Pipeline
 

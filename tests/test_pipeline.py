@@ -3,8 +3,8 @@ from types import SimpleNamespace as NS
 
 import pytest
 from conftest import speech
+from wts_core.adapters.hashing import HashingEmbedder
 
-from wcs.embed.base import HashingEmbedder
 from wcs.engine import Engine
 from wcs.index.build import Indexer, embed_pending
 from wcs.rag.pipeline import AskRequest, Pipeline, answer_once

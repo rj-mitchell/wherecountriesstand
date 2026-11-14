@@ -575,8 +575,17 @@ def index(years: str = typer.Option(None), source: list[str] = typer.Option(None
     from wcs.reference.countries import countries
 
     s = load_settings()
-    n = Indexer(s, countries(), keep_vectors=not re_embed).index_all(tuple(source) if source else SOURCES,
-                                                                      _years(years))
+    index = None
+    if re_embed:
+        # The index records which embedding model made its vectors, and is not opened for another: the vectors are
+        # thrown away and the model now in the settings recorded, before anything is written.
+        from wcs.adapters import get_embedder
+        from wcs.index.lance import open_index
+
+        index = open_index(s.index_dir)
+        index.start_again(get_embedder(s))
+    n = Indexer(s, countries(), index, keep_vectors=not re_embed).index_all(tuple(source) if source else SOURCES,
+                                                                             _years(years))
     typer.echo(f"{n} passages indexed")
 
 
@@ -584,12 +593,11 @@ def index(years: str = typer.Option(None), source: list[str] = typer.Option(None
 def optimize() -> None:
     """Merge rows waiting outside the search indices, compact small files, and delete versions of the index over an
     hour old (each update does this itself; this is for a one-off clean-up)."""
-    from wcs.index.lance import SearchIndex
+    from wcs.index.lance import open_index
 
-    s = load_settings()
-    idx = SearchIndex(s.index_dir, int(s.embedding.get("dim", 384)))
+    idx = open_index(load_settings().index_dir)
     before = idx.versions()
-    idx.optimize()
+    idx.tidy()
     typer.echo(f"Done: table versions {before} -> {idx.versions()}")
 
 
@@ -607,14 +615,15 @@ def regroup() -> None:
 @app.command()
 def embed(max_seconds: float = typer.Option(None, help="stop after about this long (resumable)")) -> None:
     """Embed indexed passages for meaning search, newest years first."""
-    from wcs.embed.base import get_embedder
+    from wcs.adapters import get_embedder
     from wcs.index.build import State, embed_pending, refresh_indices
-    from wcs.index.lance import SearchIndex
+    from wcs.index.lance import open_index
 
     s = load_settings()
-    idx = SearchIndex(s.index_dir, int(s.embedding.get("dim", 384)))
+    embedder = get_embedder(s)
+    idx = open_index(s.index_dir, embedder)
     state = State(s.index_dir / "state.json")
-    n = embed_pending(s, idx, state, get_embedder(s), max_seconds=max_seconds)
+    n = embed_pending(s, idx, state, embedder, max_seconds=max_seconds)
     if n:
         refresh_indices(idx, state)
     typer.echo(f"{n} passages embedded")
@@ -623,7 +632,7 @@ def embed(max_seconds: float = typer.Option(None, help="stop after about this lo
 @app.command()
 def stats() -> None:
     """What is loaded and indexed."""
-    from wcs.index.lance import SearchIndex
+    from wcs.index.lance import open_index
     from wcs.store.parquet import votes_path, years
 
     s = load_settings()
@@ -631,7 +640,7 @@ def stats() -> None:
         ys = years(s.parquet_dir, src)
         typer.echo(f"{src}: {len(ys)} years" + (f" ({ys[0]}-{ys[-1]})" if ys else ""))
     typer.echo(f"votes: {'loaded' if votes_path(s.parquet_dir).exists() else 'not loaded'}")
-    typer.echo(f"index: {SearchIndex(s.index_dir, int(s.embedding.get('dim', 384))).stats()}")
+    typer.echo(f"index: {open_index(s.index_dir).stats()}")
 
 
 @app.command()

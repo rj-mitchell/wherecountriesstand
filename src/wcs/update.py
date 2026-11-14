@@ -504,21 +504,35 @@ def update_index(settings: Settings, ref: Countries, changed: dict[str, set[int]
     """Re-index the years that changed, embed passages still waiting, and merge what was written into the search
     indices. A run that changed nothing writes nothing to the index (each write would leave a new version of it on
     disk until the next clean-up)."""
-    from wcs.index.build import Indexer, refresh_indices
+    from wts_core.ports import IndexOutOfDate
 
-    idx = Indexer(settings, ref)
+    from wcs.adapters import get_embedder
+    from wcs.index.build import Indexer, embed_pending, refresh_indices
+    from wcs.index.lance import open_index
+
+    embedder = None
+    try:
+        embedder = get_embedder(settings)
+    except Exception as exc:  # keyword search still works; embedding resumes when the model can be loaded
+        if embed_seconds:
+            report.warnings.append(f"embedding: {type(exc).__name__}: {exc}")
+    try:
+        idx = Indexer(settings, ref, embedder=embedder)
+    except IndexOutOfDate as exc:
+        # The index was built with another embedding model: its vectors cannot be added to or searched with this
+        # one. Search by words carries on (the site falls back to it), and the report says what to do.
+        report.warnings.append(f"meaning search is off: {exc}. Search by words carries on. To embed the record "
+                               "again with the model now in the settings, run `wcs index --re-embed`, then `wcs "
+                               "embed`")
+        idx, embedder = Indexer(settings, ref, open_index(settings.index_dir), keep_vectors=False), None
     for source, ys in changed.items():
         for year in sorted(ys):
             report.indexed += idx.index_year(source, year)
     # passages still waiting for meaning search (a first load takes hours) are embedded on every run, changes or
     # not, within the time allowed
-    if embed_seconds and idx.state.unembedded():
-        from wcs.embed.base import get_embedder
-        from wcs.index.build import embed_pending
-
+    if embed_seconds and embedder is not None and idx.state.unembedded():
         try:
-            report.embedded = embed_pending(settings, idx.index, idx.state, get_embedder(settings),
-                                            max_seconds=embed_seconds)
+            report.embedded = embed_pending(settings, idx.index, idx.state, embedder, max_seconds=embed_seconds)
         except Exception as exc:  # keyword search still works; embedding resumes next run
             report.warnings.append(f"embedding: {type(exc).__name__}: {exc}")
     # rows an earlier run added but did not merge (it was stopped) are merged too

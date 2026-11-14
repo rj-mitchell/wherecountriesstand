@@ -5,11 +5,11 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 from test_pipeline import TODAY, FakeClient, RefusingClient, indexed  # noqa: F401  (the fixture)
+from wts_core.adapters.hashing import HashingEmbedder
 
 from wcs.api.app import SITE_DIR as SITE
 from wcs.api.app import create_app
 from wcs.api.usage import StateDB, cost_usd, network_of, visitor_key
-from wcs.embed.base import HashingEmbedder
 from wcs.engine import Engine
 from wcs.rag.pipeline import Pipeline
 
