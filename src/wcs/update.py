@@ -494,13 +494,20 @@ def spending(settings: Settings, report: Report) -> None:
 
 
 def backups(report: Report, folder: Path | None = None) -> None:
-    """Whether the nightly backup and its off-site copy are still being made (``offsite.backup_alerts``). The update
-    runs every day in the same container as the backup, with the backups' folder (``/backups``, or
-    ``WCS_BACKUP_DIR``), so a backup timer that has stopped is noticed here."""
-    from wcs.offsite import backup_alerts
+    """Whether the nightly backup and its off-site copy are still being made (the shared package's
+    ``ops.backup_alerts``, in this site's words). The update runs every day in the same container as the backup,
+    with the backups' folder (``/backups``, or ``WCS_BACKUP_DIR``), so a backup timer that has stopped is noticed
+    here."""
+    from wts_core.adapters import b2
+    from wts_core.ops import backup_alerts
+
+    from wcs.config import SITE
+    from wcs.state import BACKUP_ALERTS, BACKUPS
 
     try:
-        report.backups = backup_alerts(Path(folder or os.environ.get("WCS_BACKUP_DIR") or "/backups"))
+        found = backup_alerts(Path(folder or os.environ.get("WCS_BACKUP_DIR") or "/backups"), BACKUPS,
+                              offsite_set_up=b2.configured(SITE) is not None, wording=BACKUP_ALERTS)
+        report.backups = [{"level": alert.level, "text": alert.text} for alert in found]
     except Exception as exc:  # the report itself matters more
         report.backups = [{"level": "error", "text": f"could not check the backups ({type(exc).__name__}: {exc})"}]
 

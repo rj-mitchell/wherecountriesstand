@@ -19,7 +19,7 @@ from __future__ import annotations
 import sqlite3
 
 from wts_core import observe, replies, usage
-from wts_core.ops import BackupSpec
+from wts_core.ops import AlertWording, BackupSpec
 from wts_core.ports import SYSTEM_CLOCK, Clock
 from wts_core.state import Import, Migration, StateDB, columns
 
@@ -36,6 +36,18 @@ OLD_TABLES = ("usage", "kv", "answer_cache", "failures", "briefings", "reports",
 # is also marked as this site's when it is opened (``open_state``), and a restore refuses one marked as another's.
 BACKUPS = BackupSpec(prefix="wcs-state-", keep=14, keep_offsite=60, required_tables=("usage", "briefings"),
                      site=SITE.package)
+
+
+# What the update says when the nightly backup or its off-site copy has stopped (`wcs update`, which runs in the
+# same container every day and whose failure is emailed): this site's own words, as they were.
+BACKUP_ALERTS = AlertWording(
+    no_backups="no backups have been made yet",
+    backup_stale="the last backup was made over two days ago ({name}): is wcs-backup.timer running?",
+    server_only="backups are kept on this server only: no off-site copy is set up",
+    no_offsite_yet="no off-site copy has been made yet; one is made with the next backup",
+    offsite_failed="the last off-site copy failed ({when}): {error}",
+    offsite_stale="the last off-site copy was over two days ago ({day})",
+)
 
 
 def migrations() -> tuple[Migration, ...]:

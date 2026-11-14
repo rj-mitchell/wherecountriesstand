@@ -22,13 +22,22 @@ from datetime import date
 from typing import Any
 
 import typer
-from wts_core.cli import RepliesCommands, RepliesWording, replies_commands
+from wts_core.cli import (
+    BackupWords,
+    OpsWording,
+    RepliesCommands,
+    RepliesWording,
+    RestoreWords,
+    ops_commands,
+    replies_commands,
+)
 from wts_core.ports import SYSTEM_CLOCK, Clock
 from wts_core.replies import Replies, word_count
 from wts_core.state import StateDB
 from wts_core.usage import BriefingArchive, token_id
 
-from wcs.config import Settings, load_settings
+from wcs.config import SITE, Settings, load_settings
+from wcs.state import BACKUPS
 
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 # the clock the owner's commands read: a test stands its own in here
@@ -206,58 +215,37 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
         raise typer.Exit(1)
 
 
-@app.command()
-def backup(to: str = typer.Option(..., help="folder for the backups"),
-           keep: int = typer.Option(14, help="how many to keep")) -> None:
-    """Copy the state database (spending, saved briefings, reports): the one thing that cannot be rebuilt. The copy
-    also goes to a Backblaze B2 bucket when one is set up (WCS_B2_* in deploy/.env)."""
-    from pathlib import Path
+# ---- backups (wts-core, ``wts_core.cli.ops_commands``): `wcs backup`, `wcs restore`, `wcs offsite` ----------------
+#
+# The copy, the checks before a restore and the off-site store are the Where They Stand sites' shared ones
+# (``wts_core.ops``); what the backups are called and hold is ``wcs.state.BACKUPS``, and every line printed is this
+# site's, as it was.
 
-    from wcs.backup import make_backup
-    from wcs.offsite import OffsiteError, send
+OPS_WORDING = OpsWording(
+    backup=BackupWords(
+        folder=None, keep=BACKUPS.keep,
+        nothing_to_back_up="nothing to back up yet (no state database)", backed_up="backup: {archive}", failed=None,
+        offsite_stored="Off-site copy: stored in {bucket} ({stored} kept there)",
+        offsite_not_set_up="Off-site copy: not set up", offsite_failed="The off-site copy failed: {error}",
+        help="Copy the state database (spending, saved briefings, reports): the one thing that cannot be rebuilt. "
+             "The copy also goes to a Backblaze B2 bucket when one is set up (WCS_B2_* in deploy/.env).",
+        to_help="folder for the backups", keep_help="how many to keep"),
+    restore=RestoreWords(
+        archive_must_exist=False, says_aborted=False,
+        confirm="Replace {state_db} with {archive}? Stop the site first.",
+        restored="restored {state_db} from {archive}", replaced="; the database it replaced is {kept}",
+        not_restored="Not restored: {error}",
+        help="Put a backup of the state database back (spending, saved briefings, reports). Stop the site first "
+             "(docs/DEPLOY.md, \"Backups\"). The backup is checked before anything is replaced, and the database it "
+             "replaces is kept as data/state.db.before-restore. A kept copy from an earlier restore is never "
+             "written over: move or delete it first.",
+        archive_help="a backup: /backups/wcs-state-YYYY-MM-DD.sqlite.gz", yes_help="don't ask first"),
+    backup_check=None,  # a stopped backup is noticed by `wcs update`, which runs every day and is emailed
+    errors_to_stderr=True,
+    offsite_help="Check the off-site backup bucket: whether the key works, and how many of this site's backups are "
+                 "there.")
 
-    out = make_backup(load_settings().data_dir / "state.db", Path(to), keep)
-    if not out:
-        typer.echo("nothing to back up yet (no state database)")
-        return
-    typer.echo(f"backup: {out}")
-    try:
-        sent = send(out)
-    except OffsiteError as exc:
-        typer.echo(f"The off-site copy failed: {exc}", err=True)
-        raise typer.Exit(1) from exc
-    typer.echo("Off-site copy: " + (f"stored in {sent['bucket']} ({sent['stored']} kept there)"
-                                    if sent.get("ok") else sent["offsite"]))
-
-
-@app.command()
-def restore(archive: str = typer.Argument(..., help="a backup: /backups/wcs-state-YYYY-MM-DD.sqlite.gz"),
-            yes: bool = typer.Option(False, "--yes", help="don't ask first")) -> None:
-    """Put a backup of the state database back (spending, saved briefings, reports). Stop the site first
-    (docs/DEPLOY.md, "Backups"). The backup is checked before anything is replaced, and the database it replaces is
-    kept as data/state.db.before-restore. A kept copy from an earlier restore is never written over: move or delete
-    it first."""
-    from pathlib import Path
-
-    from wcs.backup import restore_backup
-
-    state_db = load_settings().data_dir / "state.db"
-    if not yes and not typer.confirm(f"Replace {state_db} with {archive}? Stop the site first."):
-        raise typer.Exit(1)
-    try:
-        kept = restore_backup(Path(archive), state_db)
-    except (OSError, RuntimeError) as exc:
-        typer.echo(f"Not restored: {exc}", err=True)
-        raise typer.Exit(1) from exc
-    typer.echo(f"restored {state_db} from {archive}" + (f"; the database it replaced is {kept}" if kept else ""))
-
-
-@app.command()
-def offsite() -> None:
-    """Check the off-site backup bucket: whether the key works, and how many of this site's backups are there."""
-    from wcs.offsite import check
-
-    typer.echo(json.dumps(check(), indent=2))
+app.add_typer(ops_commands(SITE, load_settings, BACKUPS, OPS_WORDING, clock=lambda: CLOCK))
 
 
 @app.command()

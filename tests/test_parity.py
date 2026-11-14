@@ -566,3 +566,69 @@ def test_reports_statements_and_the_owners_commands_answer_as_they_did(tmp_path,
         assert [(b["id"], b["created_at"], b["question"], b["withdrawn_at"], b["withdrawn_reason"])
                 for b in new["briefings"]] == [(b["id"], b["at"], b["question"], b["withdrawn_at"],
                                                 b["withdrawn_reason"]) for b in old["briefings"]]
+
+
+# ---- backups, restores, off-site copies and their alerts ---------------------------------------------------------
+
+
+def test_backups_restores_and_their_alerts_are_what_they_were(tmp_path, monkeypatch):
+    """`wcs backup`, `wcs restore` and `wcs offsite`, line for line: the files made and what is in them, who may
+    read them, which are deleted, every refusal of a restore, and the alert for each state of the backups' folder.
+    No difference."""
+    from typer.testing import CliRunner
+    from wts_core.adapters import b2
+    from wts_core.ops import backup_alerts
+    from wts_core.testing import FixedClock
+
+    from wcs import cli
+    from wcs.config import SITE
+    from wcs.state import BACKUP_ALERTS, BACKUPS
+
+    def run(args):
+        result = CliRunner().invoke(cli.app, args)
+        return result.exit_code, result.output
+
+    def environment(data_dir, **more):
+        monkeypatch.setenv("WCS_DATA_DIR", str(data_dir))
+        for name in ("WCS_B2_BUCKET", "WCS_B2_KEY_ID", "WCS_B2_APPLICATION_KEY", "WCS_CONFIG"):
+            monkeypatch.delenv(name, raising=False)
+        for name, value in more.items():
+            monkeypatch.setenv(name, value)
+
+    def alerts(folder, env, now):
+        found = backup_alerts(folder, BACKUPS, offsite_set_up=b2.configured(SITE, env) is not None,
+                              wording=BACKUP_ALERTS, clock=FixedClock(now))
+        return [{"level": alert.level, "text": alert.text} for alert in found]
+
+    now = shared.backups_scenario(
+        tmp_path / "backups", run=run, environment=environment, alerts=alerts,
+        set_day=lambda day: monkeypatch.setattr(cli, "CLOCK", FixedClock(f"{day}T04:20:00+00:00")))
+    before = shared.read("backups.json")
+    assert [c["case"] for c in now["commands"]] == [c["case"] for c in before["commands"]]
+    for command, was in zip(now["commands"], before["commands"], strict=True):
+        assert command == was, command["case"]
+    assert now["alerts"] == before["alerts"]
+    assert now["restored"] == before["restored"] and now["after"] == before["after"]
+
+
+def test_off_site_copies_are_what_they_were(tmp_path):
+    """A copy stored, old copies deleted, a key that cannot delete, an upload that keeps failing, a refused key, a
+    key for another bucket, sites sharing a bucket: what is returned, what is in the bucket, and offsite.json."""
+    from wts_core.adapters import b2
+    from wts_core.ops import OffsiteError, check_offsite, send_offsite
+    from wts_core.testing import FixedClock
+
+    from wcs.config import SITE
+    from wcs.state import BACKUPS
+
+    clock = FixedClock("2026-11-03T04:20:05+00:00")
+    now = shared.offsite_scenario(
+        tmp_path, error=OffsiteError,
+        send=lambda archive, keep, env, client: send_offsite(archive, b2.configured(SITE, env, client=client),
+                                                             BACKUPS, keep=keep, clock=clock),
+        check=lambda env, client: check_offsite(b2.configured(SITE, env, client=client), BACKUPS,
+                                                how_to_set_up=b2.how_to_set_up(SITE)))
+    before = shared.read("offsite.json")
+    assert [step["case"] for step in now] == [step["case"] for step in before]
+    for step, was in zip(now, before, strict=True):
+        assert step == was, step["case"]
