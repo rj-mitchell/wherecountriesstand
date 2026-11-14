@@ -117,6 +117,10 @@ function sisters(question, countries = []) {
 // ---- sources ----------------------------------------------------------------------------------------------------
 
 function sourceCard(s) {
+  if (s.kind === "hidden") {
+    // a record hidden while a concern about it is decided: the note is shown in its place, under its number
+    return el("li", { class: "source", id: `s${s.n}` }, el("p", { class: "source__meta" }, s.note));
+  }
   if (s.kind === "vote") {
     const t = s.totals || {};
     return el("li", { class: "source source--vote", id: `s${s.n}` },
@@ -325,7 +329,9 @@ async function openSaved(id) {
   $("status").textContent = "";
   if (!res || !res.ok) {
     const detail = res ? await res.json().catch(() => ({})) : {};
-    $("question").textContent = res && res.status === 410 ? "Briefing withdrawn" : "Briefing not found";
+    // 410: withdrawn, with the reason; 423: hidden while a concern about it is decided, with the note
+    $("question").textContent = res && res.status === 410 ? "Briefing withdrawn"
+      : res && res.status === 423 ? "Briefing hidden for now" : "Briefing not found";
     note(typeof detail.detail === "string" ? detail.detail : "This briefing could not be opened.", true);
     return;
   }
