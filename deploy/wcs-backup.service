@@ -1,5 +1,9 @@
 # Nightly copy of the one thing that cannot be rebuilt: the state database (spending, saved briefings, reports).
 # Installed by deploy/update.sh with wcs-backup.timer. Copies land in /opt/wherecountriesstand/deploy/backups.
+# Then the nightly housekeeping (wcs tidy): what the privacy page says is deleted in time is deleted then, whether
+# or not anyone visits (the record of each briefing after 13 months, a visitor's code after its day, a statement's
+# confirming address three months after it ends). It runs whether or not the backup worked (ExecStopPost), so a
+# failing backup never puts the deleting off; if either fails, the alert email is sent.
 [Unit]
 Description=Where Countries Stand: back up the state database
 After=docker.service
@@ -11,5 +15,6 @@ OnFailure=alert@%n.service
 Type=oneshot
 WorkingDirectory=/opt/wherecountriesstand/deploy
 ExecStart=/usr/bin/docker compose run --rm -T app wcs backup --to /backups --keep 14
+ExecStopPost=/usr/bin/docker compose run --rm --no-deps -T app wcs tidy
 Nice=10
 TimeoutStartSec=30min

@@ -29,6 +29,8 @@ ADDED = {
     ("answer", "cache_instructions"): "short",  # MIGRATION 1.5: prompt caching becomes a setting, on as before
     # the structured log's limits, which wts-core's ADR 0012 gives and leaves to each site to state
     ("logs", "max_bytes"): 3000000, ("logs", "keep"): 15, ("logs", "days"): 14,
+    # for the weekly report's themes: how alike two questions must be, for this embedding model
+    ("embedding", "theme_similarity"): 0.8,
 }
 
 
@@ -38,12 +40,14 @@ def without_the_added(gives: dict) -> dict:
     import copy
 
     out = copy.deepcopy(gives)
+    if out["raw"].get("alerts") == {}:  # [alerts]: there, and empty until the owner sets a threshold (ADR 0012)
+        del out["raw"]["alerts"]
     for (section, key), value in ADDED.items():
         for holder in (out["raw"], out):
             if key in holder.get(section, {}):
                 assert holder[section].pop(key) == value, (section, key)
-            if section in holder and not holder[section] and section not in ("site",):
-                del holder[section]
+                if not holder[section] and holder is out["raw"]:  # a section the move added whole
+                    del holder[section]
     return out
 
 

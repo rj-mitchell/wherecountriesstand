@@ -9,6 +9,8 @@
     wcs restore /backups/wcs-state-<day>.sqlite.gz   # put a backup back (with the site stopped)
     wcs reports && wcs statements          # problem reports, and statements under the right of reply
     wcs waiting                            # what is waiting for a decision, and for how long
+    wcs briefing-stats --since 7d          # how briefings went: speed, cost, what the checks found (weekly: scheduled)
+    wcs tidy                               # the nightly housekeeping (scheduled)
     wcs search "climate finance" --group sids
     wcs ask "How have small island States spoken about climate change since 2015?"
 """
@@ -28,13 +30,16 @@ from wts_core.cli import (
     RepliesCommands,
     RepliesWording,
     RestoreWords,
+    StatsNames,
     ops_commands,
     replies_commands,
+    replies_tidy,
+    stats_commands,
 )
-from wts_core.ports import SYSTEM_CLOCK, Clock
+from wts_core.ports import SYSTEM_CLOCK, Clock, Embedder
 from wts_core.replies import Replies, word_count
 from wts_core.state import StateDB
-from wts_core.usage import BriefingArchive, token_id
+from wts_core.usage import BriefingArchive, PriceTable, token_id
 
 from wcs.config import SITE, Settings, load_settings
 from wcs.state import BACKUPS
@@ -432,6 +437,41 @@ def list_statements(ctx: typer.Context, all_: bool = typer.Option(
 
 app.add_typer(replies_commands(_replies, REPLIES_COMMANDS, REPLIES_WORDING, about=_country,
                                groups={"reports": reports_app, "statements": statements_app}))
+
+
+# ---- how briefings went: statistics, the weekly report, the nightly tidy (wts-core docs/adr/0012) ---------------
+#
+# `wcs briefing-stats --since 7d` (and --json, --themes, --check), `wcs weekly-report`, `wcs tidy`: the Where They
+# Stand sites' shared commands (``wts_core.cli.stats_commands``) over the record of each briefing. The statistics
+# command is the family's `stats` under another name, because `wcs stats` already says what is loaded and indexed.
+# `wcs tidy` is the one command the nightly timer runs: it deletes what the privacy notice says is deleted in time
+# (a briefing's record after 13 months, the question of a failed one after 90 days, a visitor's code after its day,
+# weekly reports after 13 months, the copy of the database made before the move once it is older than the backups),
+# then does the right of reply's housekeeping (a statement's confirming address three months after it ends, what
+# nobody decided in three months).
+
+def _prices() -> PriceTable:
+    s = load_settings()
+    return PriceTable.from_settings(s.usage, file=s.config_path)
+
+
+def _embedder() -> Embedder:
+    from wcs.adapters import get_embedder
+
+    return get_embedder(load_settings())
+
+
+app.add_typer(stats_commands(
+    SITE, _state,
+    thresholds=lambda: load_settings().section("alerts"),
+    folder=lambda: load_settings().reports_dir,
+    # readers' questions are grouped into themes by meaning with the site's own embedding model, on the server
+    embedder=_embedder, similarity=lambda: float(load_settings().embedding["theme_similarity"]),
+    pricing=_prices,
+    names=StatsNames(stats="briefing-stats", weekly_report="weekly-report", tidy="tidy"),
+    backup_days=BACKUPS.keep_offsite,  # nothing that holds old rows outlives the backups
+    also_tidy=[replies_tidy(_replies, REPLIES_WORDING)],
+    clock=lambda: CLOCK))
 
 
 @app.command()

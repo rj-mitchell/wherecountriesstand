@@ -493,6 +493,26 @@ def spending(settings: Settings, report: Report) -> None:
         report.warnings.append(f"spending: could not read {settings.state_db} ({type(exc).__name__}: {exc})")
 
 
+def briefings(settings: Settings, report: Report) -> None:
+    """Whether briefings have got worse over the last day than the owner's thresholds allow (``[alerts]``: slower,
+    more errors, more failed checks, dearer). Each figure over its threshold is an error in the report, so the
+    scheduled run exits 1 and the email goes. With no thresholds set, as at first, nothing is said."""
+    thresholds = settings.section("alerts")
+    if not thresholds or not settings.state_db.exists():
+        return
+    from datetime import timedelta
+
+    from wts_core.observe import SqliteBriefingLog, stats, tripped
+
+    from wcs.state import open_state
+
+    try:
+        figures = stats(SqliteBriefingLog(open_state(settings)), since=timedelta(days=1))
+        report.errors += [f"briefings: {said}" for said in tripped(figures, thresholds)]
+    except Exception as exc:  # the report itself matters more
+        report.warnings.append(f"briefings: could not check the alerts ({type(exc).__name__}: {exc})")
+
+
 def backups(report: Report, folder: Path | None = None) -> None:
     """Whether the nightly backup and its off-site copy are still being made (the shared package's
     ``ops.backup_alerts``, in this site's words). The update runs every day in the same container as the backup,
@@ -583,6 +603,7 @@ def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd:
         update_index(settings, ref, changed, report, embed_seconds)
     health(report)
     spending(settings, report)
+    briefings(settings, report)
     backups(report)
     report.finished = datetime.now(UTC).isoformat(timespec="seconds")
     write_report(settings, report)

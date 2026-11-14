@@ -1,6 +1,10 @@
-# Checks every push and pull request: lint, the tests (offline: the model is faked), and that the family kit's
-# copy in web/site/family/ is the version this site was last synced to and has not been edited since.
-# A second job checks every page for accessibility problems (scripts/a11y.mjs).
+# Checks every push and pull request: lint, the tests (offline: the model is faked), that the family kit's copy in
+# web/site/family/ is the version this site was last synced to, that the Docker image builds and starts, and every
+# page for accessibility problems (scripts/a11y.mjs).
+#
+# The jobs that are the same on every Where They Stand site are the shared workflows of wts-core, called at the tag
+# of the package this site installs (pyproject.toml): the two are raised together, by hand, in one change
+# (wts-core docs/adr/0010; tests/test_dependencies.py checks they agree, and Dependabot is told to leave them).
 name: CI
 
 on:
@@ -11,31 +15,28 @@ on:
 permissions:
   contents: read
 
-env:
+jobs:
+  # uv sync --frozen, ruff, pytest, with the family's Python and uv
+  python:
+    uses: rj-mitchell/wts-core/.github/workflows/python.yml@v0.2.0
+    with:
+      lint-paths: "src tests scripts"
+
   # The Where They Stand family kit version last synced into web/site/family/ (docs/DEPLOY.md, "Pages and the
   # family kit"). Raise it in the same change as a new sync.
-  FAMILY_KIT_VERSION: "1.4.0"
+  kit:
+    uses: rj-mitchell/wts-core/.github/workflows/kit.yml@v0.2.0
+    with:
+      version: "1.4.0"
+      site: countries
+      path: web/site/family
 
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.11.32"
-          python-version: "3.12"
-      - name: Install
-        run: uv sync --frozen
-      - name: Lint
-        run: uv run ruff check src tests scripts
-      - name: Family kit version
-        run: |
-          grep -qx "kit ${FAMILY_KIT_VERSION}" web/site/family/VERSION || {
-            echo "web/site/family/VERSION is not kit ${FAMILY_KIT_VERSION}:"; cat web/site/family/VERSION; exit 1; }
-          grep -qx "site countries" web/site/family/VERSION
-      - name: Tests
-        run: uv run pytest
+  # The image the server runs: built as update.sh builds it, and its command line started once
+  docker:
+    uses: rj-mitchell/wts-core/.github/workflows/docker.yml@v0.2.0
+    with:
+      tag: wherecountriesstand:ci
+      run: wcs --help
 
   # Every page served by the app (with no data loaded and no API key: the pages, their scripts and the empty states)
   # is checked with axe for WCAG 2.2 AA problems, light and dark, at desktop and phone widths, as Where MPs Stand
@@ -44,10 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.11.32"
-          python-version: "3.12"
+      - uses: rj-mitchell/wts-core/.github/actions/setup@v0.2.0
       - name: Install
         run: uv sync --frozen
       - name: Start the site with no data
@@ -60,17 +58,10 @@ jobs:
           done
           curl -fsS http://localhost:8000/status.html | grep -q "/api/status"
           curl -fsS http://localhost:8000/api/status | grep -q '"briefings"'
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
       - name: Accessibility check (axe, WCAG 2.2 AA, light and dark, desktop and phone)
-        run: |
-          mkdir -p /tmp/a11y && cp scripts/a11y.mjs /tmp/a11y/
-          cd /tmp/a11y
-          npm init -y > /dev/null
-          npm install --no-audit --no-fund playwright@1.63.0 axe-core@4.14.0
-          npx playwright install --with-deps chromium
-          node a11y.mjs http://localhost:8000
+        uses: rj-mitchell/wts-core/.github/actions/a11y@v0.2.0
+        with:
+          url: http://localhost:8000
       - name: Show the site's log if anything failed
         if: failure()
         run: cat /tmp/wcs.log || true

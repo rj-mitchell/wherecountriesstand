@@ -27,6 +27,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --extra embed
 COPY config ./config
 COPY data_static ./data_static
+# the test questions, and the note of each evaluation run that passed (eval/runs/passed.jsonl)
+COPY eval ./eval
 COPY web/site ./web/site
 COPY web/partials ./web/partials
 ENV WCS_DATA_DIR=/data \

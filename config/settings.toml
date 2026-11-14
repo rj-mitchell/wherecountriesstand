@@ -92,6 +92,10 @@ model = "snowflake/snowflake-arctic-embed-xs"
 dim = 384
 passage_words = 250
 batch_size = 8
+# How alike two questions must be to count as one theme in the weekly report (cosine similarity, for this model,
+# which scores unrelated text around 0.5 and a strong match around 0.85). A first figure, to be looked at again
+# once there are a few weeks' worth of questions.
+theme_similarity = 0.8
 
 [usage]
 # The site is public; each new model-written briefing costs money (docs/DECISIONS.md, 9). When a cap is reached the
@@ -131,3 +135,9 @@ url = ""
 max_bytes = 3000000
 keep = 15
 days = 14
+
+[alerts]
+# What the weekly report, `wcs briefing-stats --check` and each update warn about. Thresholds start unset: the first
+# weekly report proposes them from that week's figures, and the owner writes them here (or in
+# data/settings.local.toml). The names are p95_full_briefing_ms, error_rate, check_failure_rate, not_useful_rate
+# and daily_cost_usd. An alert never comes from a number nobody chose.
