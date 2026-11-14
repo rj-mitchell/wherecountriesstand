@@ -131,13 +131,19 @@ Every written briefing is saved at its own address (`/b/<id>`), shown under it w
 it. Reports sent through the corrections page (`/corrections.html`) are kept in `data/state.db`:
 
 ```bash
-wcs reports                       # open reports, newest first (--all for closed ones too)
-wcs close-report 12               # dealt with: its contact address is deleted (the privacy notice says so)
+wcs waiting                       # how many reports and statements are waiting, and how long the oldest has waited
+wcs reports                       # open reports: takedown requests first, then newest first (--all for closed ones too)
+wcs reports show 12
+wcs reports close 12              # dealt with: its contact address is deleted (the privacy notice says so)
+wcs reports close 12 --outcome dismissed --note "Checked against S/PV.9000: the briefing is right."
+wcs reports close 12 --public-note "A date in one briefing was wrong; it was written again."   # shown on the corrections page
 wcs withdraw AbC123xy --reason "It attributed a statement to the wrong country."
 ```
 
-A command that finds nothing to change (no open report with that number, no briefing with that id, a statement
-that is not waiting) says so and exits 1; so do the statement commands below.
+`--outcome` is `resolved` (the default) or `dismissed`; `--note` is kept privately; `--public-note` is what the
+corrections page says of it, and must name no one who reported. A command that cannot do what was asked (no open
+report with that number, no briefing with that id, a statement that is not waiting) says why and exits 1; so do
+the statement commands below. (A briefing's id can begin with a hyphen: write `wcs withdraw --reason "…" -- -AbC123x`.)
 
 A withdrawn briefing's address says it was withdrawn, and why, and the corrections page lists its question and the
 reason. The same question can then be asked again. The alpha notice on every page links to the report form, and
@@ -150,6 +156,28 @@ the site says so on the corrections page and on "If you're named" (`/named.html`
 that may be unlawful or harmful, comes first. Log each decision and its reason (the trustees review the log at each
 meeting); a letter claiming legal liability goes straight to the trustees.
 
+### Hiding something while a concern is decided
+
+Policy 7.3: while a concern is being decided, the thing it is about can be hidden, with a note shown in its place.
+It is not a withdrawal: nothing is listed on the corrections page, and `wcs unhide` puts it back as it was.
+
+```bash
+wcs hide /b/AbC123xy --note "Hidden while a concern about it is looked into."
+wcs hide record:sc:S/PV.9000:0005 --note "Hidden while a concern about this record is looked into."
+wcs hidden                        # what is hidden now, and the note shown in its place
+wcs unhide /b/AbC123xy
+```
+
+Two kinds of thing can be hidden:
+
+* **A saved briefing,** by its address. Its page says "Briefing hidden for now" and shows the note; any statement
+  beside it is hidden with it and no new one is taken; the same question asked again gets the sources and the note,
+  not the briefing.
+* **A record of the archive** (one speech), by `record:` and the `record_id` on its source card (in the JSON of
+  `/api/search`, or of the briefing). It is left out of every search and of every new briefing's sources. In a
+  briefing saved before, its source card shows the note in its place; the briefing's own words stay, so if those
+  are the concern, hide the briefing too.
+
 ### Statements under the right of reply
 
 The third route, "Add a statement in your own words", sends a statement (up to 150 words, a name and role, the
@@ -159,33 +187,107 @@ own words. Not checked or endorsed by Where Countries Stand." Statements are nev
 index.
 
 ```bash
-wcs statements                                  # waiting and published, newest first (--all: declined and withdrawn too)
-wcs publish-statement 3 --checked "Reply from the mission's published address, 14 November."
+wcs statements                                  # waiting and published, newest first (--all: every one)
+wcs statements show 3                           # one statement, and everything done to it
+wcs statements publish 3 --checked "Reply from the mission's published address, 14 November."
                                                 # once its author is confirmed: shown from today, as written
-wcs publish-statement 3 --checked "…" --country KEN   # ... and recorded as Kenya's, for a country page once there is one
-wcs decline-statement 3 --reason "It is about another delegation's conduct."
-wcs update-statement 3 --text-file new.txt      # the author's new words (or --text, --name, --role, --link, --country)
-wcs withdraw-statement 3                        # at the author's request ("Withdrawn by its author.")
-wcs withdraw-statement 3 --reason "It appeals for support, which statements can't."   # removed by the site
+wcs statements publish 3 --checked "…" --country KEN   # ... and recorded as Kenya's, for a country page once there is one
+wcs statements decline 3 --reason "It is about another delegation's conduct."
+wcs statements update 3 --text-file new.txt     # the author's new words (or --text, --name, --role, --link, --country)
+wcs statements withdraw 3                       # at the author's request ("Withdrawn by its author.")
+wcs statements remove 3 --reason "It appeals for support, which statements can't."   # taken down by the site
+wcs statements log 3                            # every step, with its time and note
 ```
+
+These are the commands every Where They Stand site has (the shared package's). The names this site had before
+(`wcs publish-statement 3`, `decline-statement`, `update-statement`, `withdraw-statement`, `close-report`) still
+work for this release.
 
 1. **Confirm who sent it.** Reply to the address it came with, and wait for an answer from it: an address at the
    permanent mission or the foreign ministry is best; for any other, ask for confirmation from an address the mission
    or government publishes. Do the same before an update or a withdrawal the author asks for. Say how you
    confirmed it when you publish (`--checked`, required): the note is kept in the statement's log, is never shown on
    the site, and `wcs statements` reads it back as "sender confirmed". Leave the sender's email address out of the
-   note: the privacy notice promises that address is deleted, and the note is kept.
+   note: the privacy notice promises that address is deleted, and the note is kept (a note with the address in it
+   is refused).
 2. **Check it against the rules** (policy 7.2; `/named.html` says them in plain words): up to 150 words (the site
    checks), about the briefing it sits beside, nothing defamatory or abusive, nothing about a private individual or
    another person's conduct, no personal data about anyone else, no appeals for votes, money or support.
 3. **Publish it as written, or decline it with the reason** (and tell the author). Never edit it: if something in it
    breaks the rules, ask the author to send it again without it, or agree the removal with them and use
-   `update-statement` with their agreed words.
-4. **Withdrawing**: an author can withdraw a statement at any time; the site can remove one that breaks the rules,
-   and tells the author why.
+   `statements update` with their agreed words (the words it replaced are kept in the log).
+4. **Withdrawing and removing**: an author can withdraw a statement at any time (`statements withdraw`); the site
+   can take down one that breaks the rules (`statements remove`, with the reason), and tells the author why. The
+   log says which happened.
 
-The confirming address is deleted three months after a statement is withdrawn or declined (the privacy notice): as
-each statement arrives, by every statement command, and twice a day by `wcs update`.
+The confirming address is deleted three months after a statement is withdrawn, declined or removed (the privacy
+notice). A statement nobody has decided in three months lapses: it is declined with the reason "No decision was
+made in time; please send it again.", and its address is deleted; a report still open after three months keeps its
+place in the list, without its contact address. All this is done as each report or statement arrives, by every
+listing, each night by `wcs tidy` and twice a day by `wcs update`.
+
+## How briefings went: the record, the weekly report and alerts
+
+For each question asked the site keeps one record (the shared package's; its docs/adr/0012): how long each step
+took, what it cost, how many sources went in and from which groups, what the checks found and how it ended
+(written, from the cache, no records, sources only, paused by a cap or a limit, an error, the reader left), with
+the question and nothing about the reader. A report that names a briefing, and its withdrawal, are noted on that
+briefing's record.
+
+```bash
+wcs briefing-stats --since 7d     # speed, cost, check failures, errors, beside the four weeks before (--json; --themes)
+wcs briefing-stats --check        # only what is over its threshold; exits 1 if anything is
+wcs weekly-report                 # the week's figures, saved in data/reports/ as a page and as JSON
+wcs tidy                          # the nightly housekeeping
+```
+
+(`wcs stats` is a different command: what is loaded and indexed.)
+
+* **The weekly report** is written every Monday at 07:07 UTC (`deploy/wcs-weekly-report.timer`) to
+  `/data/reports/<year>-W<week>.md` and `.json`, readable by the site's user only: it lists the questions that
+  found no records and the commonest themes (grouped by meaning with the site's own embedding model, on the server).
+* **Alerts** are thresholds under `[alerts]` in `config/settings.toml` (or `data/settings.local.toml`):
+  `p95_full_briefing_ms`, `error_rate`, `check_failure_rate`, `not_useful_rate`, `daily_cost_usd`. They start
+  unset, and nothing alerts until one is set: the first weekly report prints proposed values from that week's
+  figures. Once set, the weekly report and each update (`briefings: …` in its errors) exit 1 when a figure is over
+  its threshold, which sends the alert email.
+* **The structured log,** `/data/logs/briefings.jsonl`: one line for each stage a briefing reached and one for how
+  it ended (the record's id, a stage, milliseconds, an error's class), kept for 14 days or 50 MB. Never a question,
+  an address or a visitor's code.
+* **`wcs tidy`** runs each night after the backup (`deploy/wcs-backup.service`). It deletes a briefing's record
+  after 13 months and the question of a failed one after 90 days, forgets a visitor's code after its day, deletes
+  weekly reports after 13 months and the copy of the database made before the move to the shared package once it is
+  older than the backups, and does the right of reply's housekeeping above.
+
+**The test questions with each briefing written.** `wcs evaluate` scores how each question in `eval/questions.toml`
+is read and what evidence is found, free. `wcs eval run` has each briefing written and checked as well, and reports
+what the checks found, the spread of sources, the time and the cost; it spends up to `[eval] max_cost_usd` (3 US
+dollars) on the model, so it is run by hand, on the server, where the record is:
+
+```bash
+docker compose run --rm -T app wcs eval run --record-fixtures /data/eval-fixtures   # saved in /app/eval/runs
+docker compose run --rm -T app wcs eval compare <run A>.json <run B>.json           # two runs side by side
+docker compose run --rm -T app wcs eval replay /data/eval-fixtures                  # the checks again, free
+```
+
+Run it before and after a change to the model, the instructions, the ranking or the checks. A run that asks the
+whole set and meets `[eval.thresholds]` is noted in `eval/runs/passed.jsonl`, which is kept in git.
+
+## The state database
+
+`data/state.db` is the one thing that cannot be rebuilt from the UN's records. Its tables are the shared package's,
+each named `wts_…` (spending, the answer cache, saved briefings, notes of failed briefings, the record of each
+briefing, reports, statements and their log, what is hidden, the day's visitor secret).
+
+**The move (November 2026).** Before the shared package the site kept the same things in tables of its own
+(`usage`, `kv`, `answer_cache`, `failures`, `briefings`, `reports`, `statements`). The first time the site starts
+on that database, their rows are copied into the `wts_` tables, once, in one transaction that takes a moment; a
+copy of the file as it was is kept first, as `/data/state.pre-wts-core.<date>.db` (`wcs tidy` deletes it after 60
+days). The old tables are left exactly as they were.
+
+**Going back.** Deploy the previous version: it finds its tables as they were on the day of the move. To carry
+back what has been asked, sent and decided since, stop the site and run `deploy/undo-wts-core.sql` first (the
+commands are at the top of the file).
 
 ## The General Debate
 

@@ -53,7 +53,22 @@ The charity's corrections and right-of-reply policy (decision 16): "If you're na
 sets out the three routes for countries' delegations, missions and governments, and people named in the record, with
 the response times ("We reply within 5 working days, and decide within 20 working days."). A statement in someone's
 own words is held until the owner confirms who sent it (`wcs statements`, `docs/OPERATIONS.md`), then shown beside
-its briefing, set apart from the site's text; it never reaches the model or the index.
+its briefing, set apart from the site's text; it never reaches the model or the index. A briefing, or a record
+of the archive, can be hidden with a note while a concern about it is decided (`wcs hide`).
+
+## The shared engine
+
+What this site does in the same way as its sister sites is not written here but taken from **wts-core**, the Where
+They Stand sites' shared package ([rj-mitchell/wts-core](https://github.com/rj-mitchell/wts-core), AGPL-3.0; the
+wheel of a release, named in `pyproject.toml`): settings, the state database, the limits and the spending record,
+the checks on every briefing (citations, quotations, unsupported sentences, judgemental words, spelling), the flow
+of a question from its arrival to its last event, the model client, the embedder and the search index's tables,
+reports and the right of reply, backups, the record of each briefing with its statistics and weekly report, the
+evaluation harness, and the shared CI. What is here is what follows the United Nations' record: the loaders and
+parsers, who is speaking and for whom, the countries and groups on each date, the index's columns, how a question
+is read, retrieval and ranking, the instructions to the model, the pages, and every word a reader is shown.
+Decision 18 in [`docs/DECISIONS.md`](docs/DECISIONS.md) says why; `tests/test_parity.py` compares what the site
+gives now with what its own code gave before the move.
 
 ## Documents
 
@@ -118,6 +133,7 @@ uv run wcs fetch-votes && uv run wcs ingest-votes    # General Assembly votes (a
 uv run wcs update --no-index                           # Security Council records since 2024 (first run: about 10 s a
                                                        # meeting) and General Debate records from 2024
 uv run wcs evaluate                                    # score against the test set (eval/questions.toml)
+uv run wcs briefing-stats --since 7d                   # how briefings went: speed, cost, what the checks found
 uv run wcs index                                       # keyword index (about 40 seconds)
 uv run wcs embed --max-seconds 3600                    # meaning search, newest years first (resumable; see below)
 uv run wcs optimize                                    # merge, compact and delete old index versions (updates do this)

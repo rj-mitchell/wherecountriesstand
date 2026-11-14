@@ -86,8 +86,14 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
 * **New code:** merge it into `main` on GitHub, then `bash /opt/wherecountriesstand/deploy/update.sh`.
 * **Memory:** the container is limited to 4 GB (`mem_limit` in `docker-compose.yml`), so a runaway update stops
   itself rather than slowing the other sites.
-* **Spending:** every briefing's cost is recorded in `/data/state.db` (table `usage`). When a cap is reached the
-  site carries on showing sources, and says why.
+* **Spending:** every briefing's cost is recorded in `/data/state.db` (table `wts_spending`; `wcs usage` shows it).
+  When a cap is reached the site carries on showing sources, and says why.
+* **The weekly report and the nightly housekeeping:** `wcs-weekly-report.timer` writes how briefings went each
+  Monday to `/data/reports`, and `wcs tidy` runs after each night's backup (`docs/OPERATIONS.md`, "How briefings
+  went"). `update.sh` installs both.
+* **The nightly family check:** to let the charity's nightly check ask this site what is waiting and how old its
+  backups are, set `WCS_CHECK_TOKEN` in `deploy/.env` to the same random value as the charity repository's
+  `FAMILY_CHECK_TOKEN` secret (`deploy/.env.example`). Left empty, `/api/check` is not there.
 * **Backups:** everything but the state database can be rebuilt. That database (spending, saved briefings,
   reports) is copied every night (`wcs-backup.timer`) to `/opt/wherecountriesstand/deploy/backups`, the last 14 kept,
   and to the charity's Backblaze B2 bucket (Where MPs Stand's [`docs/HOSTING.md`](https://github.com/rj-mitchell/wherempsstand/blob/main/docs/HOSTING.md), "Backups"), the last 60
@@ -116,8 +122,9 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
   the site's user (`chown 10001:10001 <file>`). Each update warns if the backups stop (`docs/OPERATIONS.md`).
 * **The privacy notice** (`web/site/privacy.html`) says what the site keeps: no requests logged (`wcs serve` turns
   the access log off, and the front door keeps none), written briefings saved at their own addresses (`/b/<id>`) unless withdrawn, problem reports with their contact address deleted when closed,
-  statements' confirming addresses deleted three months after a statement is withdrawn or declined, notes
-  of failed briefings for 90 days, and a daily visitor code in place of IP addresses. It names Cloudflare, which
+  statements' confirming addresses deleted three months after a statement is withdrawn, declined or removed, notes
+  of failed briefings for 90 days, a note of how each briefing went (time, cost, what the checks found) for 13
+  months, backups for up to two months, and a daily visitor code in place of IP addresses. It names Cloudflare, which
   carries the site's visits. Keep it true when changing any of these, or the hosting.
 * **Search engines and link previews:** `/robots.txt`, `/sitemap.xml` and the pages' link-preview tags use
   `https://` and `DOMAIN` from `.env` (or `WCS_SITE_URL`, or `[site] url` in `config/settings.toml`). Crawlers are
