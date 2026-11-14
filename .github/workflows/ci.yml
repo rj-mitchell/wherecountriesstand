@@ -44,7 +44,7 @@ jobs:
   accessibility:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: rj-mitchell/wts-core/.github/actions/setup@v0.2.0
       - name: Install
         run: uv sync --frozen
