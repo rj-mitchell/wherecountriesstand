@@ -345,3 +345,15 @@ def test_going_back_writes_the_old_tables_again_with_what_has_come_in_since(site
     assert rows(path, "SELECT page, country, status, shown_on, text, link, email FROM statements WHERE id = 1") == [
         (was["page"], was["country"], "published", was["shown_on"], was["text"], was["link"], was["email"])]
     assert json.loads(rows(path, "SELECT log FROM statements WHERE id = 1")[0][0]) == was["log"]
+
+
+def test_a_database_from_before_cache_writes_were_recorded_is_brought_across_too(old):
+    """The oldest backups have no ``cache_write_tokens`` column in ``usage`` (the old code added it when it first
+    opened such a file): restored and opened by the code as it is now, those rows had no cache writes."""
+    con = sqlite3.connect(old.state_db)
+    con.execute("ALTER TABLE usage DROP COLUMN cache_write_tokens")
+    con.commit()
+    con.close()
+    open_state(old, FixedClock(NOW))
+    assert rows(old.state_db, "SELECT count(*), sum(cache_write_tokens), round(sum(cost_usd), 6) FROM wts_spending") \
+        == [(10, 0, rows(old.state_db, "SELECT round(sum(cost_usd), 6) FROM usage")[0][0])]
