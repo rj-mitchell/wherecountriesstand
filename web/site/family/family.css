@@ -1,0 +1,254 @@
+/* Where They Stand family kit: shared tokens, the endorsement and the footer shelf.
+   Generated into each site by sync.mjs. Edit family/kit/family.css, not the copies.
+   Every class and custom property is prefixed wts- so nothing clashes with a site's own styles. */
+
+:root {
+  --wts-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --wts-sans: "Source Sans 3", "Segoe UI", Helvetica, Arial, sans-serif;
+
+  --wts-ink: #1C2427;
+  --wts-ink-muted: #4F5A5E;
+  --wts-paper: #F2F4F4;        /* panels and the footer shelf */
+  --wts-paper-light: #FFFFFF;  /* the page */
+  --wts-rule: #C4CBCD;
+  --wts-rule-faint: #DFE4E5;
+  --wts-gilt: #B08D3C;         /* spine bands only */
+  --wts-gilt-text: #4F5A5E;    /* kept for older site styles; now the muted ink */
+  --wts-gilt-spine: #D9BC72;
+  --wts-spine-text: #F3E3B8;
+  --wts-shelf-line: #1C2427;
+  --wts-on-cloth: #FFFFFF;     /* text on a cloth-coloured band */
+
+  --wts-cloth-mps: #1D4535;
+  --wts-cloth-councils: #6E4A2A;
+  --wts-cloth-landlords: #40484D;
+  --wts-cloth-countries: #1F5F8B;
+  --wts-cloth-lives: #5E3F63;
+  --wts-cloth-mps-text: #1D4535;
+  --wts-cloth-councils-text: #6E4A2A;
+  --wts-cloth-landlords-text: #40484D;
+  --wts-cloth-countries-text: #1F5F8B;
+  --wts-cloth-lives-text: #5E3F63;
+
+  --wts-focus: currentColor;
+  --wts-focus-width: 3px;
+  --wts-focus-offset: 3px;
+  --wts-ease-out: ease-out;
+  --wts-duration: 150ms;
+  --wts-target-min: 24px;
+  --wts-target: 44px;
+}
+
+@supports (color: light-dark(#000, #fff)) {
+  :root {
+    --wts-ink: light-dark(#1C2427, #E6EAEA);
+    --wts-ink-muted: light-dark(#4F5A5E, #A9B4B7);
+    --wts-paper: light-dark(#F2F4F4, #1A2023);
+    --wts-paper-light: light-dark(#FFFFFF, #111517);
+    --wts-rule: light-dark(#C4CBCD, #3D474B);
+    --wts-rule-faint: light-dark(#DFE4E5, #283034);
+    --wts-gilt: light-dark(#B08D3C, #C9A456);
+    --wts-gilt-text: light-dark(#4F5A5E, #A9B4B7);
+    --wts-shelf-line: light-dark(#1C2427, #7D898D);
+    --wts-cloth-mps: light-dark(#1D4535, #2F7056);
+    --wts-cloth-councils: light-dark(#6E4A2A, #865A33);
+    --wts-cloth-landlords: light-dark(#40484D, #5B666D);
+    --wts-cloth-countries: light-dark(#1F5F8B, #22699A);
+    --wts-cloth-lives: light-dark(#5E3F63, #7F5585);
+    --wts-cloth-mps-text: light-dark(#1D4535, #93C9AC);
+    --wts-cloth-councils-text: light-dark(#6E4A2A, #D8AE84);
+    --wts-cloth-landlords-text: light-dark(#40484D, #B3BEC5);
+    --wts-cloth-countries-text: light-dark(#1F5F8B, #94C3E8);
+    --wts-cloth-lives-text: light-dark(#5E3F63, #D0ADD6);
+  }
+}
+@supports not (color: light-dark(#000, #fff)) {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --wts-ink: #E6EAEA;
+      --wts-ink-muted: #A9B4B7;
+      --wts-paper: #1A2023;
+      --wts-paper-light: #111517;
+      --wts-rule: #3D474B;
+      --wts-rule-faint: #283034;
+      --wts-gilt: #C9A456;
+      --wts-gilt-text: #A9B4B7;
+      --wts-shelf-line: #7D898D;
+      --wts-cloth-mps: #2F7056;
+      --wts-cloth-councils: #865A33;
+      --wts-cloth-landlords: #5B666D;
+      --wts-cloth-countries: #22699A;
+      --wts-cloth-lives: #7F5585;
+      --wts-cloth-mps-text: #93C9AC;
+      --wts-cloth-councils-text: #D8AE84;
+      --wts-cloth-landlords-text: #B3BEC5;
+      --wts-cloth-countries-text: #94C3E8;
+      --wts-cloth-lives-text: #D0ADD6;
+    }
+  }
+}
+
+.wts-cloth--mps { --wts-cloth: var(--wts-cloth-mps); --wts-cloth-text: var(--wts-cloth-mps-text); }
+.wts-cloth--councils { --wts-cloth: var(--wts-cloth-councils); --wts-cloth-text: var(--wts-cloth-councils-text); }
+.wts-cloth--landlords { --wts-cloth: var(--wts-cloth-landlords); --wts-cloth-text: var(--wts-cloth-landlords-text); }
+.wts-cloth--countries { --wts-cloth: var(--wts-cloth-countries); --wts-cloth-text: var(--wts-cloth-countries-text); }
+.wts-cloth--lives { --wts-cloth: var(--wts-cloth-lives); --wts-cloth-text: var(--wts-cloth-lives-text); }
+
+.wts-headings :is(h1, h2, h3, h4, h5, h6),
+.wts-serif {
+  font-family: var(--wts-serif);
+}
+
+/* Spines */
+
+.wts-spine { display: block; flex: none; }
+.wts-spine .wts-spine__cloth { fill: var(--wts-cloth); }
+.wts-spine .wts-spine__gilt { stroke: var(--wts-gilt-spine); }
+
+/* Endorsement: the site's spine and "A Where They Stand project". It takes the colour of the text around it,
+   so it works on a page or on a cloth-coloured header. */
+
+.wts-endorse {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  min-block-size: var(--wts-target-min);
+  font-family: var(--wts-sans);
+  font-size: 0.875rem;
+  line-height: 1.2;
+  color: inherit;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+.wts-endorse .wts-spine { block-size: 2em; inline-size: auto; }
+.wts-endorse__line { text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 0.2em; }
+.wts-endorse:is(:hover, :focus-visible, :active) .wts-endorse__line { text-decoration-color: currentColor; }
+/* On a cloth-coloured band, add wts-endorse--on-cloth so the spine stands out from the band */
+.wts-endorse--on-cloth .wts-spine { outline: 1px solid color-mix(in srgb, currentColor 60%, transparent); }
+:where(.wts-endorse:focus-visible) {
+  outline: var(--wts-focus-width) solid var(--wts-focus);
+  outline-offset: var(--wts-focus-offset);
+}
+
+/* Footer shelf */
+
+.wts-shelf {
+  margin-block-start: 2rem;
+  padding-block: 1.75rem 1.5rem;
+  padding-inline: var(--wts-gutter, clamp(1rem, 0.5rem + 3.5vw, 2.5rem));
+  background: var(--wts-paper);
+  border-block-start: 1px solid var(--wts-rule-faint);
+  color: var(--wts-ink);
+  font-family: var(--wts-sans);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+.wts-shelf__inner {
+  max-inline-size: var(--wts-shelf-width, 72rem);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem 3rem;
+  align-items: start;
+}
+@media (min-width: 60rem) {
+  .wts-shelf__inner { grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr); }
+}
+.wts-shelf a { color: inherit; text-underline-offset: 0.15em; touch-action: manipulation; }
+.wts-shelf a:is(:hover, :active) { text-decoration-thickness: 2px; }
+.wts-shelf a:focus-visible { outline: var(--wts-focus-width) solid var(--wts-focus); outline-offset: var(--wts-focus-offset); }
+
+.wts-shelf__brand { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+.wts-shelf__brand svg { flex: none; block-size: 2.25em; inline-size: auto; }
+.wts-mark__ink { fill: var(--wts-ink); }
+.wts-mark__mps { fill: var(--wts-cloth-mps); }
+.wts-mark__countries { fill: var(--wts-cloth-countries); }
+.wts-mark__shelf { stroke: var(--wts-ink); }
+.wts-shelf__wordmark {
+  font-family: var(--wts-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.wts-shelf__brand:is(:hover, :active) .wts-shelf__wordmark { text-decoration: underline; text-underline-offset: 0.15em; }
+.wts-shelf__status {
+  margin: 0.75rem 0 0.4rem;
+  font-size: 0.9375rem;
+  color: var(--wts-ink-muted);
+  text-wrap: pretty;
+}
+.wts-shelf__links { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0 1.25rem; font-size: 0.9375rem; }
+.wts-shelf__links a { display: inline-flex; align-items: center; min-block-size: var(--wts-target-min); }
+
+.wts-shelf__groups { display: flex; flex-wrap: wrap; gap: 1.25rem 3rem; }
+.wts-shelf__group { flex: 0 1 auto; min-inline-size: 0; }
+.wts-shelf__label {
+  margin: 0 0 0.4rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--wts-ink);
+}
+.wts-shelf__books { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; }
+.wts-shelf__books li {
+  display: flex;
+  flex-grow: 1;
+  padding-inline: 0.4rem 0.9rem;
+  border-block-end: 3px solid var(--wts-shelf-line);
+}
+.wts-book {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.45rem;
+  min-block-size: var(--wts-target);
+  padding-block-start: 0.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.2;
+  text-decoration: none;
+}
+.wts-book .wts-spine { margin-block-end: 0; block-size: 2.106em; inline-size: auto; }
+.wts-book[aria-current] .wts-spine { block-size: 2.632em; }
+.wts-cart { display: block; flex: none; }
+.wts-book__name {
+  padding-block-end: 0.3rem;
+  text-decoration: underline;
+  text-decoration-color: var(--wts-rule);
+  text-underline-offset: 0.2em;
+  text-wrap: balance;
+}
+.wts-book:is(:hover, :active) .wts-book__name { text-decoration-color: currentColor; }
+.wts-book[aria-current] .wts-book__name { font-weight: 600; text-decoration: none; }
+
+@media (pointer: coarse) {
+  .wts-endorse,
+  .wts-shelf__brand,
+  .wts-shelf__links a { position: relative; }
+  .wts-endorse::after,
+  .wts-shelf__brand::after,
+  .wts-shelf__links a::after {
+    content: "";
+    position: absolute;
+    inset-block: calc((100% - var(--wts-target)) / 2);
+    inset-inline: -0.25rem;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .wts-book__name { text-decoration-color: currentColor; }
+  .wts-shelf__status { color: var(--wts-ink); }
+}
+
+@media (forced-colors: active) {
+  .wts-spine { forced-color-adjust: none; }
+  .wts-spine .wts-spine__cloth { fill: CanvasText; }
+  .wts-spine .wts-spine__gilt { stroke: Canvas; }
+  .wts-shelf { border-block-start-color: CanvasText; }
+  .wts-shelf__books li { border-block-end-color: CanvasText; }
+  .wts-shelf__mark { forced-color-adjust: none; }
+  .wts-shelf__mark rect { fill: CanvasText; }
+  .wts-shelf__mark path { stroke: CanvasText; }
+  .wts-endorse .wts-endorse__line { text-decoration-color: currentColor; }
+}
+
+@media print {
+  .wts-shelf { background: none; border-block-start: 1px solid; }
+}

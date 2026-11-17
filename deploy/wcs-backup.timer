@@ -1,0 +1,10 @@
+[Unit]
+Description=Where Countries Stand: back up the state database every night
+
+[Timer]
+# UTC, between the charity's other sites' updates
+OnCalendar=*-*-* 04:20:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

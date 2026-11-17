@@ -1,0 +1,21 @@
+# Nightly backup of the state database (the one thing that cannot be rebuilt) to
+# /opt/wherecountriesstand/deploy/backups, then the nightly housekeeping (wcs tidy), which deletes what the privacy
+# page says is deleted in time. The housekeeping runs even if the backup fails (ExecStopPost); either failure sends
+# the alert email. Installed by deploy/update.sh with wcs-backup.timer.
+[Unit]
+Description=Where Countries Stand: back up the state database
+After=docker.service
+Requires=docker.service
+# Emails the alerts address if this fails (deploy/alert@.service in Where MPs Stand's repository, rj-mitchell/wherempsstand; docs/HOSTING.md there)
+OnFailure=alert@%n.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/wherecountriesstand/deploy
+ExecStart=/usr/bin/docker compose run --rm -T app wcs backup --to /backups --keep 14
+ExecStopPost=/usr/bin/docker compose run --rm --no-deps -T app wcs tidy
+Nice=10
+TimeoutStartSec=30min
+# ExecStopPost is timed by this, not TimeoutStartSec. systemd's default of 90 seconds can cut the housekeeping
+# (which ends by compacting the database) short on a slow night, leaving due deletions undone.
+TimeoutStopSec=30min

@@ -1,0 +1,188 @@
+"""Question -> plan -> evidence -> grounded briefing -> verification.
+
+``Pipeline.run`` yields events as it goes (the plan, the sources, text as it is written, then the verified answer),
+so a web page can show each step; ``answer_once`` collects them into one result for the command line and tests.
+"""
+
+from __future__ import annotations
+
+import logging
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass, field
+from datetime import date
+from typing import Any
+
+from wts_core.briefing import current_stages
+from wts_core.checks import curl_event, to_british
+from wts_core.events import Completed, blocks_as_today, to_reader
+from wts_core.ports import ModelClient, NoStructuredAnswer
+
+from wcs.adapters import has_model, model_client
+from wcs.config import Settings
+from wcs.engine import Engine
+from wcs.messages import MESSAGES, NO_MODEL
+from wcs.rag.answer import briefing_request
+from wcs.rag.checks import checked
+from wcs.rag.prompts import NO_RECORDS
+from wcs.rag.query_parse import QueryPlan, parse_offline, parse_with_model
+from wcs.rag.sources import build_sources
+from wcs.votes import VoteFinder
+
+log = logging.getLogger(__name__)
+
+
+@dataclass
+class AskRequest:
+    question: str
+    mode: str = "summary"                       # summary | comprehensive
+    plan: dict[str, Any] | None = None          # an edited plan from the reader, used instead of parsing
+    recency: float | None = None
+    role_weight: float | None = None
+    history: list[dict[str, str]] = field(default_factory=list)
+
+
+def plan_note(plan: QueryPlan, engine: Engine) -> str:
+    """The filters, in words, for the model (so it knows what the evidence was limited to)."""
+    f = plan.filters
+    c = engine.countries
+    bits = []
+    if f.sources:
+        bits.append("bodies: " + ", ".join({"sc": "Security Council", "gd": "General Assembly General Debate"}[s]
+                                           for s in f.sources))
+    if f.countries:
+        bits.append("countries: " + ", ".join(c.name_on(x) for x in f.countries))
+    if f.groups:
+        bits.append("groups: " + ", ".join(c.label(g) for g in f.groups))
+    if f.date_from or f.date_to:
+        bits.append("dates: " + (f.date_from.isoformat() if f.date_from else "the start") + " to " +
+                    (f.date_to.isoformat() if f.date_to else "today"))
+    return "; ".join(bits)
+
+
+VOTES_ASKED = 6  # resolutions shown when a question asks about votes
+
+
+class Pipeline:
+    """Where Countries Stand's pipeline. ``client`` is the model that reads questions and writes briefings (the
+    shared package's ``ports.ModelClient``); left out, it is made from the settings when first needed and kept for
+    the life of the process."""
+
+    def __init__(self, settings: Settings, engine: Engine | None = None, client: ModelClient | None = None,
+                 today: date | None = None):
+        self.settings = settings
+        self.engine = engine or Engine(settings, today=today)
+        self.votes = VoteFinder(settings, self.engine.countries)
+        self._client = client
+        self.today = today
+
+    @property
+    def client(self) -> ModelClient:
+        if self._client is None:
+            self._client = model_client(self.settings)
+        return self._client
+
+    def has_model(self) -> bool:
+        """Whether briefings can be written at all: a model was given, or an API key is set."""
+        return self._client is not None or has_model(self.settings)
+
+    def make_plan(self, req: AskRequest) -> tuple[QueryPlan, dict[str, int] | None]:
+        if req.plan:
+            return QueryPlan.from_dict({"question": req.question, **req.plan}), None
+        today = self.today or date.today()
+        default_years = int(self.settings.archive.get("default_years", 10))
+        offline = parse_offline(req.question, self.engine.countries, today, default_years, self.settings.start_date)
+        if not self.has_model():
+            return offline, None
+        try:
+            plan, usage = parse_with_model(self.client, self.settings, req.question, self.engine.countries, today)
+            plan.interpretation = to_british(plan.interpretation)
+            return plan, usage.as_stored()
+        except NoStructuredAnswer as exc:
+            # The model answered, and was paid, but gave nothing that reads as a plan (it declined, wrote nothing,
+            # was cut off, or wrote what does not fit): the built-in rules read the question, and the reading's
+            # cost is recorded as any other's, so it counts towards the caps.
+            log.warning("model query parsing failed (%s); using offline rules", exc)
+            offline.parse_error = f"{type(exc).__name__}: {exc}"
+            return offline, exc.usage.as_stored()
+        except Exception as exc:
+            log.warning("model query parsing failed (%s); using offline rules", exc)
+            offline.parse_error = f"{type(exc).__name__}: {exc}"
+            return offline, None
+
+    def find(self, plan: QueryPlan, req: AskRequest):
+        """The evidence for a plan: (search result, votes, numbered sources). Free: no model call."""
+        limit = int(self.settings.answer.get(
+            "comprehensive_sources" if req.mode == "comprehensive" else "summary_sources", 24))
+        result = self.engine.search(plan.search_text, plan.filters, req.recency, req.role_weight, limit,
+                                    diversify=True, group_by=plan.group_by)
+        votes = []
+        if not plan.filters.sources or "gd" in plan.filters.sources:
+            # resolution titles are matched on the question's own subject words first: the model's search words add
+            # debate vocabulary ("territorial integrity, sovereignty") that titles such as "Aggression against
+            # Ukraine" lack
+            n = VOTES_ASKED if plan.wants_votes else 1
+            own = parse_offline(req.question, self.engine.countries, self.today or date.today()).search_text
+            strict = not plan.wants_votes
+            votes = self.votes.find(own, plan.filters, n, strict) or \
+                self.votes.find(plan.search_text, plan.filters, n, strict)
+        return result, votes, build_sources(result.records, votes, plan.group_by)
+
+    def run(self, req: AskRequest, keep: Callable[..., None] | None = None) -> Iterator[dict[str, Any]]:
+        """The events of one briefing. ``keep``, if given, is handed what the model was sent and what it wrote back
+        (the documents, the finished blocks and each source's heading): how an evaluation run keeps a briefing, so
+        that the checks can be run over it again later without the model."""
+        plan, parse_usage = self.make_plan(req)
+        ev: dict[str, Any] = {"type": "plan", "plan": plan.to_dict(), "usage": parse_usage}
+        if plan.parse_error:
+            ev["parse_error"] = plan.parse_error
+        yield curl_event(ev)  # the interpretation in curly quotes, as the briefing
+        result, votes, sources = self.find(plan, req)
+        yield {"type": "sources", "sources": [s.card() for s in sources], "candidates": result.candidates,
+               "semantic": result.semantic_available, "evidence": {**result.evidence, "votes": len(votes)}}
+        if not result.records and not votes:
+            yield {"type": "final", "answer": {"segments": [{"text": NO_RECORDS + " The archive contains no records "
+                   "matching this question and these filters.", "sources": [], "cited": [], "status": "connective"}],
+                   "markdown": NO_RECORDS, "no_records": True, "citations_total": 0, "citations_invalid": 0,
+                   "grounded_ratio": 1.0, "unsupported_segments": 0}, "usage": None}
+            return
+        if not self.has_model():
+            yield {"type": "final", "answer": None, "usage": None, "note": NO_MODEL}
+            return
+        request = briefing_request(self.settings, plan.question, sources, req.mode, plan_note(plan, self.engine),
+                                   req.history, self.today or date.today(), plan.group_by)
+        done: Completed | None = None
+        stream = self.client.stream(request)
+        try:
+            for event in stream:
+                if isinstance(event, Completed):
+                    done = event
+                else:
+                    yield to_reader(event)  # text and citations, as they are written
+        finally:
+            stream.close()  # if the reader has gone, this stops the model: nothing more is written or paid for
+        current_stages().mark("written")
+        if done is None:
+            raise RuntimeError("the model returned no answer")
+        if done.stop_reason == "refusal":
+            # the model declined: an error for the reader, never an empty briefing shown as fully grounded (as Where
+            # MPs Stand). The call was still paid for, so its token counts go with the event to be recorded.
+            yield {"type": "error", "message": MESSAGES.model_declined, "usage": done.usage.as_stored(),
+                   "model": done.model}
+            return
+        # Every check, in the one order: citations, openers about the records dropped, the model's own words made
+        # British (quotations stay verbatim), judgemental words in its own voice highlighted (not hidden),
+        # quotations not found word for word marked; then curly quotes and apostrophes, last, once the checks have
+        # read the text as the model wrote it (wcs.rag.checks).
+        if keep is not None:
+            keep(request.documents, done.blocks, tuple(str(s.meta.get("heading") or "") for s in sources))
+        yield {"type": "final", "answer": checked(blocks_as_today(done), sources),
+               "usage": done.usage.as_stored(), "model": done.model, "stop_reason": done.stop_reason}
+
+
+def answer_once(pipeline: Pipeline, req: AskRequest) -> dict[str, Any]:
+    """Run a question to the end and collect the plan, sources and answer."""
+    out: dict[str, Any] = {}
+    for ev in pipeline.run(req):
+        if ev["type"] in ("plan", "sources", "final", "error"):
+            out[ev["type"]] = ev
+    return out

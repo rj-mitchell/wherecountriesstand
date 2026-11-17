@@ -1,0 +1,256 @@
+[
+ {
+  "case": "not set up: nothing is sent",
+  "offsite.json": null,
+  "result": {
+   "offsite": "not set up"
+  },
+  "stored": null
+ },
+ {
+  "case": "not set up: the check says how",
+  "offsite.json": null,
+  "result": {
+   "error": "not set up: add WCS_B2_BUCKET, WCS_B2_KEY_ID and WCS_B2_APPLICATION_KEY to deploy/.env",
+   "ok": false
+  },
+  "stored": null
+ },
+ {
+  "case": "a copy is stored and the newest two kept (2026-11-01)",
+  "offsite.json": {
+   "bucket": "wts-backups",
+   "deleted": 0,
+   "file": "wcs-state-2026-11-01.sqlite.gz",
+   "ok": true,
+   "stored": 1,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "bucket": "wts-backups",
+   "deleted": 0,
+   "file": "wcs-state-2026-11-01.sqlite.gz",
+   "ok": true,
+   "stored": 1,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "stored": [
+   "wcs-state-2026-11-01.sqlite.gz"
+  ]
+ },
+ {
+  "case": "a copy is stored and the newest two kept (2026-11-02)",
+  "offsite.json": {
+   "bucket": "wts-backups",
+   "deleted": 0,
+   "file": "wcs-state-2026-11-02.sqlite.gz",
+   "ok": true,
+   "stored": 2,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "bucket": "wts-backups",
+   "deleted": 0,
+   "file": "wcs-state-2026-11-02.sqlite.gz",
+   "ok": true,
+   "stored": 2,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "stored": [
+   "wcs-state-2026-11-01.sqlite.gz",
+   "wcs-state-2026-11-02.sqlite.gz"
+  ]
+ },
+ {
+  "case": "a copy is stored and the newest two kept (2026-11-03)",
+  "offsite.json": {
+   "bucket": "wts-backups",
+   "deleted": 1,
+   "file": "wcs-state-2026-11-03.sqlite.gz",
+   "ok": true,
+   "stored": 2,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "bucket": "wts-backups",
+   "deleted": 1,
+   "file": "wcs-state-2026-11-03.sqlite.gz",
+   "ok": true,
+   "stored": 2,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "stored": [
+   "wcs-state-2026-11-02.sqlite.gz",
+   "wcs-state-2026-11-03.sqlite.gz"
+  ]
+ },
+ {
+  "case": "the check counts the copies",
+  "offsite.json": {
+   "bucket": "wts-backups",
+   "deleted": 1,
+   "file": "wcs-state-2026-11-03.sqlite.gz",
+   "ok": true,
+   "stored": 2,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "backups": 2,
+   "bucket": "wts-backups",
+   "newest": "wcs-state-2026-11-03.sqlite.gz",
+   "ok": true
+  },
+  "stored": [
+   "wcs-state-2026-11-02.sqlite.gz",
+   "wcs-state-2026-11-03.sqlite.gz"
+  ]
+ },
+ {
+  "case": "a key that cannot delete still stores (2026-11-01)",
+  "offsite.json": {
+   "bucket": "wts-backups",
+   "deleted": 0,
+   "file": "wcs-state-2026-11-01.sqlite.gz",
+   "ok": true,
+   "stored": 1,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "bucket": "wts-backups",
+   "deleted": 0,
+   "file": "wcs-state-2026-11-01.sqlite.gz",
+   "ok": true,
+   "stored": 1,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "stored": [
+   "wcs-state-2026-11-01.sqlite.gz"
+  ]
+ },
+ {
+  "case": "a key that cannot delete still stores (2026-11-02)",
+  "offsite.json": {
+   "bucket": "wts-backups",
+   "deleted": 0,
+   "file": "wcs-state-2026-11-02.sqlite.gz",
+   "ok": true,
+   "stored": 2,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "bucket": "wts-backups",
+   "deleted": 0,
+   "file": "wcs-state-2026-11-02.sqlite.gz",
+   "ok": true,
+   "stored": 2,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "stored": [
+   "wcs-state-2026-11-01.sqlite.gz",
+   "wcs-state-2026-11-02.sqlite.gz"
+  ]
+ },
+ {
+  "case": "an upload that keeps failing is reported and recorded",
+  "offsite.json": {
+   "error": "upload failed: 503 ",
+   "ok": false,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "raised": "upload failed: 503 "
+  },
+  "stored": []
+ },
+ {
+  "case": "a key that is refused",
+  "offsite.json": {
+   "error": "Backblaze did not accept the key: check WCS_B2_KEY_ID and WCS_B2_APPLICATION_KEY",
+   "ok": false,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "raised": "Backblaze did not accept the key: check WCS_B2_KEY_ID and WCS_B2_APPLICATION_KEY"
+  },
+  "stored": []
+ },
+ {
+  "case": "a key for another bucket",
+  "offsite.json": {
+   "error": "the key is for the bucket 'wts-backups', not 'another'",
+   "ok": false,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "raised": "the key is for the bucket 'wts-backups', not 'another'"
+  },
+  "stored": []
+ },
+ {
+  "case": "sites sharing a bucket keep their own (2026-11-01)",
+  "offsite.json": {
+   "bucket": "wts-backups",
+   "deleted": 0,
+   "file": "wcs-state-2026-11-01.sqlite.gz",
+   "ok": true,
+   "stored": 1,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "bucket": "wts-backups",
+   "deleted": 0,
+   "file": "wcs-state-2026-11-01.sqlite.gz",
+   "ok": true,
+   "stored": 1,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "stored": [
+   "councils-state-2026-11-01.sqlite.gz",
+   "wcs-state-2026-11-01.sqlite.gz"
+  ]
+ },
+ {
+  "case": "sites sharing a bucket keep their own (2026-11-02)",
+  "offsite.json": {
+   "bucket": "wts-backups",
+   "deleted": 1,
+   "file": "wcs-state-2026-11-02.sqlite.gz",
+   "ok": true,
+   "stored": 1,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "bucket": "wts-backups",
+   "deleted": 1,
+   "file": "wcs-state-2026-11-02.sqlite.gz",
+   "ok": true,
+   "stored": 1,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "stored": [
+   "councils-state-2026-11-01.sqlite.gz",
+   "wcs-state-2026-11-02.sqlite.gz"
+  ]
+ },
+ {
+  "case": "the check counts this site's only",
+  "offsite.json": {
+   "bucket": "wts-backups",
+   "deleted": 1,
+   "file": "wcs-state-2026-11-02.sqlite.gz",
+   "ok": true,
+   "stored": 1,
+   "when": "2026-11-03T04:20:05+00:00"
+  },
+  "result": {
+   "backups": 1,
+   "bucket": "wts-backups",
+   "newest": "wcs-state-2026-11-02.sqlite.gz",
+   "ok": true
+  },
+  "stored": [
+   "councils-state-2026-11-01.sqlite.gz",
+   "wcs-state-2026-11-02.sqlite.gz"
+  ]
+ }
+]

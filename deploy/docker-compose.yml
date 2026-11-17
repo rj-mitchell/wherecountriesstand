@@ -1,0 +1,46 @@
+# Where Countries Stand on the charity's shared server. Where MPs Stand's web server is the front door (HTTPS,
+# Cloudflare) and reaches the app over the shared "sites" network. Updates, backups and the weekly report run on
+# systemd timers, each in a one-off container. Install or update with deploy/update.sh (docs/DEPLOY.md).
+
+# Every site keeps this file in a folder called "deploy", so the project needs its own name
+name: wherecountriesstand
+
+# Logs are capped (three files of 10 MB per container) so they never fill the disk.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  app:
+    build:
+      context: ..
+    env_file: .env
+    logging: *logging
+    volumes:
+      - wcs-data:/data
+      # nightly copies of the database that cannot be rebuilt (/opt/wherecountriesstand/deploy/backups)
+      - ./backups:/backups
+    restart: unless-stopped
+    # the server is shared with the charity's other sites: a runaway update stops itself rather than slowing them
+    mem_limit: 4g
+    expose:
+      - "8000"
+    networks:
+      default:
+      sites:
+        aliases:
+          - wherecountriesstand
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  sites:
+    external: true  # made by Where MPs Stand's update.sh (or: docker network create sites)
+
+volumes:
+  wcs-data:

@@ -1,0 +1,23 @@
+To: gaab@un.org
+Cc: avlibrary@un.org
+Subject: Request for automated access to General Debate statements (gadebate.un.org)
+
+Dear General Debate website team,
+
+I could not find a contact address for the website itself, so I am writing to the General Assembly Affairs Branch, with a copy to the UN Audiovisual Library, which the website names for its audio and video. If this belongs with another team, I would be grateful if you could pass it on.
+
+I am writing from Where Countries Stand (https://wherecountriesstand.com), an independent public website that helps people find out what countries have said, and how they have voted, at the United Nations. It answers questions with short, balanced briefings in which every point cites the UN's own record, with its document symbol. It is a project of Where They Stand, which is applying to register as a charity in England and Wales.
+
+For the General Debate we rely on the official verbatim records, which appear about a year after each debate. Your website (https://gadebate.un.org) has each statement within days, so we would like to use it until the official record is published. Each statement taken from your site is labelled as not yet the official record, links back to its page, and is replaced by the official record once that is out.
+
+Your site's browser check turns away automated programs. I should tell you that our program has so far presented itself as an ordinary browser in order to read the statement pages, while keeping to robots.txt and reading slowly, and that the check now turns our server away regardless. We would much rather do this with your agreement, so I am writing to ask whether you would be willing either to let our server through the check, or to point us to a download or data feed of the statements and transcripts if one exists or is planned. Our server is at [the server's IP address, as given in the letter sent], and it would identify itself as "WhereCountriesStand", with a link to our site.
+
+If you allowed it, our program would read the sitemap about once a day and fetch only the statement pages that are new or have changed since its last visit. It would make one request every two seconds and keep every page it fetches, so nothing is read twice. For each statement it would read only the page itself, the delegation's text and the English transcript.
+
+If you would rather we did not use the website, we will stop and wait for the official records. I am happy to answer any questions, or to change how our program reads the site to suit you.
+
+Kind regards,
+
+Where They Stand
+wheretheystanduk@gmail.com
+https://wherecountriesstand.com

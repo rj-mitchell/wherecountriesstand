@@ -1,0 +1,20 @@
+# Bring Where Countries Stand's data up to date: new General Assembly votes, new and corrected Security Council
+# records, the General Debate, the search index, and up to an hour of meaning search. Installed by deploy/update.sh
+# with wcs-update.timer (docs/OPERATIONS.md). Reports go to /data/logs/ in the data volume.
+[Unit]
+Description=Where Countries Stand: update data
+After=docker.service
+Requires=docker.service
+# Emails the alerts address if this fails (deploy/alert@.service in Where MPs Stand's repository, rj-mitchell/wherempsstand; docs/HOSTING.md there)
+OnFailure=alert@%n.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/wherecountriesstand/deploy
+# Exits 1 when something needs attention; the report is in /data/logs/update-*.json.
+# Every site's scheduled update takes this lock, so only one heavy job runs on the shared server at a time; this one
+# waits rather than fails.
+ExecStart=/usr/bin/flock /var/lock/wheretheystand-update.lock /usr/bin/docker compose run --rm -T app wcs update --embed-seconds 3600
+Nice=10
+# Up to 3 hours of its own, plus the wait for the other sites' updates (Where MPs Stand's can take 6)
+TimeoutStartSec=9h

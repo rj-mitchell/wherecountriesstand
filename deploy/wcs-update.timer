@@ -1,0 +1,12 @@
+[Unit]
+Description=Where Countries Stand: update data twice a day
+
+[Timer]
+# UTC. Security Council records usually appear on the UN's sites within a day or two of a meeting.
+OnCalendar=*-*-* 05:41:00 UTC
+OnCalendar=*-*-* 17:41:00 UTC
+RandomizedDelaySec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,18 @@
+# The week's figures on briefings (wcs weekly-report): speed, cost, what the checks found and questions that found
+# no records, saved in /data/reports as Markdown and JSON. Installed by deploy/update.sh with wcs-weekly-report.timer
+# (docs/OPERATIONS.md, "How briefings went").
+[Unit]
+Description=Where Countries Stand: the weekly report on briefings
+After=docker.service
+Requires=docker.service
+# Emails the alerts address if this fails (deploy/alert@.service in Where MPs Stand's repository, rj-mitchell/wherempsstand; docs/HOSTING.md there)
+OnFailure=alert@%n.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/wherecountriesstand/deploy
+# Exits 1 when a figure is over its threshold ([alerts] in the settings), so the alert email is sent; the report is
+# saved first either way. Until thresholds are set it proposes them from the week's figures and exits 0.
+ExecStart=/usr/bin/docker compose run --rm --no-deps -T app wcs weekly-report
+Nice=10
+TimeoutStartSec=30min

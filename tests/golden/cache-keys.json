@@ -1,0 +1,406 @@
+[
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+  "world": {}
+ },
+ {
+  "body": {
+   "question": "what has been said about  CLIMATE finance since 2020?"
+  },
+  "key": "afdc35965313e43eefea52bd21409fc2f653b92592b98943966eaf69f54bbe36",
+  "world": {}
+ },
+ {
+  "body": {
+   "mode": "comprehensive",
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "1e381ba01f819522dd9cf5eec1608e2a6fe0557786930c1e71544fe3de49ca9e",
+  "world": {}
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "recency": 0.7
+  },
+  "key": "c397fee2acdb5fdb1c8c130b4bd0771a4b67a779837aa7365ec94f29cc7a867e",
+  "world": {}
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "role_weight": 1.5
+  },
+  "key": "8429c38729bceb5feb9838b18831a4ed929f25cfc22f122cad88d58f7ab21748",
+  "world": {}
+ },
+ {
+  "body": {
+   "plan": {
+    "filters": {
+     "date_from": "2020-01-01"
+    },
+    "search_text": "climate finance"
+   },
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "bbd950996f7f9576a1322d6c3c023c608ccf2456a18c7f53e095fa3d98cfd854",
+  "world": {}
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "sources_only": true
+  },
+  "key": "48ba87268eadeee1ed447d2b7cae5009d7b520893cc53b06038968445ed59b0a",
+  "world": {}
+ },
+ {
+  "body": {
+   "question": "And what did the small island States say?"
+  },
+  "key": "e89a5b08eeadd3a71c7b969c68dca5936e346139d811f8d0b82782c09a89a36c",
+  "world": {}
+ },
+ {
+  "body": {
+   "history": [
+    {
+     "answer": "Kenya said that climate finance was too slow.",
+     "question": "What has been said about climate finance since 2020?"
+    }
+   ],
+   "question": "And what did the small island States say?"
+  },
+  "key": null,
+  "world": {}
+ },
+ {
+  "body": {
+   "question": "Où est la bibliothèque — “déjà vu”?"
+  },
+  "key": "c96010d45fde2ff594f669a5a82c5160154051895dacf708d13c7c02662fa2d7",
+  "world": {}
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "2076935a8482a771aad687c09ef6caa16231bfacd25553e2c8ffc419b8f0e0df",
+  "world": {
+   "model": "claude-sonnet-9"
+  }
+ },
+ {
+  "body": {
+   "question": "what has been said about  CLIMATE finance since 2020?"
+  },
+  "key": "2076935a8482a771aad687c09ef6caa16231bfacd25553e2c8ffc419b8f0e0df",
+  "world": {
+   "model": "claude-sonnet-9"
+  }
+ },
+ {
+  "body": {
+   "mode": "comprehensive",
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "e290b99b4aac0b329df6b4389dfd8ae833e1b228182d86d6f56199d84e0e0844",
+  "world": {
+   "model": "claude-sonnet-9"
+  }
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "recency": 0.7
+  },
+  "key": "598ac9fb73f992e68468c18556e41ff368929d5eb6b5349a46851b8ed2fb248c",
+  "world": {
+   "model": "claude-sonnet-9"
+  }
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "role_weight": 1.5
+  },
+  "key": "8efaf3495455537bccb318eeb5dba5be6565b0e9001064aea1bf3148a908721d",
+  "world": {
+   "model": "claude-sonnet-9"
+  }
+ },
+ {
+  "body": {
+   "plan": {
+    "filters": {
+     "date_from": "2020-01-01"
+    },
+    "search_text": "climate finance"
+   },
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "bb1ead71db83cef55b3513894d17b1de87025d60e7c13e9b76bbffda55e6d6f2",
+  "world": {
+   "model": "claude-sonnet-9"
+  }
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "sources_only": true
+  },
+  "key": "ebda573df868ecdf48bc022d4ed80a76e633216f633b07c8cb1e58634a43a3dc",
+  "world": {
+   "model": "claude-sonnet-9"
+  }
+ },
+ {
+  "body": {
+   "question": "And what did the small island States say?"
+  },
+  "key": "a40f2a9c48192326730ca036f8268e17eeed97299c04cfd4ba28e4d6ba1639b5",
+  "world": {
+   "model": "claude-sonnet-9"
+  }
+ },
+ {
+  "body": {
+   "history": [
+    {
+     "answer": "Kenya said that climate finance was too slow.",
+     "question": "What has been said about climate finance since 2020?"
+    }
+   ],
+   "question": "And what did the small island States say?"
+  },
+  "key": null,
+  "world": {
+   "model": "claude-sonnet-9"
+  }
+ },
+ {
+  "body": {
+   "question": "Où est la bibliothèque — “déjà vu”?"
+  },
+  "key": "3a5ae3f25bec60da22d1ff8b4365593816478526616ed3ca262c1d7dcb8b7e83",
+  "world": {
+   "model": "claude-sonnet-9"
+  }
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "9e32095acb058d831a8c18c04009945e20220c87d9b6e7a905437e730c85b340",
+  "world": {
+   "data": "1763009999"
+  }
+ },
+ {
+  "body": {
+   "question": "what has been said about  CLIMATE finance since 2020?"
+  },
+  "key": "9e32095acb058d831a8c18c04009945e20220c87d9b6e7a905437e730c85b340",
+  "world": {
+   "data": "1763009999"
+  }
+ },
+ {
+  "body": {
+   "mode": "comprehensive",
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "4b2882fb220af15bdcc37ef8ee1f72a0f1328f5f148d17b592baea28f40483ba",
+  "world": {
+   "data": "1763009999"
+  }
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "recency": 0.7
+  },
+  "key": "058d6271cd80f03e99c0c9c3ca26509440a63aec5fc0af9d1a7570a6e2cc23ba",
+  "world": {
+   "data": "1763009999"
+  }
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "role_weight": 1.5
+  },
+  "key": "7734cb71377c924e3b3fa1fcf43d92f52ce991abbb940104a9da6516c79e338f",
+  "world": {
+   "data": "1763009999"
+  }
+ },
+ {
+  "body": {
+   "plan": {
+    "filters": {
+     "date_from": "2020-01-01"
+    },
+    "search_text": "climate finance"
+   },
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "b7a954bcbd880dad3d579be26a53b84be177b8f0c8f08f7ba44fa5208c4c7e3b",
+  "world": {
+   "data": "1763009999"
+  }
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "sources_only": true
+  },
+  "key": "d010e4a8f5f87a4e11941eaafb24026584e38faadb17d0d207eda2797b9523c0",
+  "world": {
+   "data": "1763009999"
+  }
+ },
+ {
+  "body": {
+   "question": "And what did the small island States say?"
+  },
+  "key": "c065a3a96419cbfe95b2c24f5a5614594f2802fe8f77244a5ec90277579ba643",
+  "world": {
+   "data": "1763009999"
+  }
+ },
+ {
+  "body": {
+   "history": [
+    {
+     "answer": "Kenya said that climate finance was too slow.",
+     "question": "What has been said about climate finance since 2020?"
+    }
+   ],
+   "question": "And what did the small island States say?"
+  },
+  "key": null,
+  "world": {
+   "data": "1763009999"
+  }
+ },
+ {
+  "body": {
+   "question": "Où est la bibliothèque — “déjà vu”?"
+  },
+  "key": "0a6a24d1ec319790172577ae87c9665cff7f6dc8675b983fce7b4c3c99a3cb79",
+  "world": {
+   "data": "1763009999"
+  }
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "85659c0a12f30364ee27324ec1a138a2f73d2196cd29936ff295a1d6bd9e40c6",
+  "world": {
+   "instructions": 4
+  }
+ },
+ {
+  "body": {
+   "question": "what has been said about  CLIMATE finance since 2020?"
+  },
+  "key": "85659c0a12f30364ee27324ec1a138a2f73d2196cd29936ff295a1d6bd9e40c6",
+  "world": {
+   "instructions": 4
+  }
+ },
+ {
+  "body": {
+   "mode": "comprehensive",
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "360fa85600d356c618fbd6cb1fb4cdd62ff6372f9675a8801ce2109681a4c5bc",
+  "world": {
+   "instructions": 4
+  }
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "recency": 0.7
+  },
+  "key": "a5729b92ef3e31d83313d3615f3e238eaeb7b740b2e460da1cd70a112303515c",
+  "world": {
+   "instructions": 4
+  }
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "role_weight": 1.5
+  },
+  "key": "c2f426c5eecd08e05fb96968c368d5d248d26e57f513b61e54be0180f89f29cc",
+  "world": {
+   "instructions": 4
+  }
+ },
+ {
+  "body": {
+   "plan": {
+    "filters": {
+     "date_from": "2020-01-01"
+    },
+    "search_text": "climate finance"
+   },
+   "question": "What has been said about climate finance since 2020?"
+  },
+  "key": "744d5ddf7f4dd5e10afe6b906a9ce870a9fae9cfd20dc1d9b89834dc6b481ba1",
+  "world": {
+   "instructions": 4
+  }
+ },
+ {
+  "body": {
+   "question": "What has been said about climate finance since 2020?",
+   "sources_only": true
+  },
+  "key": "a35ef872fab6766ae80d306b1c876590bb55ee124d13114fa174c7d33a80699a",
+  "world": {
+   "instructions": 4
+  }
+ },
+ {
+  "body": {
+   "question": "And what did the small island States say?"
+  },
+  "key": "12b50569f750d8dd477ee37ebdecf9d39832a2ce932ebd74bbc27c6d8f4f4290",
+  "world": {
+   "instructions": 4
+  }
+ },
+ {
+  "body": {
+   "history": [
+    {
+     "answer": "Kenya said that climate finance was too slow.",
+     "question": "What has been said about climate finance since 2020?"
+    }
+   ],
+   "question": "And what did the small island States say?"
+  },
+  "key": null,
+  "world": {
+   "instructions": 4
+  }
+ },
+ {
+  "body": {
+   "question": "Où est la bibliothèque — “déjà vu”?"
+  },
+  "key": "24e11137c6554f1a72412cb1ef27643f72e91c25e4f900ff098f864b05a6fdb5",
+  "world": {
+   "instructions": 4
+  }
+ }
+]
