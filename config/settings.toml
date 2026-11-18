@@ -77,7 +77,7 @@ summary_sources = 24
 comprehensive_sources = 40
 summary_effort = "medium"
 comprehensive_effort = "high"
-query_parse_effort = "low"
+query_parse_effort = "medium"
 max_tokens = 16000
 use_fallbacks = true
 # How the instructions to the model are kept in the provider's prompt cache between requests: "short" (a few
