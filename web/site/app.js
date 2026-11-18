@@ -301,8 +301,10 @@ function saved(id, st) {
     el("a", { href: `/corrections.html?page=${encodeURIComponent(path)}` }, "Report a problem with it")));
 }
 
+// The page's title is the site's own words and the date, never the reader's question, which the page shows as theirs.
 function written(iso) {
   $("today").textContent = `Briefing of ${fmtDate(iso)}, written by AI from the sources below.`;
+  document.title = `Briefing from UN records, ${fmtDate(iso)} | Where Countries Stand`;
 }
 
 function reset(question) {
@@ -311,9 +313,9 @@ function reset(question) {
   document.body.classList.add("showing-result");
   $("result").hidden = false;
   $("question").textContent = question;
+  $("asked").hidden = !question;
   $("interpretation").textContent = "";
   written(new Date().toISOString().slice(0, 10));
-  document.title = `${question} | Where Countries Stand`;
   for (const id of ["briefing", "notes", "statements", "sources", "chips"]) $(id).replaceChildren();
   shownBriefing = null;
   $("summary").hidden = true;

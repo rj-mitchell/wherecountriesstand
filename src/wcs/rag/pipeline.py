@@ -35,7 +35,8 @@ log = logging.getLogger(__name__)
 class AskRequest:
     question: str
     mode: str = "summary"                       # summary | comprehensive
-    plan: dict[str, Any] | None = None          # an edited plan from the reader, used instead of parsing
+    plan: dict[str, Any] | None = None          # a plan to use instead of reading the question (tests and tools;
+                                                # the public API takes none): never its own question
     recency: float | None = None
     role_weight: float | None = None
     history: list[dict[str, str]] = field(default_factory=list)
@@ -60,6 +61,14 @@ def plan_note(plan: QueryPlan, engine: Engine) -> str:
 
 
 VOTES_ASKED = 6  # resolutions shown when a question asks about votes
+
+
+def no_records() -> dict[str, Any]:
+    """The final event when nothing in the record answers the question: no model writes it."""
+    return {"type": "final", "answer": {"segments": [{"text": NO_RECORDS + " The archive contains no records "
+            "matching this question and these filters.", "sources": [], "cited": [], "status": "connective"}],
+            "markdown": NO_RECORDS, "no_records": True, "citations_total": 0, "citations_invalid": 0,
+            "grounded_ratio": 1.0, "unsupported_segments": 0}, "usage": None}
 
 
 class Pipeline:
@@ -87,7 +96,7 @@ class Pipeline:
 
     def make_plan(self, req: AskRequest) -> tuple[QueryPlan, dict[str, int] | None]:
         if req.plan:
-            return QueryPlan.from_dict({"question": req.question, **req.plan}), None
+            return QueryPlan.from_dict({**req.plan, "question": req.question}), None
         today = self.today or date.today()
         default_years = int(self.settings.archive.get("default_years", 10))
         offline = parse_offline(req.question, self.engine.countries, today, default_years, self.settings.start_date)
@@ -136,14 +145,17 @@ class Pipeline:
         if plan.parse_error:
             ev["parse_error"] = plan.parse_error
         yield curl_event(ev)  # the interpretation in curly quotes, as the briefing
+        if plan.off_topic:
+            # read as about nothing the UN discusses: "No records found", with nothing searched and no briefing
+            # paid for (whatever a search found would only be near in wording)
+            yield {"type": "sources", "sources": [], "candidates": 0, "semantic": False, "evidence": {}}
+            yield no_records()
+            return
         result, votes, sources = self.find(plan, req)
         yield {"type": "sources", "sources": [s.card() for s in sources], "candidates": result.candidates,
                "semantic": result.semantic_available, "evidence": {**result.evidence, "votes": len(votes)}}
         if not result.records and not votes:
-            yield {"type": "final", "answer": {"segments": [{"text": NO_RECORDS + " The archive contains no records "
-                   "matching this question and these filters.", "sources": [], "cited": [], "status": "connective"}],
-                   "markdown": NO_RECORDS, "no_records": True, "citations_total": 0, "citations_invalid": 0,
-                   "grounded_ratio": 1.0, "unsupported_segments": 0}, "usage": None}
+            yield no_records()
             return
         if not self.has_model():
             yield {"type": "final", "answer": None, "usage": None, "note": NO_MODEL}

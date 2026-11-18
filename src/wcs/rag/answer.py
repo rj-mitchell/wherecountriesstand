@@ -26,7 +26,10 @@ def briefing_request(settings: Settings, question: str, sources: list[Source], m
                      group_by: str = "region", compare: list[dict[str, str]] | None = None) -> ModelRequest:
     """The request for one briefing: the sources as documents the model can cite, then the question in the site's
     own words. The instructions are the same for every request (apart from the date), so they are sent to be kept
-    in the provider's prompt cache (``[answer] cache_instructions``: "short", as always; "long" or "off")."""
+    in the provider's prompt cache (``[answer] cache_instructions``: "short", as always; "long" or "off").
+
+    ``history`` is the earlier questions, with each one's answer only where the site itself supplies it (the web
+    API takes the questions alone: an answer sent by a browser would read to the model as the site's own)."""
     cfg = settings.answer
     history_note = ""
     if history:
@@ -34,7 +37,8 @@ def briefing_request(settings: Settings, question: str, sources: list[Source], m
             "earlier briefing rather than repeating it (do not restate points already made unless the new " \
             "records change them). Earlier in this conversation (for context only; cite only the search " \
             "results below):\n" + \
-            "\n".join(f"Q: {h['question']}\nA (summary): {h.get('answer', '')[:600]}" for h in history[-3:])
+            "\n".join(f"Q: {h['question']}" + (f"\nA (summary): {h['answer'][:600]}" if h.get("answer") else "")
+                      for h in history[-3:])
     return ModelRequest(
         model=briefing_model(settings),
         instructions=system_prompt(today or date.today()),
