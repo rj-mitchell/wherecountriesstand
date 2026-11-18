@@ -270,6 +270,7 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 /* A briefing */
 
 .reading { margin: 0; color: var(--ink-muted); }
+.asked { margin: 0; color: var(--ink-muted); }  /* the question is a reader's words, not the site's */
 
 .result__grid {
   display: grid;

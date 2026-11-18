@@ -61,10 +61,11 @@ from fastapi.responses import (
     StreamingResponse,
 )
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from wts_core.briefing import Ask, Hooks, TooManyRequests, desk_parts, sse
 from wts_core.cli import backup_ages, check_route, last_day_figures, latest_week_figures
+from wts_core.dates import long_date
 from wts_core.events import Event
 from wts_core.observe import LOGGER, SqliteBriefingLog, briefing_config, json_logging
 from wts_core.ports import SYSTEM_CLOCK, SYSTEM_RANDOM, BriefingConfig, Clock, Random
@@ -116,32 +117,23 @@ PAGE_NAME = re.compile(r"[a-z0-9-]{1,40}")
 
 
 class Turn(BaseModel):
+    """An earlier question in the conversation. Only its words are taken: an earlier answer sent with it is
+    ignored, as the model would read it as a briefing the site wrote."""
     question: str = Field(max_length=500)
-    answer: str = Field(default="", max_length=4000)
-
-
-PLAN_MAX_CHARS = 20_000  # an edited plan is a few hundred characters; this is far more than any reader needs
 
 
 class AskBody(BaseModel):
     question: str = Field(min_length=3, max_length=500)
     mode: Literal["summary", "comprehensive"] = "summary"
-    plan: dict[str, Any] | None = None
     recency: float | None = Field(default=None, ge=0, le=1)
     role_weight: float | None = Field(default=None, ge=1, le=2)
     history: list[Turn] = Field(default_factory=list, max_length=4)
     sources_only: bool = False
-    # These are the fields the pages send, and all there are: a field of any other name is ignored, as it always
-    # was. In particular nothing says which saved briefing a follow-up question follows on from, so a briefing's
-    # record is never marked "followed up" on this site (the record of a follow-up says that it was one).
-
-    @field_validator("plan")
-    @classmethod
-    def _plan_size(cls, v: dict[str, Any] | None) -> dict[str, Any] | None:
-        # as Where MPs Stand: a plan is saved with its briefing and goes into the prompt, so it cannot be any size
-        if v is not None and len(json.dumps(v, default=str)) > PLAN_MAX_CHARS:
-            raise ValueError("the search plan is too large")
-        return v
+    # These are the fields the API takes, and all there are: a field of any other name is ignored, as it always
+    # was. A search plan sent with the question is one of them: the question is always read by the site itself,
+    # so a plan can neither replace the question nor put its own reading under it on a saved briefing. Nothing
+    # says which saved briefing a follow-up question follows on from, so a briefing's record is never marked
+    # "followed up" on this site (the record of a follow-up says that it was one).
 
 
 class ReportBody(BaseModel):
@@ -304,14 +296,21 @@ def site_url(settings: Settings, request: Request) -> str:
     return (url or str(request.base_url)).rstrip("/")
 
 
-def question_page(page: str, question: str, base: str, query: str, path: str = "/") -> str:
-    """The home page for a shared question (``/?q=...``) or a saved briefing (``/b/<id>``): its title and link
-    preview name the question. The briefing itself is shown by the page's script, so the page is not for search
-    engines to index."""
-    q = html.escape(question.strip()[:500], quote=True)
-    page = re.sub(r"<title>.*?</title>", f"<title>{q} | Where Countries Stand</title>", page, count=1, flags=re.S)
+def briefing_title(when: str | None = None) -> str:
+    """A briefing's title in the page's title and link preview: the site's own words and the date it was written,
+    never the reader's question (decision 7), which the page shows as a reader's question."""
+    return f"Briefing from UN records, {long_date(when)}" if when else "Briefing from UN records"
+
+
+def question_page(page: str, base: str, query: str, path: str = "/", when: str | None = None) -> str:
+    """The home page for a shared question (``/?q=...``) or a saved briefing (``/b/<id>``, written on ``when``):
+    its title and link preview are the site's own (``briefing_title``). The briefing itself is shown by the
+    page's script, so the page is not for search engines to index."""
+    title = html.escape(briefing_title(when), quote=True)
+    page = re.sub(r"<title>.*?</title>", f"<title>{title} | Where Countries Stand</title>", page, count=1,
+                  flags=re.S)
     page = page.replace('<meta property="og:title" content="Where Countries Stand">',
-                        f'<meta property="og:title" content="{q}">', 1)
+                        f'<meta property="og:title" content="{title}">', 1)
     here = path + (f"?{html.escape(query, quote=True)}" if query else "")
     page = page.replace(f'content="{SITE_MARK}/"', f'content="{SITE_MARK}{here}"')
     page = page.replace(f'href="{SITE_MARK}/"', f'href="{SITE_MARK}{here}"')
@@ -334,7 +333,9 @@ def answer_key(settings: Settings, body: AskBody, *, model: bool, cache_hours: f
     (its answer depends on what came before)."""
     if not model or cache_hours <= 0 or body.history:
         return None
-    return cache_key({"q": " ".join(body.question.lower().split()), **body.model_dump(exclude={"question"}),
+    # "plan" was a field of the body; it is kept in the key, empty, so that keys made before stay the same
+    return cache_key({"q": " ".join(body.question.lower().split()), "plan": None,
+                      **body.model_dump(exclude={"question"}),
                       "model": settings.answer.get("model"), "data": data_stamp(settings),
                       "instructions": INSTRUCTIONS_VERSION, **({"hidden": sorted(hidden)} if hidden else {})},
                      length=64)
@@ -349,9 +350,7 @@ def models_called(settings: Settings) -> tuple[str, str]:
 def filters_set(body: AskBody) -> tuple[str, ...]:
     """Which choices the reader made beyond the question, for the record of the briefing: their names, never their
     values."""
-    chosen = [k for k, v in ((body.plan or {}).get("filters") or {}).items() if v not in (None, [], "", True)]
-    chosen += [name for name in ("recency", "role_weight") if getattr(body, name) is not None]
-    return tuple(sorted(chosen))
+    return tuple(sorted(name for name in ("recency", "role_weight") if getattr(body, name) is not None))
 
 
 def configuration(settings: Settings, log: SqliteBriefingLog | None) -> BriefingConfig:
@@ -397,6 +396,13 @@ def hidden_now(briefing_id: str | None, events: list[Event], hidden: list[dict[s
     return [*kept, {"type": "final", "answer": None, "usage": None, "note": note}]
 
 
+def without_counts(event: Event) -> Event:
+    """An event as a reader is sent it: the token counts of a plan or a final event are for the spending record
+    (which has them by then), not for the browser. Blanked, not taken out, as saved briefings have always had
+    them."""
+    return {**event, "usage": None} if event.get("type") in ("plan", "final") and event.get("usage") else event
+
+
 WITHDRAWN = "This briefing has been withdrawn: {reason}"  # what a withdrawn briefing's address says
 
 
@@ -426,15 +432,15 @@ class SiteHooks(Hooks):
         if (saved is not None and saved.withdrawn_at) or (bid and any(h["item"] == f"/b/{bid}" for h in hidden)):
             return None
         instead = hidden_now(bid, events, hidden)
-        return rechecked(events) if instead is None else instead
+        return [without_counts(e) for e in (rechecked(events) if instead is None else instead)]
 
     def on_event(self, ask: Ask, event: Event) -> Event | None:
         """An error is sent to the reader as its message and nothing else, as it always was here: whatever else
         the pipeline put in the event (the token counts of a call the model declined) is for the spending record,
-        which has it by now."""
+        which has it by now. So are the token counts of a plan or a final event (``without_counts``)."""
         if event.get("type") == "error":
             return {"type": "error", "message": event.get("message", "")}
-        return event
+        return without_counts(event)
 
 
 def create_app(settings: Settings | None = None, pipeline: Pipeline | None = None, state: StateDB | None = None,
@@ -497,7 +503,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         return code
 
     def request_for(body: AskBody) -> AskRequest:
-        return AskRequest(question=body.question, mode=body.mode, plan=body.plan, recency=body.recency,
+        return AskRequest(question=body.question, mode=body.mode, recency=body.recency,
                           role_weight=body.role_weight, history=[t.model_dump() for t in body.history])
 
     def is_the_nightly_check(request: Request) -> bool:
@@ -530,7 +536,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         if note is not None:
             raise HTTPException(423, note)
         return {"id": b.id, "at": b.created_at, "question": b.question, "options": b.options,
-                "events": rechecked(b.events)}
+                "events": [without_counts(e) for e in rechecked(b.events)]}
 
     @app.get("/api/corrections")
     def corrections():
@@ -647,19 +653,14 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def sources_only(body: AskBody, note: str) -> Iterator[dict[str, Any]]:
         """The plan and the sources, and no briefing, ending with ``note`` for the reader. The question is always
         read by the built-in rules here, whoever asks and whatever stopped the briefing: it costs nothing."""
+        from datetime import date
+
+        from wcs.rag.query_parse import parse_offline
+
         p = get_pipeline()
         req = request_for(body)
-        from wcs.rag.query_parse import QueryPlan
-
-        if body.plan:
-            plan = QueryPlan.from_dict({"question": body.question, **body.plan})
-        else:
-            from datetime import date
-
-            from wcs.rag.query_parse import parse_offline
-
-            plan = parse_offline(body.question, p.engine.countries, p.today or date.today(),
-                                 int(settings.archive.get("default_years", 10)), settings.start_date)
+        plan = parse_offline(body.question, p.engine.countries, p.today or date.today(),
+                             int(settings.archive.get("default_years", 10)), settings.start_date)
         result, votes, sources = p.find(plan, req)
         yield {"type": "plan", "plan": plan.to_dict(), "usage": None}
         yield {"type": "sources", "sources": [s.card() for s in sources], "candidates": result.candidates,
@@ -735,7 +736,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         text, base = rendered[name], site_url(settings, request)
         q = request.query_params.get("q", "") if name == "index" else ""
         if len(q.strip()) >= 3:
-            return html_page(question_page(text, q, base, request.url.query))
+            return html_page(question_page(text, base, request.url.query))
         return html_page(text.replace(SITE_MARK, base))
 
     @app.get("/", include_in_schema=False)
@@ -748,7 +749,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
 
     @app.get("/b/{bid}", include_in_schema=False)
     def shared_briefing(request: Request, bid: str):
-        """A saved briefing: the home page, which loads it, with the question as its title and link preview."""
+        """A saved briefing: the home page, which loads it, with the site's title for it (``briefing_title``)."""
         b = parts.archive.get(bid) if re.fullmatch(r"[A-Za-z0-9_-]{6,20}", bid) else None
         text, base = rendered["index"], site_url(settings, request)
         if b is None:
@@ -758,7 +759,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
             # names nothing
             return html_page(text.replace(SITE_MARK, base).replace(
                 "</head>", '  <meta name="robots" content="noindex">\n</head>', 1))
-        return html_page(question_page(text, b.question, base, "", f"/b/{bid}"))
+        return html_page(question_page(text, base, "", f"/b/{bid}", when=b.created_at))
 
     @app.exception_handler(StarletteHTTPException)
     async def not_found(request: Request, exc: StarletteHTTPException):

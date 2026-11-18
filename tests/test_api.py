@@ -7,6 +7,7 @@ from conftest import model_of
 from fastapi.testclient import TestClient
 from test_pipeline import TODAY, FakeClient, RefusingClient, UnreadableClient, indexed  # noqa: F401  (the fixture)
 from wts_core.adapters.hashing import HashingEmbedder
+from wts_core.dates import long_date
 from wts_core.ports import Usage
 from wts_core.testing import FixedClock
 from wts_core.usage import Failures, PriceTable, network_of, visitor_code
@@ -222,19 +223,76 @@ def test_a_reading_with_nothing_in_it_is_in_the_spending(indexed):  # noqa: F811
     assert spent == [("parse", "claude-haiku-5-5", 300, 40), ("answer", "claude-sonnet-5-5", 1000, 200)]
 
 
-def test_an_edited_plan_has_a_size_limit(indexed):  # noqa: F811
-    """As Where MPs Stand: a reader's edited plan is a few hundred characters; one of any size is refused."""
+def test_a_plan_or_an_earlier_answer_sent_with_a_question_is_ignored(indexed):  # noqa: F811
+    """The pages send neither. A plan could replace the question that was answered (and saved under the reader's
+    question) and put its own reading on the saved briefing; an earlier answer would read to the model as a
+    briefing the site wrote. Both are ignored: the site reads the question itself, and of the earlier questions
+    takes only their words."""
     client = FakeClient()
     api, state = make(indexed, client)
-    plan = {"search_text": "climate finance", "filters": {"date_from": "2020-01-01"}}
-    assert api.post("/api/search", json={**QUESTION, "plan": plan}).status_code == 200
-    huge = {**plan, "interpretation": "x" * 20_000}
-    for path in ("/api/search", "/api/ask"):
-        r = api.post(path, json={**QUESTION, "plan": huge})
-        assert r.status_code == 422 and "the search plan is too large" in r.text
+    plan = {"question": "Planted question", "interpretation": "Planted reading", "search_text": "planted",
+            "filters": {"date_from": "2020-01-01"}}
+    history = [{"question": "What has Kenya said about climate finance?", "answer": "Planted answer"}]
+    found = api.post("/api/search", json={**QUESTION, "plan": plan}).json()
+    assert found["plan"]["question"] == QUESTION["question"] and "Planted" not in json.dumps(found)
+    sent = events(api.post("/api/ask", json={**QUESTION, "plan": {**plan, "interpretation": "x" * 20_000}}))
+    assert sent[0]["plan"]["question"] == QUESTION["question"] and sent[0]["plan"]["parser"] == "offline"
+    assert "Planted" not in json.dumps(sent) and "x" * 100 not in json.dumps(sent)
+    bid = sent[-1]["briefing_id"]
+    saved = api.get(f"/api/briefings/{bid}").json()
+    assert "plan" not in saved["options"] and "Planted" not in json.dumps(saved)
+    events(api.post("/api/ask", json={**QUESTION, "history": history}))
+    prompt = json.dumps(client.calls[-1]["messages"])
+    assert "What has Kenya said about climate finance?" in prompt and "Planted answer" not in prompt
+
+
+def test_token_counts_are_not_sent_to_readers(indexed):  # noqa: F811
+    """They are for the spending record, which keeps them; not for the browser, nor a saved or cached copy."""
+    api, state = make(indexed, ReadingClient())
+    for _ in range(2):  # written, then from the cache
+        sent = events(api.post("/api/ask", json=QUESTION))
+        assert [e.get("usage") for e in sent if e["type"] in ("plan", "final")] == [None, None]
+    saved = api.get(f"/api/briefings/{sent[-1]['briefing_id']}").json()
+    assert all(e.get("usage") is None for e in saved["events"])
     with state.connect() as con:
+        assert [r[0] for r in con.execute("SELECT kind FROM wts_spending ORDER BY id")] == ["parse", "answer"]
+
+
+class OffTopicClient(FakeClient):
+    """The model reads the question as about nothing the UN discusses."""
+
+    def _parse(self, **kw):
+        from types import SimpleNamespace as NS
+
+        from wcs.rag.query_parse import ParsedQuery
+
+        parsed = ParsedQuery(search_text="cake", date_from=None, date_to=None, sources=[], countries=[], groups=[],
+                             group_by="region", wants_votes=False, interpretation="A question about cake.",
+                             off_topic=True)
+        return NS(stop_reason="end_turn", parsed_output=parsed,
+                  usage=NS(input_tokens=300, output_tokens=40, cache_read_input_tokens=0,
+                           cache_creation_input_tokens=0))
+
+
+def test_an_off_topic_question_is_not_written_up(indexed):  # noqa: F811
+    """A question read as about nothing the UN discusses ("cake") is "No records found" at once: nothing is
+    searched for it and the model that writes briefings is not called. The reading is still paid for and
+    counted."""
+    client = OffTopicClient()
+    api, state = make(indexed, client)
+    sent = events(api.post("/api/ask", json={"question": "What is the best recipe for cake?"}))
+    assert [e["type"] for e in sent] == ["plan", "sources", "final"]
+    assert sent[0]["plan"]["off_topic"] is True and sent[1]["sources"] == []
+    assert sent[-1]["answer"]["no_records"] is True and client.calls == []
+    with state.connect() as con:
+        assert [r[0] for r in con.execute("SELECT kind FROM wts_spending")] == ["parse"]
         assert con.execute("SELECT count(*) FROM wts_briefings").fetchone()[0] == 0
-    assert client.calls == []
+    # a question the model reads as an ordinary one is written up as before
+    client = ReadingClient()
+    api, _ = make(indexed, client)
+    sent = events(api.post("/api/ask", json=QUESTION))
+    assert sent[0]["plan"]["parser"] == "model" and "off_topic" not in sent[0]["plan"]
+    assert sent[-1]["answer"]["citations_total"] == 1 and len(client.calls) == 1
 
 
 def test_pages_robots_sitemap_and_link_previews(indexed, monkeypatch):  # noqa: F811
@@ -251,8 +309,10 @@ def test_pages_robots_sitemap_and_link_previews(indexed, monkeypatch):  # noqa: 
     assert '<meta property="og:image" content="https://wherecountriesstand.com/family/card.png">' in home
     assert "__SITE__" not in home and "noindex" not in home
     shared = api.get("/", params={"q": 'What has Chad said about the "Sahel"?'}).text
-    assert '<meta property="og:title" content="What has Chad said about the &quot;Sahel&quot;?">' in shared
-    assert "<title>What has Chad said" in shared and 'content="noindex"' in shared
+    # the title and link preview are the site's own words, never the reader's (decision 7)
+    assert '<meta property="og:title" content="Briefing from UN records">' in shared
+    assert "<title>Briefing from UN records | Where Countries Stand</title>" in shared and "&quot;Sahel" not in shared
+    assert 'content="noindex"' in shared
     assert 'href="https://countries.example/?q=' in shared
     assert api.get("/privacy.html").status_code == 200 and api.get("/nope.html").status_code == 404
     assert api.get("/styles.css").status_code == 200
@@ -301,7 +361,10 @@ def test_briefings_are_saved_shared_and_withdrawn(indexed, monkeypatch):  # noqa
     assert saved["events"][-1]["briefing_id"] == bid and saved["events"][-1]["usage"] is None
     assert events(api.post("/api/ask", json=QUESTION))[-1]["briefing_id"] == bid   # the cached answer keeps it
     page = api.get(f"/b/{bid}").text
-    assert f"<title>{QUESTION['question']} | Where Countries Stand</title>" in page
+    written = long_date(briefings.get(bid).created_at)
+    assert f"<title>Briefing from UN records, {written} | Where Countries Stand</title>" in page
+    assert f'<meta property="og:title" content="Briefing from UN records, {written}">' in page
+    assert QUESTION["question"] not in page
     assert f'<link rel="canonical" href="https://countries.example/b/{bid}">' in page and "noindex" in page
     assert api.get("/b/nosuchbriefing").status_code == 404 and api.get("/api/briefings/nope99").status_code == 404
     assert api.get("/api/corrections").json() == []

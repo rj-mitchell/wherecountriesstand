@@ -36,6 +36,9 @@ ADDED = {
     ("eval", "thresholds"): {"max_invalid_citations": 0, "max_unverified_quotations": 0, "max_errors": 0},
 }
 
+# Values in config/settings.toml changed on purpose since the recording, each (as it was, as it is): fewer new
+# briefings a day for each visitor, and each briefing in progress counted at the dearest briefings' cost.
+CHANGED = {("usage", "per_visitor_daily_questions"): (40, 8), ("usage", "briefing_estimate_usd"): (0.1, 0.25)}
 
 BRIEFING_MODEL = "claude-sonnet-5-5"
 
@@ -55,6 +58,10 @@ def without_the_added(gives: dict) -> dict:
         if BRIEFING_MODEL in models and "price_input_per_mtok" in holder["usage"]:
             assert models.pop(BRIEFING_MODEL) == {k: holder["usage"][k] for k in (
                 "price_input_per_mtok", "price_output_per_mtok", "price_cache_read_per_mtok")}
+    for (section, key), (was, now) in CHANGED.items():
+        for holder in (out["raw"], out):
+            if holder.get(section, {}).get(key) == now:
+                holder[section][key] = was
     for (section, key), value in ADDED.items():
         for holder in (out["raw"], out):
             if key in holder.get(section, {}):
@@ -181,7 +188,65 @@ def records_of(side):
         con.close()
 
 
-SCRIPTED = shared.read("ask-scripted.json")
+# Changes made on purpose since the recordings, applied to them here (``as_now``):
+# - the token counts of a plan or a final event are blanked before they are sent, saved or cached: they are for the
+#   spending record alone, which still has them;
+# - the ask API takes no search plan, so a briefing's saved options no longer have "plan" (the cache's key keeps
+#   it, empty, so that keys stay the same);
+# - of the earlier questions sent with a follow-up, only the words are taken: an earlier answer sent with them is
+#   not, and is not put in the model's prompt.
+# - the model that reads a question is asked whether it is about anything the UN discusses ("off_topic"): one that
+#   is not is "No records found", with no briefing written.
+FOLLOW_UP_ANSWER = re.compile(r"\nA \(summary\): [^\n]*")
+READING_RULES = [  # (as the instructions for reading a question were, as they are)
+    ("""If the topic is not one the UN would discuss, keep just the question's words:
+  "No records found" is then the right answer.""", """If the topic is not one the UN would discuss, keep just the question's words
+  and set off_topic: "No records found" is then the right answer."""),
+    ("""- wants_votes: true if the question is about how countries voted.
+""", """- wants_votes: true if the question is about how countries voted.
+- off_topic: true only when the question is about nothing that countries discuss at the United Nations (a recipe,
+  a sports result, a film). Then no briefing is written and the reader is told no records were found, so when in
+  doubt (a question that could touch on the UN's work, however loosely) leave it false.
+"""),
+]
+
+
+def as_now(recorded):
+    """A recording with the changes above made to it: in every event, row and request, whether held as JSON, as
+    JSON in text, or as server-sent events."""
+    import json
+
+    if isinstance(recorded, list):
+        return [as_now(v) for v in recorded]
+    if isinstance(recorded, dict):
+        out = {k: as_now(v) for k, v in recorded.items()}
+        if out.get("type") in ("plan", "final") and out.get("usage"):
+            out["usage"] = None
+        if "sources_only" in out and "plan" in out and out["plan"] is None:
+            del out["plan"]
+        if set(out) == {"question", "answer"} and isinstance(out["answer"], str):
+            del out["answer"]
+        return out
+    if not isinstance(recorded, str):
+        return recorded
+    if recorded.startswith("event: ") and "\ndata: " in recorded:
+        return "\n".join(f"data: {json.dumps(as_now(json.loads(line[6:])), default=str)}"
+                         if line.startswith("data: ") else line for line in recorded.split("\n"))
+    if recorded[:1] in "[{" and recorded:
+        try:
+            value = json.loads(recorded)
+        except ValueError:
+            return recorded
+        if json.dumps(value, default=str) == recorded:  # written as the site writes it: rewritten the same way
+            return json.dumps(as_now(value), default=str)
+    if recorded.startswith("You convert research questions"):
+        for was, now in READING_RULES:
+            assert was in recorded
+            recorded = recorded.replace(was, now)
+    return FOLLOW_UP_ANSWER.sub("", recorded)
+
+
+SCRIPTED = as_now(shared.read("ask-scripted.json"))
 
 
 @pytest.mark.parametrize("name", list(shared.SCRIPTED))
@@ -354,7 +419,8 @@ def unstamped_rows(rows):
             "briefings": [[*row[:4], without_the_stamp(json.loads(row[4])), *row[5:]] for row in rows["briefings"]]}
 
 
-REAL = shared.read("ask-real.json")
+REAL = as_now(shared.read("ask-real.json"))  # with the changes made since (``as_now``)
+PLAN_SENT = {"no records", "an edited plan"}  # cases that sent a search plan with the question
 
 
 @pytest.mark.parametrize("name", list(shared.REAL))
@@ -396,6 +462,19 @@ def test_the_real_pipeline_sends_and_writes_what_it_did(name, small_index, tmp_p
         return side, get
 
     now = shared.plain(shared.real_asks(make, only=name), tmp=tmp_path)[name]
+    if name in PLAN_SENT:
+        # recorded with a search plan sent with each question, which the ask API no longer takes: the site reads
+        # the question itself, so each case gives exactly what the same questions give without a plan
+        make_sdk, requests, usage = shared.REAL[name]
+        assert all("plan" in body for body in requests)
+        monkeypatch.setitem(shared.REAL, name, (make_sdk, [{k: v for k, v in body.items() if k != "plan"}
+                                                           for body in requests], usage))
+        without = shared.plain(shared.real_asks(make, only=name), tmp=tmp_path)[name]
+        assert now == without and now["calls"] and "parse" in now["calls"][0]
+        for _, body in now["sent"]:
+            plan = shared.events_of(body)[0]["plan"]
+            assert plan["question"] == requests[0]["question"] and plan["parser"] == "model"
+        return
     before = REAL[name]
     assert now["calls"] == before["calls"]  # what the model was asked, whole
     assert len(now["sent"]) == len(before["sent"])
@@ -474,6 +553,11 @@ def test_the_answer_caches_key_is_what_it_was(tmp_path, monkeypatch):
             if "instructions" in world:
                 patch.setattr(web, "INSTRUCTIONS_VERSION", world["instructions"])
             key = web.answer_key(used, web.AskBody(**row["body"]), model=True, cache_hours=168)
+        if "plan" in row["body"]:
+            # the ask API no longer takes a search plan: a question sent with one is the question without it
+            plain = {k: v for k, v in row["body"].items() if k != "plan"}
+            assert key == next(r["key"] for r in before if r["body"] == plain and r["world"] == world), row
+            continue
         assert key == row["key"], row
         assert key is None or len(key) == 64
     # a follow-up has no key; nor has anything when there is no model or no cache
@@ -623,6 +707,14 @@ def test_reports_statements_and_the_owners_commands_answer_as_they_did(tmp_path,
                 # a page's title is "Page | Site name" in the family's words (GLOSSARY, "Page titles"), where its
                 # separator was a middle dot
                 was = {**was, "title": was["title"].replace(" · Where Countries Stand", " | Where Countries Stand")}
+            if "og_title" in step and "Briefing from UN records" in step.get("title", ""):
+                # a saved briefing's title and link preview are the site's words and the day it was written, where
+                # they were the reader's question (decision 7)
+                assert re.fullmatch(r"<title>Briefing from UN records, \d{1,2} [A-Z][a-z]+ \d{4} \| Where "
+                                    r"Countries Stand</title>", step["title"])
+                assert step["og_title"] == [step["title"].replace("<title>", '<meta property="og:title" content="')
+                                            .replace(" | Where Countries Stand</title>", '">')]
+                was = {**was, "title": step["title"], "og_title": step["og_title"]}
             if step["case"] not in listed:
                 assert step == was, step["case"]
     steps = {step["case"]: step for part in ("http", "cli", "after") for step in now[part]}

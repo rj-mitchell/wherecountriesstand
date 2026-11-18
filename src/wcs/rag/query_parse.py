@@ -76,11 +76,13 @@ class QueryPlan:
     group_by: str = "region"
     unresolved_countries: list[str] = field(default_factory=list)
     parse_error: str | None = None
+    off_topic: bool = False  # the model read the question as about nothing the UN discusses: no briefing is written
 
     def to_dict(self) -> dict[str, Any]:
         return {"question": self.question, "search_text": self.search_text, "filters": self.filters.as_dict(),
                 "wants_votes": self.wants_votes, "interpretation": self.interpretation, "parser": self.parser,
-                "group_by": self.group_by, "unresolved_countries": self.unresolved_countries}
+                "group_by": self.group_by, "unresolved_countries": self.unresolved_countries,
+                **({"off_topic": True} if self.off_topic else {})}
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> QueryPlan:
@@ -272,6 +274,8 @@ class ParsedQuery(BaseModel):
     group_by: GroupBy
     wants_votes: bool
     interpretation: str = Field(description="One sentence: how the question was interpreted")
+    off_topic: bool = Field(default=False, description="True only if the question is about nothing the UN "
+                            "discusses, so that no records could answer it")
 
 
 def system_prompt(today: date, start: date, archive_start: date, default_years: int) -> str:
@@ -284,8 +288,8 @@ Rules:
 - search_text: the topic, in the vocabulary used in UN debates (e.g. "climate finance, adaptation, loss and damage";
   "use of force, self-defence, Article 51"). Leave out words that only express filters (dates, country names, groups).
   Add only terms that mean the same thing in UN usage, never broader or general words ("sport", "policy", "history")
-  that would match unrelated speeches. If the topic is not one the UN would discuss, keep just the question's words:
-  "No records found" is then the right answer.
+  that would match unrelated speeches. If the topic is not one the UN would discuss, keep just the question's words
+  and set off_topic: "No records found" is then the right answer.
 - date_from/date_to: ISO dates for explicit or clearly implied periods ("between 2015 and 2020" -> 2015-01-01 to
   2020-12-31; "since 2022" -> 2022-01-01). When the question gives no period, set date_from to
   {today.year - default_years}-01-01 (the last {default_years} years) and date_to to null.
@@ -305,6 +309,9 @@ Rules:
   members); "bloc" when it compares blocs (EU, NATO, AU, OIC,
   Non-Aligned Movement, G77, SIDS, LDCs); otherwise "region".
 - wants_votes: true if the question is about how countries voted.
+- off_topic: true only when the question is about nothing that countries discuss at the United Nations (a recipe,
+  a sports result, a film). Then no briefing is written and the reader is told no records were found, so when in
+  doubt (a question that could touch on the UN's work, however loosely) leave it false.
 - interpretation: one plain sentence describing the filters you chose, in British English."""
 
 
@@ -340,6 +347,7 @@ def parse_with_model(client: ModelClient, settings, question: str, countries: Co
         parser="model",
         group_by=p.group_by,
         unresolved_countries=unresolved,
+        off_topic=p.off_topic,
     )
     return plan, usage
 

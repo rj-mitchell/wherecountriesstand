@@ -47,6 +47,11 @@ The charity's impartiality policy and Where MPs Stand's wording rules apply. The
 describes a formal statement. A statement made on behalf of a group is attributed to the group, never to each of its
 members.
 
+A reader's question is never presented in the site's voice. A briefing's page title and link preview say "Briefing
+from UN records" and the date it was written, and the page shows the question as one a reader asked. The ask API
+takes no search plan and no earlier answers from the browser, so the site always reads the question itself and the
+model never sees text presented as a briefing that the site did not write.
+
 ## 8. Licence
 
 The code is licensed under AGPL-3.0, as Where MPs Stand's is. Briefing text is licensed under CC BY-NC 4.0, because
