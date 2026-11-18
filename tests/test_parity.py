@@ -354,54 +354,6 @@ def unstamped_rows(rows):
             "briefings": [[*row[:4], without_the_stamp(json.loads(row[4])), *row[5:]] for row in rows["briefings"]]}
 
 
-# The briefing's instructions as they were recorded, and as they are now: briefings open with a short plain paragraph
-# in place of a bold "In brief" list, and group headings name the group only, with no stance joined on by a dash.
-# The rest of what the model is sent is unchanged.
-WAS_BRIEFING_FORMAT = [
-    ("""- The "In brief" bullets and every stance sentence are claims too: cite the example(s) that show them, in the same
-  sentence. Never write a summary of what a group said as a sentence on its own: join it to its quoted, cited example
-  with "as when", or leave it out. Only headings, bold group labels and the closing note may go uncited.""",
-     """- The opening paragraph and every stance sentence are claims too: cite the example(s) that show them, in the same
-  sentence. Never write a summary of what a group said as a sentence on its own: join it to its quoted, cited example
-  with "as when", or leave it out. Only headings and the closing note may go uncited."""),
-    ("""Style: neutral and precise, plain markdown (short headings or bold group labels, bullets for examples).""",
-     """Style: neutral and precise, in plain markdown: short "## " headings that name the group or topic and nothing else
-("## Permanent members", never "## Permanent members - divided" or a heading joined to its stance by a dash or
-colon), and bullets for examples. Do not put bold text in the briefing, and do not use dashes to join phrases:
-use commas, colons or full stops."""),
-    ("Write a briefing that opens with an executive summary: the line '**In brief**' followed by two to four bullets, "
-     "each one specific finding that answers the question (which countries took which position, on what, and when). "
-     "Each bullet is a single sentence that states the finding and carries its cited example, joined with 'as when' "
-     "(for example: 'Several African States tied their support to regional ownership, as when Kenya said \"...\"'); "
-     "never a summary sentence followed by the example in a second sentence. Then one short section per group of "
-     "countries - a bold label giving the group and its stance (for example '**Permanent members - divided**'), one "
-     "sentence characterising it that also gives its clearest example as a short quotation, then up to two further "
-     "cited examples as bullets. Statements on behalf of groups form a group of their own unless they fit better "
-     "beside the countries they concern. If votes are supplied, a short section '**How they voted**' follows. End "
-     "with the short 'About the evidence:' paragraph. Keep it to roughly 300-450 words.", "summary"),
-    ("Write a detailed briefing that opens with an executive summary: the line '**In brief**' followed by three to "
-     "five bullets, each one specific finding in a single sentence that carries its cited example (joined with 'as "
-     "when'); then positions by group, each with a characterisation that itself quotes and cites the group's "
-     "clearest example, and one to three further cited examples; then a short section on how positions changed over "
-     "time, in date order; then, if votes are supplied, how the countries discussed voted; then the main points of "
-     "agreement and contention, each quoting and citing an example; and finally the 'About the evidence:' "
-     "paragraph, including what the supplied records do not cover. Roughly 700-1300 words.", "comprehensive"),
-]
-
-
-def in_the_new_briefing_format(calls):
-    """The recorded calls with the briefing's instructions as they are now (``WAS_BRIEFING_FORMAT``)."""
-    import json
-
-    from wcs.rag.prompts import MODE_INSTRUCTIONS
-
-    text = json.dumps(calls, ensure_ascii=False)
-    for was, now in WAS_BRIEFING_FORMAT:
-        now = MODE_INSTRUCTIONS.get(now, now)
-        text = text.replace(json.dumps(was, ensure_ascii=False)[1:-1], json.dumps(now, ensure_ascii=False)[1:-1])
-    return json.loads(text)
-
-
 REAL = shared.read("ask-real.json")
 
 
@@ -409,10 +361,9 @@ REAL = shared.read("ask-real.json")
 def test_the_real_pipeline_sends_and_writes_what_it_did(name, small_index, tmp_path, monkeypatch):
     """The same through the site's real pipeline, over a small index and a faked SDK: what the model is sent,
     whole (its instructions, its documents, the question, the model and how hard it is asked to think), what the
-    reader is sent, what is written, a saved briefing opened again, the search and the status. Two differences, and
-    they are listed: a written answer carries ``rules``, the version of the checking rules that wrote it, and the
-    briefing's instructions ask for a plain opening paragraph and plain headings
-    (``WAS_BRIEFING_FORMAT``). With those taken into account, nothing differs."""
+    reader is sent, what is written, a saved briefing opened again, the search and the status. One difference, and
+    it is listed: a written answer carries ``rules``, the version of the checking rules that wrote it. With that key
+    taken out, nothing differs."""
     import os
     import shutil
 
@@ -446,9 +397,7 @@ def test_the_real_pipeline_sends_and_writes_what_it_did(name, small_index, tmp_p
 
     now = shared.plain(shared.real_asks(make, only=name), tmp=tmp_path)[name]
     before = REAL[name]
-    if any("stream" in call for call in before["calls"]):
-        assert in_the_new_briefing_format(before["calls"]) != before["calls"]
-    assert now["calls"] == in_the_new_briefing_format(before["calls"])  # what the model was asked, whole
+    assert now["calls"] == before["calls"]  # what the model was asked, whole
     assert len(now["sent"]) == len(before["sent"])
     stamped = 0
     for (status, body), (was_status, was_body) in zip(now["sent"], before["sent"], strict=True):

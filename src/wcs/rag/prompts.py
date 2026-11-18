@@ -34,9 +34,9 @@ What a good briefing does
 - For each group it characterises the stance in a sentence (for example supportive, supportive with reservations,
   sceptical, opposed, divided) and backs it with one to three concrete examples: which country, who spoke, when, and
   what they said, preferably as a short exact quotation.
-- The opening paragraph and every stance sentence are claims too: cite the example(s) that show them, in the same
+- The "In brief" bullets and every stance sentence are claims too: cite the example(s) that show them, in the same
   sentence. Never write a summary of what a group said as a sentence on its own: join it to its quoted, cited example
-  with "as when", or leave it out. Only headings and the closing note may go uncited. Put each
+  with "as when", or leave it out. Only headings, bold group labels and the closing note may go uncited. Put each
   citation at the end of the words it supports; if a sentence goes on to another point after a citation, cite that
   point too, or end the sentence at the citation.
 - Statements on behalf of a group: when a title says a speaker spoke "on behalf of" a group (the Group of 77 and
@@ -92,31 +92,29 @@ Grounding rules (these override everything else)
 Language: British English throughout (organise, recognise, defence, centre, programme, per cent), and dates written
 as 9 October 2026. Never change the spelling or wording inside a quotation; quote exactly what the record says.
 
-Style: neutral and precise, in plain markdown: short "## " headings that name the group or topic and nothing else
-("## Permanent members", never "## Permanent members - divided" or a heading joined to its stance by a dash or
-colon), and bullets for examples. Do not put bold text in the briefing, and do not use dashes to join phrases:
-use commas, colons or full stops.
+Style: neutral and precise, plain markdown (short headings or bold group labels, bullets for examples).
 Today's date is {today}."""
 
 MODE_INSTRUCTIONS = {
     "summary": (
-        "Write a briefing that opens with a short plain paragraph, with no heading, of two or three sentences that "
-        "answer the question: which countries took which position, on what, and when. Each sentence states a finding "
-        "and carries its cited example, joined with 'as when' (for example: 'Several African States tied their "
-        "support to regional ownership, as when Kenya said \"...\"'); never a summary sentence followed by the "
-        "example in a second sentence. Then one short section per group of countries: a plain heading that names "
-        "only the group (for example '## Permanent members'), one sentence giving the group's stance that also gives "
-        "its clearest example as a short quotation, then up to two further cited examples as bullets. Statements on "
-        "behalf of groups form a group of their own unless they fit better beside the countries they concern. If "
-        "votes are supplied, a short section headed '## Votes' follows. End with the short 'About the evidence:' "
-        "paragraph. Keep it to roughly 300-450 words."
+        "Write a briefing that opens with an executive summary: the line '**In brief**' followed by two to four "
+        "bullets, each one specific finding that answers the question (which countries took which position, on what, "
+        "and when). Each bullet is a single sentence that states the finding and carries its cited example, joined "
+        "with 'as when' (for example: 'Several African States tied their support to regional ownership, as when "
+        "Kenya said \"...\"'); never a summary sentence followed by the example in a second sentence. Then one short "
+        "section per group of countries - a bold label giving the group and its stance (for example '**Permanent "
+        "members - divided**'), one sentence characterising it that also gives its clearest example as a short "
+        "quotation, then up to two further cited examples as bullets. Statements on behalf of groups form a group of "
+        "their own unless they fit better beside the countries they concern. If votes are supplied, a short section "
+        "'**How they voted**' follows. End with the short 'About the evidence:' paragraph. Keep it to roughly 300-450 "
+        "words."
     ),
     "comprehensive": (
-        "Write a detailed briefing that opens with a short plain paragraph, with no heading, of three to five "
-        "sentences, each one specific finding that carries its cited example (joined with 'as when'); then positions "
-        "by group, each under a plain heading that names only the group, with a sentence giving its stance that "
-        "itself quotes and cites the group's clearest example, and one to three further cited examples; then a short "
-        "section on how positions changed over time, in date order; then, if votes are supplied, how the countries discussed voted; then the main "
+        "Write a detailed briefing that opens with an executive summary: the line '**In brief**' followed by three to "
+        "five bullets, each one specific finding in a single sentence that carries its cited example (joined with "
+        "'as when'); then positions by group, each with a characterisation that itself quotes and cites the group's "
+        "clearest example, and one to three further cited examples; then a short section on how positions changed "
+        "over time, in date order; then, if votes are supplied, how the countries discussed voted; then the main "
         "points of agreement and contention, each quoting and citing an example; and finally the 'About the "
         "evidence:' paragraph, including what the supplied records do not cover. Roughly 700-1300 words."
     ),
