@@ -37,8 +37,10 @@ ADDED = {
 }
 
 # Values in config/settings.toml changed on purpose since the recording, each (as it was, as it is): fewer new
-# briefings a day for each visitor, and each briefing in progress counted at the dearest briefings' cost.
-CHANGED = {("usage", "per_visitor_daily_questions"): (40, 8), ("usage", "briefing_estimate_usd"): (0.1, 0.25)}
+# briefings a day for each visitor, each briefing in progress counted at the dearest briefings' cost, and medium
+# effort, not low, for the question reader (a reading costs a fiftieth of a penny).
+CHANGED = {("usage", "per_visitor_daily_questions"): (40, 8), ("usage", "briefing_estimate_usd"): (0.1, 0.25),
+           ("answer", "query_parse_effort"): ("low", "medium")}
 
 BRIEFING_MODEL = "claude-sonnet-5-5"
 
@@ -175,6 +177,9 @@ def settings_in(folder, monkeypatch, **usage):
     monkeypatch.setenv("WCS_DATA_DIR", str(folder / "data"))
     settings = load_settings(**shared.SETTINGS_FOR_TESTS)
     settings.raw["usage"] = {**settings.raw["usage"], **usage}
+    # the recordings were made with the question read at low effort, since raised to medium (CHANGED): played with
+    # the effort they were made with, so that everything else the model is sent is checked whole
+    settings.raw["answer"] = {**settings.raw["answer"], "query_parse_effort": "low"}
     return settings
 
 
