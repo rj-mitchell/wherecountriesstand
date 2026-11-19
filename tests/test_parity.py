@@ -91,21 +91,54 @@ def test_settings_resolve_as_they_did(tmp_path, monkeypatch):
 # The checks on briefings
 
 
+# wts-core 0.3.2, version 2 of the checking rules: a short uncited line that is a sentence of its own is a claim to
+# check ("unsupported"), where version 1 let it pass as a join ("connective"). Each passage named here is a claim no
+# source supports, so it is right that it is marked; nothing else in any report changes, and no flag is lost.
+RULES_2_CLAIMS = {
+    "a cited claim, a lead-in and an uncited claim": [" This was a turning point for the Council."],
+    "an honorific's full stop ends no sentence": [" Dr. Prasad disagreed. St. Lucia was not heard."],
+}
+
+
+def as_under_rules_2(name: str, answer: dict) -> dict:
+    """A report recorded under version 1 of the checking rules as version 2 gives it: the passages
+    ``RULES_2_CLAIMS`` names for the case marked as claims, and the two counts that follow from the statuses
+    worked out again. Every other passage and figure is as it was recorded."""
+    claims = RULES_2_CLAIMS.get(name, [])
+    if not claims:
+        return answer
+    assert [s["text"] for s in answer["segments"] if s["text"] in claims] == claims, name  # each, once
+    segments = []
+    for segment in answer["segments"]:
+        if segment["text"] in claims:
+            assert segment["status"] == "connective", name
+            segment = {**segment, "status": "unsupported"}
+        segments.append(segment)
+    cited = sum(len(s["text"]) for s in segments if s["status"] == "cited")
+    unsupported = sum(len(s["text"]) for s in segments if s["status"] in ("unsupported", "invalid"))
+    return {**answer, "segments": segments,
+            "unsupported_segments": sum(1 for s in segments if s["status"] == "unsupported"),
+            "grounded_ratio": round(1.0 if not cited + unsupported else cited / (cited + unsupported), 3)}
+
+
 def test_the_checks_report_what_they_reported():
-    """Each test briefing through every check, as the pipeline runs them. One difference: an answer now carries the version of the checking
-    rules that wrote it, as a new key, ``rules``. Everything else is what it was: never a flag fewer."""
+    """Each test briefing through every check, as the pipeline runs them. Two differences, each listed: an answer
+    now carries the version of the checking rules that wrote it, as a new key, ``rules`` (2 since wts-core 0.3.2);
+    and the short uncited claims in ``RULES_2_CLAIMS`` are marked as unsupported. Everything else is what it was:
+    never a flag fewer."""
     from wts_core.checks import RULES_VERSION
 
     from wcs.rag.checks import checked
     from wcs.rag.sources import Source
 
+    assert RULES_VERSION == 2
     sources = [Source(**s) for s in shared.SOURCES]
     before = by_name(shared.read("checks.json")["written"])
-    assert before.keys() == {case["name"] for case in shared.CHECK_CASES}
+    assert before.keys() == {case["name"] for case in shared.CHECK_CASES} >= RULES_2_CLAIMS.keys()
     for case in shared.CHECK_CASES:
         answer = dict(checked(case["blocks"], sources))
         assert answer.pop("rules") == RULES_VERSION, case["name"]
-        assert answer == before[case["name"]]["answer"], case["name"]
+        assert answer == as_under_rules_2(case["name"], before[case["name"]]["answer"]), case["name"]
 
 
 def test_saved_briefings_are_shown_again_as_they_were():
@@ -252,13 +285,17 @@ def as_now(recorded):
 
 
 SCRIPTED = as_now(shared.read("ask-scripted.json"))
+# Cases in which a briefing ends without an answer once its model has been called, each with where its row is in
+# the spending record (wts-core 0.3.2: such a briefing is charged, in a row of kind "unfinished")
+UNFINISHED = {"the pipeline raising mid-stream": 1, "the reader leaving while the briefing is written": 1}
 
 
 @pytest.mark.parametrize("name", list(shared.SCRIPTED))
 def test_the_flow_of_a_question_sends_and_writes_what_it_did(name, tmp_path, monkeypatch):
     """Every parity case of wts-core's docs/adr/0009, played through the site's real web app over a scripted
     pipeline: the status and the exact bytes of every answer, the rows written to the spending record, the answer
-    cache, the saved briefings and the notes of failures, and what was asked of the pipeline. No difference."""
+    cache, the saved briefings and the notes of failures, and what was asked of the pipeline. One difference, and
+    it is listed: a briefing that ends without an answer after its model was called is charged (``UNFINISHED``)."""
     from wts_core.testing import FixedClock
 
     from wcs.reference.countries import countries
@@ -270,6 +307,7 @@ def test_the_flow_of_a_question_sends_and_writes_what_it_did(name, tmp_path, mon
         settings = settings_in(tmp_path / f"side-{len(made)}", monkeypatch, **usage)
         pipeline = shared.ScriptedPipeline(clock.advance, settings.answer["model"], countries(), has_model=has_model)
         made.append(new_side(settings, pipeline, clock, monkeypatch))
+        made[-1].settings = settings
         return made[-1]
 
     now = shared.plain(shared.scripted_asks(make, only=name), tmp=tmp_path)[name]
@@ -279,6 +317,20 @@ def test_the_flow_of_a_question_sends_and_writes_what_it_did(name, tmp_path, mon
         assert status == was_status
         assert shared.events_of(body) == shared.events_of(was_body)  # the readable comparison first
         assert body == was_body  # then every byte
+    if name in UNFINISHED:
+        # wts-core 0.3.2: the briefing that broke off is charged when it ends, in a row of its own, and counts
+        # towards the visitor's daily limit. The scripted pipeline's model reports nothing of what it used, so the
+        # row is charged what a briefing in progress is reserved at, with no token counts. Taken out, the rows are
+        # what they were.
+        spending, was = now["rows"]["spending"], before["rows"]["spending"]
+        (at, *row), = [r for r in spending if r[1] == "unfinished"]
+        visitor = was[0][3]
+        estimate = made[0].settings.usage["briefing_estimate_usd"]
+        assert row == ["unfinished", BRIEFING_MODEL, visitor, 0, 0, 0, 0, estimate] and estimate == 0.25  # CHANGED
+        # written when the briefing ended: after its question was read, before the next question was
+        assert spending.index([at, *row]) == UNFINISHED[name] and was[0][0] <= at <= was[1][0]
+        assert made[0].app.state.parts.spending.briefings_today(visitor=visitor) == 2  # it and the next one
+        now["rows"]["spending"] = [r for r in spending if r[1] != "unfinished"]
     for table in ("spending", "cache", "briefings", "failures"):
         assert now["rows"][table] == before["rows"][table], table
     assert now["calls"] == before["calls"]
@@ -433,13 +485,14 @@ def test_the_real_pipeline_sends_and_writes_what_it_did(name, small_index, tmp_p
     """The same through the site's real pipeline, over a small index and a faked SDK: what the model is sent,
     whole (its instructions, its documents, the question, the model and how hard it is asked to think), what the
     reader is sent, what is written, a saved briefing opened again, the search and the status. One difference, and
-    it is listed: a written answer carries ``rules``, the version of the checking rules that wrote it. With that key
-    taken out, nothing differs."""
+    it is listed: a written answer carries ``rules``, the version of the checking rules that wrote it (2 since
+    wts-core 0.3.2). With that key taken out, nothing differs."""
     import os
     import shutil
 
     from conftest import model_of
     from wts_core.adapters.hashing import HashingEmbedder
+    from wts_core.checks import RULES_VERSION
     from wts_core.testing import FixedClock
 
     from wcs.engine import Engine
@@ -489,7 +542,7 @@ def test_the_real_pipeline_sends_and_writes_what_it_did(name, small_index, tmp_p
         assert unstamped_events(body) == shared.events_of(was_body)
         stamped += body != was_body
         # every byte, once the stamp is taken out of the text as it was sent
-        assert body.replace(', "rules": 1}', "}") == was_body
+        assert body.replace(f', "rules": {RULES_VERSION}}}', "}") == was_body
     assert unstamped_rows(now["rows"]) == unstamped_rows(before["rows"])
     assert without_the_stamp(now["saved"]) == before["saved"] and now["search"] == before["search"]
     assert now["status"] == before["status"]

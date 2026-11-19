@@ -231,12 +231,12 @@ def test_the_privacy_page_says_what_the_site_now_keeps():
     assert "OnCalendar=*-*-* 04:20:00 UTC" in timer
 
 
-def test_a_backup_holds_the_codes_and_secret_of_its_own_day_and_none_of_the_day_before(site, tmp_path,
-                                                                                         monkeypatch):
-    """What the privacy page says of backups (wts-core 0.3.0, where the shared `backup` command forgets earlier
-    days before it copies): `wcs backup`, as the nightly unit runs it, made while a day lasts holds
-    that day's visitor codes, the times of its briefings and the secret the codes were made with; made the next
-    day it holds none of them."""
+def test_a_backup_holds_no_visitor_code_or_secret_on_its_own_day_or_after(site, tmp_path, monkeypatch):
+    """wts-core 0.3.2, where a backup's copy of the database forgets every visitor secret, today's included, and
+    every visitor's code before it is checked and packed (0.3.0's backup held the day's codes beside the secret
+    they were made with). `wcs backup`, as the nightly unit runs it, made while a day lasts holds the times of
+    that day's briefings but none of its visitor codes and not the secret; made the next day it holds neither, nor
+    any time of day. The live database keeps today's code and secret for the limits."""
     import gzip
     import sqlite3
 
@@ -247,30 +247,41 @@ def test_a_backup_holds_the_codes_and_secret_of_its_own_day_and_none_of_the_day_
     sent = shared.events_of(site.post("/api/ask", json={"question": CANARY},
                                       headers={"X-Forwarded-For": "203.0.113.10"}).text)
     assert [e for e in sent if isinstance(e, dict)][-1]["type"] == "final"
-    with site.db.connect() as con:
-        codes = {r[0] for r in con.execute("SELECT visitor FROM wts_spending")}
-        times = {r[0] for r in con.execute("SELECT at FROM wts_spending")}
-        (key, secret), = [tuple(r) for r in con.execute("SELECT key, value FROM wts_kv WHERE key LIKE 'visitor_salt:%'")]
-    (code,) = codes
+
+    def live() -> tuple[set[str], set[str], list[tuple[str, str]]]:
+        with site.db.connect() as con:
+            return ({r[0] for r in con.execute("SELECT visitor FROM wts_spending")},
+                    {r[0] for r in con.execute("SELECT at FROM wts_spending")},
+                    [tuple(r) for r in con.execute("SELECT key, value FROM wts_kv WHERE key LIKE 'visitor_salt%'")])
+
+    codes, times, salts = live()
+    (code,), ((key, secret),) = codes, salts
+    assert code and secret
     monkeypatch.setattr(cli, "CLOCK", site.clock)
 
-    def held(label: str) -> tuple[str, set[str]]:
-        """Everything in the backup, and the times on its spending rows."""
+    def held(label: str) -> tuple[str, set[str], set[str]]:
+        """Everything in the backup, and the times and visitor codes on its spending rows."""
         folder = tmp_path / label
         result = CliRunner().invoke(cli.app, ["backup", "--to", str(folder)])
         assert result.exit_code == 0, result.output
         (archive,) = folder.glob("wcs-state-*.sqlite.gz")
         copy = tmp_path / f"{label}.db"
-        copy.write_bytes(gzip.decompress(archive.read_bytes()))
+        raw = gzip.decompress(archive.read_bytes())
+        assert code.encode() not in raw and secret.encode() not in raw  # nor in the file's free pages
+        copy.write_bytes(raw)
         con = sqlite3.connect(copy)
         try:
-            return "\n".join(con.iterdump()), {r[0] for r in con.execute("SELECT at FROM wts_spending")}
+            return ("\n".join(con.iterdump()), {r[0] for r in con.execute("SELECT at FROM wts_spending")},
+                    {r[0] for r in con.execute("SELECT visitor FROM wts_spending")})
         finally:
             con.close()
 
-    same_day, at_same_day = held("the same day")
-    assert code in same_day and secret in same_day and at_same_day == times
+    same_day, at_same_day, visitors_same_day = held("the same day")
+    assert code not in same_day and secret not in same_day and "visitor_salt" not in same_day
+    assert visitors_same_day == {""} and at_same_day == times  # the code blanked; the times of day still there
+    assert live() == (codes, times, salts)  # the live database still has them, for today's limits
     site.clock.advance(days=1)
-    next_day, at_next_day = held("the next day")
-    assert code not in next_day and secret not in next_day and key not in next_day
+    next_day, at_next_day, visitors_next_day = held("the next day")
+    assert code not in next_day and secret not in next_day and "visitor_salt" not in next_day and key not in next_day
+    assert visitors_next_day == {""}
     assert at_next_day == {f"{shared.DAY}T00:00:00+00:00"}  # the day is kept, and no time of day
