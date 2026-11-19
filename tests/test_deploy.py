@@ -43,7 +43,8 @@ case "$name $*" in
   "systemctl start "*) shift 1; for t in "$@"; do touch "$FAKE/timers/$t"; done ;;
   "systemctl enable --now "*) shift 2; for t in "$@"; do touch "$FAKE/timers/$t"; done ;;
   "systemctl show "*) echo "Sat 2026-11-14 17:41:00 UTC" ;;
-  "docker compose build") [[ ! -e "$FAKE/build-fails" ]] ;;
+  "git -C "*" log -1 --format=%cs -- web/site/"*) echo 2026-11-19 ;;
+  "docker compose build"*) [[ ! -e "$FAKE/build-fails" ]] ;;
   "docker compose run "*) exit 1 ;;   # the look for files not owned by the site's user: none
   "docker compose exec "*) [[ ! -e "$FAKE/not-answering" ]] ;;
   "sleep "*) ;;
@@ -63,6 +64,9 @@ def server(tmp_path, monkeypatch):
     for folder in (fake / "timers", fake / "running", tmp_path / "units", bin_):
         folder.mkdir(parents=True)
     shutil.copytree(DEPLOY, site / "deploy")
+    (site / "web" / "site").mkdir(parents=True)
+    for page in ("about", "index"):
+        (site / "web" / "site" / f"{page}.html").touch()
     (site / "deploy" / ".env").write_text("", encoding="utf-8")
     for name in ("git", "docker", "systemctl", "sleep"):
         (bin_ / name).write_text(STAND_IN, encoding="utf-8")
@@ -104,6 +108,8 @@ def test_update_sh_holds_the_timers_builds_and_brings_the_new_site_up_and_only_t
     answers = position(calls, "docker compose exec")
     reload_, enable = position(calls, "systemctl daemon-reload"), position(calls, "systemctl enable --now")
     assert position(calls, "git -C") < held < build < up < answers < reload_ < enable
+    # the image is told the day each page last changed, from git, for the sitemap (it has no history of its own)
+    assert calls[build] == "docker compose build --build-arg PAGE_DATES=about:2026-11-19 index:2026-11-19 "
     # every timer was held before the build, and each is running again on the new units at the end
     for unit in UNITS:
         assert position(calls, f"systemctl stop {unit}.timer") < build

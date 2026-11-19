@@ -315,7 +315,6 @@ function written(iso) {
 
 function reset(question) {
   $("home").hidden = true;
-  $("lede").hidden = true;
   document.body.classList.add("showing-result");
   $("result").hidden = false;
   $("question").textContent = question;
@@ -399,7 +398,6 @@ function fromUrl() {
   const q = params.get("q");
   if (!q) {
     $("home").hidden = false;
-    $("lede").hidden = false;
     $("result").hidden = true;
     document.body.classList.remove("showing-result");
     return;

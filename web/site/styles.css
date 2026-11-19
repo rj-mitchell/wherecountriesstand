@@ -279,6 +279,8 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
   align-items: start;
 }
 .result__head { grid-column: 1; grid-row: 1; }
+/* the reader's question: as large as a page's heading, under the page's own heading in the site's words */
+.result__head h2 { font-size: clamp(2rem, 1.5rem + 2vw, 2.75rem); margin: 0 0 0.5em; }
 .result__side { grid-column: 2; grid-row: 1 / span 2; }
 .result__main { grid-column: 1; grid-row: 2; min-inline-size: 0; }
 @media (max-width: 56rem) {

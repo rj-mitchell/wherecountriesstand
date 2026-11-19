@@ -2,13 +2,29 @@
 <html lang="en-GB">
 <head>
   <!--#include head-->
-  <title>Where Countries Stand</title>
+  <title>Where Countries Stand: what countries have said and how they have voted at the UN</title>
   <meta name="description" content="Sourced, impartial briefings on what countries have said, and how they have voted, at the United Nations.">
   <link rel="canonical" href="__SITE__/">
   <meta property="og:title" content="Where Countries Stand">
   <meta property="og:description" content="Sourced, impartial briefings on what countries have said, and how they have voted, at the United Nations.">
   <meta property="og:url" content="__SITE__/">
   <script src="/app.js" defer></script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Where Countries Stand",
+      "url": "__SITE__/",
+      "description": "Sourced, impartial briefings on what countries have said, and how they have voted, at the United Nations.",
+      "inLanguage": "en-GB",
+      "publisher": {
+        "@type": "Organization",
+        "@id": "https://wheretheystand.uk/#org",
+        "name": "Where They Stand",
+        "url": "https://wheretheystand.uk/"
+      }
+    }
+  </script>
 </head>
 <body class="wts-headings">
   <!--#include header-->
@@ -63,7 +79,7 @@
       <div class="result__grid">
         <div class="result__head">
           <p class="asked" id="asked" hidden>A reader asked:</p>
-          <h1 id="question"></h1>
+          <h2 id="question"></h2>
           <p class="reading"><span id="today"></span> <span id="interpretation"></span></p>
         </div>
         <aside class="result__side panel" aria-labelledby="filters-head">

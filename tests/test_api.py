@@ -1,6 +1,7 @@
 """The web service, with the fake model client from test_pipeline (no network)."""
 
 import json
+import re
 
 import pytest
 from conftest import model_of
@@ -594,6 +595,52 @@ def test_unknown_addresses_get_a_page_and_the_api_keeps_json(indexed):  # noqa: 
         assert r.status_code == 404 and r.headers["content-type"] == "application/json", path
     assert api.post("/api/nothing", json={}).status_code in (404, 405)
     assert "404" not in api.get("/sitemap.xml").text
+
+
+def test_a_page_asked_for_at_another_form_of_its_address_is_sent_to_its_own_for_good(indexed):  # noqa: F811
+    """A page's address is the one its canonical link gives (/about.html, and / for the home page). The others a
+    reader or a crawler might try are sent there with a 301, keeping the query, as a path so that the browser keeps
+    the scheme it asked with (behind the proxy, the app may not know it was https)."""
+    api, _ = make(indexed, FakeClient())
+    for asked, sent in (("/about", "/about.html"), ("/about/", "/about.html"), ("/about.html/", "/about.html"),
+                        ("/named", "/named.html"), ("/status/", "/status.html"), ("/index.html", "/"),
+                        ("/index", "/"), ("/index.html/", "/"), ("/corrections?kind=error", "/corrections.html?kind=error"),
+                        ("/index.html?q=veto", "/?q=veto")):
+        for method in (api.get, api.head):
+            r = method(asked, follow_redirects=False)
+            assert (r.status_code, r.headers["location"]) == (301, sent), asked
+    # the page itself, and the files at their own addresses only: a file's address with a slash after it served the
+    # page's template, unfilled
+    assert api.get("/about.html").status_code == 200 and "<!--#include" not in api.get("/about.html").text
+    for path in ("/app.js/", "/styles.css/", "/404/", "/404.html/", "/family/", "/family/VERSION/", "/nope/"):
+        r = api.get(path, follow_redirects=False)
+        assert r.status_code == 404 and "<h1>Page not found</h1>" in r.text, path
+    assert api.get("/app.js").status_code == 200
+
+
+def test_the_sitemap_gives_the_day_each_page_last_changed_and_none_it_does_not_know(indexed, monkeypatch):  # noqa: F811
+    monkeypatch.setenv("WCS_SITE_URL", "https://countries.example")
+    monkeypatch.setenv("WCS_PAGE_DATES", "about:2026-11-19 index:2026-11-18 privacy:2026-11-19 status:")
+    sitemap = make(indexed, FakeClient())[0].get("/sitemap.xml").text
+    assert "<url><loc>https://countries.example/</loc><lastmod>2026-11-18</lastmod></url>" in sitemap
+    assert "<url><loc>https://countries.example/about.html</loc><lastmod>2026-11-19</lastmod></url>" in sitemap
+    assert "<url><loc>https://countries.example/status.html</loc></url>" in sitemap  # no date: none is made up
+    monkeypatch.delenv("WCS_PAGE_DATES")
+    assert "lastmod" not in make(indexed, FakeClient())[0].get("/sitemap.xml").text
+
+
+def test_the_home_page_says_what_the_site_is_and_who_publishes_it(indexed, monkeypatch):  # noqa: F811
+    monkeypatch.setenv("WCS_SITE_URL", "https://countries.example")
+    home = make(indexed, FakeClient())[0].get("/").text
+    title = re.search(r"<title>(.*?)</title>", home)[1]
+    assert title.startswith("Where Countries Stand: ") and len(title) > 40
+    # one heading of the first rank, in the site's words; the reader's question, when there is one, is under it
+    assert re.findall(r"<h1[ >]", home) == ["<h1 "] and '<h2 id="question"></h2>' in home
+    data = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', home, re.S)[1])
+    assert data["@type"] == "WebSite" and data["url"] == "https://countries.example/"
+    assert data["publisher"] == {"@type": "Organization", "@id": "https://wheretheystand.uk/#org",
+                                 "name": "Where They Stand", "url": "https://wheretheystand.uk/"}
+    assert not {"potentialAction", "mainEntity"} & set(data)
 
 
 def test_alpha_notice_links_to_the_report_form(indexed):  # noqa: F811
