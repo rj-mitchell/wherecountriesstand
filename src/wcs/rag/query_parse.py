@@ -16,7 +16,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 from wts_core.ports import ModelClient, ModelRequest, Usage
 
-from wcs.engine import Filters
+from wcs.engine import MAX_NAMED, Filters
 from wcs.rank.evidence import GROUP_BY
 from wcs.reference.countries import Countries, norm
 
@@ -77,12 +77,16 @@ class QueryPlan:
     unresolved_countries: list[str] = field(default_factory=list)
     parse_error: str | None = None
     off_topic: bool = False  # the model read the question as about nothing the UN discusses: no briefing is written
+    # States the question names that are not speaker filters: each is heard if it has spoken on the subject
+    # (docs/DECISIONS.md, 21)
+    named_countries: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {"question": self.question, "search_text": self.search_text, "filters": self.filters.as_dict(),
                 "wants_votes": self.wants_votes, "interpretation": self.interpretation, "parser": self.parser,
                 "group_by": self.group_by, "unresolved_countries": self.unresolved_countries,
-                **({"off_topic": True} if self.off_topic else {})}
+                **({"off_topic": True} if self.off_topic else {}),
+                **({"named_countries": self.named_countries} if self.named_countries else {})}
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> QueryPlan:
@@ -97,7 +101,8 @@ class QueryPlan:
         return cls(question=d.get("question", ""), search_text=d.get("search_text") or d.get("question", ""),
                    filters=filters, wants_votes=bool(d.get("wants_votes")), interpretation=d.get("interpretation", ""),
                    parser=d.get("parser", "edited"),
-                   group_by=d.get("group_by") if d.get("group_by") in GROUP_BY else "region")
+                   group_by=d.get("group_by") if d.get("group_by") in GROUP_BY else "region",
+                   named_countries=[str(c) for c in d.get("named_countries") or []][:MAX_NAMED])
 
 
 def _iso(v: Any) -> date | None:
@@ -163,11 +168,11 @@ TOPIC_AFTER = {"embargo", "sanctions", "blockade", "invasion", "occupation", "wa
                "bombing", "mission", "role", "accession"}
 
 
-def countries_in(question: str, countries: Countries) -> list[tuple[str, str]]:
-    """Countries named in the question as speakers: (code, matched words), longest names first, no overlaps. A
-    country named as the subject ("what did France say about Haiti") is left to the search words."""
+def _mentions(question: str, countries: Countries) -> list[tuple[int, str, str, bool]]:
+    """Every country the question names: (where in it, code, matched words, named as the subject), longest names
+    first, no overlaps. A territory named other than as the subject is not one."""
     words = norm(question).split()
-    found: list[tuple[str, str]] = []
+    found: list[tuple[int, str, str, bool]] = []
     used: set[int] = set()
     for size in range(6, 0, -1):
         for i in range(len(words) - size + 1):
@@ -181,13 +186,46 @@ def countries_in(question: str, countries: Countries) -> list[tuple[str, str]]:
             code = countries.resolve(phrase)
             after = words[i + size] if i + size < len(words) else ""
             if code and ((i > 0 and words[i - 1] in TOPIC_WORDS) or after in TOPIC_AFTER):
+                found.append((i, code, phrase, True))
                 used.update(range(i, i + size))
-                continue
-            if code and countries.kind(code) != "territory":
-                if code not in {c for c, _ in found}:
-                    found.append((code, phrase))
+            elif code and countries.kind(code) != "territory":
+                found.append((i, code, phrase, False))
                 used.update(range(i, i + size))
     return found
+
+
+def countries_in(question: str, countries: Countries) -> list[tuple[str, str]]:
+    """Countries named in the question as speakers: (code, matched words), longest names first, no overlaps. A
+    country named as the subject ("what did France say about Haiti") is left to the search words."""
+    found: list[tuple[str, str]] = []
+    for _, code, phrase, subject in _mentions(question, countries):
+        if not subject and code not in {c for c, _ in found}:
+            found.append((code, phrase))
+    return found
+
+
+# Short forms the country names leave out, matched only as written here: "US" (never "us"), "UK", "America" (not
+# "Latin America", "the Americas").
+SHORT_FORMS = re.compile(r"(?<![\w.])(U\.S\.A\.|U\.S\.|USA|US|U\.K\.|UK)(?![\w])|"
+                         r"(?<!Latin )(?<!South )(?<!Central )(?<!North )\bAmerica\b(?!s)")
+SHORT_CODES = {"U.S.A.": "USA", "U.S.": "USA", "USA": "USA", "US": "USA", "U.K.": "GBR", "UK": "GBR",
+               "America": "USA"}
+
+
+def countries_named(question: str, countries: Countries) -> list[str]:
+    """The States the question names, whether as speakers or as its subject, in the order it names them and at most
+    ``MAX_NAMED``: those whose statements on the subject, if they have made any, a briefing must include
+    (docs/DECISIONS.md, 21). A group ("the EU", "Western countries") is not a State and is not expanded into its
+    members. "Russia's" is read as "Russia"."""
+    plain = re.sub(r"(?<=\w)['\u2019]s\b", "", question)
+    found = [(i, code) for i, code, _, _ in _mentions(plain, countries)]
+    for m in SHORT_FORMS.finditer(plain):  # placed by the number of words before it, as the names are
+        found.append((len(norm(plain[:m.start()]).split()), SHORT_CODES[m.group(0)]))
+    out: list[str] = []
+    for _, code in sorted(found):
+        if countries.kind(code) not in ("territory", "organisation") and code not in out:
+            out.append(code)
+    return out[:MAX_NAMED]
 
 
 def groups_in(question: str) -> list[tuple[str, str]]:
@@ -208,6 +246,12 @@ def groups_in(question: str) -> list[tuple[str, str]]:
             out.append((GROUP_PHRASES[phrase], phrase))
         q = q.replace(p, " ")
     return out
+
+
+def not_filtered(named: list[str], filters: Filters) -> list[str]:
+    """The named States to make sure of: none when the question limits who spoke to certain countries (it asks
+    what they said), else those named that are not among the filters."""
+    return [] if filters.countries else list(named)
 
 
 def parse_offline(question: str, countries: Countries, today: date | None = None, default_years: int = 10,
@@ -252,11 +296,11 @@ def parse_offline(question: str, countries: Countries, today: date | None = None
     if sources:
         bits.append("bodies: " + ", ".join({"sc": "Security Council", "gd": "General Debate"}[s] for s in sources))
     bits.append(f"from {date_from.year}" + (f" to {date_to.year}" if date_to else ""))
-    return QueryPlan(question=question, search_text=text,
-                     filters=Filters(date_from=date_from, date_to=date_to, sources=sources,
-                                     countries=[c for c, _ in named], groups=[g for g, _ in groups]),
-                     wants_votes=wants_votes, interpretation="Searching " + "; ".join(bits) + ".",
-                     parser="offline", group_by=group_by)
+    filters = Filters(date_from=date_from, date_to=date_to, sources=sources, countries=[c for c, _ in named],
+                      groups=[g for g, _ in groups])
+    return QueryPlan(question=question, search_text=text, filters=filters, wants_votes=wants_votes,
+                     interpretation="Searching " + "; ".join(bits) + ".", parser="offline", group_by=group_by,
+                     named_countries=not_filtered(countries_named(question, countries), filters))
 
 
 # Model-based
@@ -349,6 +393,7 @@ def parse_with_model(client: ModelClient, settings, question: str, countries: Co
         unresolved_countries=unresolved,
         off_topic=p.off_topic,
     )
+    plan.named_countries = not_filtered(countries_named(question, countries), plan.filters)
     return plan, usage
 
 

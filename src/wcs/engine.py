@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Collection, Sequence
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import date
 from typing import Any
 
@@ -23,13 +23,14 @@ from wcs.adapters import get_embedder
 from wcs.config import Settings
 from wcs.index.lance import open_index
 from wcs.rank.composite import Candidate, RankParams, Scored, rank
-from wcs.rank.evidence import GROUP_BY, evidence_summary, select_evidence
+from wcs.rank.evidence import GROUP_BY, evidence_summary, own_statement_of, select_evidence
 from wcs.reference.countries import Countries, countries
 from wcs.sources.speech import canonical_group
 from wcs.store.parquet import read_records
 
 log = logging.getLogger(__name__)
 
+MAX_NAMED = 6  # States named in a question that are searched for on their own (docs/DECISIONS.md, 21)
 STATE_KINDS = ("member_state", "observer_state", "former_member_state", "other_state")
 SPEAKER_KINDS = (*STATE_KINDS, "organisation", "un", "chair")
 BODIES = {"sc": "Security Council", "gd": "General Assembly"}
@@ -145,13 +146,17 @@ class Engine:
 
     def search(self, query: str, filters: Filters | None = None, recency: float | None = None,
                role_weight: float | None = None, limit: int = 12, diversify: bool = True,
-               group_by: str = "region") -> SearchResult:
+               group_by: str = "region", named: Sequence[str] = ()) -> SearchResult:
+        """The balanced evidence for ``query`` within ``filters``. ``named``: States the question names (not
+        speaker filters, which already decide who is heard): each is searched for on its own, within the same
+        filters, and its best statements are kept if they are as relevant as any other passage must be
+        (docs/DECISIONS.md, 21)."""
         f = filters or Filters()
         r = self.settings.ranking
-        where = build_where(f)
+        named = [] if f.countries else list(dict.fromkeys(named))[:MAX_NAMED]
         hidden = sorted(self.hidden_records()) if self.hidden_records is not None else []
-        if hidden:
-            where += f" AND record_id NOT IN ({', '.join(sql_str(r) for r in hidden)})"
+        not_hidden = f" AND record_id NOT IN ({', '.join(sql_str(r) for r in hidden)})" if hidden else ""
+        where = build_where(f) + not_hidden
         timings: dict[str, float] = {}
         clock = time.perf_counter()
 
@@ -177,6 +182,17 @@ class Engine:
                 lap("meaning")
             bm = by_keyword.result()
             lap("keyword")
+        # each named State on its own: its statements may be worded too differently from the question's to be
+        # among the best of all. As many candidates as the briefing has places is more than it can take.
+        named_hits: list[tuple[list[dict[str, Any]], list[dict[str, Any]]]] = []
+        for code in named:
+            own = build_where(replace(f, countries=[code])) + not_hidden
+            named_hits.append((self.index.search_words(query, own, limit),
+                               self.index.search_meaning(vec, own, limit, nprobes=r.get("vector_nprobes"),
+                                                         refine_factor=r.get("vector_refine_factor"))
+                               if semantic else []))
+        if named:
+            lap("named")
         current_stages().mark("searched")  # for the record of the briefing being written, if one is
 
         cands: dict[str, Candidate] = {}
@@ -192,21 +208,34 @@ class Engine:
                 cands[hit["record_id"]] = c
             return c
 
-        for h in bm:
-            c = cand_for(h)
-            c.data["passages"][h["passage_id"]] = {"text": h["text"], "heading": h["heading"]}
-            for k in ("speaker_name", "country_name", "on_behalf_of"):
-                c.data.setdefault(k, h.get(k))
-            if c.bm25 is None or h["_score"] > c.bm25:
-                c.bm25 = float(h["_score"])
-                c.best_passage_id = h["passage_id"]
-        for h in vec_hits:
-            c = cand_for(h)
-            sim = 1.0 - float(h["_distance"])
-            if c.cosine is None or sim > c.cosine:
-                c.cosine = sim
-                if c.bm25 is None:
+        def by_words(hits: list[dict[str, Any]]) -> None:
+            for h in hits:
+                c = cand_for(h)
+                c.data["passages"][h["passage_id"]] = {"text": h["text"], "heading": h["heading"]}
+                for k in ("speaker_name", "country_name", "on_behalf_of"):
+                    c.data.setdefault(k, h.get(k))
+                if c.bm25 is None or h["_score"] > c.bm25:
+                    c.bm25 = float(h["_score"])
                     c.best_passage_id = h["passage_id"]
+
+        def by_meaning(hits: list[dict[str, Any]]) -> None:
+            for h in hits:
+                c = cand_for(h)
+                sim = 1.0 - float(h["_distance"])
+                if c.cosine is None or sim > c.cosine:
+                    c.cosine = sim
+                    if c.bm25 is None:
+                        c.best_passage_id = h["passage_id"]
+
+        # the named States' hits first by words, then all by meaning: a record's best passage is then chosen as it
+        # would be had the main search found it
+        by_words(bm)
+        for words, _ in named_hits:
+            by_words(words)
+        by_meaning(vec_hits)
+        for _, meaning in named_hits:
+            by_meaning(meaning)
+        vec_hits = vec_hits + [h for _, meaning in named_hits for h in meaning]
 
         floor, ceiling = getattr(self.embedder, "similarity_range", (0.5, 0.85)) if semantic else (0.5, 0.85)
         params = RankParams.from_settings(
@@ -235,18 +264,27 @@ class Engine:
                 # would leave it two sources each (found in the first-load rehearsal: France on Mali, 2 of 152)
                 per_country = max(per_country, -(-limit // len(f.countries)))
                 per_speaker = max(per_speaker, -(-per_country // 2))
-            top = select_evidence(scored[:max(limit * 8, 150)], limit,
-                                  group_by=group_by if group_by in GROUP_BY else "region",
+            cut = max(limit * 8, 150)
+            # at most a quarter of the places for the named States, two each at most (as for any country), one
+            # each at least
+            named_each = min(per_country, max(1, limit // 4 // max(len(named), 1)))
+            head = scored[:cut]
+            for code in named:  # a named State's best, wherever it ranks
+                head += [s for s in scored[cut:] if own_statement_of(s.candidate.data) == code][:named_each]
+            head.sort(key=lambda s: (-s.score, -s.relevance, s.candidate.record_id))  # in score order again
+            top = select_evidence(head, limit, group_by=group_by if group_by in GROUP_BY else "region",
                                   max_per_speaker=per_speaker, max_per_country=per_country,
-                                  min_relevance_ratio=float(r.get("min_relevance_ratio", 0.25)))
+                                  min_relevance_ratio=float(r.get("min_relevance_ratio", 0.25)),
+                                  named=named, named_each=named_each)
         else:
             top = scored[:limit]
         lap("select")
         current_stages().mark("ranked")
         records = self.records_for(top) if top else []
         lap("records")
+        names = {code: self.countries.name_on(code, self.today) for code in named}
         return SearchResult(top, records, no_records, len(cands), semantic, where,
-                            evidence_summary(records, group_by), timings)
+                            evidence_summary(records, group_by, names), timings)
 
     # Full records for display / grounding
     def records_for(self, scored: list[Scored]) -> list[dict[str, Any]]:

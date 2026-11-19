@@ -9,6 +9,10 @@ deterministic:
 3. take the best remaining record from each group in turn (groups ordered by their best score), then fill any
    remaining places by score.
 
+Before the groups take turns, a State the question names (``named``) that has spoken on the subject is given its
+best records, ``named_each`` of them, if they clear the same relevance floor (docs/DECISIONS.md, 21). They take
+places within the same number, so the turns that would have come last are the ones that make way.
+
 How records are grouped (``group_by``):
 
 * ``region`` (default): the country's geographic region (UN M49); group statements form their own group, and
@@ -21,6 +25,7 @@ How records are grouped (``group_by``):
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Sequence
 from typing import Any
 
 from wts_core.checks import round_robin
@@ -89,14 +94,26 @@ def evidence_group(rec: dict[str, Any], group_by: str = "region") -> str:
     return "other"
 
 
+def own_statement_of(rec: dict[str, Any]) -> str | None:
+    """The State whose own statement a record is: none for a statement on behalf of a group."""
+    if rec.get("on_behalf_of") or rec.get("group_statement"):
+        return None
+    return rec.get("country_code")
+
+
 def select_evidence(scored: list[Scored], k: int, *, group_by: str = "region", max_per_speaker: int = 2,
-                    max_per_country: int = 2, min_relevance_ratio: float = 0.25) -> list[Scored]:
+                    max_per_country: int = 2, min_relevance_ratio: float = 0.25, named: Sequence[str] = (),
+                    named_each: int = 1) -> list[Scored]:
     """The balanced set: the turn-taking between groups is the Where They Stand sites' shared one (wts-core,
-    ``wts_core.checks.round_robin``); the relevance floor, the grouping and the two caps are this site's."""
+    ``wts_core.checks.round_robin``, whose ``seeds`` are taken first); the relevance floor, the grouping, the two
+    caps and the States named in the question are this site's."""
     if not scored:
         return []
     best_rel = max(s.relevance for s in scored)
     pool = [s for s in scored if s.relevance >= best_rel * min_relevance_ratio]  # already in score order
+    seeds: list[Scored] = []
+    for code in named:
+        seeds += [s for s in pool if own_statement_of(s.candidate.data) == code][:named_each]
 
     def who(s: Scored) -> str:
         d = s.candidate.data
@@ -108,11 +125,14 @@ def select_evidence(scored: list[Scored], k: int, *, group_by: str = "region", m
 
     return round_robin(pool, k, group_of=lambda s: evidence_group(s.candidate.data, group_by),
                        key_of=lambda s: s.candidate.record_id, score_of=lambda s: s.score,
-                       caps=[(who, max_per_speaker), (country, max_per_country)])
+                       caps=[(who, max_per_speaker), (country, max_per_country)], seeds=seeds[:k])
 
 
-def evidence_summary(records: list[dict[str, Any]], group_by: str = "region") -> dict[str, Any]:
-    """Deterministic description of the evidence base (shown to the reader, not model-written)."""
+def evidence_summary(records: list[dict[str, Any]], group_by: str = "region",
+                     named: dict[str, str] | None = None) -> dict[str, Any]:
+    """Deterministic description of the evidence base (shown to the reader, not model-written). ``named``: the
+    States the question names, code to name, each listed with how many of its own statements are in the
+    evidence (none: it has said nothing on the subject that the search found relevant)."""
     groups: Counter[str] = Counter()
     bodies: Counter[str] = Counter()
     countries: set[str] = set()
@@ -137,4 +157,7 @@ def evidence_summary(records: list[dict[str, Any]], group_by: str = "region") ->
         "bodies": dict(bodies.most_common()),
         "translated": translated,   # speeches given in another language: the English text is the UN's translation
         "ocr": ocr,                 # speeches from scanned records, which may contain recognition errors
+        **({"named": [{"code": code, "name": name,
+                       "records": sum(1 for r in records if own_statement_of(r) == code)}
+                      for code, name in named.items()]} if named else {}),
     }
