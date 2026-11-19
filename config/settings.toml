@@ -101,7 +101,7 @@ theme_similarity = 0.8
 # The site is public; each new model-written briefing costs money (docs/DECISIONS.md, 9). When a cap is reached the
 # sources are still shown, which costs nothing.
 daily_spend_cap_usd = 25.0
-monthly_spend_cap_usd = 50.0
+monthly_spend_cap_usd = 100.0
 per_visitor_daily_questions = 8    # new briefings; anonymous visitors, keyed by a daily-salted hash of their IP address
 requests_per_minute = 20           # questions and searches per visitor
 answer_cache_hours = 168           # identical questions are not re-run until the data changes (or a week)

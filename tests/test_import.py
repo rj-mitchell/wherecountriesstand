@@ -183,11 +183,12 @@ def run(*args):
 
 
 def cap_then(report: dict) -> dict:
-    """The summary with today's cap as it was when the golden was recorded: the owner raised the daily cap from $3 to
-    $25 on 19 November 2026 (test_parity.CHANGED). Only that figure is put back; everything else is compared as is."""
-    today = dict(report["today"])
-    assert today["cap_usd"] == 25.0
-    return {**report, "today": {**today, "cap_usd": 3.0}}
+    """The summary with the caps as they were when the golden was recorded: the owner raised the daily cap from $3 to
+    $25, and the monthly cap from $50 to $100, on 19 November 2026 (test_parity.CHANGED). Only those figures are put
+    back; everything else is compared as is."""
+    today, month = dict(report["today"]), dict(report["month"])
+    assert (today["cap_usd"], month["cap_usd"]) == (25.0, 100.0)
+    return {**report, "today": {**today, "cap_usd": 3.0}, "month": {**month, "cap_usd": 50.0}}
 
 def test_spending_today_and_this_month_and_each_visitors_count_are_what_they_were(site):
     from wcs.spending import summary, warnings
@@ -215,11 +216,13 @@ def test_spending_today_and_this_month_and_each_visitors_count_are_what_they_wer
     said = shared.plain(run("usage"), tmp=site.settings.data_dir.parent)
     assert said == [GOLDEN["usage_command"][0], GOLDEN["usage_command"][1].replace(
         "\nLast 7 days:\n", "\nToday and the 6 days before:\n").replace(
-        "Today (UTC): $0.06 of $3.00 (2%)", "Today (UTC): $0.06 of $25.00 (0%)")]  # the daily cap, $25 since 19 November
+        "Today (UTC): $0.06 of $3.00 (2%)", "Today (UTC): $0.06 of $25.00 (0%)").replace(
+        "This month: $0.49 of $50.00 (1%)", "This month: $0.49 of $100.00 (0%)")]  # the caps, $25 and $100 since 19 November
     assert "Last 7 days" in GOLDEN["usage_command"][1]
     code, printed = shared.plain(run("usage", "--json"), tmp=site.settings.data_dir.parent)
-    assert '"cap_usd": 25.0' in printed  # the daily cap, $25 since 19 November 2026; only that figure differs
-    assert [code, printed.replace('"cap_usd": 25.0', '"cap_usd": 3.0', 1)] == GOLDEN["usage_command_json"]
+    assert '"cap_usd": 25.0' in printed and '"cap_usd": 100.0' in printed  # the caps since 19 November 2026
+    printed = printed.replace('"cap_usd": 25.0', '"cap_usd": 3.0', 1).replace('"cap_usd": 100.0', '"cap_usd": 50.0', 1)
+    assert [code, printed] == GOLDEN["usage_command_json"]
     # the day's visitor secret came across, so a visitor's code today is what it was this morning
     assert site.app.state.db.get(f"visitor_salt:{shared.DAY}") == GOLDEN["salt"]
 
