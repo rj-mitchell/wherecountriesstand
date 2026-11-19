@@ -82,7 +82,13 @@ function summary(evidence, sources) {
   const parts = [`${evidence.records} statements from ${evidence.countries} countries and groups at ${evidence.meetings} meetings`];
   if (evidence.date_from) parts.push(`, ${fmtDate(evidence.date_from)} to ${fmtDate(evidence.date_to)}`);
   if (evidence.votes) parts.push(`, and ${evidence.votes} recorded vote${evidence.votes > 1 ? "s" : ""}`);
-  parts.push(". The site counts these from the record itself.");
+  parts.push(".");
+  // countries the question names are always included when they have spoken on the subject
+  const named = (evidence.named || []).map(n => n.records
+    ? `${n.name} (${n.records} statement${n.records > 1 ? "s" : ""})`
+    : `${n.name} (no relevant statement found)`);
+  if (named.length) parts.push(` Named in the question: ${named.join(", ")}.`);
+  parts.push(" The site counts these from the record itself.");
   p.replaceChildren(...parts);
   p.hidden = false;
 }

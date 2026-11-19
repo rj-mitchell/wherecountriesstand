@@ -42,8 +42,9 @@ class AskRequest:
     history: list[dict[str, str]] = field(default_factory=list)
 
 
-def plan_note(plan: QueryPlan, engine: Engine) -> str:
-    """The filters, in words, for the model (so it knows what the evidence was limited to)."""
+def plan_note(plan: QueryPlan, engine: Engine, evidence: dict[str, Any] | None = None) -> str:
+    """The filters, in words, for the model (so it knows what the evidence was limited to), and the States the
+    question names that the search found no relevant statement by (docs/DECISIONS.md, 21)."""
     f = plan.filters
     c = engine.countries
     bits = []
@@ -57,6 +58,9 @@ def plan_note(plan: QueryPlan, engine: Engine) -> str:
     if f.date_from or f.date_to:
         bits.append("dates: " + (f.date_from.isoformat() if f.date_from else "the start") + " to " +
                     (f.date_to.isoformat() if f.date_to else "today"))
+    unheard = [n["name"] for n in (evidence or {}).get("named", []) if not n["records"]]
+    if unheard:
+        bits.append("no relevant statement found by " + ", ".join(unheard))
     return "; ".join(bits)
 
 
@@ -123,7 +127,7 @@ class Pipeline:
         limit = int(self.settings.answer.get(
             "comprehensive_sources" if req.mode == "comprehensive" else "summary_sources", 24))
         result = self.engine.search(plan.search_text, plan.filters, req.recency, req.role_weight, limit,
-                                    diversify=True, group_by=plan.group_by)
+                                    diversify=True, group_by=plan.group_by, named=plan.named_countries)
         votes = []
         if not plan.filters.sources or "gd" in plan.filters.sources:
             # resolution titles are matched on the question's own subject words first: the model's search words add
@@ -160,7 +164,8 @@ class Pipeline:
         if not self.has_model():
             yield {"type": "final", "answer": None, "usage": None, "note": NO_MODEL}
             return
-        request = briefing_request(self.settings, plan.question, sources, req.mode, plan_note(plan, self.engine),
+        request = briefing_request(self.settings, plan.question, sources, req.mode,
+                                   plan_note(plan, self.engine, result.evidence),
                                    req.history, self.today or date.today(), plan.group_by)
         done: Completed | None = None
         stream = self.client.stream(request)

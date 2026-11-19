@@ -166,3 +166,26 @@ not bear it out when checked, so the citation was removed: check the record befo
 "Method" section says the same. A reader should be able to see every point that needs checking. The accessibility
 check (`scripts/a11y.mjs`) opens a made-up briefing with each kind of point to check, light and dark, and fails if
 one is not marked.
+
+## 21. Countries named in a question are heard
+
+On 19 November 2026 the owner decided that a briefing includes the countries its question names, if they have spoken
+on the subject. An audit found briefings on contested subjects that left out the very countries the question was
+about: a question about Western countries shielding Israel drew 24 sources and none from Israel, and a question
+about Russia and Ukraine had no statement by the Russian Federation. Evidence followed the question's wording and
+was balanced only across groups, so a country whose statements were worded differently could go unheard.
+
+- A country counts as named when the question names a State the site's country names resolve ("Russia's" is read
+  as "Russia"), or writes "US", "UK" or "America" (not "Latin America"). A group ("the EU", "NATO", "Western
+  countries") is not a State and is not expanded into its members. At most six are taken, in the order the question
+  names them.
+- Each is searched for on its own, with the same search words, dates, bodies and groups as the question. Its
+  statements must clear the same tests as any other source: found by words, or close enough in meaning, and at
+  least a quarter as relevant as the best source found (`min_relevance_ratio`).
+- Its best statements are taken first, within the same number of sources: two each, as for any country, while the
+  named countries together hold no more than a quarter of the places, and one each otherwise. The other places are
+  filled by turns across groups as before, so the turns that would have come last make way. A statement made on
+  behalf of a group is not the country's own.
+- A country that has said nothing relevant is not brought in. The summary of the evidence lists each named country
+  with the number of its statements, or says no relevant statement by it was found, and the model is told the same.
+- A question that asks what particular countries said (they are filters) is unchanged: only they are searched.

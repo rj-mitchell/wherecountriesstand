@@ -271,3 +271,40 @@ def test_a_briefing_written_under_todays_rules_is_not_judged_again():
     answer = as_saved(["Several delegations criticised the draft. France's representative said on 4 May that "])
     stamped = {**answer, "rules": VERIFIER.rules_version}
     assert VERIFIER.recheck(stamped, curled=True) is stamped
+
+
+def test_the_states_a_question_names_are_found_and_groups_are_not_expanded():
+    """docs/DECISIONS.md, 21: the States named, as speakers or as the subject, are heard if they have spoken on it;
+    a group is not a State and is not expanded into its members."""
+    from wcs.rag.query_parse import countries_named
+
+    c = countries()
+    q = "Why do Western countries keep shielding Israel from accountability for its genocide in Gaza?"
+    assert countries_named(q, c) == ["ISR"]
+    assert countries_named("How have countries responded to Russia's invasion of Ukraine?", c) == ["RUS", "UKR"]
+    assert countries_named("What has the US said about the UK and America?", c) == ["USA", "GBR"]
+    assert countries_named("What have Latin America and the Americas said to us about Cuba?", c) == ["CUB"]
+    for q in ("What has the EU said about NATO enlargement?", "What have the permanent members said about Gaza?",
+              "How do African States see the Group of 77?"):
+        assert countries_named(q, c) == [], q
+    many = "What has been said about Haiti, Mali, Chad, Niger, Sudan, Iran, Iraq and Yemen?"
+    assert countries_named(many, c) == ["HTI", "MLI", "TCD", "NER", "SDN", "IRN"]   # six at most
+    # a plan made from the question carries them, unless the question limits who spoke
+    p = parse_offline("What has been said about Russia's invasion of Ukraine?", c, TODAY)
+    assert p.filters.countries == [] and p.named_countries == ["RUS", "UKR"]
+    assert QueryPlan.from_dict({"question": p.question, **p.to_dict()}).named_countries == ["RUS", "UKR"]
+    assert parse_offline("What did France say about Haiti?", c, TODAY).named_countries == []
+    assert "named_countries" not in parse_offline("What has been said about peacekeeping?", c, TODAY).to_dict()
+
+
+def test_the_model_is_told_which_named_states_have_no_relevant_statement():
+    import types
+
+    from wcs.rag.pipeline import plan_note
+
+    p = parse_offline("What has been said about Russia's invasion of Ukraine?", countries(), TODAY)
+    engine = types.SimpleNamespace(countries=countries())
+    evidence = {"named": [{"code": "RUS", "name": "Russian Federation", "records": 2},
+                          {"code": "UKR", "name": "Ukraine", "records": 0}]}
+    assert plan_note(p, engine, evidence).endswith("; no relevant statement found by Ukraine")
+    assert "no relevant statement" not in plan_note(p, engine, {"named": evidence["named"][:1]})
