@@ -134,9 +134,15 @@ def test_a_run_with_each_briefing_written_and_the_checks_run_again_over_it(index
 
 def test_the_checks_give_the_old_codes_reports_on_replay():
     """The harness's replay over a dozen briefings as the model writes them, each with the report the site's own
-    checks gave before the move (tests/golden/checks.json): no difference, and so nothing weaker. This is the
+    checks gave before the move (tests/golden/checks.json). Since wts-core 0.3.2 (version 2 of the checking
+    rules) the short uncited claims listed in test_parity's ``RULES_2_CLAIMS`` are marked as unsupported: those
+    passages, and the two counts that follow from them, are the only differences, each one stricter, and so
+    nothing weaker. With them made in the recorded reports there is no difference at all. This is the
     before-and-after of the checks that needs no model; one on the server's whole record needs `wcs eval run`."""
+    import dataclasses
+
     import shared
+    from test_parity import RULES_2_CLAIMS, as_under_rules_2
     from wts_core.eval import Fixture, assert_never_weaker, replay
     from wts_core.events import Block, Citation
     from wts_core.ports import Document
@@ -152,8 +158,17 @@ def test_the_checks_give_the_old_codes_reports_on_replay():
                                                             for x in b.get("citations", []))) for b in c["blocks"]),
                         report=before[c["name"]]) for c in shared.CHECK_CASES]
     differences = replay(fixtures, VERIFIER, LOADED_WORDS, curled=True)
-    assert len(fixtures) == 12 and differences == []
+    assert len(fixtures) == 12
+    assert {(d.fixture, d.check, d.sentence, d.before, d.after) for d in differences if d.check == "status"} == {
+        (name, "status", claim.strip(), "connective", "unsupported")
+        for name, claims in RULES_2_CLAIMS.items() for claim in claims}
+    assert {(d.fixture, d.check) for d in differences if d.check != "status"} == {
+        (name, check) for name in RULES_2_CLAIMS for check in ("unsupported_segments", "grounded_ratio")}
+    assert all(d.kind == "stricter" for d in differences)
     assert_never_weaker(differences)
+    # the recorded reports with the stricter rules' differences made: the same reports, whole
+    rescored = [dataclasses.replace(f, report=as_under_rules_2(f.name, f.report)) for f in fixtures]
+    assert replay(rescored, VERIFIER, LOADED_WORDS, curled=True) == []
 
 
 def test_the_eval_commands_are_there():
