@@ -1915,7 +1915,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.8" },
     { name = "typer", specifier = ">=0.12" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
-    { name = "wts-core", extras = ["cli", "offsite", "duckdb", "ai"], url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.3.1/wts_core-0.3.1-py3-none-any.whl" },
+    { name = "wts-core", extras = ["cli", "offsite", "duckdb", "ai"], url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.3.2/wts_core-0.3.2-py3-none-any.whl" },
 ]
 provides-extras = ["embed"]
 
@@ -2072,10 +2072,10 @@ wheels = [
 
 [[package]]
 name = "wts-core"
-version = "0.3.1"
-source = { url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.3.1/wts_core-0.3.1-py3-none-any.whl" }
+version = "0.3.2"
+source = { url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.3.2/wts_core-0.3.2-py3-none-any.whl" }
 wheels = [
-    { url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.3.1/wts_core-0.3.1-py3-none-any.whl", hash = "sha256:c36eb3c4fc1a049a9682401b8815941d9373deccf886feb5e40d46e4027dbf23" },
+    { url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.3.2/wts_core-0.3.2-py3-none-any.whl", hash = "sha256:26cb6aa738dbf6a7e054a508ca499f8d8b4a9e53785124d16628071cf52ebe67" },
 ]
 
 [package.optional-dependencies]
