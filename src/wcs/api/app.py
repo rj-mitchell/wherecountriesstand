@@ -23,7 +23,10 @@ Endpoints:
 * ``GET /api/countries``, ``GET /api/groups``: for the filters.
 * ``GET /api/health``.
 * ``GET /robots.txt``, ``GET /sitemap.xml``, and the pages, with the site's address filled in for link previews
-  (``[site] url``, or ``WCS_SITE_URL``, or ``https://`` and ``DOMAIN``). The pages share one header and footer:
+  (``[site] url``, or ``WCS_SITE_URL``, or ``https://`` and ``DOMAIN``). A page's address is ``/<name>.html`` (the
+  home page's, ``/``), as its canonical link says; ``/<name>``, ``/<name>/`` and ``/<name>.html/`` are sent there
+  for good (301), as is ``/index.html`` to ``/``. The sitemap gives the day each page last changed, from
+  ``WCS_PAGE_DATES`` (``page_dates``), and no day for a page it has none for. The pages share one header and footer:
   ``<!--#include header-->`` is replaced by ``web/partials/header.html``, and ``<!--#include family/shelf-->`` by the
   Where They Stand family kit's ``web/site/family/shelf.html`` (see ``render_page``).
 
@@ -57,6 +60,7 @@ from fastapi.responses import (
     HTMLResponse,
     JSONResponse,
     PlainTextResponse,
+    RedirectResponse,
     Response,
     StreamingResponse,
 )
@@ -114,6 +118,7 @@ FORGET_IDLE_VISITORS_OVER = 50_000
 # are served.
 SITE_MARK = "__SITE__"
 PAGE_NAME = re.compile(r"[a-z0-9-]{1,40}")
+PAGE_DATE = re.compile(r"([a-z0-9-]{1,40}):(\d{4}-\d{2}-\d{2})")
 
 
 class Turn(BaseModel):
@@ -221,6 +226,14 @@ def render_page(path: Path, site: Path, partials: Path, versions: dict[str, str]
     return versioned(mark_current(expand_includes(path.read_text(encoding="utf-8"), site, partials), here), versions)
 
 
+def page_dates(spec: str | None) -> dict[str, str]:
+    """The day each page last changed, by name, from ``WCS_PAGE_DATES`` ("about:2026-11-19 index:2026-11-18 ..."):
+    the date of the last commit to change ``web/site/<name>.html``, which deploy/update.sh reads from git and builds
+    into the image. It is for the sitemap's lastmod; without it (a build that wasn't given the dates) the sitemap
+    gives none, rather than a date that isn't true."""
+    return dict(PAGE_DATE.findall(spec or ""))
+
+
 class SiteFiles(StaticFiles):
     """The site's files, with how long each may be kept (see FOREVER)."""
 
@@ -242,6 +255,10 @@ class SiteFiles(StaticFiles):
 
     async def get_response(self, path: str, scope):
         if FAMILY_PRIVATE.fullmatch(path):
+            raise HTTPException(404, "Not found")
+        if scope["path"].endswith("/"):
+            # a file's address with a slash after it (/app.js/) is not an address of the site's; a page's is sent
+            # to the page (page_moved), and the files are served at their own addresses only
             raise HTTPException(404, "Not found")
         response = await super().get_response(path, scope)
         if response.status_code == 404:  # Starlette's own 404.html: shown by the app instead, as for every page
@@ -715,6 +732,8 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def pages() -> list[str]:
         return sorted(name for name in rendered if name != "404")
 
+    dates = page_dates(os.environ.get("WCS_PAGE_DATES"))
+
     @app.get("/robots.txt", include_in_schema=False)
     def robots(request: Request):
         # /api/ is closed to crawlers: a crawler that runs the page's script would otherwise ask for briefings
@@ -724,7 +743,11 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     @app.get("/sitemap.xml", include_in_schema=False)
     def sitemap(request: Request):
         base = site_url(settings, request)
-        urls = "".join(f"  <url><loc>{base}/{'' if name == 'index' else name + '.html'}</loc></url>\n"
+
+        def lastmod(name: str) -> str:
+            return f"<lastmod>{dates[name]}</lastmod>" if name in dates else ""
+
+        urls = "".join(f"  <url><loc>{base}/{'' if name == 'index' else name + '.html'}</loc>{lastmod(name)}</url>\n"
                        for name in pages())
         return Response('<?xml version="1.0" encoding="UTF-8"?>\n'
                         f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}</urlset>\n',
@@ -742,6 +765,17 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     @app.get("/", include_in_schema=False)
     def home(request: Request):
         return page(request, "index")
+
+    def page_moved(request: Request) -> RedirectResponse:
+        """A page asked for at another form of its address: sent, for good, to the one its canonical link gives,
+        with the query kept. The address sent is a path, so the browser keeps the scheme and host it asked with."""
+        name = request.url.path.strip("/").removesuffix(".html")
+        query = f"?{request.url.query}" if request.url.query else ""
+        return RedirectResponse(("/" if name == "index" else f"/{name}.html") + query, status_code=301)
+
+    for name in pages():
+        for other in (f"/{name}", f"/{name}/", f"/{name}.html/", *(("/index.html",) if name == "index" else ())):
+            app.add_api_route(other, page_moved, methods=["GET", "HEAD"], include_in_schema=False)
 
     @app.get("/{name}.html", include_in_schema=False)
     def named_page(request: Request, name: str):

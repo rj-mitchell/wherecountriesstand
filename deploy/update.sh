@@ -54,7 +54,12 @@ trap release EXIT
 echo "==> Rebuilding the site"
 mkdir -p backups
 docker network create sites >/dev/null 2>&1 || true  # shared with the charity's other sites on this server
-docker compose build
+# the day each page last changed, from git, for the sitemap's lastmod (the image has no history of its own)
+page_dates=""
+for page in "$DIR"/web/site/*.html; do
+  page_dates+="$(basename "$page" .html):$(git -C "$DIR" log -1 --format=%cs -- "web/site/$(basename "$page")") "
+done
+docker compose build --build-arg PAGE_DATES="$page_dates"
 # The site runs as user 10001: hand over anything in its data or backups owned by someone else
 if docker compose run --rm --no-deps -T --user root --entrypoint sh app -c \
      'find /data /backups ! -user 10001 -print -quit | grep -q .'; then

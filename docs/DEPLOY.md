@@ -195,6 +195,12 @@ logged: `wcs serve` turns the access log off, and the front door keeps none.
 `WCS_SITE_URL`, or `[site] url` in `config/settings.toml`). Crawlers are kept out of `/api/`, so one that runs the
 page's script cannot ask for briefings.
 
+Each page's address is the one its canonical link gives: `/about.html`, and `/` for the home page. `/about`,
+`/about/`, `/about.html/` and `/index.html` are sent there with a 301, as a path (so the browser keeps the https it
+asked with). The sitemap gives the day each page last changed (`<lastmod>`): `update.sh` reads the date of the last
+commit to each `web/site/<page>.html` from git and builds it into the image (`WCS_PAGE_DATES`). An image built
+without it, as CI's and `compose.yaml`'s are, gives no dates rather than wrong ones.
+
 ### Caching
 
 Pages are sent with `Cache-Control: no-cache`, so browsers and Cloudflare check them on every visit. Each page's

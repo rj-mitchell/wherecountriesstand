@@ -766,6 +766,12 @@ def test_reports_statements_and_the_owners_commands_answer_as_they_did(tmp_path,
                 # a page's title is "Page | Site name" in the family's words (GLOSSARY, "Page titles"), where its
                 # separator was a middle dot
                 was = {**was, "title": was["title"].replace(" · Where Countries Stand", " | Where Countries Stand")}
+            if was.get("title") == "<title>Where Countries Stand</title>":
+                # the home page's title says what the site is, in its own words, where it was the name alone
+                # (19 November 2026); its link preview's title is still the name
+                assert step["title"] == ("<title>Where Countries Stand: what countries have said and how they have "
+                                         "voted at the UN</title>")
+                was = {**was, "title": step["title"]}
             if "og_title" in step and "Briefing from UN records" in step.get("title", ""):
                 # a saved briefing's title and link preview are the site's words and the day it was written, where
                 # they were the reader's question (decision 7)

@@ -31,6 +31,9 @@ COPY data_static ./data_static
 COPY eval ./eval
 COPY web/site ./web/site
 COPY web/partials ./web/partials
+# The day each page last changed, from git, for the sitemap (deploy/update.sh passes it; without it, none is given)
+ARG PAGE_DATES=""
+ENV WCS_PAGE_DATES=$PAGE_DATES
 ENV WCS_DATA_DIR=/data \
     PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1
