@@ -221,12 +221,13 @@ def test_the_privacy_page_says_what_the_site_now_keeps():
     assert ("which is kept with the time and cost of each briefing you ask for until the end of that day (UTC). "
             "After that day the code and the time of day are removed: only the day, the cost and how much text was "
             "sent and written are kept, with nothing that says who asked.") in said
-    assert ("The backup made each night, at 4.20am UTC, also holds the visitor codes and times of the briefings "
-            "asked since midnight, and the day's secret those codes were made with (see below), until it is "
-            "deleted.") in said
-    assert ("Visitor codes, and the time of day of each briefing's cost, are removed after the day they are made, "
-            "except from the night's backup, which keeps those of the hours after midnight until it is deleted."
-            ) in said
+    # wts-core 0.3.2: a backup holds no visitor code and no secret at all
+    # (test_a_backup_holds_no_visitor_code_or_secret_on_its_own_day_or_after)
+    assert ("The backup made each night, at 4.20am UTC, also holds the times of the briefings asked since midnight, "
+            "until it is deleted, but no visitor codes and not the secret they are made with (see below).") in said
+    assert ("Visitor codes, and the time of day of each briefing's cost, are removed after the day they are made. "
+            "Backups hold no visitor codes; the night's backup keeps the times of the hours after midnight until it "
+            "is deleted.") in said
     timer = (SITE_DIR.parents[1] / "deploy" / "wcs-backup.timer").read_text(encoding="utf-8")
     assert "OnCalendar=*-*-* 04:20:00 UTC" in timer
 

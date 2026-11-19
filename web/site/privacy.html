@@ -51,8 +51,8 @@
         withdrawn, declined or removed.</p>
       <h3>Backups</h3>
       <p>Backups of the site’s database are kept for up to two months, so a deleted address can remain in a backup
-        until then. The backup made each night, at 4.20am UTC, also holds the visitor codes and times of the briefings
-        asked since midnight, and the day’s secret those codes were made with (see below), until it is deleted.</p>
+        until then. The backup made each night, at 4.20am UTC, also holds the times of the briefings asked since
+        midnight, until it is deleted, but no visitor codes and not the secret they are made with (see below).</p>
       <h3>A daily visitor code in place of your IP address</h3>
       <p>To apply the daily limit on new briefings and prevent abuse, your IP address is turned into a scrambled
         code, which is kept with the time and cost of each briefing you ask for until the end of that day (UTC).
@@ -94,8 +94,8 @@
         unless withdrawn. Report contact details are deleted when the report is closed. The email address given
         with a statement is kept while it is waiting or shown, and deleted three months after it is withdrawn or
         declined. Notes of failed briefings are deleted after 90 days. Visitor codes, and the time of day of each briefing’s
-        cost, are removed after the day they are made, except from the night’s backup, which keeps those of the
-        hours after midnight until it is deleted. Server error logs are kept briefly, and requests are not logged.</p>
+        cost, are removed after the day they are made. Backups hold no visitor codes; the night’s backup keeps the
+        times of the hours after midnight until it is deleted. Server error logs are kept briefly, and requests are not logged.</p>
 
       <h2>Your rights</h2>
       <p>Under UK data protection law you can ask for a copy of information held about you, and ask for it to be

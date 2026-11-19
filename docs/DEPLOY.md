@@ -177,8 +177,8 @@ out of the way (`docker compose run --rm app mv /data/state.db.before-restore /d
 restore again. For a copy from B2, download it into `/opt/wherecountriesstand/deploy/backups` first and give it to
 the site's user (`chown 10001:10001 <file>`).
 
-A backup holds visitor codes and times of day for its own day only: like the housekeeping, it first removes those
-of earlier days. Run on new code before the site has started on it, a backup is still made, but it says on standard
+A backup holds no visitor codes and no visitor secret (wts-core 0.3.2), and times of day for its own day only: like
+the housekeeping, it first removes those of earlier days. Run on new code before the site has started on it, a backup is still made, but it says on standard
 error what the copy holds and ends with status 1. `update.sh` starts the site before it releases the timers, so this
 cannot happen at a deploy; do not run `wcs backup` by hand between a build and the restart.
 
