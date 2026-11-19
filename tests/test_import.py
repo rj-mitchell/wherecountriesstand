@@ -181,6 +181,14 @@ def run(*args):
     return [result.exit_code, result.output]
 
 
+
+def cap_then(report: dict) -> dict:
+    """The summary with today's cap as it was when the golden was recorded: the owner raised the daily cap from $3 to
+    $25 on 19 November 2026 (test_parity.CHANGED). Only that figure is put back; everything else is compared as is."""
+    today = dict(report["today"])
+    assert today["cap_usd"] == 25.0
+    return {**report, "today": {**today, "cap_usd": 3.0}}
+
 def test_spending_today_and_this_month_and_each_visitors_count_are_what_they_were(site):
     from wcs.spending import summary, warnings
 
@@ -198,7 +206,7 @@ def test_spending_today_and_this_month_and_each_visitors_count_are_what_they_wer
         assert (refusal.message if refusal else None) == said, visitor
     # `wcs usage`: the same report, the same warnings, the same lines printed
     report = summary(site.settings, site.app.state.db, site.clock)
-    assert report == GOLDEN["summary"] and warnings(report) == GOLDEN["warnings"]
+    assert cap_then(report) == GOLDEN["summary"] and warnings(report) == GOLDEN["warnings"]
     # One line is the owner's to notice, and is not what the old code printed: the heading of the days listed.
     # wts-core 0.3.0, where a spending row says who it was for and what time of day it was made for its own day
     # only, keeps a day gone by with no time of day, so "the last 7 days" from this time a week ago would
@@ -206,9 +214,12 @@ def test_spending_today_and_this_month_and_each_visitors_count_are_what_they_wer
     # says so. Every figure, day and line under it is the old code's.
     said = shared.plain(run("usage"), tmp=site.settings.data_dir.parent)
     assert said == [GOLDEN["usage_command"][0], GOLDEN["usage_command"][1].replace(
-        "\nLast 7 days:\n", "\nToday and the 6 days before:\n")]
+        "\nLast 7 days:\n", "\nToday and the 6 days before:\n").replace(
+        "Today (UTC): $0.06 of $3.00 (2%)", "Today (UTC): $0.06 of $25.00 (0%)")]  # the daily cap, $25 since 19 November
     assert "Last 7 days" in GOLDEN["usage_command"][1]
-    assert shared.plain(run("usage", "--json"), tmp=site.settings.data_dir.parent) == GOLDEN["usage_command_json"]
+    code, printed = shared.plain(run("usage", "--json"), tmp=site.settings.data_dir.parent)
+    assert '"cap_usd": 25.0' in printed  # the daily cap, $25 since 19 November 2026; only that figure differs
+    assert [code, printed.replace('"cap_usd": 25.0', '"cap_usd": 3.0', 1)] == GOLDEN["usage_command_json"]
     # the day's visitor secret came across, so a visitor's code today is what it was this morning
     assert site.app.state.db.get(f"visitor_salt:{shared.DAY}") == GOLDEN["salt"]
 
@@ -873,6 +884,7 @@ def test_a_backup_from_before_statements_were_kept_restores_starts_and_shows_wha
     api = TestClient(create_app(settings, pipeline=shared.ScriptedPipeline(clock.advance, "m", countries()),
                                 state=db, clock=clock))
     report = summary(settings, db, clock)
+    report = cap_then(report)
     assert (report["today"], report["month"]) == (GOLDEN["summary"]["today"], GOLDEN["summary"]["month"])
     assert api.get("/api/briefings/Briefing01").json()["question"] == shared.Q
     assert api.get("/api/briefings/Withdrawn1").status_code == 410

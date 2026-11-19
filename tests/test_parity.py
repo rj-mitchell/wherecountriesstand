@@ -40,7 +40,7 @@ ADDED = {
 # briefings a day for each visitor, each briefing in progress counted at the dearest briefings' cost, and medium
 # effort, not low, for the question reader (a reading costs a fiftieth of a penny).
 CHANGED = {("usage", "per_visitor_daily_questions"): (40, 8), ("usage", "briefing_estimate_usd"): (0.1, 0.25),
-           ("answer", "query_parse_effort"): ("low", "medium")}
+           ("answer", "query_parse_effort"): ("low", "medium"), ("usage", "daily_spend_cap_usd"): (3.0, 25.0)}
 
 BRIEFING_MODEL = "claude-sonnet-5-5"
 

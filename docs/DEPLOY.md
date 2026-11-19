@@ -106,7 +106,8 @@ turned off, with a warning in the next update's report, until `wcs index --re-em
 
 ### Spending
 
-Spending caps are in `config/settings.toml`, under `[usage]`: $3 a day and $50 a month to start, 8 new briefings
+Spending caps are in `config/settings.toml`, under `[usage]`: $25 a day (raised from $3 by the owner on 19 November
+2026) and $50 a month, 8 new briefings
 per visitor per day and 20 requests a minute. At most 8 briefings are written at once (2 per visitor), and each
 counts against the caps at an estimated $0.25 until its real cost is known, so many questions arriving together
 cannot overshoot a cap. Every briefing's cost is recorded in `/data/state.db` (table `wts_spending`), and
