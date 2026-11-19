@@ -60,7 +60,7 @@ the UN's terms for its documents are non-commercial.
 ## 9. Hosting and budget
 
 The site runs on the charity's shared server, beside Where MPs Stand, which had room for it. Its AI spending has caps
-of its own: $3 a day and $50 a month to start, and $25 a day from 19 November 2026, the owner's decision
+of its own: $3 a day and $50 a month to start, and $25 a day and $100 a month from 19 November 2026, the owner's decision
 ([DEPLOY.md](DEPLOY.md#spending)).
 
 ## 10. Testing
