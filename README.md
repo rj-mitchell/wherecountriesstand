@@ -82,6 +82,7 @@ uv run pytest                                         # offline: the model is fa
 - [docs/DATA.md](docs/DATA.md): data sources, coverage and licences
 - [docs/DECISIONS.md](docs/DECISIONS.md): the product decisions and their reasons
 - [docs/DEPLOY.md](docs/DEPLOY.md) and [docs/OPERATIONS.md](docs/OPERATIONS.md): running the live site
+- [docs/EVALUATION.md](docs/EVALUATION.md): the test set's runs, and the baseline later runs are compared against
 
 ## Data sources and licences
 

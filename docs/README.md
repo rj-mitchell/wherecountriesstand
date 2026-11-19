@@ -7,6 +7,7 @@ An index of Where Countries Stand's documents, with what each covers and who it 
 |---|---|---|
 | [DECISIONS.md](DECISIONS.md) | The product decisions and their reasons, numbered so that code can refer to them | Everyone |
 | [DATA.md](DATA.md) | Data sources, their coverage and licences, what was found in them, and group memberships | Developers and researchers |
+| [EVALUATION.md](EVALUATION.md) | The test set's runs with each briefing written: what they found and the baseline later runs are compared against | The maintainer |
 | [VALIDATION.md](VALIDATION.md) | How closely the parser for the UN's records matches the corpora, and a review of real briefings | Developers and researchers |
 | [DESIGN.md](DESIGN.md) | The site's look and behaviour within the Where They Stand family, and the rules on the UN's name and emblem | Anyone changing the pages |
 | [DEPLOY.md](DEPLOY.md) | Setting up the site on the shared server, deploying new code, spending caps, backups and caching | The maintainer |

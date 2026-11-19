@@ -162,8 +162,10 @@ days = 14
 
 [eval]
 # The most a run of the test questions may spend on the model, in US dollars (`wcs eval run`, which has each
-# briefing written): no run starts without a limit, and it stops cleanly once spending reaches it.
-max_cost_usd = 3.0
+# briefing written): no run starts without a limit, and it stops cleanly once spending reaches it. A full run of the
+# test set on the real archive cost about $8.40 (two runs, docs/EVALUATION.md, 19 November 2026); $10 covers it with
+# a margin. Raised from $3 by the owner on 19 November 2026.
+max_cost_usd = 10.0
 
 [eval.thresholds]
 # What a run is held to (a threshold is min_ or max_ and the name of a figure). Citations and quotations must all
