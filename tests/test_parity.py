@@ -38,10 +38,12 @@ ADDED = {
 
 # Values in config/settings.toml changed on purpose since the recording, each (as it was, as it is): fewer new
 # briefings a day for each visitor, each briefing in progress counted at the dearest briefings' cost, and medium
-# effort, not low, for the question reader (a reading costs a fiftieth of a penny).
+# effort, not low, for the question reader (a reading costs a fiftieth of a penny). And what a run of the test set
+# may spend, written in with the move at $3 (``ADDED``) and raised to $10 by the owner on 19 November 2026, after
+# the whole set on the real archive cost $8.40 in two runs (docs/EVALUATION.md).
 CHANGED = {("usage", "per_visitor_daily_questions"): (40, 8), ("usage", "briefing_estimate_usd"): (0.1, 0.25),
            ("answer", "query_parse_effort"): ("low", "medium"), ("usage", "daily_spend_cap_usd"): (3.0, 25.0),
-           ("usage", "monthly_spend_cap_usd"): (50.0, 100.0)}
+           ("usage", "monthly_spend_cap_usd"): (50.0, 100.0), ("eval", "max_cost_usd"): (3.0, 10.0)}
 
 BRIEFING_MODEL = "claude-sonnet-5-5"
 
@@ -86,7 +88,9 @@ def test_settings_resolve_as_they_did(tmp_path, monkeypatch):
     for name in before:
         assert without_the_added(now[name]["gives"]) == before[name]["gives"], name
     real = now["the real settings file"]["gives"]["raw"]
-    assert all(real[section][key] == value for (section, key), value in ADDED.items())
+    assert all(real[section][key] == CHANGED.get((section, key), (value, value))[1]
+               for (section, key), value in ADDED.items())
+    assert real["eval"]["max_cost_usd"] == 10.0  # the owner's limit for a run (CHANGED)
 
 
 # The checks on briefings

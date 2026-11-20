@@ -314,8 +314,9 @@ wcs tidy                          # the nightly housekeeping
 
 `wcs evaluate` scores, at no cost, how each question in `eval/questions.toml` is read and what evidence is found.
 `wcs eval run` also has each briefing written and checked, and reports what the checks found, the spread of
-sources, the time and the cost. It spends up to `[eval] max_cost_usd` ($3) on the model, so it is run by hand on
-the server, where the record is:
+sources, the time and the cost. It spends up to `[eval] max_cost_usd` ($10) on the model, so it is run by hand on
+the server, where the record is. What the runs found, and the first baseline to compare a run with, are in
+[EVALUATION.md](EVALUATION.md):
 
 ```bash
 cd /opt/wherecountriesstand/deploy
@@ -333,8 +334,9 @@ whole set and meets `[eval.thresholds]` is noted in `passed.jsonl` in the same f
   container, and the container is removed when the command ends. Give `--record-fixtures` and `--out` paths under
   `/data`. Runs are not in the nightly backup, which holds only the state database.
 * A run's spending is not in `wcs usage` and counts towards neither cap: its questions go straight to the
-  pipeline. The run has its own limit (`[eval] max_cost_usd`, or `--max-cost`) and prints what it spent
-  (`cost_usd` in the saved run). Add that by hand when checking the provider's bill against `wcs usage`.
+  pipeline. The run has its own limit (`[eval] max_cost_usd`, or `--max-cost`), stops cleanly when its spending
+  reaches it, and prints what it spent (`cost_usd` in the saved run). Add that by hand when checking the
+  provider's bill against `wcs usage`. The whole set cost $8.40 on 19 November 2026.
 
 ## The state database
 
