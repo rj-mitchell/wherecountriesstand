@@ -295,6 +295,25 @@ def coverage(settings: Settings) -> dict[str, Any]:
     return out
 
 
+COVERAGE_LABELS = (("gd", "General Debate"), ("sc", "Security Council debates"), ("votes", "General Assembly votes"))
+COVERAGE_LIST = re.compile(r'(<dl class="facts" id="coverage">).*?(</dl>)', re.S)
+
+
+def coverage_list(page: str, cover: dict[str, Any]) -> str:
+    """The home page with what the record covers written into it, as the page's script would write it ("1946 to
+    19 November 2026"), so that a reader without scripts, and a search engine that may not ask the API, sees the
+    dates and never an error (A1 of the charity's review plan of 21 November 2026; Where MPs Stand's decision 40).
+    The script still refreshes the list, and leaves this text in place if it can't."""
+    def span(x: dict[str, Any] | None) -> str:
+        return f"{str(x['from'])[:4]} to {long_date(str(x['to'])[:10])}" if x and x.get("from") and x.get("to") \
+            else "not loaded yet"
+    if not cover:
+        return page  # nothing read in yet, or the record can't be read: the page's own words ("from 1946")
+    rows = "".join(f"\n          <div><dt>{label}</dt><dd>{html.escape(span(cover.get(key)))}</dd></div>"
+                   for key, label in COVERAGE_LABELS)
+    return COVERAGE_LIST.sub(lambda m: f"{m.group(1)}{rows}\n        {m.group(2)}", page, count=1)
+
+
 def update_status(settings: Settings) -> dict[str, Any]:
     reports = sorted((settings.data_dir / "logs").glob("update-*.json"))
     if not reports:
@@ -536,6 +555,15 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def health():
         return {"ok": True}
 
+    def home_coverage() -> dict[str, Any]:
+        """What the record covers, for the home page: nothing, so the page keeps its own words, if the record can't
+        be read."""
+        try:
+            return dict(remembered("coverage", lambda: coverage(settings)))
+        except Exception:  # noqa: BLE001 - the page is served whatever the record's state
+            log.warning("home page: the record's coverage could not be read", exc_info=True)
+            return {}
+
     @app.get("/api/meta")
     def meta():
         return {"briefings": get_pipeline().has_model(), "coverage": remembered("coverage", lambda: coverage(settings)),
@@ -736,8 +764,10 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
 
     @app.get("/robots.txt", include_in_schema=False)
     def robots(request: Request):
-        # /api/ is closed to crawlers: a crawler that runs the page's script would otherwise ask for briefings
-        return PlainTextResponse(f"User-agent: *\nAllow: /\nDisallow: /api/\n\n"
+        # /api/ is closed to crawlers, so that a crawler that runs the page's script never asks for a briefing; the
+        # free, read-only answers the pages are drawn from are open (as Where MPs Stand's decision 40)
+        return PlainTextResponse("User-agent: *\nAllow: /\nAllow: /api/meta\nAllow: /api/countries\n"
+                                 "Allow: /api/groups\nDisallow: /api/\n\n"
                                  f"Sitemap: {site_url(settings, request)}/sitemap.xml\n")
 
     @app.get("/sitemap.xml", include_in_schema=False)
@@ -758,6 +788,8 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
             raise HTTPException(404, "Not found")
         text, base = rendered[name], site_url(settings, request)
         q = request.query_params.get("q", "") if name == "index" else ""
+        if name == "index":
+            text = coverage_list(text, home_coverage())
         if len(q.strip()) >= 3:
             return html_page(question_page(text, base, request.url.query))
         return html_page(text.replace(SITE_MARK, base))

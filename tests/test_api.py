@@ -301,6 +301,10 @@ def test_pages_robots_sitemap_and_link_previews(indexed, monkeypatch):  # noqa: 
     api, _ = make(indexed, FakeClient())
     robots = api.get("/robots.txt").text
     assert "Disallow: /api/" in robots and "Sitemap: https://countries.example/sitemap.xml" in robots
+    # the free, read-only answers the home page is drawn from are open to crawlers; briefings are not
+    for path in ("/api/meta", "/api/countries", "/api/groups"):
+        assert f"Allow: {path}\n" in robots
+    assert "Allow: /api/ask" not in robots and "Allow: /api/briefings" not in robots
     sitemap = api.get("/sitemap.xml").text
     for loc in ("https://countries.example/</loc>", "/privacy.html</loc>", "/accessibility.html</loc>",
                 "/terms.html</loc>", "/glossary.html</loc>"):
@@ -820,3 +824,28 @@ def test_the_status_page_reads_without_javascript(indexed):  # noqa: F811
     assert '<a href="/api/status">/api/status</a>' in noscript
     assert '<script src="/status.js?v=' in text and 'id="status-live"' in text
     assert "/status.html</loc>" in api.get("/sitemap.xml").text and "/press.html</loc>" in api.get("/sitemap.xml").text
+
+
+def test_the_home_page_carries_the_records_dates_without_a_script(indexed):  # noqa: F811
+    """A crawler that may not ask /api/meta sees the dates, never an error (the review plan's A1)."""
+    api, _ = make(indexed, FakeClient())
+    home = api.get("/").text
+    listed = home.split('id="coverage">', 1)[1].split("</dl>", 1)[0]
+    assert "<dt>Security Council debates</dt><dd>2023 to 1 March 2023</dd>" in listed
+    assert "<dt>General Debate</dt><dd>not loaded yet</dd>" in listed
+    assert "could not be loaded" not in home
+    # the same dates on a shared question's page
+    assert "<dt>Security Council debates</dt><dd>2023 to 1 March 2023" in api.get("/", params={"q": "climate finance"}).text
+
+
+def test_the_home_page_keeps_its_own_words_if_the_record_cannot_be_read(indexed, monkeypatch):  # noqa: F811
+    import wcs.api.app as app_module
+
+    def broken(settings):
+        raise OSError("the record is being rewritten")
+
+    monkeypatch.setattr(app_module, "coverage", broken)
+    api, _ = make(indexed, FakeClient())
+    home = api.get("/")
+    assert home.status_code == 200
+    assert "<dt>General Debate</dt><dd>from 1946</dd>" in home.text and "could not be loaded" not in home.text
