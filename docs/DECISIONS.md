@@ -168,6 +168,10 @@ not bear it out when checked, so the citation was removed: check the record befo
 check (`scripts/a11y.mjs`) opens a made-up briefing with each kind of point to check, light and dark, and fails if
 one is not marked.
 
+Changed by [decision 25](#25-checked-briefings) (21 November 2026): such a sentence is marked as one with no source
+is, with a dotted underline and words, never grey, and the note under the briefing moves into the check strip and
+"How this briefing was checked".
+
 ## 21. Countries named in a question are heard
 
 On 19 November 2026 the owner decided that a briefing includes the countries its question names, if they have spoken
@@ -243,3 +247,55 @@ that is Where MPs Stand, which takes a question as `?q=`.
   about follow the same rule, so a page offers nothing it has not answered itself.
 - `scripts/a11y.mjs` opens a saved briefing, a saved "No records found" and a saved failure in a browser, and fails
   if the link is missing, wrongly addressed, worded or without its spine, or offered where it should not be.
+
+## 25. Checked briefings
+
+On 21 November 2026 the charity's review plan (Part B, "make the checking the design") asked the three briefing sites
+to show their checking as design rather than prose, in one family design chosen from a prototype (direction B,
+"ledger"; the charity's `family/BRIEFINGS.md` and kit 2.1.0). On this site:
+
+- B1 and B3, the briefing: The check strip ("Checked against the UN record") replaces the note under the
+  briefing and the legend in `#marks`; record quotations, source chips and the record beside the briefing (a bottom
+  sheet on phones) follow the family's markup ([DESIGN.md](DESIGN.md#checked-briefings)). Text with no source is
+  always shown and marked with a dotted underline and words, never grey, as the owner decided (answer 9): grey read
+  as "secondary", and colour alone fails WCAG 1.4.1. A sentence whose citation failed is marked the same way, which
+  changes decision 20.
+- The display rule: Every answer shown passes through wts-core's `quotes_beside` on the server: a new
+  briefing's final event (after it is saved and cached as the verifier wrote it), a cached answer and a saved one.
+  It was found in saved briefing kGfKBI3cRLw, where Italy's quotation, found word for word in its source, was shown
+  grey because the model attached the citation to "in November 2025". The page also counts a quotation in a lead-in
+  as the source cited straight after it, as the verifier checks it: version 2 of the checks reads such a lead-in as
+  a join, not a claim, so in new briefings the case no longer comes as text with no source, but its quotation still
+  needs its source named. The checks and their counts are unchanged; the strip counts sentences without a source on
+  the segments as shown (wts-core's `check_counts`), and "How this briefing was checked" keeps the verifier's own.
+- Chip wording: The country or group, the body and the date in full ("Italy, Security Council, 14 November
+  2025"). A statement on behalf of a group names the group (decision 7). A General Assembly vote's chip says
+  "Recorded vote, General Assembly" and its date. A General Debate statement whose record gives only the session
+  shows the year. A chip's accessible name is its own words, "Source 1 Italy, Security Council, 14 November 2025.
+  Show the passage", and not the kit's `aria-label` ("Source 1: …"), which axe fails under WCAG 2.5.3 (label in
+  name) because the visible "1Italy, …" is not part of it. The charity's kit should take the same markup.
+- Judgemental words in the AI's own voice are underlined in the warning colour on a light tint, word by word
+  (they were dotted, a whole sentence at a time, which the mark for no source now uses), with their words for
+  screen readers; the strip says how many there are.
+- B6, the wait: The stages follow the stream's real events ([DESIGN.md](DESIGN.md#the-wait)); cards are marked
+  "Cited" when the model's citation event arrives, and the counts run up through the final event's real results.
+  The streaming text is laid out as it will be (headings, lists, bold) rather than as raw text.
+- "Sources only (no AI)" is a second button beside "Prepare briefing", an equal choice, in place of a checkbox
+  under the box ("Sources only (no written briefing)"). Addresses with `?sources=1` work as before. With no model
+  configured the first button says "Find sources" and the second is not shown.
+- B4, the home page: The grey side box gives way to the family's line and disclosure under the question box,
+  and the static proof, built from a real sentence of kGfKBI3cRLw ("Italy said it does not support expanding the
+  category of permanent members, which “would inevitably generate additional vetoes”", source 1, S/PV.10043
+  (Resumption 1), 14 November 2025): the cleanest sentence in it, fully cited, with no mark for text with no source.
+  A fixed copy of that briefing, as `/api/briefings/kGfKBI3cRLw` gave it on 21 November 2026, is kept in
+  `tests/fixtures/`, and the tests check that the proof's words are its own. The first step says "Searches only the
+  UN's records", as decision 17 has the site say "the UN's records" for "the official record".
+- B5, share cards: A saved briefing's link preview is its own card ([DESIGN.md](DESIGN.md#share-cards)), with the
+  site's neutral title, never the reader's question (decision 7). The site has no topic briefings yet; when it has,
+  each topic's card will carry the topic's own question.
+- The instructions: The model is told to attach each citation to the claim and its quotation, not to a date or
+  other words beside them (instructions version 4). Answers cached under version 3 are not served again.
+- Printing keeps the numbers ("[3]") and the sources as the printed reference list. The site has no Word export.
+
+The prototype the design was chosen from is published at https://claude.ai/artifact/MrYFRm3pmhdi7n1uhZ2pKR and kept
+in the charity's repository (`family/prototypes/checked-briefings/`).
