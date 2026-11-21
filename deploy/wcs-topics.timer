@@ -1,0 +1,11 @@
+[Unit]
+Description=Where Countries Stand: write the topic briefings afresh every Sunday
+
+[Timer]
+# UTC, Sunday at 11:23: after the morning's update (05:41, usually done within the hour, at most three) and the
+# night's backups, before the evening's update (17:41), and clear of every other site's jobs on the server
+OnCalendar=Sun *-*-* 11:23:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,24 @@
+# Write each topic briefing afresh (wcs topics refresh, decision 27): through the same pipeline and checks as a
+# reader's question, counted against the site's spending caps, stopping at one. A topic whose run fails, finds no
+# records or is stopped keeps its last good version. About 17 cents a topic, $1.70 for the ten (docs/OPERATIONS.md,
+# "Topic briefings"). Installed by deploy/update.sh with wcs-topics.timer.
+#
+# It takes no update lock: it reads the search index and the record as the site does while a question is answered,
+# and writes only to the state database, which the site and every timer share (SQLite). It writes nothing the
+# update writes.
+[Unit]
+Description=Where Countries Stand: write the topic briefings afresh
+After=docker.service
+Requires=docker.service
+# Emails the alerts address if this fails (deploy/alert@.service in Where MPs Stand's repository, rj-mitchell/wherempsstand; docs/HOSTING.md there)
+OnFailure=alert@%n.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/wherecountriesstand/deploy
+# Exits 1 when a topic could not be written, or the run stopped at a spending cap or at its own limit; what each
+# topic did is in the journal (journalctl -u wcs-topics.service) and in `wcs topics list`.
+ExecStart=/usr/bin/docker compose run --rm --no-deps -T app wcs topics refresh
+Nice=10
+# Ten briefings of about 15 seconds each, with room for a slow model
+TimeoutStartSec=1h

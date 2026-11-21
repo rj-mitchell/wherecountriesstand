@@ -45,6 +45,10 @@ CHANGED = {("usage", "per_visitor_daily_questions"): (40, 8), ("usage", "briefin
            ("answer", "query_parse_effort"): ("low", "medium"), ("usage", "daily_spend_cap_usd"): (3.0, 25.0),
            ("usage", "monthly_spend_cap_usd"): (50.0, 100.0), ("eval", "max_cost_usd"): (3.0, 10.0)}
 
+# Sections added to config/settings.toml since the recording, for something new (each as the file has it): the
+# topic briefings (decision 27, 21 November 2026). Nothing read before reads them.
+LATER = {"topics": {"file": "topics.toml", "min_days": 6, "max_cost_usd": 3.0, "mode": "summary"}}
+
 BRIEFING_MODEL = "claude-sonnet-5-5"
 
 
@@ -56,6 +60,10 @@ def without_the_added(gives: dict) -> dict:
     out = copy.deepcopy(gives)
     if out["raw"].get("alerts") == {}:  # [alerts]: there, and empty until the owner sets a threshold (ADR 0012)
         del out["raw"]["alerts"]
+    for section, value in LATER.items():
+        for holder in (out["raw"], out):
+            if section in holder:
+                assert holder.pop(section) == value, section
     for holder in (out["raw"], out):
         # strict prices (the review of the adoption): the briefing model has a table of its own, which holds the
         # base prices it was costed at before

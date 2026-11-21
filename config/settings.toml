@@ -147,6 +147,20 @@ dir = ""
 # and DOMAIN, or the address it was reached at).
 url = ""
 
+[topics]
+# Topic briefings (decision 27): the standing questions in this file, each written afresh every week by
+# `wcs topics refresh` (deploy/wcs-topics.timer) and shown at /topics/<slug>.html. A rewrite costs about 17 cents,
+# so ten topics cost about $1.70 a week (docs/OPERATIONS.md, "Topic briefings").
+file = "topics.toml"
+# A topic written fewer than this many days ago is not written again, unless asked with --force (a run after the
+# server was down, or by hand the day before, does not pay twice).
+min_days = 6
+# The most one run may spend, in US dollars: it stops before a topic that could take it over, at the estimate a
+# briefing is reserved at ([usage] briefing_estimate_usd). Ten topics at $0.25 each is $2.50.
+max_cost_usd = 3.0
+# Summary briefings (decision 14), as a reader's question gets unless they choose otherwise.
+mode = "summary"
+
 [logs]
 # The structured log of briefings (data/logs/briefings.jsonl): one line for each stage a briefing reaches and one
 # for how it ended, never a reader's words. Kept for 14 days or 50 MB, whichever is less (wts-core docs/adr/0012).

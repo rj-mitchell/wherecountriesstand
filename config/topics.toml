@@ -1,0 +1,99 @@
+# Topic briefings (decision 27): standing questions, each with a page of its own at /topics/<slug>.html, written
+# afresh every week by `wcs topics refresh` (deploy/wcs-topics.timer) through the same pipeline and checks as a
+# reader's question.
+#
+# Wording matters (decision 7): each question asks what countries and groups have said, and how they voted where the
+# record holds votes on the subject. It is neutral, names no side, presumes no answer, and can be answered from the
+# record the site holds: the Security Council's debates, the General Assembly's General Debate and its recorded votes.
+#
+#   slug         the page's address: lower-case words joined by hyphens. Never change it once published
+#   title        the page's heading and title, and its name in lists
+#   question     what is asked each time the briefing is written, shown on the page and on its share card
+#   area         the heading it is listed under on /topics.html
+#   description  one line under its name in lists, in the site's own words
+#   date_from    the earliest date of the record searched (YYYY-MM-DD), whatever the question is read as
+#   date_to      the latest (optional; none: up to the latest record)
+#   sources      the bodies searched: "sc" (Security Council), "gd" (General Assembly). None given: both
+#
+# Each rewrite costs about 17 cents (13p); ten topics a week about $1.70 (£1.34). docs/OPERATIONS.md, "Topic
+# briefings", says how to add one.
+
+[[topic]]
+slug = "war-in-ukraine"
+title = "The war in Ukraine"
+area = "Countries and conflicts"
+question = "What have countries and groups said about the war in Ukraine at the United Nations since 2022, and how have they voted?"
+description = "Statements in the Security Council and the General Assembly, and the Assembly’s recorded votes."
+date_from = "2022-01-01"
+
+[[topic]]
+slug = "israel-gaza-and-palestine"
+title = "Israel, Gaza and the question of Palestine"
+area = "Countries and conflicts"
+question = "What have countries and groups said about Israel, Gaza and the question of Palestine at the United Nations since 2022, and how have they voted?"
+description = "Statements in the Security Council and the General Assembly, and the Assembly’s recorded votes."
+date_from = "2022-01-01"
+
+[[topic]]
+slug = "sudan"
+title = "Sudan"
+area = "Countries and conflicts"
+question = "What have countries and groups said about the situation in Sudan at the United Nations since 2022?"
+description = "Statements in the Security Council and the General Assembly."
+date_from = "2022-01-01"
+
+[[topic]]
+slug = "afghanistan"
+title = "Afghanistan"
+area = "Countries and conflicts"
+question = "What have countries and groups said about the situation in Afghanistan at the United Nations since 2022?"
+description = "Statements in the Security Council and the General Assembly."
+date_from = "2022-01-01"
+
+[[topic]]
+slug = "haiti"
+title = "Haiti"
+area = "Countries and conflicts"
+question = "What have countries and groups said about the situation in Haiti at the United Nations since 2022?"
+description = "Statements in the Security Council and the General Assembly."
+date_from = "2022-01-01"
+
+[[topic]]
+slug = "security-council-reform-and-the-veto"
+title = "Reform of the Security Council and the veto"
+area = "Themes"
+question = "What have countries and groups said about reform of the Security Council and the use of the veto at the United Nations since 2022?"
+description = "Membership of the Council, the veto and its working methods."
+date_from = "2022-01-01"
+
+[[topic]]
+slug = "climate-change-and-climate-finance"
+title = "Climate change and climate finance"
+area = "Themes"
+question = "What have countries and groups said about climate change and climate finance at the United Nations since 2022?"
+description = "Climate change, adaptation, loss and damage, and how they are paid for."
+date_from = "2022-01-01"
+
+[[topic]]
+slug = "nuclear-weapons-and-non-proliferation"
+title = "Nuclear weapons and non-proliferation"
+area = "Themes"
+question = "What have countries and groups said about nuclear weapons, disarmament and non-proliferation at the United Nations since 2022, and how have they voted?"
+description = "Disarmament, non-proliferation and nuclear tests, with the General Assembly’s recorded votes."
+date_from = "2022-01-01"
+
+[[topic]]
+slug = "women-peace-and-security"
+title = "Women, peace and security"
+area = "Themes"
+question = "What have countries and groups said about women, peace and security at the United Nations since 2022?"
+description = "Women’s part in preventing and ending conflict, and their protection in it."
+date_from = "2022-01-01"
+
+[[topic]]
+slug = "unilateral-sanctions"
+title = "Unilateral sanctions"
+area = "Themes"
+question = "What have countries and groups said about unilateral sanctions, also called unilateral coercive measures, at the United Nations since 2022, and how have they voted?"
+description = "Sanctions imposed by a country or group of countries outside the Security Council, under both names."
+date_from = "2022-01-01"

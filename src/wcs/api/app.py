@@ -87,6 +87,8 @@ from wts_core.usage import (
 )
 
 from wcs import adapters
+from wcs.api.topic_pages import INDEX_PATH as TOPICS_INDEX
+from wcs.api.topic_pages import TopicPages
 from wcs.api.votes import INDEX_PATH as VOTES_INDEX
 from wcs.api.votes import SESSION_KEY, SLUG, VotePages, statements_html
 from wcs.api.votes import STATEMENTS as STATEMENTS_HERE
@@ -125,6 +127,8 @@ FORGET_IDLE_VISITORS_OVER = 50_000
 # are served.
 SITE_MARK = "__SITE__"
 PAGE_NAME = re.compile(r"[a-z0-9-]{1,40}")
+# where the server writes the home page's list of topic briefings (decision 27)
+TOPICS_HERE = "<!--#topics-->"
 PAGE_DATE = re.compile(r"([a-z0-9-]{1,40}):(\d{4}-\d{2}-\d{2})")
 
 
@@ -500,20 +504,25 @@ class SiteHooks(Hooks):
         return shown([final])[0]
 
 
+def site_parts(settings: Settings, db: StateDB, clock: Clock = SYSTEM_CLOCK, random: Random = SYSTEM_RANDOM) -> Any:
+    """Everything the flow of a briefing is made of, from [usage]: prices, limits, the spending record, the caps,
+    the per-minute limiter, the places in progress, the answer cache, saved briefings and the notes of failed
+    briefings (kept 90 days, as the privacy notice says), on the one clock. This is also the start-up check: every
+    limit, price and message the flow needs, with whatever is missing named together in one error. Prices are
+    strict: the model that writes briefings and the model that reads questions must each have a table of its own
+    under [usage.models], so neither is ever costed at another model's prices (a dearer model costed at the base
+    prices undercounts, and the caps then bite late). The site and ``wcs topics refresh`` use the same parts, so a
+    topic's briefing is costed, capped and kept as a reader's is."""
+    return desk_parts(settings, db, MESSAGES, new_id=lambda chance: new_briefing_id(chance),
+                      at_once_per_visitor="briefings_at_once_per_visitor", forget_over=FORGET_IDLE_VISITORS_OVER,
+                      require_prices_for=models_called(settings), keep_failures=True, clock=clock, random=random)
+
+
 def create_app(settings: Settings | None = None, pipeline: Pipeline | None = None, state: StateDB | None = None,
                behind_proxy: bool = False, *, clock: Clock = SYSTEM_CLOCK, random: Random = SYSTEM_RANDOM) -> FastAPI:
     settings = settings or load_settings()
     db = state or open_state(settings, clock)
-    # Everything the flow of a briefing is made of, from [usage]: prices, limits, the spending record, the caps,
-    # the per-minute limiter, the places in progress, the answer cache, saved briefings and the notes of failed
-    # briefings (kept 90 days, as the privacy notice says), on the one clock. This is also the start-up check:
-    # every limit, price and message the flow needs, with whatever is missing named together in one error. Prices
-    # are strict: the model that writes briefings and the model that reads questions must each have a table of
-    # its own under [usage.models], so neither is ever costed at another model's prices (a dearer model costed at
-    # the base prices undercounts, and the caps then bite late).
-    parts = desk_parts(settings, db, MESSAGES, new_id=lambda chance: new_briefing_id(chance),
-                       at_once_per_visitor="briefings_at_once_per_visitor", forget_over=FORGET_IDLE_VISITORS_OVER,
-                       require_prices_for=models_called(settings), keep_failures=True, clock=clock, random=random)
+    parts = site_parts(settings, db, clock, random)
     record = SqliteBriefingLog(db, clock=clock)  # one record for each question asked (wts-core docs/adr/0012)
     votes = VotePages(settings)  # a page for each General Assembly recorded vote (decision 26)
     replies = open_replies(db, parts.archive, clock,
@@ -527,6 +536,9 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     app = FastAPI(title="Where Countries Stand", docs_url=None, redoc_url=None, openapi_url=None)
     app.state.parts, app.state.replies, app.state.record, app.state.db = parts, replies, record, db
     app.state.votes = votes
+    # a page for each topic briefing, written on the server (decision 27)
+    topics = TopicPages(settings, db, parts.archive, replies.all_hidden)
+    app.state.topics = topics
     holder: dict[str, Any] = {"pipeline": pipeline}
     memo: dict[str, tuple[float, Any]] = {}
     check_token = SITE.env("CHECK_TOKEN")
@@ -587,6 +599,14 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         except Exception:  # noqa: BLE001 - the page is served whatever the record's state
             log.warning("home page: the record's coverage could not be read", exc_info=True)
             return {}
+
+    def home_topics() -> str:
+        """The home page's list of topic briefings (decision 27), written by the server; nothing if it can't be."""
+        try:
+            return str(remembered("home-topics", topics.home_section, ttl=60))
+        except Exception:  # noqa: BLE001 - the page is served whatever the state database's state
+            log.warning("home page: the topic briefings could not be listed", exc_info=True)
+            return ""
 
     @app.get("/api/meta")
     def meta():
@@ -782,6 +802,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     frame = partials / "record-page.html"
     if site.exists() and frame.is_file():
         votes.frame = versioned(expand_includes(frame.read_text(encoding="utf-8"), site, partials), versions)
+        topics.frame = mark_current(votes.frame, TOPICS_INDEX)
 
     def html_page(text: str, status_code: int = 200) -> HTMLResponse:
         return HTMLResponse(text, status_code=status_code, headers={"Cache-Control": ALWAYS_CHECK})
@@ -815,13 +836,17 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         hidden = {h["item"] for h in replies.all_hidden()}
         return [(base + path, when) for path, when in votes.sitemap(lambda path: path in hidden)]
 
+    def topic_rows(base: str) -> list[tuple[str, str]]:
+        return [(base + path, when) for path, when in topics.sitemap()]
+
     @app.get("/sitemap.xml", include_in_schema=False)
     def sitemap(request: Request):
-        """The sitemap index (robots.txt names it): the site's pages, and the pages written from the record's votes
-        (decision 26), each with the newest date it has for a page in it, and none if it has none."""
+        """The sitemap index (robots.txt names it): the site's pages, the pages written from the record's votes
+        (decision 26) and the topic briefings (decision 27), each with the newest date it has for a page in it, and
+        none if it has none."""
         base = site_url(settings, request)
         entries = []
-        for name, rows in (("pages", page_rows(base)), ("votes", vote_rows(base))):
+        for name, rows in (("pages", page_rows(base)), ("votes", vote_rows(base)), ("topics", topic_rows(base))):
             newest = max((when for _, when in rows if when), default="")
             entries.append(f"  <sitemap><loc>{base}/sitemap-{name}.xml</loc>"
                            f"{f'<lastmod>{newest}</lastmod>' if newest else ''}</sitemap>\n")
@@ -841,13 +866,18 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         within a sitemap's 50,000)."""
         return urlset(vote_rows(site_url(settings, request)))
 
+    @app.get("/sitemap-topics.xml", include_in_schema=False)
+    def sitemap_topics(request: Request):
+        """The topics' index and each topic with a briefing, dated by when its briefing was prepared."""
+        return urlset(topic_rows(site_url(settings, request)))
+
     def page(request: Request, name: str) -> HTMLResponse:
         if name not in rendered or name == "404":
             raise HTTPException(404, "Not found")
         text, base = rendered[name], site_url(settings, request)
         q = request.query_params.get("q", "") if name == "index" else ""
         if name == "index":
-            text = coverage_list(text, home_coverage())
+            text = coverage_list(text, home_coverage()).replace(TOPICS_HERE, home_topics(), 1)
         if len(q.strip()) >= 3:
             return html_page(question_page(text, base, request.url.query))
         return html_page(text.replace(SITE_MARK, base))
@@ -902,6 +932,48 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
             return html_page(text.replace(STATEMENTS_HERE, statements_html(found, NOT_ENDORSED), 1)
                              .replace(SITE_MARK, base))
         to = votes.moved(rest)
+        if to is not None and to != request.url.path:
+            return votes_moved(request, to)
+        raise HTTPException(404, "Not found")
+
+    # The topic briefings' pages (decision 27): at one address each, the other forms sent there for good.
+
+    @app.api_route(TOPICS_INDEX, methods=["GET", "HEAD"], include_in_schema=False)
+    def topics_index(request: Request):
+        return html_page(topics.index().replace(SITE_MARK, site_url(settings, request)))
+
+    def topics_index_moved(request: Request) -> RedirectResponse:
+        return votes_moved(request, TOPICS_INDEX)
+
+    for other in ("/topics", "/topics/", "/topics.html/"):
+        app.add_api_route(other, topics_index_moved, methods=["GET", "HEAD"], include_in_schema=False)
+
+    def topic_counts(slug: str) -> Any:
+        cur = topics.current(slug)
+        return (cur, None) if cur is None else (cur, shown_counts(cur.briefing.events))
+
+    @app.api_route("/topics/{rest:path}", methods=["GET", "HEAD"], include_in_schema=False)
+    def topic_pages(request: Request, rest: str):
+        base = site_url(settings, request)
+        name = rest.removesuffix(".html") if rest.endswith(".html") else None
+        if name and topics.topic(name) is not None:
+            cur, counts = topic_counts(name)
+            found = [as_shown(s) for s in replies.published(items=[Item(address=f"/b/{cur.briefing.id}")])] \
+                if cur is not None else []
+            text = topics.topic_page(name, counts_words=None if counts is None else counts_in_words(counts),
+                                     statements=statements_html(found, NOT_ENDORSED)) or ""
+            # the briefing's stylesheet and scripts, added to the frame here, carry their hash as every page's do
+            return html_page(versioned(text, versions).replace(SITE_MARK, base))
+        card = re.fullmatch(r"([a-z0-9-]+)/card\.png", rest)
+        if card and topics.topic(card[1]) is not None:
+            cur, counts = topic_counts(card[1])
+            if cur is None or counts is None:
+                raise HTTPException(404, "Not found")
+            t = topics.topic(card[1])
+            path = card_png(settings.data_dir / "cards", cur.briefing.id, t.question, counts, cur.prepared_at,
+                            topic=t.slug)
+            return FileResponse(path, media_type="image/png", headers={"Cache-Control": A_DAY})
+        to = topics.moved(rest)
         if to is not None and to != request.url.path:
             return votes_moved(request, to)
         raise HTTPException(404, "Not found")

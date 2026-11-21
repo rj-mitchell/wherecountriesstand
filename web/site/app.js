@@ -827,7 +827,24 @@ function alignProof() {
   pair.style.setProperty("--wts-join", `${m.top - box.top + m.height / 2}px`);
 }
 
+// A topic briefing's page (decision 27) is written by the server, whole, for readers without scripts and for search
+// engines. Here the same briefing is opened from the record of saved briefings and shown again by this script, the
+// same markup with what needs a script added: the record beside it on a wide screen, and a chip's sheet on a phone.
+// If it can't be opened, the server's page stays as it is.
+async function openTopic(id) {
+  const res = await fetch(`/api/briefings/${encodeURIComponent(id)}`).catch(() => null);
+  const b = res && res.ok ? await res.json().catch(() => null) : null;
+  if (!b) return;
+  const final = b.events.find((e) => e.type === "final");
+  const found = b.events.find((e) => e.type === "sources");
+  if (!final || !final.answer || final.answer.no_records) return;
+  renderAnswer(final.answer, (found && found.sources) || []);
+  if (wide()) openRecord(false);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  const topic = document.body.dataset.briefing;
+  if (topic) { openTopic(topic); return; }
   alignProof();
   addEventListener("resize", alignProof);
   document.fonts?.ready.then(alignProof);

@@ -1,7 +1,7 @@
 # Operations
 
 How the maintainer keeps Where Countries Stand running: the scheduled update and the problems it reports, the
-General Debate, the search index, corrections and the right of reply, the record of briefings, test runs and the
+topic briefings, the General Debate, the search index, corrections and the right of reply, the record of briefings, test runs and the
 state database. Setting up the server and deploying new code are in [DEPLOY.md](DEPLOY.md).
 
 On the server, run each `wcs` command in `/opt/wherecountriesstand/deploy` as
@@ -74,6 +74,48 @@ If a run or the nightly backup fails (exits 1, or stops with an error), the serv
 with the result and the last log lines, at most once every six hours. This is set up once for every site on the
 server: see "Email from the server" in Where MPs Stand's
 [`docs/HOSTING.md`](https://github.com/rj-mitchell/wherempsstand/blob/main/docs/HOSTING.md).
+
+## Topic briefings
+
+The ten topic briefings ([decision 27](DECISIONS.md#27-topic-briefings), `config/topics.toml`) are written afresh
+every Sunday at 11:23 UTC by `wcs topics refresh`, run by `wcs-topics.timer` in a one-off container, which
+`deploy/update.sh` installs with the other timers. Each topic's briefing goes through the same pipeline and checks
+as a reader's question, is saved (at `/b/<id>` as well as on the topic's page) and is counted against the spending
+caps as kind `topic`.
+
+- The cost: about 17 cents (13p) a topic, $1.70 (£1.34) a week, $7 to $9 a month. `wcs usage` includes it.
+- The run stops before a topic that would reach the day's or the month's cap, counting it at $0.25, and at its own
+  limit of $3 (`[topics] max_cost_usd`). It stops too when a briefing cannot be written (the service, or the model
+  declining), since the same cause would stop the rest. A topic it does not reach, or whose run finds no records,
+  keeps its last good version.
+- It exits 1 when a topic could not be written or the run was stopped, so the server emails the operations address
+  as for the update. Each topic's outcome is in the journal and in `wcs topics list`; a failure is also in the
+  failures `wcs usage` lists.
+- A topic written in the last six days (`[topics] min_days`) is not written again, so a run after the server was
+  down does not pay twice. `--force` writes it all the same.
+- It takes no lock: it reads the index as the site does and writes only to the state database.
+
+```bash
+systemctl list-timers wcs-topics.timer                                     # when it runs next
+journalctl -u wcs-topics.service -n 30                                     # the last run, topic by topic
+docker compose run --rm -T app wcs topics list                             # what each topic's page shows
+docker compose run --rm -T app wcs topics refresh                          # write the topics now (about $1.70)
+docker compose run --rm -T app wcs topics refresh --only haiti --force     # one topic, even if written this week
+```
+
+After the first deploy with topic briefings, run `wcs topics refresh` once by hand, so the pages have briefings
+before the first Sunday; until a topic has one, its page says so and stays out of search engines and the sitemap.
+
+To withdraw a topic's briefing, withdraw its saved briefing as any other (`wcs withdraw <id> --reason "…"`, the id
+from `wcs topics list` or the page's "This version's own address"): the page then shows the version before it, or
+says it has none, until the next run. Hiding it while a concern is decided (`wcs hide /b/<id>`) does the same.
+
+To add a topic, add a `[[topic]]` to `config/topics.toml` with its slug (its address, never changed once published),
+title, area, question, one-line description and `date_from`, and deploy; then run
+`wcs topics refresh --only <slug>`. The question follows decision 7: it asks what countries and groups have said
+(and how they voted, only where the General Assembly's recorded votes bear on it), names no side and presumes no
+answer. Each topic adds about 17 cents a week. To remove one, delete it from the file and deploy: its page goes,
+and its briefings stay at their own addresses.
 
 ## The General Debate
 

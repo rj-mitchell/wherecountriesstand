@@ -228,6 +228,7 @@ methodology page, and this site kept its method inside About.
   page, as the glossary says.
 - The footer follows the glossary: About, Methodology, Corrections, Accessibility, Privacy, Source code, and no
   more. "If you're named" is reached from Corrections and About, not from the footer, as the plan's decisions record.
+- The menu gained "Topics" after Ask on 21 November 2026 ([decision 27](#27-topic-briefings)).
 - The page is found by the sitemap as every other page is. The charity's nightly check should add
   `/methodology.html` to this site's `crawlerPages` once the page is live.
 
@@ -354,3 +355,66 @@ sessions.
 - Accessibility: CI starts the site with two made-up votes (`scripts/sample_votes.py`), as it has no data, and
   `scripts/a11y.mjs` checks the index, the first session and the first vote it links to, and that the vote's page
   has its table, one heading of the first rank, the "If you're named" link and only breadcrumbs as structured data.
+
+## 27. Topic briefings
+
+On 21 November 2026 the owner agreed (answer 10 of the charity's review plan, C3) that the site has topic briefings,
+as Where MPs Stand has: standing questions on subjects the UN keeps returning to, each with a briefing written afresh
+every week at a fixed address, so that a first-time visitor or a search engine finds real, checked briefings to read
+without asking anything. The plan left the choice of topics to the session carrying it out.
+
+- The topics: ten, in `config/topics.toml`, chosen across what the record holds (the Security Council's debates, the
+  General Debate and the General Assembly's recorded votes) and from every side. Under "Countries and conflicts": the
+  war in Ukraine; Israel, Gaza and the question of Palestine; Sudan; Afghanistan; Haiti. Under "Themes": reform of
+  the Security Council and the veto; climate change and climate finance; nuclear weapons and non-proliferation;
+  women, peace and security; unilateral sanctions. Each has been on the Security Council's or the General Assembly's
+  agenda throughout the years since 2022; together they cover conflicts in Europe, the Middle East, Africa, Asia and
+  the Americas, and themes that divide groups of countries rather than parties to one conflict (Security Council
+  reform, climate finance, nuclear weapons, unilateral sanctions).
+  "The question of Palestine" is the UN's own name for its agenda item; unilateral sanctions are named under both
+  names in use, "also called unilateral coercive measures", so that neither side's word is the site's alone.
+- The questions: each asks "What have countries and groups said about … at the United Nations since 2022?", and
+  adds "and how have they voted?" only where the General Assembly's recorded votes bear on it (Ukraine, Palestine,
+  nuclear weapons, unilateral sanctions). Each names no side and presumes no answer (decision 7), and the record can
+  answer it. 2022 gives each topic close to four years, long enough to cover the war in Ukraine from its start and
+  short enough for 24 sources to say something of each year. Each topic's dates (`date_from`, and optionally
+  `date_to` and the bodies, `sources`) are laid over the model's reading of its question, so every week's briefing
+  covers the same ground whatever the reading.
+- The briefing: written by `wcs topics refresh` through the site's own pipeline, with every check a reader's
+  briefing has, in summary length (decision 14), and saved as any other briefing (it also has an address of its own,
+  `/b/<id>`, which stays out of search engines). A run that fails, finds no records or is stopped at a cap leaves
+  the last good version in place. A version that is withdrawn, or hidden while a concern is decided, gives way to the
+  one before it. Earlier versions are linked from the page.
+- The pages: `/topics.html`, the index by area, and `/topics/<slug>.html`, each written on the server whole (the
+  question, the day it was prepared and the latest record it could use, the filters, the check strip, the text
+  with record quotations, chips and every mark, the check details and the sources), in the family's design
+  (decision 25), so a reader without scripts and a search engine see all of it. The page's script then shows the same
+  briefing again with the record beside it, or a sheet on a phone. The server's markup and the script's are the
+  same, and a test checks it. A topic's page is titled with the topic's name ("The war in Ukraine: briefing from UN
+  records | Where Countries Stand") and carries only `BreadcrumbList` as structured data, as the vote pages do.
+- Indexing: the topics' pages are open to search engines, and in the sitemap (`/sitemap-topics.xml`, dated by when
+  each briefing was prepared), while every reader's briefing stays out (decision 7, and the owner's answer 1 of the
+  review plan: only the record's own pages and curated topics are indexed). Their words are the site's own: the
+  topic's title and its neutral question, which no reader wrote. A topic with no briefing standing has a page that
+  says so, kept out of search engines and the sitemap.
+- Share cards: a topic's link preview is its own card, `/topics/<slug>/card.png`, with the topic's own question as
+  its title and the strip's counts (the review plan's B5, and the charity's `family/BRIEFINGS.md`). The same
+  briefing at `/b/<id>` keeps the site's neutral card.
+- Where it is linked: "Topics" joins the menu after Ask (Ask, Topics, About, Methodology, Glossary), as Where MPs
+  Stand's menu has Topics; the glossary sets no limit on menus, only on footers. The home page lists the topics
+  with a briefing, written by the server. A topic's page does not offer the same question on Where MPs Stand
+  (decision 24): its question is about the United Nations.
+- The cost: a briefing cost $0.1667 on average in the first full evaluation run (19 November 2026,
+  [EVALUATION.md](EVALUATION.md)), and readers' briefings cost $0.11 to $0.21. Ten topics a week cost about $1.70
+  (£1.34 at £1 = $1.27), and at most $2.10 (£1.65): about $7 to $9 a month, within the review plan's £1 to £2 a week
+  and under a tenth of the monthly cap. Each rewrite is counted against the site's caps as kind `topic`; the run
+  stops before a topic that would reach a cap, counting it at the estimate a briefing is reserved at ($0.25), and at
+  its own limit of $3 (`[topics] max_cost_usd`). A topic written in the last six days is not written again unless
+  asked (`--force`), so a run after the server was down, or one by hand the day before, does not pay twice.
+- When: every Sunday at 11:23 UTC (`deploy/wcs-topics.timer`, installed by `deploy/update.sh`), between the morning
+  and evening updates and clear of the other sites' jobs on the server. It takes no update lock: it reads the index as
+  the site does and writes only to the state database.
+
+Each topic's versions are kept in the state database's key-value table (`topic:<slug>`), so they are backed up with
+the briefings. Where MPs Stand rewrites a topic only when its sources have changed; here each is written afresh
+every week, as the review plan asks, which the cost allows.

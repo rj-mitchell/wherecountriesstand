@@ -19,7 +19,7 @@ const base = process.argv[2] ?? "http://localhost:8000";
 // else, and that it is marked, in words as well as by its look (family/BRIEFINGS.md). The record beside the briefing is
 // checked on a computer, and the bottom sheet on a phone: open, focused, closed with Escape, focus back on its chip.
 // It offers the same question on Where MPs Stand, with that site's spine; a saved "No records found" and a saved
-// briefing that failed offer nothing (decision 24).
+// briefing that failed offer nothing (decision 24). The same briefing is checked again as a topic's (below).
 const SAMPLE = "a11ysample";
 const NO_RECORDS = "a11ynorecords";
 const FAILED = "a11yfailed";
@@ -37,6 +37,17 @@ if (!sessionPage || !votePage) {
   process.exit(1);
 }
 pages.push(sessionPage, votePage);
+// The topic briefings (decision 27): the index and the first topic it links to. CI writes the same made-up briefing
+// as the sample below into the site's data as a topic's (scripts/sample_topic.py), so its page is written by the
+// server, then shown again by its script: every mark is checked on it as on the saved briefing, and in the page's own
+// HTML, with no script, as a search engine reads it.
+const topicsIndex = await fetch(`${base}/topics.html`).then((r) => r.text());
+const topicPage = topicsIndex.match(/href="(\/topics\/[a-z0-9-]+\.html)"/)?.[1];
+if (!topicPage) {
+  console.log("The site has no topic briefing to check: write one (python scripts/sample_topic.py <data folder>)");
+  process.exit(1);
+}
+pages.push("/topics.html", topicPage);
 const CHECKED = "adaptation finance must reach the most vulnerable";
 const BESIDE = "climate finance is far too slow";
 const UNSUPPORTED = "Most delegations agreed.";
@@ -94,6 +105,23 @@ const saved = { [SAMPLE]: sample, [NO_RECORDS]: noRecords, [FAILED]: failed };
 
 const browser = await chromium.launch();
 let failures = 0;
+{
+  // the topic's page as the server wrote it, before any script: the whole briefing, indexed
+  const raw = await fetch(base + topicPage).then((r) => r.text());
+  const missing = [
+    !raw.includes('<section class="wts-check"') && "no check strip",
+    !raw.includes('<button type="button" class="wts-chip"') && "no source chips",
+    !raw.includes('class="wts-quote wts-quote--checked"') && "no record quotation",
+    !raw.includes('class="wts-nosource"') && "no mark for text with no source",
+    !raw.includes('id="check-details"') && "no check details",
+    !raw.includes('<li class="source"') && "no sources",
+    raw.includes('name="robots" content="noindex"') && "it is kept out of search engines",
+  ].filter(Boolean);
+  for (const m of missing) {
+    failures++;
+    console.log(`${topicPage} as the server writes it: ${m}`);
+  }
+}
 for (const scheme of ["light", "dark"]) {
   for (const width of [1280, 390]) {
     // the site's content security policy is set by the front door, not the app, so there is none to bypass here
@@ -113,7 +141,7 @@ for (const scheme of ["light", "dark"]) {
         console.log(`${scheme} ${width}px ${path}: ${v.id} (${v.impact}) ${v.help}`);
         for (const n of v.nodes.slice(0, 3)) console.log(`    ${n.target.join(" ")}`);
       }
-      if (path === `/b/${SAMPLE}`) {
+      if (path === `/b/${SAMPLE}` || path === topicPage) {
         // every mark is there, in words as well as by its look, and nothing found word for word is marked as no source
         const marked = await page.evaluate(() => {
           const texts = (sel) => [...document.querySelectorAll(sel)].map((e) => e.textContent);
@@ -148,7 +176,10 @@ for (const scheme of ["light", "dark"]) {
           !/Checked against the UN record/.test(marked.strip) && "there is no check strip",
           !/!\s*3\s*of 4\s*To check\s*citations matched to the record/.test(marked.strip) && `the strip's citations count reads "${marked.strip}"`,
           !/!\s*2\s*of 3\s*To check\s*quotations found word for word/.test(marked.strip) && `the strip's quotations count reads "${marked.strip}"`,
-          !/!\s*4\s*To check\s*sentences without a source/.test(marked.strip) && `the strip's count with no source reads "${marked.strip}"`,
+          // as a topic's, the server shows it as it shows every saved briefing, judged again by today's checking
+          // rules, which read the lead-in to Kenya's second quotation as a join: one passage with no source fewer
+          !new RegExp(`!\\s*${path === topicPage ? 3 : 4}\\s*To check\\s*sentences without a source`).test(marked.strip)
+            && `the strip's count with no source reads "${marked.strip}"`,
           !/did not match/.test(marked.details) && "the check details do not explain the citation that failed",
           width > 1000 && !marked.record && "the record is not beside the briefing",
         ].filter(Boolean);
@@ -240,6 +271,7 @@ for (const scheme of ["light", "dark"]) {
 }
 await browser.close();
 console.log(failures ? `${failures} accessibility problem(s) found`
-  : `No serious accessibility problems on ${pages.length} pages, the sample briefing's marks are all there in words, ` +
-    "only a written briefing offers the same question on Where MPs Stand, and the vote pages carry their table");
+  : `No serious accessibility problems on ${pages.length} pages, the sample briefing's marks are all there in words ` +
+    "(on its saved page and as a topic's, in the server's HTML too), only a written briefing offers the same " +
+    "question on Where MPs Stand, and the vote pages carry their table");
 process.exit(failures ? 1 : 0);
