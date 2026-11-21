@@ -12,7 +12,7 @@ const MAX_WORDS = 150;
 const HINT = {
   error: "A fact, a quotation, a date, a label, a group or a connection is incorrect, or a briefing misstates the record.",
   unfair: "The record is right, but the site’s own words, labels or groupings are unfair: a loaded word in the site’s own voice, a connection without published evidence, or a grouping that suggests something the record doesn’t show.",
-  statement: "The record is accurate and the site has followed its impartiality policy, but you see it differently: add a short statement, shown beside the briefing.",
+  statement: "The record is accurate and the site has followed its impartiality policy, but you see it differently: add a short statement, shown beside the briefing or vote it is about.",
   takedown: "Something about you is shown that should not be. These requests are dealt with first.",
   other: "Anything else about the site.",
 };

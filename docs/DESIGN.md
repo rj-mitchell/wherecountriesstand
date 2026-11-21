@@ -109,6 +109,28 @@ text on the site that is neither the record nor the site's own. It follows the b
 dashed border, headed "Statement from [name], [date]" with the author's role beneath, and ends "In their own words.
 Not checked or endorsed by Where Countries Stand." The "If you're named" page (`/named.html`) shows an example.
 
+## Pages for each recorded vote
+
+The index of recorded votes (`/votes.html`), each session's list and each vote's page
+([decision 26](DECISIONS.md#26-a-page-for-each-recorded-vote-in-the-general-assembly)) are written on the server
+into `web/partials/record-page.html`, which carries the same head, header and footer as every other page, by
+[`src/wcs/api/votes.py`](../src/wcs/api/votes.py). They need no script.
+
+- Above the heading, a link back to the index ("Recorded votes in the General Assembly"), which is also the page's
+  breadcrumb trail. The heading is the vote's symbol and title; the line under it gives the date, the session and the
+  result in words.
+- On screens 64rem wide and over, the facts (a label beside each value, on one rule each) and the lists sit in the
+  main column with the "If you're named" panel (light grey) beside them; on narrower screens the panel follows the
+  facts. Running text keeps to the reading width.
+- The totals are a small table. Every Member State is listed under how it voted, in columns about 10rem wide (two
+  on a phone, four on a computer), each name on its own hairline. Nothing is coloured by how a country voted.
+- Statements beside a vote use the same dashed box as beside a briefing, after the table.
+- Lists of votes give the vote's heading as the link and its date and result under it in muted text; the sessions
+  are listed in columns, each with its number of votes and its dates.
+
+Screenshots of a vote's page, a session's list and the index at 390 and 1,280 pixels wide were looked at on
+21 November 2026.
+
 ## Links to sister sites
 
 After a briefing, with its address and the link to report a problem, links to sister sites each show that site's

@@ -50,7 +50,8 @@ jobs:
       tag: wherecountriesstand:ci
       run: wcs --help
 
-  # Every page served by the app (with no data loaded and no API key: the pages, their scripts and the empty states)
+  # Every page served by the app (with no data loaded but two made-up votes, and no API key: the pages, their scripts,
+  # the empty states and the vote pages)
   # is checked with axe for WCAG 2.2 AA problems, light and dark, at desktop and phone widths, as Where MPs Stand
   # does. A serious or critical problem, or a page that scrolls sideways, fails the check (scripts/a11y.mjs).
   accessibility:
@@ -60,9 +61,11 @@ jobs:
       - uses: rj-mitchell/wts-core/.github/actions/setup@v0.4.0
       - name: Install
         run: uv sync --frozen
-      - name: Start the site with no data
+      - name: Start the site with no data but a small made-up votes file
         run: |
           mkdir -p /tmp/wcs-data
+          # two made-up votes, so that the vote pages are checked too (decision 26)
+          .venv/bin/python scripts/sample_votes.py /tmp/wcs-data
           # Started with the environment's own program, not through `uv run`: a `uv run` left in the background
           # holds uv's cache, and the toolchain step's tidying of that cache at the end of the job then waits
           # five minutes for it and fails the job (the accessibility check itself having passed).

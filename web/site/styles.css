@@ -288,6 +288,7 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .facts > div:first-child { border-block-start: 1px solid var(--rule-faint); }
 .facts dt { font-weight: 600; }
 .facts dd { margin: 0; }
+.record-more { margin: 0.75rem 0 0; font-size: 1rem; }
 .panel .facts > div { border-color: var(--rule); }
 
 .plain-list { margin: 0; padding-inline-start: 1.2em; }
@@ -467,6 +468,51 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .statement-example { margin: 1rem 0 1.25rem; }
 .statement-example .statement { margin: 0; }
 .statement-example figcaption { margin-block-start: 0.4rem; font-size: 1rem; color: var(--ink-muted); }
+
+/* Pages written from the record: the General Assembly's recorded votes (decision 26). Running text is held to the
+   reading column; the facts, the totals and the lists of countries use the full column, the "If you're named"
+   panel beside them on wide screens and after them on narrower ones. */
+
+.record-page > :is(p, h1, .lede) { max-inline-size: var(--column); }
+.crumbs { margin: 0 0 0.5rem; font-size: 1rem; }
+.crumbs a { display: inline-block; padding-block: max(2px, calc((var(--target) - 1.55em) / 2)); }
+.vote-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+  gap: 1.5rem 3rem;
+  align-items: start;
+}
+@media (max-width: 63.99rem) {
+  .vote-layout { grid-template-columns: minmax(0, 1fr); }
+}
+.vote-main > :is(p, ul.plain-list) { max-inline-size: var(--column); }
+.vote-main > h2:first-of-type { margin-block-start: 1.5em; }
+.vote-facts { max-inline-size: var(--column); }
+.vote-facts > div { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 0 1rem; }
+.vote-facts dd a { overflow-wrap: anywhere; }
+@media (max-width: 30rem) {
+  .vote-facts > div { grid-template-columns: minmax(0, 1fr); }
+}
+.vote-side { font-size: 1rem; }
+.vote-side h2 { margin: 0 0 0.5rem; font-size: 1.375rem; }
+.vote-side p { margin: 0 0 0.75rem; }
+.vote-side li { margin-block-end: 0.25rem; }
+.vote-totals { min-inline-size: min(100%, 20rem); border-collapse: collapse; margin-block: 0 1rem; font-variant-numeric: tabular-nums; }
+.vote-totals caption { text-align: start; font-weight: 600; padding-block-end: 0.4rem; }
+.vote-totals th, .vote-totals td { padding: 0.35rem 2rem 0.35rem 0; border-block-end: 1px solid var(--rule-faint); text-align: start; }
+.vote-totals thead th { border-block-end-color: var(--rule); }
+.vote-totals td { text-align: end; padding-inline-end: 0; }
+.vote-list { margin: 0 0 1rem; padding: 0; list-style: none; columns: 10rem; column-gap: 1.25rem; }
+.vote-list li { break-inside: avoid; padding-block: 0.15rem; border-block-end: 1px solid var(--rule-faint); }
+.vote-index, .session-index { margin: 0 0 1rem; padding: 0; list-style: none; }
+.vote-index li, .session-index li { padding-block: 0.6rem; border-block-end: 1px solid var(--rule-faint); }
+.vote-index li:first-child, .session-index li:first-child { border-block-start: 1px solid var(--rule-faint); }
+.vote-index__meta { display: block; color: var(--ink-muted); font-size: 1rem; }
+.session-index { columns: 18rem; column-gap: 3rem; }
+.session-index li { break-inside: avoid; }
+.session-index__meta { color: var(--ink-muted); font-size: 1rem; }
+.vote-source, .vote-named { color: var(--ink-muted); font-size: 1rem; }
+.record-page .statements { margin-block-start: 1.5rem; }
 
 /* Text pages: running text held to the reading column */
 

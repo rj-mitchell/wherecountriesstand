@@ -299,3 +299,58 @@ to show their checking as design rather than prose, in one family design chosen 
 
 The prototype the design was chosen from is published at https://claude.ai/artifact/MrYFRm3pmhdi7n1uhZ2pKR and kept
 in the charity's repository (`family/prototypes/checked-briefings/`).
+
+## 26. A page for each recorded vote in the General Assembly
+
+On 21 November 2026 the owner agreed (answer 6 of the charity's review plan, C3) that the site gives a page to each
+General Assembly recorded vote, so that a first-time visitor or a search engine finds the record itself to read,
+not only a question box. All of them, from 1946: 5,730 votes in the UN's voting data of 15 October 2026, in 99
+sessions.
+
+- Addresses: the index is `/votes.html` ("Recorded votes in the General Assembly"), each session's list is
+  `/votes/session-80.html` (`session-es-11` for an emergency special session, `session-s-8` for a special session),
+  and each vote is `/votes/<symbol>.html`, the resolution's symbol in lower case with every run of other characters
+  made one hyphen: `A/RES/ES-11/1` is `/votes/a-res-es-11-1.html`. The symbol is what people cite, and no two votes
+  in the data share one. Should two ever do, the earliest keeps the address and the other adds its UN Digital
+  Library number. As for every page (decisions 22 and 23), the canonical link gives the one address, and the other
+  forms are sent there for good (301): any case, no `.html`, a trailing slash, the symbol with its slashes
+  (`/votes/A/RES/ES-11/1`) and the UN Digital Library number (`/votes/4126622`). An address that is no vote's is a
+  404.
+- Titles: every page's title and heading are its own (the lesson of Where Councils Stand's decision 28). A vote's
+  is its symbol and its title as the record gives it ("A/RES/ES-11/1: Aggression against Ukraine | Where Countries
+  Stand"), without the catalogue's "resolution / adopted by the General Assembly", with the title cut at a word
+  after 70 characters in the page's title only. If two votes ever share a symbol, each adds its date, and then its
+  UN Digital Library number. Titles that the record gives in capitals are left as they are: changing their case
+  would get names wrong. A test checks that no two pages of the site share a title.
+- Content: written on the server from the votes file, with no AI and no script. Each vote's page gives the date in
+  full, the session (from the symbol for special and emergency special sessions, which the data leaves without
+  one), the meeting record, the draft and the agenda item, the result in the UN's words ("adopted by 141 votes to
+  5, with 35 abstentions"), the totals as a table, and every Member State listed under "In favour", "Against",
+  "Abstaining" or "Not voting", in the UN's short names as everywhere on the site (decision 6), alphabetically.
+  It links to the resolution, the meeting record and the draft through undocs.org, and to the vote's record in the
+  UN Digital Library. Votes are counts in words, never coloured. A vote the record gives no table for gets no page.
+- Index: the index lists the 20 latest votes, then every regular session (newest first), every emergency special
+  session and every special session, each with its number of votes and dates. Each session's page lists its votes,
+  newest first. The home page links to the index from "The record", and the methodology page from "The record".
+  The menu is unchanged: it stays the family's Ask, About, Methodology and Glossary (decision 23).
+- Structured data: only `BreadcrumbList` (Where Countries Stand, Recorded votes in the General Assembly, the vote or
+  session), matching the link above each heading.
+- Sitemap: `/sitemap.xml` is now a sitemap index of `/sitemap-pages.xml` (the pages, as before) and
+  `/sitemap-votes.xml` (the index, every session and every vote). A vote's page is dated by the vote's own date,
+  a session's and the index's by their newest vote: dates from the record, never made up. A hidden vote is left
+  out. robots.txt is unchanged.
+- Right of reply: a vote's page names countries, so it carries the family's "If you're named" panel beside the
+  vote, linking "If you're named on this site", the report form and "Add a statement". A vote's page is an item the
+  right of reply covers as a saved briefing is (decision 16): a statement can sit beside it (shown after the table,
+  in the same box, with `data-nosnippet` so a search engine never quotes it as the site's words), and the
+  maintainer can hide it while a concern is decided (`wcs hide /votes/<symbol>.html`), which shows only its symbol
+  and the note, marked noindex and out of the sitemap. A session's list and the index are not items, as they
+  name no country's vote; they link "If you're named on this site" all the same. The "If you're named" page,
+  the corrections form and the messages a sender is shown say "briefing or vote page".
+- Speed: the list of votes is read in one query (under a fifth of a second over the whole file) and kept, and each
+  vote's page is put together the first time it is asked for (a few milliseconds) and kept, the latest 1,000.
+  Both are read again only when the votes file changes (its time and size), which happens only when the update reads
+  in a new file from the UN. The update does no more work than before.
+- Accessibility: CI starts the site with two made-up votes (`scripts/sample_votes.py`), as it has no data, and
+  `scripts/a11y.mjs` checks the index, the first session and the first vote it links to, and that the vote's page
+  has its table, one heading of the first rank, the "If you're named" link and only breadcrumbs as structured data.

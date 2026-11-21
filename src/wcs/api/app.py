@@ -28,7 +28,10 @@ Endpoints:
   for good (301), as is ``/index.html`` to ``/``. The sitemap gives the day each page last changed, from
   ``WCS_PAGE_DATES`` (``page_dates``), and no day for a page it has none for. The pages share one header and footer:
   ``<!--#include header-->`` is replaced by ``web/partials/header.html``, and ``<!--#include family/shelf-->`` by the
-  Where They Stand family kit's ``web/site/family/shelf.html`` (see ``render_page``).
+  Where They Stand family kit's ``web/site/family/shelf.html`` (see ``render_page``). ``/sitemap.xml`` is an index of
+  ``/sitemap-pages.xml`` (those pages) and ``/sitemap-votes.xml``.
+* ``GET /votes.html``, ``/votes/session-<n>.html`` and ``/votes/<symbol>.html``: the General Assembly's recorded
+  votes, a page for each, written on the server from the votes file (``wcs.api.votes``; decision 26).
 
 Spending is capped per day and per month (``[usage]``), each visitor has a daily limit and a per-minute rate limit,
 and identical questions are answered from a cache until the data changes. The flow of a question, from its
@@ -84,6 +87,9 @@ from wts_core.usage import (
 )
 
 from wcs import adapters
+from wcs.api.votes import INDEX_PATH as VOTES_INDEX
+from wcs.api.votes import SESSION_KEY, SLUG, VotePages, statements_html
+from wcs.api.votes import STATEMENTS as STATEMENTS_HERE
 from wcs.cards import card_png, counts_in_words, shown_counts
 from wcs.config import INSTRUCTIONS_VERSION, REPO_ROOT, SITE, Settings, load_settings
 from wcs.index.lance import has_record, open_index
@@ -95,7 +101,7 @@ from wcs.rag.query_parse import parse_model
 from wcs.replies import (
     MAX_CHARS,
     NOT_ENDORSED,
-    BriefingItems,
+    SiteItems,
     as_shown,
     briefing_id,
     check_country,
@@ -509,8 +515,10 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                        at_once_per_visitor="briefings_at_once_per_visitor", forget_over=FORGET_IDLE_VISITORS_OVER,
                        require_prices_for=models_called(settings), keep_failures=True, clock=clock, random=random)
     record = SqliteBriefingLog(db, clock=clock)  # one record for each question asked (wts-core docs/adr/0012)
+    votes = VotePages(settings)  # a page for each General Assembly recorded vote (decision 26)
     replies = open_replies(db, parts.archive, clock,
-                           record_exists=lambda record_id: has_record(open_index(settings.index_dir), record_id))
+                           record_exists=lambda record_id: has_record(open_index(settings.index_dir), record_id),
+                           vote_exists=votes.exists)
     desk = parts.desk(configuration(settings, record), log=record,
                       hooks=SiteHooks(replies.all_hidden, parts.archive),
                       group_of=lambda card: card.get("group"))  # the record counts each briefing's sources by group
@@ -518,6 +526,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     # content security policy blocks, so it showed a blank page. The endpoints are listed at the top of this file.
     app = FastAPI(title="Where Countries Stand", docs_url=None, redoc_url=None, openapi_url=None)
     app.state.parts, app.state.replies, app.state.record, app.state.db = parts, replies, record, db
+    app.state.votes = votes
     holder: dict[str, Any] = {"pipeline": pipeline}
     memo: dict[str, tuple[float, Any]] = {}
     check_token = SITE.env("CHECK_TOKEN")
@@ -637,7 +646,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         """A statement as sent: held until the owner has confirmed who sent it, then published or declined."""
         visitor(request)  # the rate limit
         try:
-            beside = Item(address=BriefingItems.address(body.page, site_hosts(request)))
+            beside = Item(address=SiteItems.address(body.page, site_hosts(request)))
             sid = replies.submit(item=beside, name=body.name, role=body.role, text=body.text, link=body.link,
                                  email=body.email)
         except Refused as exc:
@@ -648,7 +657,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def published_statements(page: str = "", country: str = ""):
         """The published statements beside one briefing (``page``, its address) or of one country (``country``)."""
         try:
-            item = BriefingItems.address(page) if page else None
+            item = SiteItems.address(page) if page else None
             code = check_country(country)
         except ValueError as exc:  # Refused is one
             raise HTTPException(422, str(exc)) from exc
@@ -768,6 +777,11 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     # Every page is put together once, as the site starts: a missing partial stops it starting.
     rendered = {p.stem: render_page(p, site, partials, versions)
                 for p in sorted(site.glob("*.html")) if PAGE_NAME.fullmatch(p.stem)} if site.exists() else {}
+    # the frame of the pages written from the record (the vote pages and their lists), with the same head, header
+    # and footer as every other page
+    frame = partials / "record-page.html"
+    if site.exists() and frame.is_file():
+        votes.frame = versioned(expand_includes(frame.read_text(encoding="utf-8"), site, partials), versions)
 
     def html_page(text: str, status_code: int = 200) -> HTMLResponse:
         return HTMLResponse(text, status_code=status_code, headers={"Cache-Control": ALWAYS_CHECK})
@@ -786,18 +800,46 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                                  "Disallow: /api/\n\n"
                                  f"Sitemap: {site_url(settings, request)}/sitemap.xml\n")
 
+    def xml(body: str) -> Response:
+        return Response(f'<?xml version="1.0" encoding="UTF-8"?>\n{body}', media_type="application/xml")
+
+    def urlset(rows: list[tuple[str, str]]) -> Response:
+        urls = "".join(f"  <url><loc>{html.escape(loc)}</loc>{f'<lastmod>{when}</lastmod>' if when else ''}</url>\n"
+                       for loc, when in rows)
+        return xml(f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}</urlset>\n')
+
+    def page_rows(base: str) -> list[tuple[str, str]]:
+        return [(f"{base}/{'' if name == 'index' else name + '.html'}", dates.get(name, "")) for name in pages()]
+
+    def vote_rows(base: str) -> list[tuple[str, str]]:
+        hidden = {h["item"] for h in replies.all_hidden()}
+        return [(base + path, when) for path, when in votes.sitemap(lambda path: path in hidden)]
+
     @app.get("/sitemap.xml", include_in_schema=False)
     def sitemap(request: Request):
+        """The sitemap index (robots.txt names it): the site's pages, and the pages written from the record's votes
+        (decision 26), each with the newest date it has for a page in it, and none if it has none."""
         base = site_url(settings, request)
+        entries = []
+        for name, rows in (("pages", page_rows(base)), ("votes", vote_rows(base))):
+            newest = max((when for _, when in rows if when), default="")
+            entries.append(f"  <sitemap><loc>{base}/sitemap-{name}.xml</loc>"
+                           f"{f'<lastmod>{newest}</lastmod>' if newest else ''}</sitemap>\n")
+        return xml(f'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{"".join(entries)}'
+                   "</sitemapindex>\n")
 
-        def lastmod(name: str) -> str:
-            return f"<lastmod>{dates[name]}</lastmod>" if name in dates else ""
+    @app.get("/sitemap-pages.xml", include_in_schema=False)
+    def sitemap_pages(request: Request):
+        """The site's own pages, with the day each last changed (``page_dates``), and no day for one it has none
+        for."""
+        return urlset(page_rows(site_url(settings, request)))
 
-        urls = "".join(f"  <url><loc>{base}/{'' if name == 'index' else name + '.html'}</loc>{lastmod(name)}</url>\n"
-                       for name in pages())
-        return Response('<?xml version="1.0" encoding="UTF-8"?>\n'
-                        f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}</urlset>\n',
-                        media_type="application/xml")
+    @app.get("/sitemap-votes.xml", include_in_schema=False)
+    def sitemap_votes(request: Request):
+        """The votes' index, each session's list and each vote's page that is not hidden, dated by the newest vote
+        on it: a date from the record, never one made up (5,730 votes in the record of 15 October 2026, well
+        within a sitemap's 50,000)."""
+        return urlset(vote_rows(site_url(settings, request)))
 
     def page(request: Request, name: str) -> HTMLResponse:
         if name not in rendered or name == "404":
@@ -824,6 +866,45 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     for name in pages():
         for other in (f"/{name}", f"/{name}/", f"/{name}.html/", *(("/index.html",) if name == "index" else ())):
             app.add_api_route(other, page_moved, methods=["GET", "HEAD"], include_in_schema=False)
+
+    # The pages written from the record's votes (decision 26). Each is at one address, as its canonical link says;
+    # the other forms a reader or a crawler might try are sent there for good, as for the other pages.
+
+    def votes_moved(request: Request, to: str) -> RedirectResponse:
+        query = f"?{request.url.query}" if request.url.query else ""
+        return RedirectResponse(to + query, status_code=301)
+
+    @app.api_route(VOTES_INDEX, methods=["GET", "HEAD"], include_in_schema=False)
+    def votes_index(request: Request):
+        return html_page(votes.index().replace(SITE_MARK, site_url(settings, request)))
+
+    def votes_index_moved(request: Request) -> RedirectResponse:
+        return votes_moved(request, VOTES_INDEX)
+
+    for other in ("/votes", "/votes.html/"):
+        app.add_api_route(other, votes_index_moved, methods=["GET", "HEAD"], include_in_schema=False)
+
+    @app.api_route("/votes/{rest:path}", methods=["GET", "HEAD"], include_in_schema=False)
+    def vote_pages(request: Request, rest: str):
+        base = site_url(settings, request)
+        name = rest.removesuffix(".html") if rest.endswith(".html") else None
+        if name and name.startswith("session-") and SESSION_KEY.fullmatch(name.removeprefix("session-")):
+            text = votes.session_page(name.removeprefix("session-"))
+            if text is not None:
+                return html_page(text.replace(SITE_MARK, base))
+        elif name and SLUG.fullmatch(name) and votes.exists(name):
+            path = f"/votes/{name}.html"
+            hidden = replies.hidden(path)
+            if hidden is not None:  # while a concern about it is decided (the impartiality policy, 7.3)
+                return html_page((votes.hidden_page(name, str(hidden["note"])) or "").replace(SITE_MARK, base))
+            text = votes.vote_page(name) or ""
+            found = [as_shown(s) for s in replies.published(items=[Item(address=path)])]
+            return html_page(text.replace(STATEMENTS_HERE, statements_html(found, NOT_ENDORSED), 1)
+                             .replace(SITE_MARK, base))
+        to = votes.moved(rest)
+        if to is not None and to != request.url.path:
+            return votes_moved(request, to)
+        raise HTTPException(404, "Not found")
 
     @app.get("/{name}.html", include_in_schema=False)
     def named_page(request: Request, name: str):
