@@ -1885,7 +1885,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "typer" },
     { name = "uvicorn", extra = ["standard"] },
-    { name = "wts-core", extra = ["ai", "cli", "duckdb", "offsite"] },
+    { name = "wts-core", extra = ["ai", "cards", "cli", "duckdb", "offsite"] },
 ]
 
 [package.optional-dependencies]
@@ -1915,7 +1915,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.8" },
     { name = "typer", specifier = ">=0.12" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
-    { name = "wts-core", extras = ["cli", "offsite", "duckdb", "ai"], url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.3.2/wts_core-0.3.2-py3-none-any.whl" },
+    { name = "wts-core", extras = ["cli", "offsite", "duckdb", "ai", "cards"], url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.4.0/wts_core-0.4.0-py3-none-any.whl" },
 ]
 provides-extras = ["embed"]
 
@@ -2072,10 +2072,10 @@ wheels = [
 
 [[package]]
 name = "wts-core"
-version = "0.3.2"
-source = { url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.3.2/wts_core-0.3.2-py3-none-any.whl" }
+version = "0.4.0"
+source = { url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.4.0/wts_core-0.4.0-py3-none-any.whl" }
 wheels = [
-    { url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.3.2/wts_core-0.3.2-py3-none-any.whl", hash = "sha256:26cb6aa738dbf6a7e054a508ca499f8d8b4a9e53785124d16628071cf52ebe67" },
+    { url = "https://github.com/rj-mitchell/wts-core/releases/download/v0.4.0/wts_core-0.4.0-py3-none-any.whl", hash = "sha256:7b0a02f47cc1542423cdac3b8dca1ea9ccac4adf49940db0a88c05c3f8ed0975" },
 ]
 
 [package.optional-dependencies]
@@ -2085,6 +2085,9 @@ ai = [
     { name = "lancedb" },
     { name = "numpy" },
     { name = "pyarrow" },
+]
+cards = [
+    { name = "pillow" },
 ]
 cli = [
     { name = "typer" },
@@ -2104,7 +2107,8 @@ requires-dist = [
     { name = "httpx", marker = "extra == 'offsite'", specifier = ">=0.28" },
     { name = "lancedb", marker = "extra == 'ai'", specifier = ">=0.40,<1" },
     { name = "numpy", marker = "extra == 'ai'", specifier = ">=2.5" },
+    { name = "pillow", marker = "extra == 'cards'", specifier = ">=11" },
     { name = "pyarrow", marker = "extra == 'ai'", specifier = ">=26" },
     { name = "typer", marker = "extra == 'cli'", specifier = ">=0.27" },
 ]
-provides-extras = ["ai", "cli", "duckdb", "offsite"]
+provides-extras = ["ai", "cards", "cli", "duckdb", "offsite"]
