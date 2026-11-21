@@ -656,8 +656,8 @@ def test_alpha_notice_links_to_the_report_form(indexed):  # noqa: F811
     assert "<noscript>" in api.get("/").text
 
 
-PAGES = ("/", "/about.html", "/corrections.html", "/named.html", "/privacy.html", "/accessibility.html", "/terms.html",
-         "/glossary.html", "/press.html", "/status.html", "/missing")
+PAGES = ("/", "/about.html", "/methodology.html", "/corrections.html", "/named.html", "/privacy.html",
+         "/accessibility.html", "/terms.html", "/glossary.html", "/press.html", "/status.html", "/missing")
 INDEPENDENCE = ("Where Countries Stand is independent. It is not affiliated with or endorsed by the United Nations, "
                 "and it does not use the UN’s name or emblem.")
 
@@ -680,8 +680,12 @@ def test_every_page_carries_the_family_binding_and_the_standard_furniture(indexe
         # the family's footer links, in the family's order, and no more than six (family GLOSSARY, "Footer links")
         links = footer[footer.index('<nav class="foot__links"'):]
         links = re.findall(r'href="([^"]+)"', links[:links.index("</nav>")])
-        assert links == ["/about.html", "/corrections.html", "/accessibility.html", "/privacy.html",
+        assert links == ["/about.html", "/methodology.html", "/corrections.html", "/accessibility.html", "/privacy.html",
                          "https://github.com/rj-mitchell/wherecountriesstand"], page
+        # the menu: Methodology beside About, as on the sister sites (decision 23)
+        sections = text[text.index('<nav class="sections"'):]
+        assert re.findall(r'href="([^"]+)"', sections[:sections.index("</nav>")]) == \
+            ["/", "/about.html", "/methodology.html", "/glossary.html"], page
         assert footer.index('<nav class="wts-shelf"') < footer.index('<nav class="foot__links"'), page
         assert " · " not in text and " — " not in text, page
 
@@ -743,12 +747,59 @@ def test_the_family_kit_copy_matches_its_version_file():
 
 
 def test_a_briefing_links_to_sister_sites(indexed):  # noqa: F811
+    """After a briefing, with its address and report link, the same question is offered on Where MPs Stand, with
+    that site's spine copied from the family shelf; only once a briefing is written (decision 24). scripts/a11y.mjs
+    opens a saved briefing and a "No records found" one in a browser and checks the link is on the first only."""
     api, _ = make(indexed, FakeClient())
-    home = api.get("/").text
-    assert 'id="sisters"' in home and 'id="sister-links"' in home
+    for path in ("/", "/b/nosuchbriefing"):
+        home = api.get(path).text
+        main = home[home.index('id="briefing"'):home.index('id="sources-section"')]
+        # after the briefing and its notes (address, report link), before any statements
+        assert main.index('id="notes"') < main.index('id="sisters"') < main.index('id="statements"'), path
+        # the spine it copies is the kit's own drawing, in the footer shelf of the same page
+        assert '<svg class="wts-spine wts-cloth--mps"' in home[home.index('<nav class="wts-shelf"'):], path
     script = (SITE / "app.js").read_text()
     assert 'const MPS = "https://wherempsstand.com/";' in script
     assert 'const LIVES = "https://wherelivesstand.com/country/";' in script
+    assert 'el("a", { href: `${MPS}?q=${encodeURIComponent(question)}` },\n      spine("mps"), ' \
+        '"Ask the same question on Where MPs Stand")' in script
+    assert 'document.querySelector(`.wts-shelf .wts-cloth--${site}`)' in script
+    # shown on a written briefing only, never on "No records found", and cleared for each new question
+    assert 'if (ev.answer && !ev.answer.no_records) sisters($("question").textContent, st.countries);' in script
+    assert script.count("sisters(") == 3 and 'sisters("");' in script
+
+
+def test_the_methodology_page_holds_the_method_and_about_links_to_it(indexed, monkeypatch):  # noqa: F811
+    """The method moved from About to its own page, named as on the sister sites (decision 23): one heading of the
+    first rank, its own title and address, in the sitemap, and the About page's old anchors still lead to it."""
+    monkeypatch.setenv("WCS_SITE_URL", "https://countries.example")
+    api, _ = make(indexed, FakeClient())
+    method = api.get("/methodology.html").text
+    assert "<title>Methodology | Where Countries Stand</title>" in method
+    assert '<link rel="canonical" href="https://countries.example/methodology.html">' in method
+    assert re.findall(r"<h1[ >]", method) == ["<h1>"] and "<h1>Methodology</h1>" in method
+    for anchor in ("ai-briefings", "given", "checked", "record", "how", "impartiality"):
+        assert f'id="{anchor}"' in method, anchor
+    # the family's headings for the AI briefings (GLOSSARY, "AI briefings")
+    for heading in ('<h2 id="ai-briefings">AI briefings</h2>', '<h3 id="given">What the model is given</h3>',
+                    '<h3 id="checked">How it is checked</h3>'):
+        assert heading in method
+    assert "Briefings are written by AI." in method and "sentences that\n        no source supports are flagged" in method
+    assert '<a href="/methodology.html" aria-current="page">' in method
+    assert "<url><loc>https://countries.example/methodology.html</loc></url>" in api.get("/sitemap.xml").text
+    about = api.get("/about.html").text
+    main = about[about.index("<main"):about.index("</main>")]
+    # the old anchors on About, which others may link to, are kept beside links to the new page
+    for anchor, link in (("ai-briefings", "/methodology.html#ai-briefings"), ("how", "/methodology.html"),
+                         ("record", "/methodology.html#record"), ("impartiality", "/methodology.html#impartiality")):
+        at = main.index(f'id="{anchor}"')
+        assert f'<a href="{link}">' in main[at:at + 400], anchor
+    assert 'id="given"' in main and 'id="checked"' in main
+    assert "<h2>In the family</h2>" in main and "Briefings are written by AI" in main
+    assert '<a href="/named.html">If you’re named on this site</a>' in main
+    corrections = api.get("/corrections.html").text
+    assert '<a href="/named.html">If you’re named on this site</a>' in corrections[corrections.index("<main"):]
+    assert '<a href="/methodology.html#ai-briefings">' in api.get("/").text   # the home page's disclosure
 
 
 def test_a_sentence_whose_citations_all_failed_is_marked_like_one_with_no_source():
@@ -759,7 +810,7 @@ def test_a_sentence_whose_citations_all_failed_is_marked_like_one_with_no_source
     assert 'return seg.status === "unsupported" || seg.status === "invalid";' in script
     assert 'flagged(seg) ? "unsupported" : ""' in script
     assert 'filter((seg) => seg.status === "invalid")' in script and "so the citation was removed" in script
-    assert "sentences whose\n        citations all failed the check" in (SITE / "about.html").read_text()
+    assert "sentences whose\n        citations all failed the check" in (SITE / "methodology.html").read_text()
 
 
 def test_cost_copes_with_the_sdks_own_names_and_records_cache_writes(settings):

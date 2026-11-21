@@ -99,11 +99,13 @@ function spine(site) {
   return drawn ? drawn.cloneNode(true) : null;
 }
 
+// Offered once a briefing has been written, after it with its address and report link: never for "No records found",
+// a briefing that failed, or sources shown without one (decision 24).
 function sisters(question, countries = []) {
   const links = [];
   if (question) {
     links.push(el("li", {}, el("a", { href: `${MPS}?q=${encodeURIComponent(question)}` },
-      spine("mps"), "Ask Where MPs Stand the same question")));
+      spine("mps"), "Ask the same question on Where MPs Stand")));
   }
   for (const code of countries) {
     if (!["member_state", "observer_state"].includes(names.kinds[code])) continue;
@@ -274,7 +276,7 @@ function handle(ev, st) {
   if (ev.type === "plan") {
     $("interpretation").textContent = ev.plan.interpretation || "";
     chips(ev.plan);
-    sisters($("question").textContent, (ev.plan.filters || {}).countries || []);
+    st.countries = (ev.plan.filters || {}).countries || [];
     $("status").textContent = "Searching the record for statements and votes.";
   } else if (ev.type === "sources") {
     showSources(ev.sources || []);
@@ -287,6 +289,7 @@ function handle(ev, st) {
     $("status").textContent = "";
     if (ev.answer) renderAnswer(ev.answer);
     else if (st.drafting) st.drafting.remove();
+    if (ev.answer && !ev.answer.no_records) sisters($("question").textContent, st.countries);
     if (ev.note) note(ev.note);
     if (ev.cached && !st.saved) note("This briefing was written earlier for the same question and the same data.");
     if (ev.briefing_id) { saved(ev.briefing_id, st); showStatements(ev.briefing_id); }
@@ -326,7 +329,7 @@ function reset(question) {
   $("summary").hidden = true;
   $("marks").hidden = true;
   $("sources-section").hidden = true;
-  sisters(question);
+  sisters("");
 }
 
 async function openSaved(id) {

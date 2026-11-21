@@ -73,16 +73,16 @@ to a reading width of about 46rem (`--column`); panels, grids and tables use the
 
 - The header is a band in the site's cloth. It holds the horseshoe mark on a white tile, the site's name, the
   family endorsement ("A Where They Stand project", with the site's spine) and the navigation (Ask, About,
-  Glossary).
+  Methodology, Glossary).
 - Under the band, the alpha notice is one line with an "Alpha" tag and a link to the report form.
 - On the home page, the question box and a panel on how briefings are checked sit side by side, then the example
   questions beside a short list of what the record covers. Below 56rem the grid becomes a single column.
 - A briefing puts the question and the briefing in a wide column, with the filters used in a panel beside it. The
   sources follow as numbered cards on grey panels, two to a row on wide screens and one on narrow ones.
-- Text pages (About, Glossary, Privacy and the others) use the reading width; the glossary sets each term beside its
-  meaning across the full column.
-- The footer is the family shelf, then the site's own links (About, Corrections, Accessibility, Privacy, Source code)
-  and one paragraph on independence, translations and licences.
+- Text pages (About, Methodology, Glossary, Privacy and the others) use the reading width; the glossary sets each
+  term beside its meaning across the full column.
+- The footer is the family shelf, then the site's own links (About, Methodology, Corrections, Accessibility, Privacy,
+  Source code, in the family's order) and one paragraph on independence, translations and licences.
 
 Panels have square corners and no shadow. Buttons and inputs have a 3px radius. There are no coloured stripes down
 the side of boxes, double rules, small tracked capitals or gold text; gold appears only in the bands on the book
@@ -105,9 +105,11 @@ Not checked or endorsed by Where Countries Stand." The "If you're named" page (`
 
 ## Links to sister sites
 
-Under a briefing, links to sister sites each show that site's spine: "Ask Where MPs Stand the same question"
+After a briefing, with its address and the link to report a problem, links to sister sites each show that site's
+spine, copied from the family shelf in the footer: "Ask the same question on Where MPs Stand"
 (`https://wherempsstand.com/?q=…`) and, for each country the question is about, "Quality of life in … on Where Lives
-Stand" (`https://wherelivesstand.com/country/<ISO alpha-3>`).
+Stand" (`https://wherelivesstand.com/country/<ISO alpha-3>`). They are offered only once a briefing has been written:
+not for "No records found", a briefing that failed, or sources shown without a briefing (decision 24).
 
 ## Accessibility and behaviour
 

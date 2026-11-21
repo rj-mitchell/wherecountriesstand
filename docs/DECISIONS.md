@@ -204,3 +204,42 @@ the dates. The fix follows Where MPs Stand's decision 40 (19 November 2026):
   `/api/groups`, and the public log of corrections and the status the corrections and status pages show).
   Everything else under `/api/` stays closed: briefings, statements, reports and the check token's address.
 - The page's script still refreshes the dates. If that fails, the server's text stays and no error is shown.
+
+## 23. A methodology page, and the family's footer
+
+On 21 November 2026 the charity's review plan (C4, "Same names for the same pages") asked for the same page names
+across the family: Where Councils Stand, Where Landlords Stand, Where Lives Stand and Where MPs Stand each have a
+methodology page, and this site kept its method inside About.
+
+- The method moves to its own page, `/methodology.html` ("Methodology | Where Countries Stand"), linked in the menu
+  (Ask, About, Methodology, Glossary) and in every footer. It holds the "AI briefings" section in full, with all
+  seven of the family's points (the glossary, "AI briefings"), "The record", "From question to briefing" (the
+  "Method" section, renamed so that it does not repeat the page's name) and "Impartiality". Decision 20's note on
+  sentences whose citations failed is now on this page.
+- About keeps a short "AI briefings" section, with its two short parts, as the glossary asks of About pages, and a
+  "Methodology" section linking to each part of the new page. The anchors people may have linked to
+  (`/about.html#ai-briefings`, `#given`, `#checked`, `#how`, `#record` and `#impartiality`) all still land on About,
+  beside a link to the same part of the methodology page. About keeps its licences, its "More about the site" list
+  and its "In the family" paragraph. The home page's "How the briefings are checked" now links to the methodology
+  page, as the glossary says.
+- The footer follows the glossary: About, Methodology, Corrections, Accessibility, Privacy, Source code, and no
+  more. "If you're named" is reached from Corrections and About, not from the footer, as the plan's decisions record.
+- The page is found by the sitemap as every other page is. The charity's nightly check should add
+  `/methodology.html` to this site's `crawlerPages` once the page is live.
+
+## 24. The same question on Where MPs Stand
+
+On 21 November 2026 the charity's review plan (C1, "Briefings to sister sites") asked each briefing site to offer
+the same question on a sister site where it makes sense, naming the sister site and showing its spine. For this site
+that is Where MPs Stand, which takes a question as `?q=`.
+
+- Every briefing, as it is written and when it is opened at `/b/<id>`, ends with "Ask the same question on Where
+  MPs Stand", linking to `https://wherempsstand.com/?q=` and the question, URL-encoded. It sits after the briefing,
+  with the briefing's address and the link to report a problem, and before any statements under the right of reply.
+- The spine beside it is the family kit's own drawing of Where MPs Stand's spine, copied from the shelf in the same
+  page's footer, so it changes when the kit does and is never drawn by hand here.
+- It is offered only once a briefing has been written: not for "No records found", not when the briefing failed,
+  and not for sources shown without a briefing. The links to Where Lives Stand for the countries a question is
+  about follow the same rule, so a page offers nothing it has not answered itself.
+- `scripts/a11y.mjs` opens a saved briefing, a saved "No records found" and a saved failure in a browser, and fails
+  if the link is missing, wrongly addressed, worded or without its spine, or offered where it should not be.
