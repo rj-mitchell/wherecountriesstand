@@ -576,7 +576,8 @@ def test_scripts_and_styles_carry_their_hash_and_are_kept_long(indexed):  # noqa
     home = api.get("/")
     assert home.headers["cache-control"] == "no-cache"
     refs = re.findall(r'(?:href|src)="(/[a-z/]+\.(?:css|js)[^"]*)"', home.text)
-    assert {r.split("?")[0] for r in refs} == {"/styles.css", "/app.js", "/family/fonts.css", "/family/family.css"}
+    assert {r.split("?")[0] for r in refs} == {"/styles.css", "/app.js", "/briefing.js", "/family/fonts.css",
+                                               "/family/family.css", "/family/briefing.css"}
     for ref in refs:
         assert re.fullmatch(r"/[a-z/]+\.(css|js)\?v=[0-9a-f]{12}", ref), ref
         assert api.get(ref).headers["cache-control"] == "public, max-age=31536000, immutable"
@@ -804,13 +805,16 @@ def test_the_methodology_page_holds_the_method_and_about_links_to_it(indexed, mo
 
 def test_a_sentence_whose_citations_all_failed_is_marked_like_one_with_no_source():
     """The verifier calls a sentence "invalid" when it carried citations and every one failed the check against the
-    source's text, so all were removed: the page sets it in grey, as it does a sentence with no source, and the note
-    under the briefing says why (scripts/a11y.mjs renders such a briefing and checks it, light and dark)."""
-    script = (SITE / "app.js").read_text()
-    assert 'return seg.status === "unsupported" || seg.status === "invalid";' in script
-    assert 'flagged(seg) ? "unsupported" : ""' in script
-    assert 'filter((seg) => seg.status === "invalid")' in script and "so the citation was removed" in script
-    assert "sentences whose\n        citations all failed the check" in (SITE / "methodology.html").read_text()
+    source's text, so all were removed: the page marks it as it does a sentence with no source (a dotted underline,
+    never grey), and says why in words (decision 25, which replaces decision 20's grey). web/tests/ renders such a
+    briefing, and scripts/a11y.mjs opens one in a browser, light and dark, and checks each mark."""
+    script = (SITE / "briefing.js").read_text()
+    assert 'const flagged = (seg) => seg.status === "unsupported" || seg.status === "invalid";' in script
+    assert '"its citation did not match the source and was removed"' in script
+    assert "so the citation was removed" not in (SITE / "app.js").read_text()  # the old note under the briefing
+    css = (SITE / "styles.css").read_text()
+    assert ".unsupported" not in css and "grey" not in (SITE / "methodology.html").read_text()
+    assert "marked with a dotted underline" in (SITE / "methodology.html").read_text()
 
 
 def test_cost_copes_with_the_sdks_own_names_and_records_cache_writes(settings):

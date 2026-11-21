@@ -1,9 +1,14 @@
-// Where Countries Stand: the ask page. Streams a briefing from /api/ask (server-sent events): the question, the
-// filters read from it, the briefing with numbered citations, then the sources.
-// Every piece of text is set with textContent: nothing from the record or the model is parsed as HTML.
+// Where Countries Stand: the ask page. Streams a briefing from /api/ask (server-sent events: plan, sources, text and
+// citation, final), or opens a saved one (/b/<id>), and shows it as the family shows a checked briefing
+// (family/BRIEFINGS.md in the charity's repository, with /family/briefing.css): the check strip, record quotations,
+// source chips, every passage with no source marked, and the record beside the briefing (a bottom sheet on phones).
+// While a briefing is written, the wait shows its real events in order (docs/DESIGN.md, "The wait").
+// The briefing's parts are built by briefing.js; every piece of text is set as text: nothing from the record or the
+// model is parsed as HTML.
 "use strict";
 
 const $ = (id) => document.getElementById(id);
+const B = window.WCSBriefing;
 const BODY = { sc: "Security Council", gd: "General Assembly" };
 let names = { countries: {}, kinds: {}, groups: {} };
 // Sister sites a briefing links to (docs/DESIGN.md, "Links to sister sites"): Where MPs Stand takes the same
@@ -13,6 +18,10 @@ const LIVES = "https://wherelivesstand.com/country/";
 // A statement under the right of reply is shown with these words, in the family's wording (decision 16).
 const NOT_ENDORSED = "In their own words. Not checked or endorsed by Where Countries Stand.";
 let shownBriefing = null;  // the briefing whose statements may be shown (a new question clears it)
+
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const wide = () => matchMedia("(min-width: 64rem)").matches;  // the record beside the briefing, or a sheet
+const canHover = () => matchMedia("(hover: hover)").matches;
 
 function el(tag, attrs = {}, ...children) {
   const node = document.createElement(tag);
@@ -27,6 +36,7 @@ function el(tag, attrs = {}, ...children) {
   }
   return node;
 }
+const dom = (tree) => B.toDOM(tree);
 
 function fmtDate(iso) {
   if (!iso) return "";
@@ -53,7 +63,9 @@ async function loadCoverage() {
       ...[["General Debate", c.gd], ["Security Council debates", c.sc], ["General Assembly votes", c.votes]].map(
         ([label, x]) => el("div", {}, el("dt", {}, label), el("dd", {}, span(x)))));
     if (!meta.briefings) {
+      // no model: the main button finds the sources, so the second would only repeat it
       $("go").textContent = "Find sources";
+      $("go-sources").hidden = true;
     }
   } catch (e) {
     // The server wrote the dates into the page; if they can't be refreshed, they stay as they are.
@@ -68,7 +80,7 @@ function chips(plan) {
   if (f.date_from || f.date_to) {
     const from = f.date_from ? f.date_from.slice(0, 4) : "1946";
     const to = f.date_to ? f.date_to.slice(0, 4) : "today";
-    out.push(el("li", { class: "chip" }, from === to ? from : `${from}–${to}`));
+    out.push(el("li", { class: "chip" }, from === to ? from : `${from} to ${to}`));
   }
   for (const c of f.countries || []) out.push(el("li", { class: "chip" }, names.countries[c] || c));
   for (const g of f.groups || []) out.push(el("li", { class: "chip" }, names.groups[g] || g));
@@ -76,7 +88,7 @@ function chips(plan) {
   $("chips").replaceChildren(...out);
 }
 
-function summary(evidence, sources) {
+function summary(evidence) {
   const p = $("summary");
   if (!evidence || !evidence.records) { p.hidden = true; return; }
   const parts = [`${evidence.records} statements from ${evidence.countries} countries and groups at ${evidence.meetings} meetings`];
@@ -116,6 +128,7 @@ function sisters(question, countries = []) {
   $("sisters").hidden = !links.length;
 }
 
+// The sources under the briefing: the printed reference list, with each source's address when printed.
 function sourceCard(s) {
   if (s.kind === "vote") {
     const t = s.totals || {};
@@ -135,7 +148,7 @@ function sourceCard(s) {
   if (s.language) who.push(" ", el("i", {}, `(spoke in ${s.language})`));
   who.push(":");
   const words = (s.text || "").split(/\s+/);
-  const short = words.slice(0, 90).join(" ") + (words.length > 90 ? "\u00a0…" : "");  // the ellipsis never alone on a line
+  const short = words.slice(0, 90).join(" ") + (words.length > 90 ? " …" : "");  // the ellipsis never alone on a line
   const notes = [];
   if (s.language) notes.push("English text: UN translation.");
   if (s.text_source === "delegation") notes.push("Text issued by the delegation, as prepared; not yet the official record.");
@@ -161,87 +174,407 @@ function showSources(list) {
   $("sources-section").hidden = !list.length;
 }
 
-// "**bold**" in the model's text becomes <strong>; a line starting "#" becomes a heading. Nothing else is markup.
-function inline(text) {
-  const out = [];
-  text.split(/(\*\*[^*]+\*\*)/).forEach((part) => {
-    if (part.startsWith("**") && part.endsWith("**")) out.push(el("strong", {}, part.slice(2, -2)));
-    else if (part) out.push(part);
-  });
-  return out;
+// ---------- the finished briefing: the strip, the text, the record beside it ----------
+
+// What the page shows of the briefing on screen now, for the record panel, the sheet and the chips.
+const shown = { answer: null, sources: [], byN: {}, quoted: {}, cited: [], active: null, pinnedUntil: 0 };
+
+function setBriefing(answer, sources) {
+  shown.answer = answer;
+  shown.sources = sources || [];
+  shown.byN = Object.fromEntries(shown.sources.map((s) => [s.n, s]));
+  shown.quoted = B.quotedFrom(answer);
+  shown.cited = B.citedSources(answer).filter((n) => shown.byN[n]);
 }
 
-// A sentence set in grey as a point to check: one with no source ("unsupported"), or one whose every citation failed
-// the check against the source's text, so was removed ("invalid"; wts-core's verifier).
-function flagged(seg) {
-  return seg.status === "unsupported" || seg.status === "invalid";
+// The briefing as written and checked. A briefing with no records found has no strip: the site says so in its text.
+function renderAnswer(answer, sources, { running = null } = {}) {
+  setBriefing(answer, sources);
+  const checked = !answer.no_records;
+  $("strip").replaceChildren(...(checked ? [dom(B.strip(answer, running))] : []));
+  $("briefing").replaceChildren(...B.briefingBlocks(answer, shown.byN).map(dom));
+  $("details").replaceChildren(...(checked ? [dom(B.details(answer, shown.sources.length))] : []));
+  bindChips();
 }
 
-// The briefing as lines: each line a list of pieces (text with its marks, and citation links where a cited span
-// ends). Lines are then laid out: a bold label alone on a line or "# ..." is a heading, "- ..." a list item, and
-// other lines run together into paragraphs, broken at blank lines.
-function briefingLines(answer) {
-  const lines = [[]];
-  for (const seg of answer.segments || []) {
-    const cls = [flagged(seg) ? "unsupported" : "", (seg.loaded || []).length ? "loaded" : "",
-                 (seg.misquotes || []).length ? "misquote" : ""].filter(Boolean).join(" ");
-    seg.text.split("\n").forEach((piece, i) => {
-      if (i > 0) lines.push([]);
-      if (piece) lines[lines.length - 1].push({ text: piece, cls });
+// The strip's "Show the first" links: to the passage, scrolled into view and briefly shown.
+function bindFirsts() {
+  for (const a of document.querySelectorAll(".wts-check__first")) {
+    a.addEventListener("click", (e) => {
+      const target = document.querySelector(a.getAttribute("href"));
+      if (!target) return;
+      e.preventDefault();
+      target.setAttribute("tabindex", "-1");
+      target.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+      target.focus({ preventScroll: true });
+      target.classList.add("is-shown");
+      setTimeout(() => target.classList.remove("is-shown"), 1600);
+      history.replaceState(null, "", location.pathname + location.search);
     });
-    for (const n of seg.sources || []) lines[lines.length - 1].push({ cite: n });
   }
-  return lines;
 }
 
-function renderPieces(pieces) {
-  const out = [];
-  pieces.forEach((x, i) => {
-    if (x.cite) {
-      out.push("⁠", el("a", { class: "cite", href: `#s${x.cite}`, "aria-label": `Source ${x.cite}` }, `[${x.cite}]`));
-      return;
+function bindChips() {
+  for (const c of document.querySelectorAll("#briefing .wts-chip")) {
+    const n = Number(c.dataset.source);
+    c.addEventListener("click", () => {
+      shown.pinnedUntil = Date.now() + 4000;
+      if (wide()) { settleNow(); showRecord(n, c); } else openSheet(n, c);
+    });
+    c.addEventListener("focus", () => {
+      if (!wide() || !$("record-panel")) return;
+      shown.pinnedUntil = Date.now() + 4000;
+      showRecord(n, c);
+    });
+    c.addEventListener("mouseenter", () => {
+      if (!wide() || !canHover() || !$("record-panel")) return;
+      shown.pinnedUntil = Date.now() + 2500;
+      showRecord(n, c);
+    });
+  }
+  bindFirsts();
+}
+
+// The record beside the briefing, on wide screens: open from the start on the first source, following the chips.
+function openRecord(settling) {
+  const col = $("record-col");
+  if (!shown.cited.length) { col.replaceChildren(); col.hidden = true; return; }
+  col.replaceChildren(el("div", { class: `wts-record${settling && !reduced() ? " is-settling" : ""}`, id: "record-panel" }));
+  col.hidden = false;
+  const first = document.querySelector("#briefing .wts-chip");
+  showRecord(first ? Number(first.dataset.source) : shown.cited[0], null, { quiet: true });
+}
+
+function showRecord(n, chip, { quiet = false } = {}) {
+  const panel = $("record-panel");
+  const s = shown.byN[n];
+  if (!panel || !s) return;
+  shown.active = n;
+  const seg = chip ? Number(chip.dataset.seg) : null;
+  const i = shown.cited.indexOf(n);
+  const prev = el("button", { type: "button" }, "Previous source");
+  const next = el("button", { type: "button" }, "Next source");
+  prev.addEventListener("click", () => step(-1));
+  next.addEventListener("click", () => step(1));
+  panel.replaceChildren(
+    el("p", { class: "wts-record__title" }, "The record ", el("span", {}, `Source ${n}, ${i + 1} of ${shown.cited.length}`)),
+    dom(B.slip(s, shown.quoted[n], seg === null ? firstSegOf(n) : seg, "record-passage")),
+    el("div", { class: "wts-record__pager" }, prev, next));
+  for (const c of document.querySelectorAll("#briefing .wts-chip")) {
+    c.setAttribute("aria-current", String(Number(c.dataset.source) === n && (!chip || c === chip)));
+  }
+  const passage = $("record-passage");
+  const mark = panel.querySelector("mark.wts-now") || panel.querySelector("mark");
+  if (mark && passage) passage.scrollTop = Math.max(0, mark.offsetTop - passage.offsetTop - 24);
+  if (!quiet || chip) drawConnector(chip || document.querySelector(`#briefing .wts-chip[data-source="${n}"]`));
+  else drawConnector(null);
+}
+
+function firstSegOf(n) {
+  const chip = document.querySelector(`#briefing .wts-chip[data-source="${n}"]`);
+  return chip ? Number(chip.dataset.seg) : null;
+}
+
+function step(d) {
+  if (!shown.cited.length) return;
+  const i = shown.cited.indexOf(shown.active);
+  const n = shown.cited[(i + d + shown.cited.length) % shown.cited.length];
+  shown.pinnedUntil = Date.now() + 4000;
+  const chip = document.querySelector(`#briefing .wts-chip[data-source="${n}"]`);
+  showRecord(n, chip);
+  if (chip) chip.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+}
+
+// A line from the chosen chip's line of text to its passage, across the gutter.
+function drawConnector(chip) {
+  const svg = $("connector");
+  svg.replaceChildren();
+  const panel = $("record-panel");
+  if (!chip || !panel || !wide()) return;
+  const box = $("result-grid").getBoundingClientRect(), a = chip.getBoundingClientRect();
+  if (a.bottom < 0 || a.top > innerHeight) return;
+  const passage = $("record-passage");
+  if (!passage) return;
+  const m = panel.querySelector("mark.wts-now") || panel.querySelector("mark") || passage;
+  const b = m.getBoundingClientRect(), pb = passage.getBoundingClientRect();
+  const text = $("briefing").getBoundingClientRect();
+  const x1 = Math.min(text.right, a.right) + 8 - box.left, y1 = a.top + a.height / 2 - box.top;
+  const x2 = pb.left - 6 - box.left;
+  const y2 = Math.min(Math.max(b.top + 10, pb.top + 8), pb.bottom - 8) - box.top;
+  if (x2 - x1 < 12) return;
+  const mid = (x1 + x2) / 2;
+  const ns = "http://www.w3.org/2000/svg";
+  svg.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
+  svg.setAttribute("width", box.width);
+  svg.setAttribute("height", box.height);
+  const path = document.createElementNS(ns, "path");
+  path.setAttribute("d", `M${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}`);
+  svg.append(path);
+  for (const [cx, cy] of [[x1, y1], [x2, y2]]) {
+    const dot = document.createElementNS(ns, "circle");
+    dot.setAttribute("cx", cx); dot.setAttribute("cy", cy); dot.setAttribute("r", 3);
+    svg.append(dot);
+  }
+}
+
+// As the reader scrolls a wide screen, the chip nearest the upper third of the window leads, unless they have just
+// chosen one.
+let ticking = false;
+addEventListener("scroll", () => {
+  if (ticking || !$("record-panel")) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    ticking = false;
+    if (!wide()) return;
+    const current = document.querySelector('#briefing .wts-chip[aria-current="true"]');
+    if (Date.now() < shown.pinnedUntil) { drawConnector(current); return; }
+    const line = innerHeight * 0.38;
+    let best = null, bd = Infinity;
+    for (const c of document.querySelectorAll("#briefing .wts-chip")) {
+      const r = c.getBoundingClientRect();
+      const d = Math.abs(r.top - line);
+      if (r.bottom > 0 && r.top < innerHeight && d < bd) { bd = d; best = c; }
     }
-    const text = i === 0 ? x.text.replace(/^\s*(?:[-*•]|#+)\s+/, "") : x.text;
-    out.push(x.cls ? el("span", { class: x.cls }, inline(text)) : el("span", {}, inline(text)));
+    if (best && best !== current) showRecord(Number(best.dataset.source), best);
+    else drawConnector(current);
   });
-  return out;
+}, { passive: true });
+addEventListener("resize", () => {
+  if (wide() && $("sheet")) closeSheet();
+  if (!$("record-panel") && wide() && shown.answer && !wait.active) openRecord(false);
+  drawConnector(document.querySelector('#briefing .wts-chip[aria-current="true"]'));
+});
+
+// On narrower screens a chip opens the same slip in a sheet from the bottom of the screen: focus moves to its
+// heading, stays inside it, and goes back to the chip when it closes (Close, Escape, or a tap outside).
+let sheetChip = null;
+function openSheet(n, chip) {
+  const s = shown.byN[n];
+  if (!s) return;
+  closeSheet(false);
+  sheetChip = chip;
+  const close = el("button", { type: "button", class: "wts-sheet__close" }, "Close");
+  const back = el("div", { class: "wts-sheet__back", id: "sheet-back" });
+  const sheet = el("div", { class: "wts-sheet wts-cloth--countries", role: "dialog", "aria-modal": "true",
+    "aria-labelledby": "sheet-head", id: "sheet" },
+    el("div", { class: "wts-sheet__head" }, el("h2", { id: "sheet-head", tabindex: "-1" }, `Source ${n}: the record`), close),
+    dom(B.slip(s, shown.quoted[n], Number(chip.dataset.seg), "sheet-passage", true)));
+  close.addEventListener("click", () => closeSheet());
+  back.addEventListener("click", () => closeSheet());
+  $("sheet-root").replaceChildren(back, sheet);
+  document.addEventListener("keydown", sheetKeys);
+  document.body.classList.add("has-sheet");
+  $("sheet-head").focus();
+}
+function sheetKeys(e) {
+  const sheet = $("sheet");
+  if (!sheet) return;
+  if (e.key === "Escape") { e.preventDefault(); closeSheet(); return; }
+  if (e.key !== "Tab") return;
+  const f = [...sheet.querySelectorAll("button, a[href], [tabindex='0']")];
+  const i = f.indexOf(document.activeElement);
+  if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+  else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+  else if (i < 0) { e.preventDefault(); f[0].focus(); }
+}
+function closeSheet(refocus = true) {
+  if (!$("sheet")) return;
+  $("sheet-root").replaceChildren();
+  document.removeEventListener("keydown", sheetKeys);
+  document.body.classList.remove("has-sheet");
+  if (refocus && sheetChip) sheetChip.focus();
+  sheetChip = null;
 }
 
-function renderAnswer(answer) {
-  const box = $("briefing");
-  box.replaceChildren();
-  let para = null;
-  let list = null;
-  for (const pieces of briefingLines(answer)) {
-    const plain = pieces.map((x) => x.text || "").join("").trim();
-    const cites = pieces.some((x) => x.cite);
-    if (!plain && !cites) { para = null; list = null; continue; }            // a blank line
-    if (!cites && (/^#+\s/.test(plain) || /^\*\*[^*]+\*\*:?$/.test(plain))) { // a heading
-      box.append(el("h2", { class: "briefing-head" }, plain.replace(/^#+\s*/, "").replace(/^\*\*|\*\*:?$/g, "")));
-      para = null; list = null;
-      continue;
-    }
-    if (/^[-*•]\s/.test(plain)) {                                            // a list item
-      if (!list) { list = el("ul"); box.append(list); }
-      list.append(el("li", {}, renderPieces(pieces)));
-      para = null;
-      continue;
-    }
-    list = null;
-    if (!para) { para = el("p"); box.append(para); } else para.append(" ");
-    para.append(...renderPieces(pieces));
-  }
-  const marks = [];
-  const failed = (answer.segments || []).filter((seg) => seg.status === "invalid").length;
-  if (answer.unsupported_segments) marks.push("Sentences in grey have no source and are the model’s own connecting words.");
-  if (failed) marks.push(`${failed === 1 ? "One sentence" : `${failed} sentences`} in grey gave a source that did not bear ${
-    failed === 1 ? "it" : "them"} out when checked, so the citation was removed: check the record before relying on ${
-    failed === 1 ? "it" : "them"}.`);
-  if (answer.loaded_words) marks.push("Words underlined with dots are judgemental terms in the model’s voice.");
-  if (answer.quotes_unverified) marks.push("Quotations underlined with a wave were not found word for word in their source.");
-  $("marks").textContent = marks.join(" ");
-  $("marks").hidden = !marks.length;
+// ---------- the wait: the stages, drawn from the stream's real events in order ----------
+
+const STAGES = ["Reading the question", "Searching the record", "Writing from these records only",
+  "Checking every citation and quotation"];
+const CLOTHS = ["mps", "councils", "landlords", "countries", "lives"];
+const wait = { active: false, timers: [], dealing: null, stage: -1, sourcesOnly: false, lit: new Set() };
+
+function announce(text) { $("status").textContent = text; }
+
+function setStage(k) {
+  wait.stage = k;
+  const names = wait.sourcesOnly ? STAGES.slice(0, 2) : STAGES;
+  $("stages").replaceChildren(...names.map((n, i) => el("li", { class: "wts-stage", "data-state": i < k ? "done" : i === k ? "now" : "next" },
+    el("span", { class: "wts-stage__state" }, i < k ? "✓ Done" : i === k ? "Now" : "Next"), el("span", {}, n))));
 }
+
+function startWait(sourcesOnly) {
+  stopWait();
+  wait.active = true;
+  wait.sourcesOnly = sourcesOnly;
+  wait.lit = new Set();
+  const spines = el("div", { class: "wts-spines", "aria-hidden": "true", id: "spines" });
+  CLOTHS.forEach((c, i) => {
+    const s = el("span");
+    s.style.setProperty("--c", `var(--wts-cloth-${c})`);
+    s.style.setProperty("--i", String(i));
+    s.style.setProperty("--h", `${[64, 56, 70, 60, 52][i]}px`);
+    spines.append(s);
+  });
+  $("wait").replaceChildren(
+    el("ol", { class: "wts-stages", id: "stages", "aria-label": "Preparing the briefing" }),
+    spines,
+    el("ul", { class: "wts-plan", id: "plan-chips", "aria-label": "The question as read", hidden: true }),
+    el("p", { class: "wait__reading", id: "plan-reading", hidden: true }),
+    el("p", { class: "wts-found", id: "found", hidden: true }),
+    el("p", { class: "wait__only", id: "only", hidden: true }));
+  $("wait").hidden = false;
+  $("result").classList.add("is-waiting");
+  setStage(0);
+  announce("Reading the question.");
+}
+
+function stopWait() {
+  wait.timers.forEach(clearTimeout);
+  wait.timers = [];
+  wait.dealing = null;
+  wait.active = false;
+  $("wait").hidden = true;
+  $("wait").replaceChildren();
+  if ($("pile") || !$("record-panel")) { $("record-col").replaceChildren(); $("record-col").hidden = true; }
+  $("result").classList.remove("is-waiting");
+}
+
+// 1. The question as read, as large chips, with the plan's own reading under them.
+function waitPlan(plan) {
+  $("spines")?.remove();
+  $("plan-chips").replaceChildren(...B.planChips(plan, names).map((c) => el("li", {}, c)));
+  $("plan-chips").hidden = false;
+  if (plan.interpretation) { $("plan-reading").textContent = plan.interpretation; $("plan-reading").hidden = false; }
+  setStage(1);
+  announce("Searching the record.");
+}
+
+// 2. Each record found arrives as a card in the record's own form, into a pile: down the side on wide screens, along
+// a shelf on phones. A running count while they arrive, then the summary. Finished at once by the next event.
+function waitSources(ev) {
+  $("spines")?.remove();
+  if (wait.stage < 1) setStage(1);
+  const list = ev.sources || [];
+  if (!list.length) return;
+  const deck = el("ul", {});
+  const pile = el("div", { class: "wts-pile", tabindex: "0", "aria-label": "The records found", id: "pile" }, deck);
+  if (wide()) {
+    $("record-col").replaceChildren(el("p", { class: "wts-record__title" }, "The records found ",
+      el("span", { id: "pile-count", "aria-hidden": "true" }, "")), pile);
+    $("record-col").hidden = false;
+  } else {
+    $("wait").append(pile);
+  }
+  const found = $("found");
+  found.hidden = false;
+  let k = 0;
+  const one = () => {
+    const s = list[k++];
+    const card = dom(B.card(s));
+    card.style.setProperty("--wts-r", `${((k % 5) - 2) * 1.2}deg`);
+    deck.append(card);
+    found.replaceChildren(...B.foundWords(ev.evidence, k, list.length).map(dom));
+    if ($("pile-count")) $("pile-count").textContent = String(k);
+    pile.scrollTop = pile.scrollHeight;
+    pile.scrollLeft = pile.scrollWidth;
+  };
+  const finish = () => {
+    wait.dealing = null;
+    while (k < list.length) one();
+    pile.scrollTop = 0;
+    pile.scrollLeft = 0;
+  };
+  if (reduced()) { finish(); return; }
+  wait.dealing = finish;
+  const tick = () => {
+    if (wait.dealing !== finish) return;
+    one();
+    if (k < list.length) wait.timers.push(setTimeout(tick, 45)); else finish();
+  };
+  tick();
+}
+
+// 3. Writing from these records only: the text as it streams, and each card cited as its citation arrives.
+function waitWriting(count) {
+  if (wait.dealing) wait.dealing();
+  setStage(2);
+  $("only").textContent = `Writing from these ${count} records only. The AI may use these and nothing else.`;
+  $("only").hidden = false;
+  announce(`Writing the briefing from these ${count} records only.`);
+}
+
+function waitCited(n) {
+  if (wait.lit.has(n)) return;
+  wait.lit.add(n);
+  const card = document.querySelector(`#pile .wts-card[data-source="${n}"]`);
+  const pile = $("pile");
+  if (!card || !pile) return;
+  card.classList.add("is-cited");
+  // brought into view inside the pile only: the page itself does not move
+  pile.scrollTop = Math.max(0, card.offsetTop - pile.offsetTop - 40);
+  pile.scrollLeft = Math.max(0, card.offsetLeft - pile.offsetLeft - 40);
+}
+
+// 4. Checking: the finished briefing is shown at once; the strip's counts run up through the real results, passage
+// by passage, each quotation taking its highlight in turn. 5. The pile settles into the record beside the briefing.
+function waitChecking(answer, sources) {
+  if (wait.dealing) wait.dealing();
+  setStage(3);
+  announce("Checking every citation and quotation.");
+  const segs = answer.segments || [];
+  const c = B.counts(answer);
+  renderAnswer(answer, sources, { running: { citations: 0, quotes: 0 } });
+  const quotes = [...document.querySelectorAll("#briefing .wts-quote--checked")];
+  if (reduced() || !segs.length) { wait.timers.push(setTimeout(finishWait, reduced() ? 400 : 0)); return; }
+  for (const q of quotes) {
+    q.classList.remove("wts-quote--checked");
+    q.classList.add("is-pending");
+  }
+  const cited = segs.map((s, i) => [s, i]).filter(([s]) => s.status === "cited");
+  const stepMs = Math.min(110, 2400 / Math.max(1, cited.length));
+  let cit = 0, qt = 0;
+  const nums = () => [...document.querySelectorAll("#strip .wts-check__num")];
+  cited.forEach(([s, i], j) => wait.timers.push(setTimeout(() => {
+    cit = Math.min(c.citations_matched, cit + (s.sources || []).length);
+    for (const q of quotes.filter((x) => Number(x.dataset.seg) === i)) {
+      q.classList.add("wts-quote--checked", "is-flash");
+      q.classList.remove("is-pending");
+      setTimeout(() => q.classList.remove("is-flash"), 380);
+      qt = Math.min(c.quotes_found, qt + 1);
+      for (const n of s.sources || []) {
+        const card = document.querySelector(`#pile .wts-card[data-source="${n}"]`);
+        if (card) card.classList.add("is-checked");
+      }
+    }
+    const [a, b] = nums();
+    if (a) a.textContent = String(cit);
+    if (b) b.textContent = String(qt);
+  }, 250 + j * stepMs)));
+  wait.timers.push(setTimeout(finishWait, 250 + cited.length * stepMs + 500));
+}
+
+function finishWait() {
+  const answer = shown.answer;
+  stopWait();  // the stages above go; where the browser anchors scrolling, the text being read stays in place
+  if (!answer) return;
+  // the results all shown: the strip as it stays, every quotation highlighted (the text itself is not redrawn)
+  for (const q of document.querySelectorAll("#briefing .wts-quote.is-pending")) {
+    q.classList.remove("is-pending", "is-flash");
+    q.classList.add("wts-quote--checked");
+  }
+  $("strip").replaceChildren(dom(B.strip(answer)));
+  bindFirsts();
+  announce(B.countsSentence(answer));
+  if (wide()) openRecord(true);
+  else { $("record-col").replaceChildren(); $("record-col").hidden = true; }
+}
+
+// A chip pressed while the checks' results are still running up: the results are shown at once.
+function settleNow() {
+  if (wait.active && wait.stage === 3) finishWait();
+}
+
+// ---------- the events ----------
 
 // Published statements beside a briefing, from /api/statements: in the author's own words, set apart from the site's
 // text, and never part of the briefing (they are not in its saved events, and the model never sees them).
@@ -271,30 +604,58 @@ function note(text, error = false) {
 
 let controller = null;
 
-// One event of a briefing, as it is written (POST /api/ask) or when a saved one is opened (/b/<id>).
+// One event of a briefing, as it is written (POST /api/ask, with the wait) or when a saved one is opened (/b/<id>,
+// shown finished at once).
 function handle(ev, st) {
+  const live = wait.active;
   if (ev.type === "plan") {
     $("interpretation").textContent = ev.plan.interpretation || "";
     chips(ev.plan);
     st.countries = (ev.plan.filters || {}).countries || [];
-    $("status").textContent = "Searching the record for statements and votes.";
+    if (live) waitPlan(ev.plan);
   } else if (ev.type === "sources") {
-    showSources(ev.sources || []);
-    summary(ev.evidence, ev.sources);
-    $("status").textContent = (ev.sources || []).length ? "Writing the briefing from the sources below." : "";
+    st.sources = ev.sources || [];
+    showSources(st.sources);
+    summary(ev.evidence);
+    if (live) waitSources(ev);
   } else if (ev.type === "text") {
-    if (!st.drafting) { st.drafting = el("p", { class: "drafting" }); $("briefing").append(st.drafting); }
-    st.drafting.append(ev.text);
+    if (live && wait.stage < 2) waitWriting(st.sources.length);
+    if (!st.drafting) {
+      st.cursor = el("span", { class: "wts-cursor", "aria-hidden": "true" });
+      st.drafting = el("p", { class: "drafting" }, st.cursor);
+      $("briefing").append(st.drafting);
+    }
+    st.cursor.before(ev.text);
+  } else if (ev.type === "citation") {
+    if (live && wait.stage < 2) waitWriting(st.sources.length);
+    const s = st.sources[Number(ev.search_result_index)];
+    if (live && s) waitCited(s.n);
   } else if (ev.type === "final") {
-    $("status").textContent = "";
-    if (ev.answer) renderAnswer(ev.answer);
-    else if (st.drafting) st.drafting.remove();
+    if (ev.answer && !ev.answer.no_records) {
+      if (live) waitChecking(ev.answer, st.sources);
+      else { renderAnswer(ev.answer, st.sources); if (wide()) openRecord(false); }
+    } else {
+      if (live && !ev.answer && st.sources.length) {
+        // sources only (or no briefing could be written): the records dealt in full, then the list of sources
+        setStage(2);
+        announce(`${st.sources.length} records found. No briefing was written.`);
+        const end = () => wait.timers.push(setTimeout(wait.dealing ? end : stopWait, wait.dealing ? 100 : 900));
+        end();
+      } else if (live) {
+        stopWait();
+        announce("No records found.");
+      }
+      if (ev.answer) renderAnswer(ev.answer, st.sources);
+      else if (st.drafting) st.drafting.remove();
+    }
     if (ev.answer && !ev.answer.no_records) sisters($("question").textContent, st.countries);
     if (ev.note) note(ev.note);
     if (ev.cached && !st.saved) note("This briefing was written earlier for the same question and the same data.");
     if (ev.briefing_id) { saved(ev.briefing_id, st); showStatements(ev.briefing_id); }
   } else if (ev.type === "error") {
-    $("status").textContent = "";
+    if (live) stopWait();
+    if (st.drafting) st.drafting.remove();
+    announce("");
     note(ev.message, true);
   }
 }
@@ -317,6 +678,8 @@ function written(iso) {
 }
 
 function reset(question) {
+  stopWait();
+  closeSheet(false);
   $("home").hidden = true;
   document.body.classList.add("showing-result");
   $("result").hidden = false;
@@ -324,19 +687,23 @@ function reset(question) {
   $("asked").hidden = !question;
   $("interpretation").textContent = "";
   written(new Date().toISOString().slice(0, 10));
-  for (const id of ["briefing", "notes", "statements", "sources", "chips"]) $(id).replaceChildren();
+  for (const id of ["briefing", "strip", "details", "notes", "statements", "sources", "chips", "connector", "record-col"]) {
+    $(id).replaceChildren();
+  }
+  $("record-col").hidden = true;
   shownBriefing = null;
+  shown.answer = null;
   $("summary").hidden = true;
-  $("marks").hidden = true;
   $("sources-section").hidden = true;
+  announce("");
   sisters("");
 }
 
 async function openSaved(id) {
   reset("");
-  $("status").textContent = "Opening the saved briefing.";
+  announce("Opening the saved briefing.");
   const res = await fetch(`/api/briefings/${encodeURIComponent(id)}`).catch(() => null);
-  $("status").textContent = "";
+  announce("");
   if (!res || !res.ok) {
     const detail = res ? await res.json().catch(() => ({})) : {};
     // 410: withdrawn, with the reason; 423: hidden while a concern about it is decided, with the note
@@ -351,7 +718,7 @@ async function openSaved(id) {
   const mode = b.options && b.options.mode === "comprehensive" ? "comprehensive" : "summary";
   document.querySelector(`input[name=mode][value=${mode}]`).checked = true;
   written(b.at.slice(0, 10));
-  const st = { drafting: null, saved: b.at.slice(0, 10) };
+  const st = { drafting: null, saved: b.at.slice(0, 10), sources: [] };
   for (const ev of b.events) handle(ev, st);
 }
 
@@ -359,9 +726,14 @@ async function ask(question, mode, sourcesOnly) {
   if (controller) controller.abort();
   controller = new AbortController();
   reset(question);
-  $("status").textContent = "Reading the question for its subject, dates and countries.";
+  startWait(sourcesOnly);
+  if (sourcesOnly) $("today").textContent = `Sources found on ${fmtDate(new Date().toISOString().slice(0, 10))}, with no briefing written.`;
+  // on a phone the question box fills the screen: the wait is brought into view, so it is seen
+  const top = $("result").getBoundingClientRect().top;
+  if (top > innerHeight * 0.6) $("result").scrollIntoView({ block: "start", behavior: reduced() ? "auto" : "smooth" });
   $("go").disabled = true;
-  const st = { drafting: null };
+  $("go-sources").disabled = true;
+  const st = { drafting: null, sources: [] };
   try {
     const res = await fetch("/api/ask", {
       method: "POST", headers: { "Content-Type": "application/json" }, signal: controller.signal,
@@ -388,9 +760,10 @@ async function ask(question, mode, sourcesOnly) {
       }
     }
   } catch (e) {
-    if (e.name !== "AbortError") { $("status").textContent = ""; note(e.message || String(e), true); }
+    if (e.name !== "AbortError") { stopWait(); announce(""); note(e.message || String(e), true); }
   } finally {
     $("go").disabled = false;
+    $("go-sources").disabled = false;
   }
 }
 
@@ -400,6 +773,7 @@ function fromUrl() {
   const params = new URLSearchParams(location.search);
   const q = params.get("q");
   if (!q) {
+    stopWait();
     $("home").hidden = false;
     $("result").hidden = true;
     document.body.classList.remove("showing-result");
@@ -408,26 +782,45 @@ function fromUrl() {
   $("q").value = q;
   const mode = params.get("mode") === "comprehensive" ? "comprehensive" : "summary";
   document.querySelector(`input[name=mode][value=${mode}]`).checked = true;
-  const sourcesOnly = params.get("sources") === "1";
-  document.querySelector("input[name=sources_only]").checked = sourcesOnly;
-  ask(q, mode, sourcesOnly);
+  ask(q, mode, params.get("sources") === "1");
+}
+
+// The home page's proof is drawn without a script, its sentence set level with the passage it came from at the
+// usual widths (styles.css). Where the script runs, the two highlights are made exactly level, and the rule between
+// them drawn at their first line, whatever the width.
+function alignProof() {
+  const pair = document.querySelector("#proof .wts-proof__pair");
+  if (!pair || pair.offsetParent === null) return;
+  const left = pair.firstElementChild, quote = pair.querySelector(".wts-proof__said .wts-quote");
+  const mark = pair.querySelector(".wts-passage mark");
+  if (!left || !quote || !mark) return;
+  if (!matchMedia("(min-width: 48rem)").matches) { left.style.removeProperty("padding-block-start"); return; }
+  left.style.setProperty("padding-block-start", "0px");
+  const q = quote.getClientRects()[0], m = mark.getClientRects()[0], box = pair.getBoundingClientRect();
+  if (!q || !m) return;
+  left.style.setProperty("padding-block-start", `${Math.max(0, m.top - q.top)}px`);
+  pair.style.setProperty("--wts-join", `${m.top - box.top + m.height / 2}px`);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  alignProof();
+  addEventListener("resize", alignProof);
+  document.fonts?.ready.then(alignProof);
   loadCoverage();
   loadNames().then(fromUrl);
   // The question box is a textarea, so a long question wraps: Enter asks, Shift+Enter starts a new line.
   $("q").addEventListener("keydown", (e) => {
     if (e.key !== "Enter" || e.shiftKey || e.isComposing) return;
     e.preventDefault();
-    if (!$("go").disabled) $("ask").requestSubmit();  // as Enter in a one-line box: not while a briefing is written
+    if (!$("go").disabled) $("ask").requestSubmit($("go"));  // as Enter in a one-line box: not while a briefing is written
   });
+  // Two equal choices beside the question box: a briefing written by AI, or the sources alone, with no AI.
   $("ask").addEventListener("submit", (e) => {
     e.preventDefault();
     const q = $("q").value.replace(/\s+/g, " ").trim();
     if (q.length < 3) return;
     const mode = document.querySelector("input[name=mode]:checked").value;
-    const sourcesOnly = document.querySelector("input[name=sources_only]").checked;
+    const sourcesOnly = !!e.submitter && e.submitter.value === "sources";
     const params = new URLSearchParams({ q });
     if (mode !== "summary") params.set("mode", mode);
     if (sourcesOnly) params.set("sources", "1");
