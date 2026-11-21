@@ -200,6 +200,7 @@ the dates. The fix follows Where MPs Stand's decision 40 (19 November 2026):
 
 - The server writes what the record covers into the home page ("1992 to 20 November 2026"), so no fetch is needed.
   With nothing read in, or if the record can't be read, the page keeps its own words ("from 1946").
-- robots.txt allows the free, read-only answers the pages are drawn from (`/api/meta`, `/api/countries` and
-  `/api/groups`). Everything else under `/api/`, briefings included, stays closed.
+- robots.txt allows the free, read-only answers the pages are drawn from (`/api/meta`, `/api/countries`,
+  `/api/groups`, and the public log of corrections and the status the corrections and status pages show).
+  Everything else under `/api/` stays closed: briefings, statements, reports and the check token's address.
 - The page's script still refreshes the dates. If that fails, the server's text stays and no error is shown.
