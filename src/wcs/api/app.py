@@ -767,7 +767,8 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         # /api/ is closed to crawlers, so that a crawler that runs the page's script never asks for a briefing; the
         # free, read-only answers the pages are drawn from are open (as Where MPs Stand's decision 40)
         return PlainTextResponse("User-agent: *\nAllow: /\nAllow: /api/meta\nAllow: /api/countries\n"
-                                 "Allow: /api/groups\nDisallow: /api/\n\n"
+                                 "Allow: /api/groups\nAllow: /api/corrections\nAllow: /api/status\n"
+                                 "Disallow: /api/\n\n"
                                  f"Sitemap: {site_url(settings, request)}/sitemap.xml\n")
 
     @app.get("/sitemap.xml", include_in_schema=False)

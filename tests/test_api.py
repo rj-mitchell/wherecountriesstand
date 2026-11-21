@@ -302,9 +302,10 @@ def test_pages_robots_sitemap_and_link_previews(indexed, monkeypatch):  # noqa: 
     robots = api.get("/robots.txt").text
     assert "Disallow: /api/" in robots and "Sitemap: https://countries.example/sitemap.xml" in robots
     # the free, read-only answers the home page is drawn from are open to crawlers; briefings are not
-    for path in ("/api/meta", "/api/countries", "/api/groups"):
+    for path in ("/api/meta", "/api/countries", "/api/groups", "/api/corrections", "/api/status"):
         assert f"Allow: {path}\n" in robots
     assert "Allow: /api/ask" not in robots and "Allow: /api/briefings" not in robots
+    assert "Allow: /api/statements" not in robots and "Allow: /api/check" not in robots
     sitemap = api.get("/sitemap.xml").text
     for loc in ("https://countries.example/</loc>", "/privacy.html</loc>", "/accessibility.html</loc>",
                 "/terms.html</loc>", "/glossary.html</loc>"):
