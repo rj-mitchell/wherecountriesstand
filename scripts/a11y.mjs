@@ -15,10 +15,14 @@ const base = process.argv[2] ?? "http://localhost:8000";
 // and a saved briefing, made up here (the site runs with no data), with each kind of point to check: a sentence with
 // no source, one whose only citation failed the check against its source (so was removed), and a quotation not found
 // word for word. Its grey and underlines are checked for contrast like everything else, and that each is marked.
+// It offers the same question on Where MPs Stand, with that site's spine; a saved "No records found" and a saved
+// briefing that failed offer nothing (decision 24).
 const SAMPLE = "a11ysample";
-const pages = ["/", "/about.html", "/glossary.html", "/corrections.html", "/corrections.html?kind=statement",
-  "/named.html", "/accessibility.html", "/privacy.html", "/terms.html", "/press.html", "/status.html", "/no-such-page",
-  `/b/${SAMPLE}`];
+const NO_RECORDS = "a11ynorecords";
+const FAILED = "a11yfailed";
+const pages = ["/", "/about.html", "/methodology.html", "/glossary.html", "/corrections.html",
+  "/corrections.html?kind=statement", "/named.html", "/accessibility.html", "/privacy.html", "/terms.html",
+  "/press.html", "/status.html", "/no-such-page", `/b/${SAMPLE}`, `/b/${NO_RECORDS}`, `/b/${FAILED}`];
 const UNSUPPORTED = "Most delegations agreed.";
 const INVALID = "Kenya called for a fund in 2019.";
 const MISQUOTE = "we will never accept this";
@@ -38,6 +42,20 @@ const sample = {
     no_records: false, citations_total: 3, citations_invalid: 1, grounded_ratio: 0.6, unsupported_segments: 1,
     loaded_words: 0, quotes_total: 1, quotes_unverified: 1 } }],
 };
+const MPS_LINK = `https://wherempsstand.com/?q=${encodeURIComponent(sample.question)}`;
+const noRecords = {
+  question: "What has Kenya said about cricket?", at: "2026-11-13T12:00:00Z", options: { mode: "summary" },
+  events: [{ type: "final", briefing_id: NO_RECORDS, answer: {
+    segments: [{ text: "No records found. The archive contains no records matching this question and these filters.",
+      sources: [], cited: [], status: "connective" }],
+    markdown: "No records found.", no_records: true, citations_total: 0, citations_invalid: 0, grounded_ratio: 1.0,
+    unsupported_segments: 0 } }],
+};
+const failed = {
+  question: "What has Kenya said about debt relief?", at: "2026-11-13T12:00:00Z", options: { mode: "summary" },
+  events: [{ type: "error", message: "The briefing could not be written. Please try again later." }],
+};
+const saved = { [SAMPLE]: sample, [NO_RECORDS]: noRecords, [FAILED]: failed };
 
 const browser = await chromium.launch();
 let failures = 0;
@@ -45,8 +63,10 @@ for (const scheme of ["light", "dark"]) {
   for (const width of [1280, 390]) {
     // the site's content security policy is set by the front door, not the app, so there is none to bypass here
     const ctx = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: scheme });
-    await ctx.route(`**/api/briefings/${SAMPLE}`, (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(sample) }));
+    for (const [id, body] of Object.entries(saved)) {
+      await ctx.route(`**/api/briefings/${id}`, (route) =>
+        route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) }));
+    }
     const page = await ctx.newPage();
     for (const path of pages) {
       await page.goto(base + path, { waitUntil: "networkidle" }).catch(() => {});
@@ -77,6 +97,26 @@ for (const scheme of ["light", "dark"]) {
           console.log(`${scheme} ${width}px ${path}: ${m}`);
         }
       }
+      if (path.startsWith("/b/")) {
+        // the same question on Where MPs Stand, after the briefing, named and with its spine: on a written briefing only
+        const offer = await page.evaluate(() => ({
+          shown: !document.getElementById("sisters").hidden,
+          links: [...document.querySelectorAll("#sister-links a")].map((a) => ({
+            href: a.getAttribute("href"), text: a.textContent.trim(), spine: !!a.querySelector("svg.wts-spine.wts-cloth--mps") })),
+        }));
+        const mps = offer.links.find((l) => l.href.startsWith("https://wherempsstand.com/"));
+        const problems = path === `/b/${SAMPLE}` ? [
+          !offer.shown && "the links to sister sites are hidden",
+          !mps && "there is no link to Where MPs Stand",
+          mps && mps.href !== MPS_LINK && `the link to Where MPs Stand is ${mps.href}, not ${MPS_LINK}`,
+          mps && mps.text !== "Ask the same question on Where MPs Stand" && `the link to Where MPs Stand reads "${mps.text}"`,
+          mps && !mps.spine && "the link to Where MPs Stand has no spine",
+        ] : [(offer.shown || offer.links.length) && "a briefing that was not written offers the question to a sister site"];
+        for (const m of problems.filter(Boolean)) {
+          failures++;
+          console.log(`${scheme} ${width}px ${path}: ${m}`);
+        }
+      }
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       if (overflow > 1) {
         failures++;
@@ -88,5 +128,6 @@ for (const scheme of ["light", "dark"]) {
 }
 await browser.close();
 console.log(failures ? `${failures} accessibility problem(s) found`
-  : `No serious accessibility problems on ${pages.length} pages, and the sample briefing's points to check are marked`);
+  : `No serious accessibility problems on ${pages.length} pages, the sample briefing's points to check are marked, ` +
+    "and only a written briefing offers the same question on Where MPs Stand");
 process.exit(failures ? 1 : 0);

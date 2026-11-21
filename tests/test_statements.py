@@ -363,10 +363,12 @@ def test_a_published_statement_is_shown_beside_its_briefing_without_the_address(
 
 
 def test_the_page_shows_statements_in_the_familys_words():
-    """app.js shows them after the briefing's notes: a section headed "Statement from [name], [date]", the role, the
-    words (set as text, never as HTML), a link to the record if it is a web address, then the family's sentence."""
+    """app.js shows them after the briefing's notes and the links to sister sites that go with them (decision 24):
+    a section headed "Statement from [name], [date]", the role, the words (set as text, never as HTML), a link to the
+    record if it is a web address, then the family's sentence."""
     home = (SITE / "index.html").read_text()
-    assert '<div id="notes"></div>\n          <div class="statements" id="statements"></div>' in home
+    assert re.search(r'<div id="notes"></div>\n\s*<nav class="sisters"[^>]*>\n.*\n\s*</nav>\n'
+                     r'\s*<div class="statements" id="statements"></div>', home)
     script = (SITE / "app.js").read_text()
     assert f'const NOT_ENDORSED = "{WORDS}";' in script
     assert "`Statement from ${s.name}, ${fmtDate(s.shown_on)}`" in script
