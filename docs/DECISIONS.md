@@ -190,3 +190,16 @@ was balanced only across groups, so a country whose statements were worded diffe
 - A country that has said nothing relevant is not brought in. The summary of the evidence lists each named country
   with the number of its statements, or says no relevant statement by it was found, and the model is told the same.
 - A question that asks what particular countries said (they are filters) is unchanged: only they are searched.
+
+## 22. The home page's dates need no script
+
+On 21 November 2026 an outside review, and the charity's review plan (A1), found that search engines saw "The latest
+dates in the record could not be loaded just now." on the home page. The page loaded its dates from `/api/meta`,
+which robots.txt closed to crawlers, and Google's renderer obeys robots.txt for the fetches a page makes. Readers saw
+the dates. The fix follows Where MPs Stand's decision 40 (19 November 2026):
+
+- The server writes what the record covers into the home page ("1992 to 20 November 2026"), so no fetch is needed.
+  With nothing read in, or if the record can't be read, the page keeps its own words ("from 1946").
+- robots.txt allows the free, read-only answers the pages are drawn from (`/api/meta`, `/api/countries` and
+  `/api/groups`). Everything else under `/api/`, briefings included, stays closed.
+- The page's script still refreshes the dates. If that fails, the server's text stays and no error is shown.

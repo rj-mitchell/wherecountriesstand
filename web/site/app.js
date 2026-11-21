@@ -56,7 +56,7 @@ async function loadCoverage() {
       $("go").textContent = "Find sources";
     }
   } catch (e) {
-    list.after(el("p", { class: "status" }, "The latest dates in the record could not be loaded just now."));
+    // The server wrote the dates into the page; if they can't be refreshed, they stay as they are.
   }
 }
 
