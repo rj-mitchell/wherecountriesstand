@@ -1,6 +1,6 @@
-# Checks every push and pull request: lint, the tests (offline: the model is faked), that the family kit's copy in
-# web/site/family/ is the version this site was last synced to, that the Docker image builds and starts, and every
-# page for accessibility problems (scripts/a11y.mjs).
+# Checks every push and pull request: lint, the tests (offline: the model is faked), the page script's tests, that the
+# family kit's copy in web/site/family/ is the version this site was last synced to, that the Docker image builds and
+# starts, and every page for accessibility problems (scripts/a11y.mjs).
 #
 # The jobs that are the same on every Where They Stand site are the shared workflows of wts-core, called at the tag
 # of the package this site installs (pyproject.toml): the two are raised together, by hand, in one change
@@ -18,22 +18,34 @@ permissions:
 jobs:
   # uv sync --frozen, ruff, pytest, with the family's Python and uv
   python:
-    uses: rj-mitchell/wts-core/.github/workflows/python.yml@v0.3.2
+    uses: rj-mitchell/wts-core/.github/workflows/python.yml@v0.4.0
     with:
       lint-paths: "src tests scripts"
 
   # The Where They Stand family kit version last synced into web/site/family/ (docs/DEPLOY.md, "Pages and the
   # family kit"). Raise it in the same change as a new sync.
   kit:
-    uses: rj-mitchell/wts-core/.github/workflows/kit.yml@v0.3.2
+    uses: rj-mitchell/wts-core/.github/workflows/kit.yml@v0.4.0
     with:
-      version: "2.0.1"
+      version: "2.1.0"
       site: countries
       path: web/site/family
 
+  # The checked briefing's parts in the page's script (web/site/briefing.js), with no browser: the display rule for
+  # quotations, the strip's counts, the marks and their words (web/tests/; node's own test runner, no packages)
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Tests
+        run: node --test "web/tests/*.test.js"
+
   # The image the server runs: built as update.sh builds it, and its command line started once
   docker:
-    uses: rj-mitchell/wts-core/.github/workflows/docker.yml@v0.3.2
+    uses: rj-mitchell/wts-core/.github/workflows/docker.yml@v0.4.0
     with:
       tag: wherecountriesstand:ci
       run: wcs --help
@@ -45,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: rj-mitchell/wts-core/.github/actions/setup@v0.3.2
+      - uses: rj-mitchell/wts-core/.github/actions/setup@v0.4.0
       - name: Install
         run: uv sync --frozen
       - name: Start the site with no data
@@ -63,7 +75,7 @@ jobs:
           curl -fsS http://localhost:8000/status.html | grep -q "/api/status"
           curl -fsS http://localhost:8000/api/status | grep -q '"briefings"'
       - name: Accessibility check (axe, WCAG 2.2 AA, light and dark, desktop and phone)
-        uses: rj-mitchell/wts-core/.github/actions/a11y@v0.3.2
+        uses: rj-mitchell/wts-core/.github/actions/a11y@v0.4.0
         with:
           url: http://localhost:8000
       - name: Show the site's log if anything failed

@@ -77,7 +77,7 @@ def test_every_question_leaves_one_record_with_what_it_cost_what_the_checks_foun
     # answered "no records" or failed; never for a request that got the sources only
     assert [r["question"] for r in written] == [shared.Q, shared.Q, shared.Q2, "A third question?", ""]
     assert first["model"] == site.settings.answer["model"] and first["parse_model"] == "claude-haiku-5-5"
-    assert first["instructions"] == "3" and first["config_id"] and first["package_version"] == PACKAGE
+    assert first["instructions"] == "4" and first["config_id"] and first["package_version"] == PACKAGE
     assert (first["sources"], json.loads(first["spread"])) == (3, {"KEN": 2, "FJI": 1})  # the sources, by group
     assert (first["citations_total"], first["unsupported"], first["loaded_words"]) == (2, 2, 1)
     assert first["input_tokens"] == 1200 + 9000 and first["cost_usd"] > 0  # the reading and the writing

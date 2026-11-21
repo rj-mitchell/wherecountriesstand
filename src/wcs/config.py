@@ -21,7 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 STATIC_DIR = REPO_ROOT / "data_static"
 # Raise when the briefing instructions (rag/prompts.py) change: it is part of the answer cache's key, so a briefing
 # written under the old instructions is written again, never served as if written under the new.
-INSTRUCTIONS_VERSION = 3
+INSTRUCTIONS_VERSION = 4
 
 
 def _version() -> str:

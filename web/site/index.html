@@ -8,6 +8,8 @@
   <meta property="og:title" content="Where Countries Stand">
   <meta property="og:description" content="Sourced, impartial briefings on what countries have said, and how they have voted, at the United Nations.">
   <meta property="og:url" content="__SITE__/">
+  <link rel="stylesheet" href="/family/briefing.css">
+  <script src="/briefing.js" defer></script>
   <script src="/app.js" defer></script>
   <script type="application/ld+json">
     {
@@ -34,27 +36,27 @@
     <h1 class="visually-hidden" id="lede">Ask about the record of the United Nations</h1>
     <p class="lede">What countries have said in the Security Council and the General Assembly, and how they have
       voted, from the UN’s own records.</p>
-    <div class="home-grid" id="home-top">
-      <div class="home-top__ask">
-        <form class="ask panel" id="ask">
-          <label for="q">Ask a question</label>
-          <div class="ask__row">
-            <textarea id="q" name="q" rows="1" required minlength="3" maxlength="500" autocomplete="off"
-                      enterkeyhint="go"
-                      placeholder="How have small island developing States spoken about climate change since 2015?"></textarea>
-            <button type="submit" id="go">Prepare briefing</button>
+    <div class="home-top" id="home-top">
+      <form class="ask panel" id="ask">
+        <label for="q">Ask a question</label>
+        <div class="ask__row">
+          <textarea id="q" name="q" rows="1" required minlength="3" maxlength="500" autocomplete="off"
+                    enterkeyhint="go"
+                    placeholder="How have small island developing States spoken about climate change since 2015?"></textarea>
+          <div class="ask__go">
+            <button type="submit" id="go" name="how" value="briefing">Prepare briefing</button>
+            <button type="submit" class="button--quiet" id="go-sources" name="how" value="sources">Sources only (no AI)</button>
           </div>
-          <div class="ask__options">
-            <label><input type="radio" name="mode" value="summary" checked> Summary</label>
-            <label><input type="radio" name="mode" value="comprehensive"> Comprehensive</label>
-            <label><input type="checkbox" name="sources_only"> Sources only (no written briefing)</label>
-          </div>
-        </form>
-        <noscript><p class="status">This page needs JavaScript to prepare briefings, and it is switched off or
-          blocked in your browser. The site’s other pages, such as <a href="/about.html">About</a> and
-          <a href="/corrections.html">Corrections and problems</a>, work without it.</p></noscript>
-      </div>
-      <div class="why panel" id="why">
+        </div>
+        <div class="ask__options">
+          <label><input type="radio" name="mode" value="summary" checked> Summary</label>
+          <label><input type="radio" name="mode" value="comprehensive"> Comprehensive</label>
+        </div>
+      </form>
+      <noscript><p class="status">This page needs JavaScript to prepare briefings, and it is switched off or
+        blocked in your browser. The site’s other pages, such as <a href="/about.html">About</a> and
+        <a href="/corrections.html">Corrections and problems</a>, work without it.</p></noscript>
+      <div class="why" id="why">
         <p class="why__line">Briefings are written by AI from the UN’s records only, and every citation is
           checked.</p>
         <details>
@@ -75,8 +77,52 @@
       </div>
     </div>
 
+    <!-- The checking, shown without a script (family/BRIEFINGS.md, "The home page"). The sentence, its quotation
+         and the passage are real: saved briefing kGfKBI3cRLw of 18 November 2026 (the fixed copy in
+         tests/fixtures/), its source 1, Italy in the Security Council, S/PV.10043 (Resumption 1). -->
+    <section class="wts-proof wts-cloth--countries proof" id="proof" aria-labelledby="proof-head">
+      <h2 id="proof-head">Every briefing, checked against the UN record</h2>
+      <ol class="wts-proof__steps">
+        <li>Searches only the UN’s records</li>
+        <li>AI writes only from what was found</li>
+        <li>Every citation and quotation is checked before you see it</li>
+      </ol>
+      <div class="wts-proof__pair">
+        <div>
+          <p class="proof__label">In a briefing written by AI</p>
+          <p class="wts-proof__said">Italy said it does not support expanding the category of permanent members,
+            which <span class="wts-quote wts-quote--checked">“would inevitably generate additional vetoes”<span
+            class="wts-quote__tick" aria-hidden="true">✓ word for word</span><span class="wts-vh"> (quotation,
+            found word for word in source 1)</span></span>&#8288;<span class="wts-chip"><span class="wts-chip__in"
+            aria-hidden="true"><span class="wts-chip__n">1</span><span>Italy, Security Council, 14 November
+            2025</span></span><span class="wts-vh"> (source 1: Italy, Security Council, 14 November
+            2025)</span></span>.</p>
+        </div>
+        <div>
+          <p class="proof__label">In the record it cites</p>
+          <div class="wts-slip">
+            <div class="wts-slip__top"><span class="wts-slip__sym">S/PV.10043 (Resumption 1)</span><span>14 November
+              2025</span></div>
+            <div class="wts-slip__who"><strong>Mr. Greco</strong>, for Italy</div>
+            <div class="wts-slip__heading">Security Council, 10043rd meeting (resumption 1). Implementation of the note
+              by the President of the Security Council (S/2024/507)</div>
+            <p class="wts-passage" tabindex="0" aria-label="The passage from source 1">… This is also one of the main
+              reasons why we do not support the expansion of the category of permanent members, which
+              <mark>would inevitably generate additional vetoes</mark>. Such an expansion would undermine the
+              effectiveness of the Council, in addition to creating further discrimination and divisions among its
+              members and reducing its inclusiveness and accountability. …</p>
+            <div class="wts-slip__foot"><span class="wts-slip__found">✓ Highlighted words found word for word</span><a
+              href="https://undocs.org/en/S/PV.10043(Resumption1)" rel="noopener">Read S/PV.10043 (Resumption
+              1)</a></div>
+          </div>
+        </div>
+      </div>
+      <p class="proof__more"><a href="/methodology.html#checked">How every briefing is checked, on the methodology
+        page</a></p>
+    </section>
+
     <section id="result" aria-labelledby="question" hidden>
-      <div class="result__grid">
+      <div class="result__grid wts-cloth--countries" id="result-grid">
         <div class="result__head">
           <p class="asked" id="asked" hidden>A reader asked:</p>
           <h2 id="question"></h2>
@@ -87,22 +133,28 @@
           <ul class="chips" id="chips"></ul>
           <p class="summary" id="summary" hidden></p>
         </aside>
+        <div class="result__stages" id="stages-row" hidden></div>
+        <div class="wait" id="wait" hidden></div>
+        <div class="result__strip" id="strip"></div>
         <div class="result__main">
-          <p class="status" id="status" role="status" aria-live="polite"></p>
-          <div class="columns" id="briefing"></div>
-          <p class="marks" id="marks" hidden></p>
+          <p class="status visually-hidden" id="status" role="status" aria-live="polite"></p>
+          <div class="columns briefing-text" id="briefing"></div>
+          <div id="details"></div>
           <div id="notes"></div>
           <nav class="sisters" id="sisters" aria-label="On sister sites" hidden>
             <ul id="sister-links"></ul>
           </nav>
           <div class="statements" id="statements"></div>
         </div>
+        <aside class="record-col" id="record-col" aria-label="The record beside the briefing" hidden></aside>
+        <svg class="wts-connector" id="connector" aria-hidden="true" focusable="false"></svg>
       </div>
       <section id="sources-section" hidden>
         <h2>Sources</h2>
         <ol class="sources" id="sources"></ol>
       </section>
     </section>
+    <div id="sheet-root"></div>
 
     <div class="home-grid" id="home">
       <section aria-labelledby="examples-head">

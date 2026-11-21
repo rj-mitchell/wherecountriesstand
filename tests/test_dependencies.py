@@ -21,8 +21,8 @@ def requirement() -> str:
 def test_the_shared_package_is_the_wheel_of_a_release_with_the_extras_this_site_uses():
     name, address = (part.strip() for part in requirement().split("@", 1))
     # Typer for the shared commands, httpx for off-site copies, the thread-safe DuckDB connection the vote finder
-    # uses, and the libraries behind the model, the embedder and the index
-    assert name == "wts-core[cli,offsite,duckdb,ai]"
+    # uses, the libraries behind the model, the embedder and the index, and Pillow for the share cards
+    assert name == "wts-core[cli,offsite,duckdb,ai,cards]"
     # by its address: the Docker image has no git (wts-core docs/adr/0006)
     assert re.fullmatch(r"https://github\.com/rj-mitchell/wts-core/releases/download/v(\d+\.\d+\.\d+)/"
                         r"wts_core-\1-py3-none-any\.whl", address)

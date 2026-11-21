@@ -20,9 +20,9 @@ dependencies = [
     "uvicorn[standard]>=0.30",
     # The Where They Stand sites' shared package, as the wheel of its release, by its address (its docs/adr/0006):
     # uv.lock holds the file's SHA-256, and nothing is fetched with git. Its extras: the shared commands, off-site
-    # copies of backups, the thread-safe DuckDB connection, and the libraries behind the model, the embedder and
-    # the index.
-    "wts-core[cli,offsite,duckdb,ai] @ https://github.com/rj-mitchell/wts-core/releases/download/v0.3.2/wts_core-0.3.2-py3-none-any.whl",
+    # copies of backups, the thread-safe DuckDB connection, the libraries behind the model, the embedder and the
+    # index, and Pillow for saved briefings' share cards.
+    "wts-core[cli,offsite,duckdb,ai,cards] @ https://github.com/rj-mitchell/wts-core/releases/download/v0.4.0/wts_core-0.4.0-py3-none-any.whl",
 ]
 
 [project.optional-dependencies]

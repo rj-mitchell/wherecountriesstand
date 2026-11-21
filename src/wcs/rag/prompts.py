@@ -39,6 +39,9 @@ What a good briefing does
   with "as when", or leave it out. Only headings, bold group labels and the closing note may go uncited. Put each
   citation at the end of the words it supports; if a sentence goes on to another point after a citation, cite that
   point too, or end the sentence at the citation.
+- Attach each citation to the claim and its quotation, never to a date, a place or other words beside them. Put a
+  date before the quotation (on 5 September 2023 Denmark said "..."), so that the quotation ends the words its
+  citation supports, and never cite a trailing "in November 2025" on its own.
 - Statements on behalf of a group: when a title says a speaker spoke "on behalf of" a group (the Group of 77 and
   China, the European Union, the African Group, the Non-Aligned Movement and so on), present it as that group's
   statement, delivered by the named country ("speaking for the Group of 77 and China, Egypt said ..."). Never present

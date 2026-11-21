@@ -197,6 +197,11 @@ A withdrawn briefing's address says it was withdrawn and why, and the correction
 reason. `wcs withdraw` also drops the briefing's copy in the answer cache, so the same question asked again is
 written afresh.
 
+Each saved briefing's share card (`/b/<id>/card.png`, its link preview) is drawn the first time it is asked for and
+kept in `data/cards/` (`<id>.v<card version>.r<rules version>.png`). A withdrawn or hidden briefing's card is no
+longer served, though its file stays. The folder holds nothing that cannot be drawn again: it can be emptied at any
+time, and is not in the backups.
+
 The form offers the charity's three routes (impartiality policy, section 7.1;
 [decision 16](DECISIONS.md#16-corrections-and-the-right-of-reply)). Reports come in with the kind `error`
 ("Something is wrong"), `unfair` ("You've been characterised unfairly"), `takedown` or `other`; older reports may say

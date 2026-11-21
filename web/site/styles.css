@@ -185,7 +185,8 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .panel > :first-child { margin-block-start: 0; }
 .panel > :last-child { margin-block-end: 0; }
 
-/* Home page: the question box beside how briefings are checked, then examples beside the record */
+/* Home page: the question box with the line and disclosure on how briefings are checked under it, the proof of
+   the checking (the kit's wts-proof), then the example questions beside the record */
 
 .home-grid {
   display: grid;
@@ -196,12 +197,10 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 @media (max-width: 56rem) {
   .home-grid { grid-template-columns: minmax(0, 1fr); }
 }
-.home-grid + .home-grid { margin-block-start: 1rem; }
-#home-top { align-items: stretch; }
-.home-top__ask { display: grid; }
-.showing-result #home-top { grid-template-columns: minmax(0, 1fr); margin-block-end: 2rem; }
-.showing-result :is(#why, .lede) { display: none; }
 .home-grid h2 { margin-block-start: 1rem; font-size: 1.375rem; }
+.home-top { display: grid; gap: 0.75rem; max-inline-size: 52rem; }
+.showing-result .home-top { max-inline-size: none; margin-block-end: 2rem; }
+.showing-result :is(#why, .lede, #proof) { display: none; }
 
 .lede { max-inline-size: var(--column); margin: 0 0 1.25rem; font-size: clamp(1.2rem, 1.1rem + 0.4vw, 1.375rem); line-height: 1.45; }
 
@@ -229,22 +228,49 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
     .ask textarea { block-size: calc(2lh + 1.2rem + 2px); }
   }
 }
-.ask__row > button { min-block-size: calc(1.55em * 1.125 + 1.2rem + 2px); }
+/* two equal choices beside the box: a briefing written by AI, or the sources alone */
+.ask__go { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.ask__go > button { min-block-size: calc(1.55em * 1.125 + 1.2rem + 2px); }
+@media (max-width: 30rem) {
+  .ask__go { inline-size: 100%; }
+  .ask__go > button { flex: 1 1 auto; }
+}
+.button--quiet { color: var(--link); background: var(--page); box-shadow: inset 0 0 0 2px var(--link); }
+.button--quiet:disabled { color: var(--ink-muted); background: var(--page); box-shadow: inset 0 0 0 2px var(--ink-muted); }
 .ask__options { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin-block-start: 0.5rem; font-size: 1rem; }
 .ask__options label { display: inline-flex; align-items: center; gap: 0.4rem; min-block-size: var(--target); cursor: pointer; }
 
+.why { font-size: 1rem; }
 .why__line { margin: 0; }
 .why summary {
   inline-size: fit-content;
-  margin-block-start: 0.4rem;
+  margin-block-start: 0.2rem;
   padding-block: max(2px, calc((var(--target) - 1.55em) / 2));
   color: var(--link);
   font-weight: 600;
   cursor: pointer;
 }
-.why ul { margin: 0.5rem 0 0.75rem; padding-inline-start: 1.2em; }
+.why ul { margin: 0.5rem 0 0.75rem; padding-inline-start: 1.2em; max-inline-size: var(--column); }
 .why li { margin-block-end: 0.4rem; }
 .why details p { margin: 0; }
+
+/* The proof of the checking: the kit's wts-proof, framed as a panel of the page */
+.proof { margin-block: 2rem 1rem; padding-block: 1.5rem; border-block: 1px solid var(--rule); }
+.proof h2 { margin: 0; font-size: 1.375rem; }
+.proof__label { margin: 0 0 0.4rem; font-size: 0.9375rem; font-weight: 600; color: var(--ink-muted); }
+.proof__more { margin: 0; font-size: 1rem; }
+.proof .wts-chip { cursor: default; }
+/* The sentence is set level with the passage it came from, and the rule across the gutter at the first line of both
+   highlights. These are the measures at the usual widths, for a page read without its script; app.js makes them
+   exact at any width (alignProof). */
+@media (min-width: 48rem) {
+  .proof .wts-proof__pair { --wts-join: 16.3rem; }
+  .proof .wts-proof__pair > :first-child { padding-block-start: 11.95rem; }
+}
+@media (min-width: 64rem) {
+  .proof .wts-proof__pair { --wts-join: 14.93rem; }
+  .proof .wts-proof__pair > :first-child { padding-block-start: 10.58rem; }
+}
 
 .examples { margin: 0; padding-inline-start: 1.2em; }
 .examples li { margin-block-end: 0.5rem; }
@@ -267,28 +293,55 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .plain-list { margin: 0; padding-inline-start: 1.2em; }
 .plain-list li { margin-block-end: 0.4rem; }
 
-/* A briefing */
+/* A briefing: the question and the filters used, the check strip across the column, then the briefing beside the
+   record (wide screens) or above it (narrower: a chip opens a sheet). The kit's briefing.css styles the strip, the
+   quotations, the chips, the marks, the record and the wait; this lays them out. */
 
 .reading { margin: 0; color: var(--ink-muted); }
 .asked { margin: 0; color: var(--ink-muted); }  /* the question is a reader's words, not the site's */
 
 .result__grid {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  grid-template-areas: "head side" "strip strip" "main main";
   gap: 1.5rem 3rem;
   align-items: start;
 }
-.result__head { grid-column: 1; grid-row: 1; }
+@media (min-width: 64rem) {
+  .result__grid { grid-template-columns: minmax(0, 1fr) 24rem; grid-template-areas: "head side" "strip strip" "main record"; }
+}
+.result__head { grid-area: head; }
 /* the reader's question: as large as a page's heading, under the page's own heading in the site's words */
 .result__head h2 { font-size: clamp(2rem, 1.5rem + 2vw, 2.75rem); margin: 0 0 0.5em; }
-.result__side { grid-column: 2; grid-row: 1 / span 2; }
-.result__main { grid-column: 1; grid-row: 2; min-inline-size: 0; }
+.result__side { grid-area: side; }
+.result__strip { grid-area: strip; min-inline-size: 0; }
+.result__strip:empty { display: none; }
+.result__strip .wts-check { margin: 0; }
+.result__main { grid-area: main; min-inline-size: 0; }
+.record-col { grid-area: record; align-self: stretch; min-inline-size: 0; }
+@media (max-width: 63.99rem) {
+  .record-col { display: none !important; }
+  .wts-connector { display: none; }
+}
 @media (max-width: 56rem) {
-  .result__grid { grid-template-columns: minmax(0, 1fr); }
-  .result__head, .result__side, .result__main { grid-column: 1; grid-row: auto; }
+  .result__grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "side" "strip" "main"; }
 }
 .result__side h2 { margin: 0 0 0.5rem; font-family: var(--sans); font-size: 1rem; font-weight: 600; }
 .result__side .summary { margin: 1rem 0 0; }
+/* While a briefing is prepared the wait takes the filters' place: the question as read and the text as it is
+   written, beside the records found (wide screens); then, while the checks' results run up, the strip across the
+   column above the text. The filters follow once it is done. */
+.is-waiting :is(.result__side, #interpretation) { display: none; }
+.wait { grid-area: wait; }
+.result__stages { grid-area: stages; }
+.is-waiting .result__grid { grid-template-areas: "head head" "stages stages" "wait record" "main record"; }
+.is-waiting.is-checking .result__grid { grid-template-areas: "head head" "stages stages" "wait wait" "strip strip" "main record"; }
+.record-col__pile { position: sticky; top: 1rem; }
+@media (max-width: 63.99rem) {
+  .is-waiting .result__grid, .is-waiting.is-checking .result__grid { grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "stages" "wait" "strip" "main"; }
+}
 
 .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
 .chip {
@@ -308,22 +361,32 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .columns li { margin-block-end: 0.4rem; }
 .columns h3, .columns h2.briefing-head { font-size: 1.3rem; margin: 1.5rem 0 0.4rem; }
 .columns h2.briefing-head:first-child { margin-block-start: 0; }
-
-.cite {
-  font-size: 0.72em;
-  font-weight: 600;
-  vertical-align: 0.35em;
-  line-height: 0;
-  text-decoration: none;
-  padding-inline: 0.1em;
-}
+.briefing-text { max-inline-size: var(--column); }
 
 .procedural { font-style: italic; }
-.drafting { white-space: pre-wrap; color: var(--ink-muted); }
-.unsupported { color: var(--ink-muted); }
-.loaded { text-decoration: underline dotted var(--warning); text-underline-offset: 0.2em; }
-.misquote { text-decoration: underline wavy var(--warning); text-underline-offset: 0.2em; }
-.marks { font-size: 1rem; color: var(--ink-muted); }
+.drafting { color: var(--ink-muted); }
+/* a judgemental word in the AI's own voice: underlined in the warning colour, and said in words to screen readers */
+.loaded { text-decoration: underline solid var(--wts-warn); text-decoration-thickness: 2px; text-underline-offset: 0.2em;
+  background: var(--wts-warn-bg); }
+/* the strip's note on judgemental words, on the cloth */
+.check-note { margin: 0; font-size: 0.9375rem; }
+/* while the checks' results run up, a quotation's tick waits for its turn */
+.wts-quote.is-pending .wts-quote__tick { visibility: hidden; }
+
+/* How this briefing was checked: the verifier's own counts, at the end, linked from the strip */
+.check-details { max-inline-size: var(--column); margin-block: 1.5rem; padding-block-start: 1rem; border-block-start: 1px solid var(--rule); font-size: 1rem; }
+.check-details h2 { margin: 0 0 0.5rem; font-size: 1.25rem; }
+.check-details ul { margin: 0 0 0.75rem; padding-inline-start: 1.2em; }
+.check-details li { margin-block-end: 0.4rem; }
+.check-details p { margin: 0; }
+.check-details:target { outline: 3px solid var(--link); outline-offset: 4px; }
+
+/* The wait: the stages, then the question as read, the records found and what the AI may use */
+.wait { display: grid; gap: 1rem; min-inline-size: 0; }
+.wait__reading { margin: 0; color: var(--ink-muted); font-size: 1rem; max-inline-size: var(--column); }
+.wait__only { margin: 0; font-weight: 600; }
+.wait .wts-pile { margin-inline: -4px; }
+.record-col__pile > .wts-record__title { margin-block-end: 0.5rem; }
 
 .status { font-size: 1rem; color: var(--ink-muted); margin: 1rem 0; }
 .status:empty, .status[hidden] { display: none; }
@@ -331,6 +394,7 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .note--error { background: none; border: 2px solid var(--warning); }
 .note.share a { overflow-wrap: anywhere; }
 .note.share a:last-child { white-space: nowrap; }
+.has-sheet { overflow: hidden; }
 
 /* Sources: a grid of panels, numbered */
 
@@ -483,11 +547,14 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
   body { font-size: 11pt; background: white; color: black; }
   .page, .wrap { max-inline-size: none; padding-inline: 0; }
   .skip, .phase, .brand__mark, nav.sections, .ask, #home, .sisters, .note.share, .foot__links, .source__more,
-  .band .wts-endorse .wts-spine, .wts-shelf__groups, .wts-shelf__links { display: none; }
+  .band .wts-endorse .wts-spine, .wts-shelf__groups, .wts-shelf__links, .wait, .result__stages, .record-col, #sheet-root,
+  .home-top, .proof { display: none !important; }
+  .loaded { background: none; }
   .band { background: none; color: black; border-block-end: 2px solid black; }
   .band .wts-endorse { color: black; }
   a { color: inherit; }
   .result__grid, .sources { display: block; }
+  .result__strip { margin-block: 1rem; }
   .source__links a[href^="http"]::after, .prose a[href^="http"]::after { content: " (" attr(href) ")"; overflow-wrap: anywhere; }
   .source { break-inside: avoid; margin-block-end: 0.75rem; background: none; border: 1px solid #888; }
   h1, h2, h3 { break-after: avoid; }

@@ -196,6 +196,10 @@ def new_side(settings, pipeline, clock, monkeypatch):
     db.set(f"visitor_salt:{shared.DAY}", shared.SALT)
     ids = (f"briefing{n:03d}" for n in range(1, 100))
     monkeypatch.setattr(web, "new_briefing_id", lambda chance: next(ids))
+    # the goldens were recorded under version 3 of the briefing instructions, which is part of the answer cache's
+    # key: the key is made as it was then (test_the_key_changes_with_the_model_the_instructions_and_the_data shows
+    # that a new version changes every key)
+    monkeypatch.setattr(web, "INSTRUCTIONS_VERSION", RECORDED_INSTRUCTIONS)
     app = web.create_app(settings, pipeline=pipeline, state=db, clock=clock)
 
     def stream(body):
@@ -240,7 +244,18 @@ def records_of(side):
 #   not, and is not put in the model's prompt.
 # - the model that reads a question is asked whether it is about anything the UN discusses ("off_topic"): one that
 #   is not is "No records found", with no briefing written.
+# - the instructions for writing a briefing (version 4, 21 November 2026) tell the model to attach each citation to
+#   the claim and its quotation, not to a date beside them (the charity's review plan, B1; docs/DECISIONS.md, 25).
 FOLLOW_UP_ANSWER = re.compile(r"\nA \(summary\): [^\n]*")
+RECORDED_INSTRUCTIONS = 3  # the version of the briefing instructions (wcs.config) the goldens were recorded under
+BRIEFING_RULES = [  # (as the instructions for writing a briefing were, as they are)
+    ('''  point too, or end the sentence at the citation.
+''', '''  point too, or end the sentence at the citation.
+- Attach each citation to the claim and its quotation, never to a date, a place or other words beside them. Put a
+  date before the quotation (on 5 September 2023 Denmark said "..."), so that the quotation ends the words its
+  citation supports, and never cite a trailing "in November 2025" on its own.
+'''),
+]
 READING_RULES = [  # (as the instructions for reading a question were, as they are)
     ("""If the topic is not one the UN would discuss, keep just the question's words:
   "No records found" is then the right answer.""", """If the topic is not one the UN would discuss, keep just the question's words
@@ -282,6 +297,10 @@ def as_now(recorded):
             return recorded
         if json.dumps(value, default=str) == recorded:  # written as the site writes it: rewritten the same way
             return json.dumps(as_now(value), default=str)
+    if recorded.startswith("You are a research analyst"):
+        for was, now in BRIEFING_RULES:
+            assert was in recorded
+            recorded = recorded.replace(was, now)
     if recorded.startswith("You convert research questions"):
         for was, now in READING_RULES:
             assert was in recorded
@@ -613,8 +632,7 @@ def test_the_answer_caches_key_is_what_it_was(tmp_path, monkeypatch):
                 used = load_settings(**{"answer.model": world["model"]})
             if "data" in world:
                 patch.setattr(web, "data_stamp", lambda s, stamp=world["data"]: stamp)
-            if "instructions" in world:
-                patch.setattr(web, "INSTRUCTIONS_VERSION", world["instructions"])
+            patch.setattr(web, "INSTRUCTIONS_VERSION", world.get("instructions", RECORDED_INSTRUCTIONS))
             key = web.answer_key(used, web.AskBody(**row["body"]), model=True, cache_hours=168)
         if "plan" in row["body"]:
             # the ask API no longer takes a search plan: a question sent with one is the question without it
@@ -630,6 +648,7 @@ def test_the_answer_caches_key_is_what_it_was(tmp_path, monkeypatch):
     assert web.answer_key(settings, body, model=False, cache_hours=168) is None
     assert web.answer_key(settings, body, model=True, cache_hours=0) is None
     # a field the pages do not send is ignored, as it always was, and is no part of the key
+    monkeypatch.setattr(web, "INSTRUCTIONS_VERSION", RECORDED_INSTRUCTIONS)
     assert web.answer_key(settings, web.AskBody(question=shared.Q, follows="Briefing01", anything="else"),
                           model=True, cache_hours=168) == by_body[(same({"question": shared.Q}), "{}")]
 

@@ -374,7 +374,7 @@ def test_the_page_shows_statements_in_the_familys_words():
     assert "`Statement from ${s.name}, ${fmtDate(s.shown_on)}`" in script
     assert 'el("section", { class: "statement", "aria-labelledby": head }' in script
     assert "innerHTML" not in script and "/^https?:\\/\\//i.test(s.link" in script
-    assert re.search(r'"briefing", "notes", "statements", "sources", "chips"', script)   # a new question clears them
+    assert re.search(r'"briefing", "strip", "details", "notes", "statements", "sources", "chips"', script)  # cleared
     css = (SITE / "styles.css").read_text()
     assert ".statement {" in css and "border: 1px dashed" in css
 
