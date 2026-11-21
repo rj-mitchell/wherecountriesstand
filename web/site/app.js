@@ -298,7 +298,8 @@ function drawConnector(chip) {
   const m = panel.querySelector("mark.wts-now") || panel.querySelector("mark") || passage;
   const b = m.getBoundingClientRect(), pb = passage.getBoundingClientRect();
   const text = $("briefing").getBoundingClientRect();
-  const x1 = Math.min(text.right, a.right) + 8 - box.left, y1 = a.top + a.height / 2 - box.top;
+  // from the end of the chip's line of text, so the line runs in the gutter and never across the briefing
+  const x1 = text.right + 6 - box.left, y1 = a.top + a.height / 2 - box.top;
   const x2 = pb.left - 6 - box.left;
   const y2 = Math.min(Math.max(b.top + 10, pb.top + 8), pb.bottom - 8) - box.top;
   if (x2 - x1 < 12) return;
@@ -415,8 +416,9 @@ function startWait(sourcesOnly) {
     s.style.setProperty("--h", `${[64, 56, 70, 60, 52][i]}px`);
     spines.append(s);
   });
+  $("stages-row").replaceChildren(el("ol", { class: "wts-stages", id: "stages", "aria-label": "Preparing the briefing" }));
+  $("stages-row").hidden = false;
   $("wait").replaceChildren(
-    el("ol", { class: "wts-stages", id: "stages", "aria-label": "Preparing the briefing" }),
     spines,
     el("ul", { class: "wts-plan", id: "plan-chips", "aria-label": "The question as read", hidden: true }),
     el("p", { class: "wait__reading", id: "plan-reading", hidden: true }),
@@ -435,8 +437,10 @@ function stopWait() {
   wait.active = false;
   $("wait").hidden = true;
   $("wait").replaceChildren();
+  $("stages-row").hidden = true;
+  $("stages-row").replaceChildren();
   if ($("pile") || !$("record-panel")) { $("record-col").replaceChildren(); $("record-col").hidden = true; }
-  $("result").classList.remove("is-waiting");
+  $("result").classList.remove("is-waiting", "is-checking");
 }
 
 // 1. The question as read, as large chips, with the plan's own reading under them.
@@ -459,8 +463,9 @@ function waitSources(ev) {
   const deck = el("ul", {});
   const pile = el("div", { class: "wts-pile", tabindex: "0", "aria-label": "The records found", id: "pile" }, deck);
   if (wide()) {
-    $("record-col").replaceChildren(el("p", { class: "wts-record__title" }, "The records found ",
-      el("span", { id: "pile-count", "aria-hidden": "true" }, "")), pile);
+    $("record-col").replaceChildren(el("div", { class: "record-col__pile" },
+      el("p", { class: "wts-record__title" }, "The records found ", el("span", { id: "pile-count", "aria-hidden": "true" }, "")),
+      pile));
     $("record-col").hidden = false;
   } else {
     $("wait").append(pile);
@@ -520,6 +525,7 @@ function waitCited(n) {
 function waitChecking(answer, sources) {
   if (wait.dealing) wait.dealing();
   setStage(3);
+  $("result").classList.add("is-checking");
   announce("Checking every citation and quotation.");
   const segs = answer.segments || [];
   const c = B.counts(answer);
@@ -604,6 +610,30 @@ function note(text, error = false) {
 
 let controller = null;
 
+// The text as it streams, laid out as it will be (headings, lists, bold) but not yet checked: each paragraph is laid
+// out once, when it is finished; only the one being written is laid out again as words arrive.
+function drafted(st, text) {
+  if (!st.drafting) {
+    st.text = "";
+    st.doneAt = 0;
+    st.cursor = el("span", { class: "wts-cursor", "aria-hidden": "true" });
+    st.done = el("div");
+    st.tail = el("div");
+    st.drafting = el("div", { class: "drafting" }, st.done, st.tail);
+    $("briefing").append(st.drafting);
+  }
+  st.text += text;
+  const blocks = (t) => B.briefingBlocks({ segments: [{ text: t, sources: [], status: "connective" }] }, {}).map(dom);
+  const cut = st.text.lastIndexOf("\n\n");
+  if (cut > st.doneAt) {
+    st.done.append(...blocks(st.text.slice(st.doneAt, cut)));
+    st.doneAt = cut;
+  }
+  st.tail.replaceChildren(...blocks(st.text.slice(st.doneAt)));
+  const last = st.tail.querySelector("p:last-child, li:last-child, h2:last-child") || st.tail.lastElementChild;
+  (last && last.tagName === "UL" ? last.lastElementChild : last || st.tail).append(st.cursor);
+}
+
 // One event of a briefing, as it is written (POST /api/ask, with the wait) or when a saved one is opened (/b/<id>,
 // shown finished at once).
 function handle(ev, st) {
@@ -620,12 +650,7 @@ function handle(ev, st) {
     if (live) waitSources(ev);
   } else if (ev.type === "text") {
     if (live && wait.stage < 2) waitWriting(st.sources.length);
-    if (!st.drafting) {
-      st.cursor = el("span", { class: "wts-cursor", "aria-hidden": "true" });
-      st.drafting = el("p", { class: "drafting" }, st.cursor);
-      $("briefing").append(st.drafting);
-    }
-    st.cursor.before(ev.text);
+    drafted(st, ev.text);
   } else if (ev.type === "citation") {
     if (live && wait.stage < 2) waitWriting(st.sources.length);
     const s = st.sources[Number(ev.search_result_index)];

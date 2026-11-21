@@ -329,13 +329,18 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 }
 .result__side h2 { margin: 0 0 0.5rem; font-family: var(--sans); font-size: 1rem; font-weight: 600; }
 .result__side .summary { margin: 1rem 0 0; }
-/* while a briefing is prepared, the wait shows the question as read across the column, then the text as it is
-   written beside the records found; the filters follow once it is done */
+/* While a briefing is prepared the wait takes the filters' place: the question as read and the text as it is
+   written, beside the records found (wide screens); then, while the checks' results run up, the strip across the
+   column above the text. The filters follow once it is done. */
 .is-waiting :is(.result__side, #interpretation) { display: none; }
 .wait { grid-area: wait; }
-.is-waiting .result__grid { grid-template-areas: "head head" "wait wait" "strip strip" "main record"; }
+.result__stages { grid-area: stages; }
+.is-waiting .result__grid { grid-template-areas: "head head" "stages stages" "wait record" "main record"; }
+.is-waiting.is-checking .result__grid { grid-template-areas: "head head" "stages stages" "wait wait" "strip strip" "main record"; }
+.record-col__pile { position: sticky; top: 1rem; }
 @media (max-width: 63.99rem) {
-  .is-waiting .result__grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "wait" "strip" "main"; }
+  .is-waiting .result__grid, .is-waiting.is-checking .result__grid { grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "stages" "wait" "strip" "main"; }
 }
 
 .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
@@ -359,7 +364,7 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .briefing-text { max-inline-size: var(--column); }
 
 .procedural { font-style: italic; }
-.drafting { white-space: pre-wrap; color: var(--ink-muted); }
+.drafting { color: var(--ink-muted); }
 /* a judgemental word in the AI's own voice: underlined in the warning colour, and said in words to screen readers */
 .loaded { text-decoration: underline solid var(--wts-warn); text-decoration-thickness: 2px; text-underline-offset: 0.2em;
   background: var(--wts-warn-bg); }
@@ -381,7 +386,7 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .wait__reading { margin: 0; color: var(--ink-muted); font-size: 1rem; max-inline-size: var(--column); }
 .wait__only { margin: 0; font-weight: 600; }
 .wait .wts-pile { margin-inline: -4px; }
-.record-col > .wts-record__title { margin-block-end: 0.5rem; }
+.record-col__pile > .wts-record__title { margin-block-end: 0.5rem; }
 
 .status { font-size: 1rem; color: var(--ink-muted); margin: 1rem 0; }
 .status:empty, .status[hidden] { display: none; }
@@ -542,7 +547,7 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
   body { font-size: 11pt; background: white; color: black; }
   .page, .wrap { max-inline-size: none; padding-inline: 0; }
   .skip, .phase, .brand__mark, nav.sections, .ask, #home, .sisters, .note.share, .foot__links, .source__more,
-  .band .wts-endorse .wts-spine, .wts-shelf__groups, .wts-shelf__links, .wait, .record-col, #sheet-root,
+  .band .wts-endorse .wts-spine, .wts-shelf__groups, .wts-shelf__links, .wait, .result__stages, .record-col, #sheet-root,
   .home-top, .proof { display: none !important; }
   .loaded { background: none; }
   .band { background: none; color: black; border-block-end: 2px solid black; }

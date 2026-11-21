@@ -215,7 +215,7 @@
       while (j < runs.length && runs[j].quote === q) j++;
       const inner = runs.slice(k, j).map(runNode);
       if (q < 0) out.push(...inner);
-      else out.push(quoteNode(qs[q], seg, i, inner, ctx));
+      else out.push(...[].concat(quoteNode(qs[q], seg, i, inner, ctx)));
       k = j;
     }
     return out;

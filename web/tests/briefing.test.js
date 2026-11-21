@@ -190,3 +190,11 @@ test("a quotation in a lead-in to its citation is the cited source's, as the ver
     ["\u201cclimate finance for adaptation is too slow\u201d\u2713 word for word (quotation, found word for word in source 3)"]);
   assert.deepEqual(B.quotedFrom(answer)[3], [{ seg: 1, parts: ["climate finance for adaptation is too slow"] }]);
 });
+
+test("a quotation no source is given for is left as the model's words, and every block is an element or text", () => {
+  const answer = { segments: [{ text: "As Italy said it \u201csupports all initiatives that seek to impose limits\u201d in 2025.", sources: [], status: "connective" }] };
+  const blocks = B.briefingBlocks(answer, {});
+  const walk = (n) => typeof n === "string" || (n && typeof n.tag === "string" && n.children.every(walk));
+  assert.ok(blocks.every(walk));
+  assert.equal(html(blocks), "<p>As Italy said it \u201csupports all initiatives that seek to impose limits\u201d in 2025.</p>");
+});
