@@ -84,11 +84,12 @@ from wts_core.usage import (
 )
 
 from wcs import adapters
+from wcs.cards import card_png, counts_in_words, shown_counts
 from wcs.config import INSTRUCTIONS_VERSION, REPO_ROOT, SITE, Settings, load_settings
 from wcs.index.lance import has_record, open_index
 from wcs.messages import MESSAGES
 from wcs.rag.answer import briefing_model
-from wcs.rag.checks import rechecked
+from wcs.rag.checks import rechecked, shown
 from wcs.rag.pipeline import AskRequest, Pipeline
 from wcs.rag.query_parse import parse_model
 from wcs.replies import (
@@ -338,15 +339,24 @@ def briefing_title(when: str | None = None) -> str:
     return f"Briefing from UN records, {long_date(when)}" if when else "Briefing from UN records"
 
 
-def question_page(page: str, base: str, query: str, path: str = "/", when: str | None = None) -> str:
+FAMILY_CARD = re.compile(r'(<meta property="og:image" content=")[^"]*(">)')
+FAMILY_CARD_ALT = re.compile(r'(<meta property="og:image:alt" content=")[^"]*(">)')
+
+
+def question_page(page: str, base: str, query: str, path: str = "/", when: str | None = None,
+                  card_alt: str | None = None) -> str:
     """The home page for a shared question (``/?q=...``) or a saved briefing (``/b/<id>``, written on ``when``):
     its title and link preview are the site's own (``briefing_title``). The briefing itself is shown by the
-    page's script, so the page is not for search engines to index."""
+    page's script, so the page is not for search engines to index. A saved briefing with a written answer
+    (``card_alt``, its card's text alternative) has its own share card, at ``/b/<id>/card.png`` (``wcs.cards``)."""
     title = html.escape(briefing_title(when), quote=True)
     page = re.sub(r"<title>.*?</title>", f"<title>{title} | Where Countries Stand</title>", page, count=1,
                   flags=re.S)
     page = page.replace('<meta property="og:title" content="Where Countries Stand">',
                         f'<meta property="og:title" content="{title}">', 1)
+    if card_alt is not None:
+        page = FAMILY_CARD.sub(lambda m: f"{m[1]}{SITE_MARK}{path}/card.png{m[2]}", page, count=1)
+        page = FAMILY_CARD_ALT.sub(lambda m: f"{m[1]}{html.escape(card_alt, quote=True)}{m[2]}", page, count=1)
     here = path + (f"?{html.escape(query, quote=True)}" if query else "")
     page = page.replace(f'content="{SITE_MARK}/"', f'content="{SITE_MARK}{here}"')
     page = page.replace(f'href="{SITE_MARK}/"', f'href="{SITE_MARK}{here}"')
@@ -451,7 +461,7 @@ class SiteHooks(Hooks):
 
     def on_cached(self, ask: Ask, events: list[Event]) -> list[Event] | None:
         """A cached briefing as shown today: its points to check and its judgemental-word marks judged again by
-        the current rules, and its quotes curled (``rechecked``).
+        the current rules, and its quotes curled (``rechecked``), then the display rule for quotations (``shown``).
 
         A briefing that has been taken down is not played again. One that has been withdrawn, or is hidden by
         its own address while a concern is decided: None, which tells the desk to treat the question as one
@@ -468,7 +478,7 @@ class SiteHooks(Hooks):
         if (saved is not None and saved.withdrawn_at) or (bid and any(h["item"] == f"/b/{bid}" for h in hidden)):
             return None
         instead = hidden_now(bid, events, hidden)
-        return [without_counts(e) for e in (rechecked(events) if instead is None else instead)]
+        return [without_counts(e) for e in (shown(rechecked(events)) if instead is None else instead)]
 
     def on_event(self, ask: Ask, event: Event) -> Event | None:
         """An error is sent to the reader as its message and nothing else, as it always was here: whatever else
@@ -477,6 +487,11 @@ class SiteHooks(Hooks):
         if event.get("type") == "error":
             return {"type": "error", "message": event.get("message", "")}
         return without_counts(event)
+
+    def for_this_reader(self, ask: Ask, final: Event) -> Event:
+        """A new briefing's final event as it is sent, once it has been saved and cached as the verifier wrote it:
+        through the display rule for quotations (``wcs.rag.checks.shown``), as a saved or cached one is."""
+        return shown([final])[0]
 
 
 def create_app(settings: Settings | None = None, pipeline: Pipeline | None = None, state: StateDB | None = None,
@@ -581,7 +596,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         if note is not None:
             raise HTTPException(423, note)
         return {"id": b.id, "at": b.created_at, "question": b.question, "options": b.options,
-                "events": [without_counts(e) for e in rechecked(b.events)]}
+                "events": [without_counts(e) for e in shown(rechecked(b.events))]}
 
     @app.get("/api/corrections")
     def corrections():
@@ -826,7 +841,23 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
             # names nothing
             return html_page(text.replace(SITE_MARK, base).replace(
                 "</head>", '  <meta name="robots" content="noindex">\n</head>', 1))
-        return html_page(question_page(text, base, "", f"/b/{bid}", when=b.created_at))
+        counts = shown_counts(b.events)
+        alt = None if counts is None else (f"{briefing_title(b.created_at)}: a briefing written by AI, checked "
+                                           f"against the UN record. {counts_in_words(counts)}. Where Countries Stand.")
+        return html_page(question_page(text, base, "", f"/b/{bid}", when=b.created_at, card_alt=alt))
+
+    @app.get("/b/{bid}/card.png", include_in_schema=False)
+    def briefing_card(bid: str):
+        """A saved briefing's share card (``wcs.cards``): drawn once and kept. Nothing for a briefing that is not
+        there, has been withdrawn or is hidden for now."""
+        b = parts.archive.get(bid) if re.fullmatch(r"[A-Za-z0-9_-]{6,20}", bid) else None
+        if b is None or b.withdrawn_at or note_in_place(b.id, b.events, replies.all_hidden()) is not None:
+            raise HTTPException(404, "Not found")
+        counts = shown_counts(b.events)
+        if counts is None:
+            raise HTTPException(404, "Not found")
+        path = card_png(settings.data_dir / "cards", b.id, briefing_title(b.created_at), counts, b.created_at)
+        return FileResponse(path, media_type="image/png", headers={"Cache-Control": A_DAY})
 
     @app.exception_handler(StarletteHTTPException)
     async def not_found(request: Request, exc: StarletteHTTPException):

@@ -13,6 +13,10 @@ voice are highlighted (never hidden, and never inside a quotation). What is this
   two forms, as it always has: a sentence saying something "was supplied" or "were retrieved" counts as one;
 * curly quotation marks: this site shows its briefings with them, put in last, once the checks have read the text
   as the model wrote it.
+
+What a reader is shown passes one more, shared step (``shown``): the display rule for quotations, wts-core's
+``quotes_beside``. A quotation the verifier found word for word in the source cited straight after it is shown as
+that source's quotation, never as text with no source; the checks and the counts are unchanged.
 """
 
 from __future__ import annotations
@@ -28,6 +32,7 @@ from wts_core.checks import (
     Verifier,
     check_briefing,
     curl_events,
+    quotes_beside,
 )
 from wts_core.events import Answer, Event
 
@@ -56,3 +61,12 @@ def rechecked(events: list[Event]) -> list[Event]:
     saved before they were."""
     return curl_events([{**e, "answer": LOADED_WORDS.still_loaded(VERIFIER.recheck(e["answer"], curled=True))}
                         if e.get("type") == "final" and isinstance(e.get("answer"), dict) else e for e in events])
+
+
+def shown(events: list[Event]) -> list[Event]:
+    """Events as a reader is shown them: each final event's answer through the display rule for quotations
+    (``quotes_beside``), so that a quotation found word for word in the source cited beside it is never shown as text
+    with no source. Only what is sent changes: saved and cached copies keep the verifier's own segments, and every
+    count is the verifier's. The family's account is ``family/BRIEFINGS.md`` in the charity's repository."""
+    return [{**e, "answer": quotes_beside(e["answer"])}
+            if e.get("type") == "final" and isinstance(e.get("answer"), dict) else e for e in events]
