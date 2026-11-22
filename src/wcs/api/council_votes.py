@@ -472,6 +472,17 @@ class CouncilVotePages:
             return (head + "<p>The resolution was adopted without a vote, so no member’s vote is recorded."
                     + (" The members of the Council at the time:</p>"
                        f'<ul class="vote-list" aria-label="Members of the Council">{names}</ul>' if names else "</p>"))
+        if not members and v.source != "veto list":
+            # read from a meeting record whose printed lists the site could not read with certainty (``draft_rows``):
+            # the totals it announces, and never a member's vote that might be wrong
+            totals = [(LABEL[k], v.totals.get(k)) for k in ORDER if v.totals.get(k) is not None]
+            table = ('<table class="vote-totals"><caption>Totals, as the record gives them</caption><thead><tr>'
+                     '<th scope="col">Vote</th><th scope="col">Members</th></tr></thead><tbody>'
+                     + "".join(f'<tr><th scope="row">{label}</th><td>{n:,}</td></tr>' for label, n in totals)
+                     + "</tbody></table>") if totals else ""
+            return (head + table + "<p>How each member voted is not listed here: the site could not read the lists in "
+                    "the meeting record with certainty, so it gives only what the record announces. The meeting record "
+                    "has how each member voted.</p>")
         if not members:
             first = self.first_record()
             when = f" The site’s records of the Council’s meetings begin on {long_date(first)}." if first and \

@@ -595,6 +595,15 @@ so that a reader can see how each member voted on a resolution, and which drafts
   Security Council (half as many as the Assembly's when both are searched). Its chip says "Vote, Security Council"
   and the date: the Council's records do not call its votes recorded votes.
 
+- **Only a trusted reading names members** (22 November 2026, after the first run on the server put three wrong
+  permanent members on live pages: S/2018/156, S/2003/980, S/2016/1026). The printed lists are read as whole names
+  from the site's list of names, longest first, so "United Kingdom of Great Britain and Northern Ireland" and "Saint
+  Vincent and the Grenadines" are one member each, a page number is dropped and the list ends where the President
+  speaks on. How each member voted is stored only when every name matched a country, each list holds as many as the
+  result announced, and for a draft on the list of vetoes the permanent members against are the list's. Otherwise
+  the page gives the totals the record announces and says the meeting record has each member's vote. The permanent
+  members whose negative vote defeated a draft are always the list of vetoes' when it names the draft.
+
 ## 31. The rest of the General Assembly's plenary record, with explanations of vote
 
 On 22 November 2026 the owner approved a second new source: every plenary meeting record of the General Assembly
