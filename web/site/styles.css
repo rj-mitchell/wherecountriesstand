@@ -254,23 +254,12 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .why li { margin-block-end: 0.4rem; }
 .why details p { margin: 0; }
 
-/* The proof of the checking: the kit's wts-proof, framed as a panel of the page */
+/* The proof of the checking: the kit's wts-proof (two cards of the same height side by side from 48rem, one above
+   the other on phones), between rules on the page */
 .proof { margin-block: 2rem 1rem; padding-block: 1.5rem; border-block: 1px solid var(--rule); }
 .proof h2 { margin: 0; font-size: 1.375rem; }
-.proof__label { margin: 0 0 0.4rem; font-size: 0.9375rem; font-weight: 600; color: var(--ink-muted); }
 .proof__more { margin: 0; font-size: 1rem; }
 .proof .wts-chip { cursor: default; }
-/* The sentence is set level with the passage it came from, and the rule across the gutter at the first line of both
-   highlights. These are the measures at the usual widths, for a page read without its script; app.js makes them
-   exact at any width (alignProof). */
-@media (min-width: 48rem) {
-  .proof .wts-proof__pair { --wts-join: 16.3rem; }
-  .proof .wts-proof__pair > :first-child { padding-block-start: 11.95rem; }
-}
-@media (min-width: 64rem) {
-  .proof .wts-proof__pair { --wts-join: 14.93rem; }
-  .proof .wts-proof__pair > :first-child { padding-block-start: 10.58rem; }
-}
 
 .examples { margin: 0; padding-inline-start: 1.2em; }
 .examples li { margin-block-end: 0.5rem; }

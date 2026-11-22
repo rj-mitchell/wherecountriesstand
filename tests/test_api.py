@@ -95,6 +95,7 @@ def test_ask_streams_records_spend_and_caches(indexed):  # noqa: F811
     evs = events(api.post("/api/ask", json=QUESTION))
     assert [e["type"] for e in evs][:2] == ["plan", "sources"] and evs[-1]["type"] == "final"
     assert any(e["type"] == "text" for e in evs) and evs[-1]["answer"]["citations_total"] == 1
+    assert evs[-2] == {"type": "progress", "step": "checking"}  # the checks begun, after the writing, sent as it is
     with state.connect() as con:
         kind, spent = con.execute("SELECT kind, cost_usd FROM wts_spending").fetchone()
     assert kind == "answer" and spent == pytest.approx(cost(indexed, {"input_tokens": 1000, "output_tokens": 200},

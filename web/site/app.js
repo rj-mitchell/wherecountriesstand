@@ -1,7 +1,8 @@
 // Where Countries Stand: the ask page. Streams a briefing from /api/ask (server-sent events: plan, sources, text and
-// citation, final), or opens a saved one (/b/<id>), and shows it as the family shows a checked briefing
-// (family/BRIEFINGS.md in the charity's repository, with /family/briefing.css): the check strip, record quotations,
-// source chips, every passage with no source marked, and the record beside the briefing (a bottom sheet on phones).
+// citation, progress when the checks begin, final), or opens a saved one (/b/<id>), and shows it as the family shows
+// a checked briefing (family/BRIEFINGS.md in the charity's repository, with /family/briefing.css): the check strip,
+// record quotations, source chips, every passage with no source marked, and the record beside the briefing (a bottom
+// sheet on phones).
 // While a briefing is written, the wait shows its real events in order (docs/DESIGN.md, "The wait").
 // The briefing's parts are built by briefing.js; every piece of text is set as text: nothing from the record or the
 // model is parsed as HTML.
@@ -401,7 +402,8 @@ function closeSheet(refocus = true) {
 const STAGES = ["Reading the question", "Searching the record", "Writing from these records only",
   "Checking every citation and quotation"];
 const CLOTHS = ["mps", "councils", "landlords", "countries", "lives"];
-const wait = { active: false, timers: [], dealing: null, stage: -1, sourcesOnly: false, lit: new Set() };
+const wait = { active: false, timers: [], dealing: null, stage: -1, sourcesOnly: false, lit: new Set(), checking: false };
+const CHECKING = "Checking every citation and quotation against the UN record. The briefing is finished when this is done.";
 
 function announce(text) { $("status").textContent = text; }
 
@@ -444,6 +446,8 @@ function stopWait() {
   wait.timers = [];
   wait.dealing = null;
   wait.active = false;
+  wait.checking = false;
+  $("checking")?.remove();
   $("wait").hidden = true;
   $("wait").replaceChildren();
   $("stages-row").hidden = true;
@@ -531,13 +535,31 @@ function waitCited(n) {
   pile.scrollLeft = Math.max(0, card.offsetLeft - pile.offsetLeft - 40);
 }
 
-// 4. Checking: the finished briefing is shown at once; the strip's counts run up through the real results, passage
-// by passage, each quotation taking its highlight in turn. 5. The pile settles into the record beside the briefing.
+// 4. Checking. The server says when the text is written and the checks begin (a progress event, "checking"): from
+// then until the final event the checking line stands under the text, its bar moving while the checks run, and the
+// line above no longer says the briefing is being written. Without it, the seconds of checking looked finished.
+function waitCheckingBegun(st) {
+  if (wait.dealing) wait.dealing();
+  wait.checking = true;
+  setStage(3);
+  $("only").hidden = true;
+  st.cursor?.remove();
+  $("checking")?.remove();
+  $("briefing").after(el("div", { class: "wts-checking", id: "checking" }, el("span", {}, CHECKING),
+    el("div", { class: "wts-checking__bar" })));
+  announce(CHECKING);
+}
+
+// On the final event the checking line goes and the finished briefing is shown at once; the strip's counts run up
+// through the real results, passage by passage, each quotation taking its highlight in turn. 5. The pile settles
+// into the record beside the briefing.
 function waitChecking(answer, sources, id) {
   if (wait.dealing) wait.dealing();
   setStage(3);
+  $("checking")?.remove();
   $("result").classList.add("is-checking");
-  announce("Checking every citation and quotation.");
+  if (!wait.checking) announce("Checking every citation and quotation.");  // said once: here, or when they began
+  wait.checking = true;
   const segs = answer.segments || [];
   const c = B.counts(answer);
   renderAnswer(answer, sources, { running: { citations: 0, quotes: 0 }, id });
@@ -666,6 +688,8 @@ function handle(ev, st) {
     if (live && wait.stage < 2) waitWriting(st.sources.length);
     const s = st.sources[Number(ev.search_result_index)];
     if (live && s) waitCited(s.n);
+  } else if (ev.type === "progress") {
+    if (live && ev.step === "checking") waitCheckingBegun(st);
   } else if (ev.type === "final") {
     if (ev.answer && !ev.answer.no_records) {
       const id = ev.briefing_id || st.id || null;
@@ -822,23 +846,6 @@ function fromUrl() {
   ask(q, mode, params.get("sources") === "1");
 }
 
-// The home page's proof is drawn without a script, its sentence set level with the passage it came from at the
-// usual widths (styles.css). Where the script runs, the two highlights are made exactly level, and the rule between
-// them drawn at their first line, whatever the width.
-function alignProof() {
-  const pair = document.querySelector("#proof .wts-proof__pair");
-  if (!pair || pair.offsetParent === null) return;
-  const left = pair.firstElementChild, quote = pair.querySelector(".wts-proof__said .wts-quote");
-  const mark = pair.querySelector(".wts-passage mark");
-  if (!left || !quote || !mark) return;
-  if (!matchMedia("(min-width: 48rem)").matches) { left.style.removeProperty("padding-block-start"); return; }
-  left.style.setProperty("padding-block-start", "0px");
-  const q = quote.getClientRects()[0], m = mark.getClientRects()[0], box = pair.getBoundingClientRect();
-  if (!q || !m) return;
-  left.style.setProperty("padding-block-start", `${Math.max(0, m.top - q.top)}px`);
-  pair.style.setProperty("--wts-join", `${m.top - box.top + m.height / 2}px`);
-}
-
 // A topic briefing's page (decision 27) is written by the server, whole, for readers without scripts and for search
 // engines. Here the same briefing is opened from the record of saved briefings and shown again by this script, the
 // same markup with what needs a script added: the record beside it on a wide screen, and a chip's sheet on a phone.
@@ -857,9 +864,6 @@ async function openTopic(id) {
 document.addEventListener("DOMContentLoaded", () => {
   const topic = document.body.dataset.briefing;
   if (topic) { openTopic(topic); return; }
-  alignProof();
-  addEventListener("resize", alignProof);
-  document.fonts?.ready.then(alignProof);
   loadCoverage();
   loadNames().then(fromUrl);
   // The question box is a textarea, so a long question wraps: Enter asks, Shift+Enter starts a new line.

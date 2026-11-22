@@ -186,6 +186,9 @@ class Pipeline:
             yield {"type": "error", "message": MESSAGES.model_declined, "usage": done.usage.as_stored(),
                    "model": done.model}
             return
+        # the text is written and the checks begin: the page shows that they are running until the final event, so
+        # the few seconds they take do not look finished (the family's BRIEFINGS.md, "The wait", stage 4)
+        yield {"type": "progress", "step": "checking"}
         # Every check, in the one order: citations, openers about the records dropped, the model's own words made
         # British (quotations stay verbatim), judgemental words in its own voice highlighted (not hidden),
         # quotations not found word for word marked; then curly quotes and apostrophes, last, once the checks have
