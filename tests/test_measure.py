@@ -127,7 +127,7 @@ def test_on_the_privacy_page_is_the_measurement_version(data, finished):
                   'href="https://business.safety.google/privacy/"', "“Measurement choices”",
                   "Nothing is loaded from Google until you choose", "No ads are ever shown",
                   "nothing on them is personalised", "registered in England and Wales (charity number 1234567)",
-                  "the words of the question", "Last updated 1 March 2027."):
+                  "never sent to Google", "Last updated 1 March 2027."):
         assert words in text, words
     assert '<h2 id="measurement">' in page
     assert re.search(r'<link rel="canonical" href="[^"]*/privacy\.html">', page)
