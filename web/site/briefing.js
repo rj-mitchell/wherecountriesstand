@@ -264,8 +264,12 @@
           const lead = seg.text.slice(p.start, p.end).match(/^\s*(?:[-*•]|#+)\s+/);
           if (lead) start += lead[0].length;
         }
-        const nodes = pieceNodes(seg, p.seg, start, p.end, quotes[p.seg], ctx);
-        if (!flagged(seg)) { out.push(...nodes); return; }
+        if (!flagged(seg)) { out.push(...pieceNodes(seg, p.seg, start, p.end, quotes[p.seg], ctx)); return; }
+        // the space a passage ends with goes after its mark, so that the underline stops at its last word and the
+        // "No source" tag never touches the next word
+        const trail = /\S(\s+)$/.exec(seg.text.slice(start, p.end));
+        const end = trail ? p.end - trail[1].length : p.end;
+        const nodes = pieceNodes(seg, p.seg, start, end, quotes[p.seg], ctx);
         const first = !seen.has(p.seg);
         seen.add(p.seg);
         const last = lastPiece.get(p.seg) === `${li}:${pi}`;
@@ -274,6 +278,7 @@
           nodes,
           last && p.seg === ctx.firstNoSource && h("span", { class: "wts-nosource__tag", "aria-hidden": "true" }, "No source"),
           last && h("span", { class: "wts-vh" }, ` (${why})`)));
+        if (trail) out.push(" ");
       });
       return out;
     };

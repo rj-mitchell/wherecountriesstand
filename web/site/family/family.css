@@ -195,6 +195,12 @@
   padding-inline: 0.4rem 0.9rem;
   border-block-end: 3px solid var(--wts-shelf-line);
 }
+/* On a phone the books wrapped unevenly (two on one row, then one on each): one book to a row instead, each on its
+   own shelf, so the two groups look the same */
+@media (max-width: 30rem) {
+  .wts-shelf__groups, .wts-shelf__group { inline-size: 100%; }
+  .wts-shelf__books { flex-direction: column; }
+}
 .wts-book {
   display: flex;
   align-items: flex-end;

@@ -45,7 +45,9 @@ test("a quotation found word for word is never marked as having no source", () =
     q.includes("(quotation, found word for word in source 1)")));
   assert.ok(!nosource.map(plain).some((n) => n.includes("supports all initiatives")));
   // the words before Italy's quotation keep their mark, with "No source" on the first passage with none
-  assert.match(plain(nosource[0]), /^Several European States.*as when Italy said it No source \(no source\)$/s);
+  assert.match(plain(nosource[0]), /^Several European States.*as when Italy said itNo source \(no source\)$/s);
+  // the space the passage ends with comes after its mark, so that the tag never touches the next word
+  assert.ok(markup.includes('said it<span class="wts-nosource__tag" aria-hidden="true">No source</span><span class="wts-vh"> (no source)</span></span> <span class="wts-quote'));
 });
 
 test("as it was saved, before the display rule, the same quotation sat inside a passage with no source", () => {
