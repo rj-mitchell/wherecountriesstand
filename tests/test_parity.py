@@ -724,6 +724,19 @@ THE_EXACT_REASON = {                                                      # the 
     "withdraw it again": "error: statement 3 is withdrawn, not pending or published\n",
 }
 CORRECTIONS = ("the corrections log", "the corrections log, with two withdrawn")
+# A statement may sit beside a vote's page as well as a briefing (decision 26, 21 November 2026): the words for an
+# address that is not one say so. Each recorded word, as it was and as it is.
+VOTE_PAGES_TOO = {
+    "Give the address of the briefing the statement is about.":
+        "Give the address of the briefing or vote page the statement is about.",
+    "The address must be a briefing on wherecountriesstand.com.":
+        "The address must be a briefing or a vote page on wherecountriesstand.com.",
+    "The address must be a briefing on this site, such as https://wherecountriesstand.com/b/…":
+        "The address must be a briefing or a vote page on this site, such as https://wherecountriesstand.com/b/… "
+        "or https://wherecountriesstand.com/votes/…",
+    "There is no briefing at that address. Check the address of the briefing the statement is about.":
+        "There is no briefing or vote page at that address. Check the address of the page the statement is about.",
+}
 WAS_READ_BY_THE_PAGE = ("id", "at", "question", "withdrawn_at", "reason")  # what corrections.js reads of an entry
 
 
@@ -803,6 +816,9 @@ def test_reports_statements_and_the_owners_commands_answer_as_they_did(tmp_path,
                 assert step["og_title"] == [step["title"].replace("<title>", '<meta property="og:title" content="')
                                             .replace(" | Where Countries Stand</title>", '">')]
                 was = {**was, "title": step["title"], "og_title": step["og_title"]}
+            detail = (was.get("json") or {}).get("detail") if isinstance(was.get("json"), dict) else None
+            if isinstance(detail, str) and detail in VOTE_PAGES_TOO:
+                was = {**was, "json": {**was["json"], "detail": VOTE_PAGES_TOO[detail]}}
             if step["case"] not in listed:
                 assert step == was, step["case"]
     steps = {step["case"]: step for part in ("http", "cli", "after") for step in now[part]}

@@ -319,12 +319,14 @@ def _briefings(db: StateDB) -> BriefingArchive:
 
 
 def _replies() -> Replies:
+    from wcs.api.votes import VotePages
     from wcs.index.lance import has_record, open_index
     from wcs.replies import open_replies
 
     db = _state()
     return open_replies(db, _briefings(db), _clock(),
-                        record_exists=lambda record_id: has_record(open_index(load_settings().index_dir), record_id))
+                        record_exists=lambda record_id: has_record(open_index(load_settings().index_dir), record_id),
+                        vote_exists=VotePages(load_settings()).exists)
 
 
 def _report_lines(r: Mapping[str, Any]) -> list[str]:
@@ -509,7 +511,7 @@ def _never_proposed(briefing: str) -> bool:
     """Whether a saved briefing's question is never to be proposed as a test question (`wcs propose-questions`):
     the briefing is not shown at its address now. It is hidden while a concern about it is decided, by its own
     address (the package's to know) or with a record among its sources, or it has been withdrawn or is not there
-    (``BriefingItems.shown``): what its page asks. A briefing a reader has reported, and one withdrawn with
+    (``SiteItems.shown``): what its page asks. A briefing a reader has reported, and one withdrawn with
     `wcs withdraw`, are left out by the record's own marks as well."""
     desk = _replies()
     address = f"/b/{briefing}"

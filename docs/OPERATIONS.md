@@ -218,6 +218,7 @@ This is not a withdrawal: nothing is listed on the corrections page, and `wcs un
 ```bash
 wcs hide /b/AbC123xy --note "Hidden while a concern about it is looked into."
 wcs hide record:sc:S/PV.9000:0005 --note "Hidden while a concern about this record is looked into."
+wcs hide /votes/a-res-79-81.html --note "Hidden while a concern about this page is looked into."
 wcs hidden                        # what is hidden now, and the note shown in its place
 wcs unhide /b/AbC123xy
 ```
@@ -227,6 +228,9 @@ has been withdrawn, the command says so, hides nothing and exits 1.
 
 * A saved briefing, by its address. Its page says "Briefing hidden for now" and shows the note. A statement beside
   it is hidden with it, and its copy in the answer cache is dropped.
+* A vote's page (`/votes/<symbol>.html`, decision 26), by its address. It shows the vote's symbol and the note,
+  and nothing of the vote; it is marked noindex and left out of the sitemap, and a statement beside it is hidden
+  with it.
 * A record of the archive (one speech), by `record:` and the `record_id` on its source card (in the JSON of
   `/api/search` or of a briefing). It is left out of every search and every new briefing. Saved briefings that cite
   it are hidden with it, under its note, and the same question asked again is written afresh without it.
@@ -234,8 +238,10 @@ has been withdrawn, the command says so, hides nothing and exits 1.
 ### Statements under the right of reply
 
 The third route, "Add a statement in your own words", sends a statement (up to 150 words, a name and role, the
-briefing it is about, an optional link to the record, and an email address) to `data/state.db`, where it waits. It
-is shown only once published, beside its briefing.
+briefing or vote page it is about, an optional link to the record, and an email address) to `data/state.db`, where
+it waits. It is shown only once published, beside its briefing, or on the vote's page after the table of votes
+(decision 26). Give a statement beside a vote the country it speaks for (`--country`) when publishing it, since a
+vote's page names every Member State.
 
 ```bash
 wcs statements                                  # waiting and published, newest first (--all: every one)

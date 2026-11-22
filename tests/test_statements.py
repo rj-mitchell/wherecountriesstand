@@ -16,7 +16,7 @@ from wts_core.testing import FixedClock
 
 from wcs.api.app import SITE_DIR as SITE
 from wcs.cli import app as cli
-from wcs.replies import REPLY_MESSAGES, REPLY_RULES, BriefingItems, check_country
+from wcs.replies import REPLY_MESSAGES, REPLY_RULES, SiteItems, check_country
 from wcs.state import open_state
 
 SAID = "Our delegation's position on adaptation finance is set out in full in document A/79/123, paragraph 4."
@@ -37,7 +37,7 @@ def body(bid: str, **kw) -> dict:
 # What is sent is checked
 
 def test_the_item_is_a_briefing_on_this_site():
-    address = BriefingItems.address
+    address = SiteItems.address
     assert address("https://wherecountriesstand.com/b/AbC123xy") == "/b/AbC123xy"
     assert address("wherecountriesstand.com/b/AbC123xy/") == "/b/AbC123xy"
     assert address("/b/AbC123xy") == "/b/AbC123xy"
@@ -138,8 +138,8 @@ def test_what_is_sent_is_refused_with_words_for_the_reader(indexed):  # noqa: F8
                       (body(bid, link="javascript:alert(1)"), "web address"),
                       (body(bid, link='https://undocs.org/en/A/79/123"><b>'), "web address"),
                       (body(bid, page="https://example.org/b/" + bid), "wherecountriesstand.com"),
-                      (body(bid, page="https://wherecountriesstand.com/about.html"), "a briefing on this site"),
-                      (body(bid, page="/b/nosuchbriefing"), "no briefing at that address")):
+                      (body(bid, page="https://wherecountriesstand.com/about.html"), "a briefing or a vote page on this site"),
+                      (body(bid, page="/b/nosuchbriefing"), "no briefing or vote page at that address")):
         r = api.post("/api/statements", json=bad)
         assert r.status_code == 422 and says in r.json()["detail"], (bad, r.json())
     api.app.state.parts.archive.withdraw(bid, "It misread a statement.")
@@ -421,7 +421,7 @@ def test_the_named_page_and_the_routes(indexed, monkeypatch):  # noqa: F811
     assert named.status_code == 200
     text = named.text
     assert "<h1>If you’re named</h1>" in text and "<title>If you’re named | Where Countries Stand</title>" in text
-    assert "https://countries.example/named.html</loc>" in api.get("/sitemap.xml").text
+    assert "https://countries.example/named.html</loc>" in api.get("/sitemap-pages.xml").text
     for route in ("Errors", "Unfair descriptions", "Statements in your own words"):   # the family's headings
         assert f"<h3>{route}</h3>" in text, route
     for kind in ("error", "unfair", "statement", "takedown"):

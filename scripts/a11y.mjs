@@ -25,7 +25,18 @@ const NO_RECORDS = "a11ynorecords";
 const FAILED = "a11yfailed";
 const pages = ["/", "/about.html", "/methodology.html", "/glossary.html", "/corrections.html",
   "/corrections.html?kind=statement", "/named.html", "/accessibility.html", "/privacy.html", "/terms.html",
-  "/press.html", "/status.html", "/no-such-page", `/b/${SAMPLE}`, `/b/${NO_RECORDS}`, `/b/${FAILED}`];
+  "/press.html", "/status.html", "/no-such-page", `/b/${SAMPLE}`, `/b/${NO_RECORDS}`, `/b/${FAILED}`, "/votes.html"];
+// The pages written from the record's votes (decision 26): the index, and the first session and the first vote it
+// links to. CI starts the site with a small made-up votes file (scripts/sample_votes.py); a site with real votes
+// is checked on its own. A site with no votes fails here, as its vote pages would go unchecked.
+const votesIndex = await fetch(`${base}/votes.html`).then((r) => r.text());
+const sessionPage = votesIndex.match(/href="(\/votes\/session-[a-z0-9-]+\.html)"/)?.[1];
+const votePage = votesIndex.match(/href="(\/votes\/(?!session-)[a-z0-9-]+\.html)"/)?.[1];
+if (!sessionPage || !votePage) {
+  console.log("The site has no vote pages to check: start it with a votes file (python scripts/sample_votes.py <data folder>)");
+  process.exit(1);
+}
+pages.push(sessionPage, votePage);
 const CHECKED = "adaptation finance must reach the most vulnerable";
 const BESIDE = "climate finance is far too slow";
 const UNSUPPORTED = "Most delegations agreed.";
@@ -196,6 +207,28 @@ for (const scheme of ["light", "dark"]) {
           console.log(`${scheme} ${width}px ${path}: ${m}`);
         }
       }
+      if (path === votePage) {
+        // the vote's page is written on the server: its table, its totals and the family's words for anyone named
+        const vote = await page.evaluate(() => ({
+          h1: document.querySelectorAll("h1").length,
+          lists: document.querySelectorAll("ul.vote-list li").length,
+          totals: document.querySelectorAll("table.vote-totals tbody tr").length,
+          named: !!document.querySelector('.vote-side a[href="/named.html"]')
+            && document.querySelector('.vote-side a[href="/named.html"]').textContent === "If you’re named on this site",
+          data: [...document.querySelectorAll('script[type="application/ld+json"]')].map((s) => JSON.parse(s.textContent)["@type"]),
+        }));
+        const problems = [
+          vote.h1 !== 1 && "the vote's page does not have one heading of the first rank",
+          !vote.lists && "the vote's page lists no countries",
+          vote.totals !== 4 && "the vote's page has no table of totals",
+          !vote.named && "the vote's page does not link to If you're named on this site",
+          (vote.data.length !== 1 || vote.data[0] !== "BreadcrumbList") && "the vote's page carries structured data other than its breadcrumbs",
+        ].filter(Boolean);
+        for (const m of problems) {
+          failures++;
+          console.log(`${scheme} ${width}px ${path}: ${m}`);
+        }
+      }
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       if (overflow > 1) {
         failures++;
@@ -208,5 +241,5 @@ for (const scheme of ["light", "dark"]) {
 await browser.close();
 console.log(failures ? `${failures} accessibility problem(s) found`
   : `No serious accessibility problems on ${pages.length} pages, the sample briefing's marks are all there in words, ` +
-    "and only a written briefing offers the same question on Where MPs Stand");
+    "only a written briefing offers the same question on Where MPs Stand, and the vote pages carry their table");
 process.exit(failures ? 1 : 0);

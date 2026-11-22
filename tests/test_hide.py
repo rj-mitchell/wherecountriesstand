@@ -346,10 +346,10 @@ def test_an_item_is_hidden_under_one_address_however_it_was_typed_and_only_if_it
     # what is not there, or is not a briefing or a record, is refused: nothing is filed, and the command fails
     refused = {
         "/b/NoSuchId1": "there is no briefing at /b/NoSuchId1, or it has been withdrawn",
-        "https://example.org/b/" + bid: "only a saved briefing or a record of the archive can be hidden",
-        "/about": "only a saved briefing or a record of the archive can be hidden",
-        bid: "only a saved briefing or a record of the archive can be hidden",
-        KENYA: "only a saved briefing or a record of the archive can be hidden",
+        "https://example.org/b/" + bid: "only a saved briefing, a vote's page or a record of the archive can be hidden",
+        "/about": "only a saved briefing, a vote's page or a record of the archive can be hidden",
+        bid: "only a saved briefing, a vote's page or a record of the archive can be hidden",
+        KENYA: "only a saved briefing, a vote's page or a record of the archive can be hidden",
         "record:sc:S/PV.9000:9999": "there is no record 'sc:S/PV.9000:9999' in the archive",
         "record:": "there is no record '' in the archive",
     }

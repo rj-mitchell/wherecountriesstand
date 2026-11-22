@@ -306,7 +306,7 @@ def test_pages_robots_sitemap_and_link_previews(indexed, monkeypatch):  # noqa: 
         assert f"Allow: {path}\n" in robots
     assert "Allow: /api/ask" not in robots and "Allow: /api/briefings" not in robots
     assert "Allow: /api/statements" not in robots and "Allow: /api/check" not in robots
-    sitemap = api.get("/sitemap.xml").text
+    sitemap = api.get("/sitemap-pages.xml").text
     for loc in ("https://countries.example/</loc>", "/privacy.html</loc>", "/accessibility.html</loc>",
                 "/terms.html</loc>", "/glossary.html</loc>"):
         assert loc in sitemap
@@ -600,7 +600,7 @@ def test_unknown_addresses_get_a_page_and_the_api_keeps_json(indexed):  # noqa: 
         r = api.get(path)
         assert r.status_code == 404 and r.headers["content-type"] == "application/json", path
     assert api.post("/api/nothing", json={}).status_code in (404, 405)
-    assert "404" not in api.get("/sitemap.xml").text
+    assert "404" not in api.get("/sitemap-pages.xml").text
 
 
 def test_a_page_asked_for_at_another_form_of_its_address_is_sent_to_its_own_for_good(indexed):  # noqa: F811
@@ -627,12 +627,12 @@ def test_a_page_asked_for_at_another_form_of_its_address_is_sent_to_its_own_for_
 def test_the_sitemap_gives_the_day_each_page_last_changed_and_none_it_does_not_know(indexed, monkeypatch):  # noqa: F811
     monkeypatch.setenv("WCS_SITE_URL", "https://countries.example")
     monkeypatch.setenv("WCS_PAGE_DATES", "about:2026-11-19 index:2026-11-18 privacy:2026-11-19 status:")
-    sitemap = make(indexed, FakeClient())[0].get("/sitemap.xml").text
+    sitemap = make(indexed, FakeClient())[0].get("/sitemap-pages.xml").text
     assert "<url><loc>https://countries.example/</loc><lastmod>2026-11-18</lastmod></url>" in sitemap
     assert "<url><loc>https://countries.example/about.html</loc><lastmod>2026-11-19</lastmod></url>" in sitemap
     assert "<url><loc>https://countries.example/status.html</loc></url>" in sitemap  # no date: none is made up
     monkeypatch.delenv("WCS_PAGE_DATES")
-    assert "lastmod" not in make(indexed, FakeClient())[0].get("/sitemap.xml").text
+    assert "lastmod" not in make(indexed, FakeClient())[0].get("/sitemap-pages.xml").text
 
 
 def test_the_home_page_says_what_the_site_is_and_who_publishes_it(indexed, monkeypatch):  # noqa: F811
@@ -787,7 +787,7 @@ def test_the_methodology_page_holds_the_method_and_about_links_to_it(indexed, mo
         assert heading in method
     assert "Briefings are written by AI." in method and "sentences that\n        no source supports are flagged" in method
     assert '<a href="/methodology.html" aria-current="page">' in method
-    assert "<url><loc>https://countries.example/methodology.html</loc></url>" in api.get("/sitemap.xml").text
+    assert "<url><loc>https://countries.example/methodology.html</loc></url>" in api.get("/sitemap-pages.xml").text
     about = api.get("/about.html").text
     main = about[about.index("<main"):about.index("</main>")]
     # the old anchors on About, which others may link to, are kept beside links to the new page
@@ -879,7 +879,7 @@ def test_the_status_page_reads_without_javascript(indexed):  # noqa: F811
     noscript = text[text.index("<noscript>"):text.index("</noscript>")]
     assert '<a href="/api/status">/api/status</a>' in noscript
     assert '<script src="/status.js?v=' in text and 'id="status-live"' in text
-    assert "/status.html</loc>" in api.get("/sitemap.xml").text and "/press.html</loc>" in api.get("/sitemap.xml").text
+    assert "/status.html</loc>" in api.get("/sitemap-pages.xml").text and "/press.html</loc>" in api.get("/sitemap-pages.xml").text
 
 
 def test_the_home_page_carries_the_records_dates_without_a_script(indexed):  # noqa: F811

@@ -53,6 +53,14 @@ code in the real download is recognised.
   China's seat until 25 October 1971), RUS from 1992 (SUN before), and GER for the Federal Republic of Germany before
   1990 (stored as DEU). 193 codes have votes in 2026, matching today's membership.
 * The voting data leaves out votes on separate paragraphs and on drafts that were not adopted.
+* In the file of 15 October 2026 (looked at on 21 November 2026): 5,730 votes, each with its own symbol and UN Digital
+  Library record, and each with a vote listed for each Member State it records; the record's totals agree with the votes
+  listed on every one. 76 have no session: the special and emergency special sessions (`A/RES/ES-11/1`,
+  `A/RES/997(ES-I)`, `A/RES/S-8/2`) and `A/RES/80/288`, so the session is read from the symbol. One is a decision
+  (`A/DEC/80/506`). 585 drafts and 103 agenda items join two with `|`. Titles end with the catalogue's
+  "resolution / adopted by the General Assembly"; 76 are worded otherwise or in capitals. The votes run from
+  26 January 1946 to 17 September 2026, in 99 sessions: 80 regular sessions (every one from the 1st to the 81st
+  but the 19th, which has no recorded vote in the data), 10 emergency special and 9 special.
 
 ## Keeping current
 
@@ -62,7 +70,8 @@ code in the real download is recognised.
   Library's catalogue and by probing ODS for the following meeting numbers, and parsed by `wcs.sources.verbatim`.
   On meetings both cover, the parser matches the corpus closely ([VALIDATION.md](VALIDATION.md)). Closed meetings,
   which have only a communiqué, are recorded as such. Provisional records are fetched again once corrected.
-- Votes: the voting data record's file list is read on each run, and a new file is downloaded and converted.
+- Votes: the voting data record's file list is read on each run, and a new file is downloaded and converted. The
+  vote pages read the new file the first time they are asked for after it is written ([decision 26](DECISIONS.md#26-a-page-for-each-recorded-vote-in-the-general-assembly)).
 - General Debate, from the 79th session (2024): the General Assembly's own verbatim records (`A/<session>/PV.<n>`),
   parsed by `wcs.sources.unga`. Until a session's records are published, its statements come from the General Debate
   website, labelled as not yet the official record ([decision 12](DECISIONS.md#12-the-general-debate-website)).
