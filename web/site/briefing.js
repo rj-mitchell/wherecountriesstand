@@ -169,9 +169,10 @@
 
   // A chip's name is its own words, read as "Source 3 Italy, Security Council, 14 November 2025. Show the passage":
   // what it shows is part of what it is called (WCAG 2.5.3), so it has no aria-label that would differ from it.
+  // data-wts-conversion: the family kit's mark for a source opened, inert unless measurement is on (decision 28).
   function chip(n, source, seg) {
     const label = chipLabel(source) || `Source ${n}`;
-    return h("button", { type: "button", class: "wts-chip", "data-source": n, "data-seg": seg },
+    return h("button", { type: "button", class: "wts-chip", "data-source": n, "data-seg": seg, "data-wts-conversion": "source_opened" },
       h("span", { class: "wts-vh" }, "Source "),
       h("span", { class: "wts-chip__in" }, h("span", { class: "wts-chip__n" }, String(n)), " ", h("span", {}, label)),
       h("span", { class: "wts-vh" }, ". Show the passage"));
@@ -372,8 +373,11 @@
       `${c.no_source ? `${c.no_source} ${plural(c.no_source, "sentence", "sentences")}` : "no sentences"} without a source.`;
   }
 
-  // "How this briefing was checked", at the end: the verifier's own counts, and what each mark means.
-  function details(answer, found) {
+  // "How this briefing was checked", at the end: the verifier's own counts, and what each mark means. It is the end
+  // of a finished briefing, so it carries the family kit's mark for a briefing read, with the briefing's id
+  // (``briefingId``) so that the same briefing drawn again is counted once; inert unless measurement is on
+  // (decision 28).
+  function details(answer, found, briefingId) {
     const total = Number(answer.citations_total || 0), invalid = Number(answer.citations_invalid || 0);
     const quotes = Number(answer.quotes_total || 0), missing = Number(answer.quotes_unverified || 0);
     const unsupported = Number(answer.unsupported_segments || 0), loaded = Number(answer.loaded_words || 0);
@@ -390,7 +394,8 @@
       loaded ? `${loaded} ${plural(loaded, "judgemental word", "judgemental words")} in the AI’s own voice ${plural(loaded, "is", "are")} underlined.` : null,
       "Some errors can still get through: check the record before relying on a point.",
     ];
-    return h("section", { class: "check-details", id: "check-details", "aria-labelledby": "check-details-head" },
+    return h("section", { class: "check-details", id: "check-details", "aria-labelledby": "check-details-head",
+      "data-wts-conversion": "briefing_read", "data-wts-briefing": briefingId || null },
       h("h2", { id: "check-details-head" }, "How this briefing was checked"),
       h("ul", {}, points.filter(Boolean).map((p) => h("li", {}, p))),
       h("p", {}, h("a", { href: "/methodology.html#checked" }, "How every briefing is checked, on the methodology page")));
@@ -485,7 +490,7 @@
         s.title && h("div", { class: "wts-slip__heading" }, s.title),
         h("p", { class: "wts-passage", tabindex: "0", id: passageId, "aria-label": `The record of source ${s.n}` },
           `Adopted by a recorded vote: ${t.yes} in favour, ${t.no} against, ${t.abstain} abstaining.`),
-        h("div", { class: "wts-slip__foot" }, h("span", {}), h("a", { href: s.url, rel: "noopener" }, "Read the UN Digital Library record")));
+        h("div", { class: "wts-slip__foot" }, h("span", {}), h("a", { href: s.url, rel: "noopener", "data-wts-conversion": "source_opened" }, "Read the UN Digital Library record")));
     }
     const text = s.text || "";
     const spans = highlights(text, quoted, nowSeg);
@@ -505,7 +510,7 @@
       h("p", { class: "wts-passage", tabindex: "0", id: passageId, "aria-label": `The passage from source ${s.n}` }, passageNodes(text, spans, short)),
       h("div", { class: "wts-slip__foot" },
         spans.length ? h("span", { class: "wts-slip__found" }, "✓ Highlighted words found word for word") : h("span", {}),
-        h("a", { href: s.url, rel: "noopener" }, s.symbol ? `Read ${s.symbol}` : "Read the source")));
+        h("a", { href: s.url, rel: "noopener", "data-wts-conversion": "source_opened" }, s.symbol ? `Read ${s.symbol}` : "Read the source")));
   }
 
   // A record found, as a card in the pile of the wait: its document symbol and date, who spoke, its first words.

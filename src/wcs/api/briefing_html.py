@@ -212,7 +212,8 @@ def lines(segments: list[Mapping[str, Any]]) -> list[list[dict[str, Any]]]:
 
 def chip(n: Any, source: Mapping[str, Any] | None, seg: int) -> Node:
     label = chip_label(source) or f"Source {n}"
-    return h("button", {"type": "button", "class": "wts-chip", "data-source": n, "data-seg": seg},
+    return h("button", {"type": "button", "class": "wts-chip", "data-source": n, "data-seg": seg,
+                        "data-wts-conversion": "source_opened"},
              h("span", {"class": "wts-vh"}, "Source "),
              h("span", {"class": "wts-chip__in"}, h("span", {"class": "wts-chip__n"}, str(n)), " ", h("span", {}, label)),
              h("span", {"class": "wts-vh"}, ". Show the passage"))
@@ -409,8 +410,10 @@ def strip(answer: Mapping[str, Any]) -> Node:
                               "against the record."))
 
 
-def details(answer: Mapping[str, Any], found: int) -> Node:
-    """"How this briefing was checked", at the end: the verifier's own counts, and what each mark means."""
+def details(answer: Mapping[str, Any], found: int, briefing_id: str | None = None) -> Node:
+    """"How this briefing was checked", at the end: the verifier's own counts, and what each mark means. As the end
+    of a finished briefing it carries the family kit's mark for a briefing read, with the briefing's id, inert unless
+    measurement is on (decision 28)."""
     total, invalid = int(answer.get("citations_total") or 0), int(answer.get("citations_invalid") or 0)
     quotes, missing = int(answer.get("quotes_total") or 0), int(answer.get("quotes_unverified") or 0)
     unsupported, loaded = int(answer.get("unsupported_segments") or 0), int(answer.get("loaded_words") or 0)
@@ -436,7 +439,8 @@ def details(answer: Mapping[str, Any], found: int) -> Node:
         f"{p(loaded, 'is', 'are')} underlined." if loaded else None,
         "Some errors can still get through: check the record before relying on a point.",
     ]
-    return h("section", {"class": "check-details", "id": "check-details", "aria-labelledby": "check-details-head"},
+    return h("section", {"class": "check-details", "id": "check-details", "aria-labelledby": "check-details-head",
+                         "data-wts-conversion": "briefing_read", "data-wts-briefing": briefing_id},
              h("h2", {"id": "check-details-head"}, "How this briefing was checked"),
              h("ul", {}, [h("li", {}, x) for x in points if x]),
              h("p", {}, h("a", {"href": "/methodology.html#checked"},
@@ -467,7 +471,8 @@ def source_card(s: Mapping[str, Any]) -> Node:
                  h("p", {"class": "procedural"},
                    f"{t.get('yes')} in favour, {t.get('no')} against, {t.get('abstain')} abstaining"),
                  h("p", {"class": "source__links"},
-                   h("a", {"href": s.get("url"), "rel": "noopener"}, "UN Digital Library record")))
+                   h("a", {"href": s.get("url"), "rel": "noopener", "data-wts-conversion": "source_opened"},
+                     "UN Digital Library record")))
     when = None if s.get("date_precision") == "session" else long_date(s.get("date"))
     rows = [", ".join(x for x in row if x) for row in ((s.get("body"), s.get("meeting")), (when, s.get("symbol")),
                                                         (s.get("agenda"),))]
@@ -496,7 +501,7 @@ def source_card(s: Mapping[str, Any]) -> Node:
                                    h("p", {}, text)),
              notes and h("p", {"class": "source__notes"}, " ".join(notes)),
              h("p", {"class": "source__links"},
-               h("a", {"href": s.get("url"), "rel": "noopener"},
+               h("a", {"href": s.get("url"), "rel": "noopener", "data-wts-conversion": "source_opened"},
                  f"Read {s['symbol']}" if s.get("symbol") else "Read the source")))
 
 

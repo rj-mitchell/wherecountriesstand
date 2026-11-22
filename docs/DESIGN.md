@@ -1,7 +1,7 @@
 # Design
 
 How the site looks and behaves, and the rules it follows on the UN's name and emblem. Where Countries Stand uses the
-Where They Stand family design (family kit 2.1): white pages, light grey panels, a band in the site's cloth colour
+Where They Stand family design (family kit 2.2): white pages, light grey panels, a band in the site's cloth colour
 across the top of every page, Source Serif 4 for headings and Source Sans 3 for everything else. The family's rules
 are in the charity's glossary (`family/GLOSSARY.md`, "Design", in the charity's private repository,
 wheretheystand-charity); this document records what is particular to this site.
@@ -259,3 +259,25 @@ briefing ("Briefing from UN records, 18 November 2026", never the reader's quest
 counts in words, the day it was prepared and the site's address. It is set in Source Serif 4 Semibold and Source
 Sans 3, from `data_static/fonts/` (SIL Open Font License). A topic's page has a card of its own, with the topic's
 question as its title ([Topic briefings](#topic-briefings)). Every other page keeps the family's card.
+
+## Measurement for Google Ad Grants
+
+Built on 22 November 2026 and off ([decision 28](DECISIONS.md#28-measurement-for-google-ad-grants-built-and-switched-off)):
+while `[ads] measurement` is false, as it ships, no page loads anything for it and `/family/measure.js` is not
+served. The kit's `measure.js` and `measure-csp.json`, in `web/site/family/`, are the family's consent banner and
+Google tag loader, and the hosts the front door's policy adds for it
+([`src/wcs/api/measurement.py`](../src/wcs/api/measurement.py)). The banner's styles are the kit's, in `family.css`
+(`.wts-measure`).
+
+While it is on, every page loads `measure.js` last in its head, and the banner, drawn by the script, sits at the top
+of the page's main content until the reader chooses: one sentence saying what is measured, by whom and why, then
+"Accept" and "Reject", the same button in the same style, and "Read the privacy notice". It is not a dialog, and it
+moves nothing the page's script draws (the briefing, the wait and the record beside it are all drawn inside the main
+content, below it). The footer's line "Measurement choices", after the notices, opens it again. The privacy page is
+the measurement version, `web/partials/privacy-measurement.html`.
+
+The places a conversion happens carry the kit's marks whether the switch is on or off: the check details at the end
+of a finished briefing (`briefing_read`, with the briefing's id), the source chips and every link to the record
+(`source_opened`), the shelf's Donate link (`donate_click`), and the corrections page's script once a report or a
+statement is sent (`report_sent`). The site offers no downloads, so it has no `download`.
+

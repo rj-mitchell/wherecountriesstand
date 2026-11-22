@@ -136,7 +136,7 @@ function sourceCard(s) {
       el("p", { class: "source__meta" }, `General Assembly, recorded vote, ${fmtDate(s.date)}`),
       el("p", { class: "source__speaker" }, el("b", {}, `Resolution ${s.resolution}`), ` ${s.title || ""}`),
       el("p", { class: "procedural" }, `${t.yes} in favour, ${t.no} against, ${t.abstain} abstaining`),
-      el("p", { class: "source__links" }, el("a", { href: s.url, rel: "noopener" }, "UN Digital Library record")));
+      el("p", { class: "source__links" }, el("a", { href: s.url, rel: "noopener", "data-wts-conversion": "source_opened" }, "UN Digital Library record")));
   }
   // one line for where it was said, one for when and its document symbol, one for the agenda item
   const meta = [[s.body, s.meeting], [s.date_precision === "session" ? null : fmtDate(s.date), s.symbol], [s.agenda]]
@@ -165,7 +165,7 @@ function sourceCard(s) {
   }
   if (notes.length) card.append(el("p", { class: "source__notes" }, notes.join(" ")));
   card.append(el("p", { class: "source__links" },
-    el("a", { href: s.url, rel: "noopener" }, s.symbol ? `Read ${s.symbol}` : "Read the source")));
+    el("a", { href: s.url, rel: "noopener", "data-wts-conversion": "source_opened" }, s.symbol ? `Read ${s.symbol}` : "Read the source")));
   return card;
 }
 
@@ -188,12 +188,13 @@ function setBriefing(answer, sources) {
 }
 
 // The briefing as written and checked. A briefing with no records found has no strip: the site says so in its text.
-function renderAnswer(answer, sources, { running = null } = {}) {
+// ``id``: the saved briefing's, on the mark for a briefing read at its end (decision 28).
+function renderAnswer(answer, sources, { running = null, id = null } = {}) {
   setBriefing(answer, sources);
   const checked = !answer.no_records;
   $("strip").replaceChildren(...(checked ? [dom(B.strip(answer, running))] : []));
   $("briefing").replaceChildren(...B.briefingBlocks(answer, shown.byN).map(dom));
-  $("details").replaceChildren(...(checked ? [dom(B.details(answer, shown.sources.length))] : []));
+  $("details").replaceChildren(...(checked ? [dom(B.details(answer, shown.sources.length, id))] : []));
   bindChips();
 }
 
@@ -522,14 +523,14 @@ function waitCited(n) {
 
 // 4. Checking: the finished briefing is shown at once; the strip's counts run up through the real results, passage
 // by passage, each quotation taking its highlight in turn. 5. The pile settles into the record beside the briefing.
-function waitChecking(answer, sources) {
+function waitChecking(answer, sources, id) {
   if (wait.dealing) wait.dealing();
   setStage(3);
   $("result").classList.add("is-checking");
   announce("Checking every citation and quotation.");
   const segs = answer.segments || [];
   const c = B.counts(answer);
-  renderAnswer(answer, sources, { running: { citations: 0, quotes: 0 } });
+  renderAnswer(answer, sources, { running: { citations: 0, quotes: 0 }, id });
   const quotes = [...document.querySelectorAll("#briefing .wts-quote--checked")];
   if (reduced() || !segs.length) { wait.timers.push(setTimeout(finishWait, reduced() ? 400 : 0)); return; }
   for (const q of quotes) {
@@ -657,8 +658,9 @@ function handle(ev, st) {
     if (live && s) waitCited(s.n);
   } else if (ev.type === "final") {
     if (ev.answer && !ev.answer.no_records) {
-      if (live) waitChecking(ev.answer, st.sources);
-      else { renderAnswer(ev.answer, st.sources); if (wide()) openRecord(false); }
+      const id = ev.briefing_id || st.id || null;
+      if (live) waitChecking(ev.answer, st.sources, id);
+      else { renderAnswer(ev.answer, st.sources, { id }); if (wide()) openRecord(false); }
     } else {
       if (live && !ev.answer && st.sources.length) {
         // sources only (or no briefing could be written): the records dealt in full, then the list of sources
@@ -670,7 +672,7 @@ function handle(ev, st) {
         stopWait();
         announce("No records found.");
       }
-      if (ev.answer) renderAnswer(ev.answer, st.sources);
+      if (ev.answer) renderAnswer(ev.answer, st.sources, { id: ev.briefing_id || st.id || null });
       else if (st.drafting) st.drafting.remove();
     }
     if (ev.answer && !ev.answer.no_records) sisters($("question").textContent, st.countries);
@@ -743,7 +745,7 @@ async function openSaved(id) {
   const mode = b.options && b.options.mode === "comprehensive" ? "comprehensive" : "summary";
   document.querySelector(`input[name=mode][value=${mode}]`).checked = true;
   written(b.at.slice(0, 10));
-  const st = { drafting: null, saved: b.at.slice(0, 10), sources: [] };
+  const st = { drafting: null, saved: b.at.slice(0, 10), sources: [], id };
   for (const ev of b.events) handle(ev, st);
 }
 
@@ -838,7 +840,7 @@ async function openTopic(id) {
   const final = b.events.find((e) => e.type === "final");
   const found = b.events.find((e) => e.type === "sources");
   if (!final || !final.answer || final.answer.no_records) return;
-  renderAnswer(final.answer, (found && found.sources) || []);
+  renderAnswer(final.answer, (found && found.sources) || [], { id });
   if (wide()) openRecord(false);
 }
 

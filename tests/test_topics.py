@@ -108,7 +108,8 @@ def test_the_server_writes_the_briefing_as_the_page_script_does():
             {k: s.get(k) for k in ("n", "kind", "date", "date_precision", "on_behalf_of", "country_name",
                                    "speaker_name", "body")} for s in sources],
             "found": len(sources), "strip": B.to_html(B.strip(answer)),
-            "blocks": B.html_of(B.briefing_blocks(answer, by_n)), "details": B.to_html(B.details(answer, len(sources)))})
+            "blocks": B.html_of(B.briefing_blocks(answer, by_n)), "briefing_id": name,
+            "details": B.to_html(B.details(answer, len(sources), name))})
     fixture = {"cases": cases}
     if os.environ.get("WCS_WRITE_FIXTURES"):
         SERVER.write_text(json.dumps(fixture, ensure_ascii=False, indent=1) + "\n")
@@ -145,12 +146,17 @@ def test_a_topic_page_shows_its_saved_briefing_without_a_script(indexed, monkeyp
     main = page[page.index("<main"):page.index("</main>")]
     assert '<h2 class="wts-check__title" id="check-title">Checked against the UN record</h2>' in main
     assert re.search(r"✓</span><span class=\"wts-check__num\">16</span><span>of 16</span>", main)
-    chips = re.findall(r'<button type="button" class="wts-chip" data-source="\d+" data-seg="\d+">(.*?)</button>', main)
+    chips = re.findall(r'<button type="button" class="wts-chip" data-source="\d+" data-seg="\d+" '
+                       r'data-wts-conversion="source_opened">(.*?)</button>', main)
     assert len(chips) > 10
     assert re.sub(r"<[^>]+>", "", chips[0]) == "Source 1 Italy, Security Council, 14 November 2025. Show the passage"
     assert main.count('class="wts-quote wts-quote--checked"') == 15
     assert main.count('class="wts-nosource"') == 2 and main.count("wts-nosource__tag") == 1
     assert 'id="check-details"' in main and "How this briefing was checked" in main
+    # the end of the finished briefing, marked for the family kit's measure.js (inert while measurement is off,
+    # decision 28), with the briefing's id so that the script's drawing it again is counted once
+    assert (f'<section class="check-details" id="check-details" aria-labelledby="check-details-head" '
+            f'data-wts-conversion="briefing_read" data-wts-briefing="{b.id}">') in main
     sources = next(e for e in SAVED["events"] if e["type"] == "sources")["sources"]
     assert main.count('<li class="source') == len(sources) and "Read S/PV.10043 (Resumption 1)" in main
     # its saved address for reports, and the script that adds the record beside it and the sheet

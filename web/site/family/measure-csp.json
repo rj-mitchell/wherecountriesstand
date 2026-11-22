@@ -1,0 +1,28 @@
+{
+  "about": "What a page's content security policy adds, when its site's measurement switch is on, so that the Google tag loaded by measure.js can work: Google's documented policy for a Google Ads conversion tag (https://developers.google.com/tag-platform/security/guides/csp, read 21 November 2026), with the regional Google domain for the UK only, since the sites' ads are shown in the UK only. Each list is added to the directive of that name, after 'self'. Nothing else changes. family/MEASUREMENT.md.",
+  "script-src": [
+    "https://www.googletagmanager.com",
+    "https://www.googleadservices.com",
+    "https://www.google.com"
+  ],
+  "img-src": [
+    "https://www.googletagmanager.com",
+    "https://www.googleadservices.com",
+    "https://googleads.g.doubleclick.net",
+    "https://pagead2.googlesyndication.com",
+    "https://www.google.com",
+    "https://www.google.co.uk"
+  ],
+  "connect-src": [
+    "https://www.googletagmanager.com",
+    "https://www.googleadservices.com",
+    "https://googleads.g.doubleclick.net",
+    "https://pagead2.googlesyndication.com",
+    "https://www.google.com",
+    "https://www.google.co.uk",
+    "https://ad.doubleclick.net"
+  ],
+  "frame-src": [
+    "https://www.googletagmanager.com"
+  ]
+}

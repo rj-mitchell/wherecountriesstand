@@ -80,7 +80,7 @@
   font-family: var(--wts-sans); font-size: .8125rem; line-height: 1.5; white-space: normal; color: var(--wts-cloth-text);
   background: var(--wts-paper-light); border: 1px solid var(--wts-cloth-text); border-radius: 999px; padding: 0 .55em 0 0; }
 .wts-chip__n { background: var(--wts-cloth); color: var(--wts-on-cloth); border-radius: 999px; padding: 0 .45em; min-width: 1.6em;
-  text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; flex: none; white-space: nowrap; }
 .wts-chip:hover .wts-chip__in, .wts-chip[aria-current="true"] .wts-chip__in { text-decoration: underline; text-decoration-thickness: 2px; }
 .wts-chip[aria-current="true"] .wts-chip__in { background: var(--wts-mark); }
 .wts-chip:focus-visible { outline: none; }
@@ -154,6 +154,9 @@
   font-size: .8125rem; line-height: 1.35; box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
 .wts-card + .wts-card { margin-top: -1px; border-top-left-radius: 0; border-top-right-radius: 0; }
 .wts-card__top { display: flex; justify-content: space-between; gap: .5rem; color: var(--wts-ink-muted); white-space: nowrap; overflow: hidden; }
+/* a long name gives way to the date: it is cut short with an ellipsis, and the date keeps its width */
+.wts-card__top > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.wts-card__top > :last-child:not(:first-child) { flex: none; }
 .wts-card__sym { font-family: var(--wts-serif); font-weight: 700; color: var(--wts-ink); }
 .wts-card__who { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wts-card__line { font-family: var(--wts-serif); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

@@ -188,7 +188,38 @@ cannot happen at a deploy; do not run `wcs backup` by hand between a build and t
 
 The privacy notice (`web/site/privacy.html`) says what the site keeps and for how long, and names Cloudflare, which
 carries the site's visits. Keep it true when changing what is stored, for how long, or the hosting. No requests are
-logged: `wcs serve` turns the access log off, and the front door keeps none.
+logged: `wcs serve` turns the access log off, and the front door keeps none. While measurement is on, the notice is
+`web/partials/privacy-measurement.html` instead ("Measurement", below): keep the two in step.
+
+### Measurement
+
+Measurement for Google Ad Grants (decision 28; the charity's `family/MEASUREMENT.md`) is off:
+`[ads] measurement = false` and `tag = ""` in `config/settings.toml`. Turn it on only once the charity is registered
+and its Google Ads account has the conversions set up (`briefing_read`, `source_opened`, `donate_click` and
+`report_sent`; this site has no `download`), following the charity's
+[Ad Grants checklist](https://github.com/rj-mitchell/wheretheystand-charity/blob/main/plans/2026-11-21-ad-grants-checklist.md)
+("On the day the charity is registered"), in this order:
+
+1. Finish `web/partials/privacy-measurement.html`: the charity number for `NNNNNNN`, and the "Last updated" date
+   without "(draft". Read it against the checklist and `web/site/privacy.html`, and settle what it says of a
+   question's words in a page's address (decision 28). Merge it. Until both are filled in, the site refuses to start
+   with measurement on.
+2. The front door. This site sets no content security policy of its own: Where MPs Stand's Caddy front door sends
+   its own, which would block the Google tag. Once Where MPs Stand's `deploy/` has `MEASURED_SITES` (the charity's
+   `family/front-door-measurement.patch`, applied there in a pull request, then `cd /opt/hansardgpt/deploy && bash
+   update.sh`), add this site's domain to it in `/opt/hansardgpt/deploy/.env`, space-separated with any others
+   (`MEASURED_SITES="wherelandlordsstand.com wherecountriesstand.com"`), and run `bash update.sh` there again. Until
+   `MEASURED_SITES` names this site, the front door sends what it sends today.
+3. Add `WCS_ADS_MEASUREMENT=true` and `WCS_ADS_TAG=AW-…` (the Google tag's ID from the charity's Google Ads
+   account) to `/opt/wherecountriesstand/deploy/.env`, and run `bash /opt/wherecountriesstand/deploy/update.sh`.
+4. Check in a private window: the banner shows at the top of the page; "Reject" leaves no request to Google (the
+   browser's network panel); "Accept" loads the tag; "Measurement choices" at the foot of a page opens the banner
+   again; Google Ads' tag diagnostics see a conversion; and
+   `curl -sI https://wherecountriesstand.com/ | grep -i content-security-policy` names
+   `https://www.googletagmanager.com`.
+
+To turn it off, remove the two lines from `.env`, run `update.sh`, and take the site out of `MEASURED_SITES`. The
+pages are then as they were, and readers' stored choices do nothing.
 
 ### Search engines and link previews
 
@@ -226,8 +257,9 @@ node <charity repository>/family/kit/sync.mjs --site countries --out web/site/fa
 ```
 
 After a sync, raise the kit version in `.github/workflows/ci.yml` (the `kit` job) to match `web/site/family/VERSION`.
-The kit has no scripts and loads nothing from other sites, so the front door's content security policy
-(`default-src 'self'`) allows it.
+The kit loads nothing from other sites, so the front door's content security policy (`default-src 'self'`) allows
+it. Its one script, `measure.js`, is not served and no page loads it while measurement is off ("Measurement",
+below).
 
 ### Visitors' addresses
 
