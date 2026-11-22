@@ -38,7 +38,7 @@ import httpx
 from wcs.config import Settings
 from wcs.reference.countries import Countries, norm
 from wcs.sources import votes as vote_files
-from wcs.sources.vote_result import Chunk, Vote, resolve_lists, votes_in
+from wcs.sources.vote_result import Chunk, Vote, votes_in
 from wcs.store.parquet import council_votes_path, record_path, write_council_votes, years
 
 log = logging.getLogger(__name__)
@@ -261,6 +261,75 @@ def resolve(countries: Countries, name: str) -> str | None:
     return code
 
 
+# Words that end a printed list: what the President says next, or the next vote put
+_LIST_ENDS = re.compile(r"\b(?:The President|I shall|I now|Draft resolution|The draft|The result|A vote was taken)\b")
+_SKIP = {"and", "the", "none"}  # "None": an empty list
+
+
+def _label_tokens(countries: Countries) -> dict[tuple[str, ...], str]:
+    """Every name the site knows for a country, as words: the longest is matched first, so "United Kingdom of Great
+    Britain and Northern Ireland" and "Saint Vincent and the Grenadines" are read whole, never split at "and"."""
+    cached = getattr(countries, "_label_tokens", None)
+    if cached is None:
+        cached = {tuple(label.split()): code for label, code in countries._labels.items() if label}
+        countries._label_tokens = cached  # type: ignore[attr-defined]
+    return cached
+
+
+def segment(listed: list[str], countries: Countries) -> tuple[list[str], list[str]]:
+    """The members in one printed list, as codes, read as whole names in order; and what in it matched no country,
+    which makes the vote's lists untrusted (``draft_rows``). A page number ("2") is dropped."""
+    # rejoined with "and", which the first reading split at ("Saint Vincent" / "Grenadines"): names are matched
+    # without "the", and an "and" between two names is skipped
+    text = _LIST_ENDS.split(" and ".join(listed), maxsplit=1)[0]
+    words: list[str] = []
+    for w in norm(text).split():
+        if w.isdigit() or (w == "and" and words and words[-1] == "and"):
+            continue
+        # a name the PDF split after its first letter ("C olombia") is joined again
+        if words and len(words[-1]) == 1 and words[-1] not in ("a",):
+            words[-1] += w
+        else:
+            words.append(w)
+    labels = _label_tokens(countries)
+    longest = max((len(k) for k in labels), default=1)
+    codes: list[str] = []
+    unknown: list[str] = []
+    stray: list[str] = []
+    i = 0
+    while i < len(words):
+        hit = None
+        for n in range(min(longest, len(words) - i), 0, -1):
+            code = labels.get(tuple(words[i:i + n]))
+            if code:
+                hit = (n, code)
+                break
+        if hit:
+            if stray:
+                unknown.append(" ".join(stray))
+                stray = []
+            codes.append(hit[1])
+            i += hit[0]
+        else:
+            if words[i] not in _SKIP:
+                stray.append(words[i])
+            i += 1
+    if stray:
+        unknown.append(" ".join(stray))
+    return codes, unknown
+
+
+def read_lists(v: Vote, countries: Countries) -> tuple[dict[str, list[str]], list[str]]:
+    """Each of a vote's printed lists as codes, by whole names (``segment``), and everything that matched none."""
+    codes: dict[str, list[str]] = {}
+    unknown: list[str] = []
+    for k, listed in v.lists.items():
+        got, stray = segment(listed, countries)
+        codes[k] = got
+        unknown += stray
+    return codes, unknown
+
+
 def not_adopted(meeting: str, on: date, chunks: list[Chunk], countries: Countries,
                 source: str = "meeting record") -> list[Found]:
     """The drafts (and amendments) put to the vote at a meeting and not adopted, with how each member voted."""
@@ -274,7 +343,7 @@ def not_adopted(meeting: str, on: date, chunks: list[Chunk], countries: Countrie
         oral = v.what == "proposed amendment" and "oral" in v.words.lower()
         if (not v.drafts and not oral) or v.what in ("proposal", "motion"):
             continue
-        codes, unknown = resolve_lists(v, lambda name: resolve(countries, name))
+        codes, unknown = read_lists(v, countries)
         amends = None
         if v.what == "proposed amendment":
             later = [w for w in every if w.chunk >= v.chunk and w.what == "draft resolution" and w.drafts]
@@ -411,9 +480,19 @@ def draft_rows(found: list[Found], listed: list[Veto], countries: Countries, sin
         listed_as = by_found.get(id(f))
         reason = v.reason or ("veto" if listed_as else None)
         p5 = f.against_p5(countries)
-        vetoed_by = p5 if reason == "veto" else []
-        if reason == "veto" and not vetoed_by and listed_as:
-            vetoed_by = listed_as.members
+        # How each member voted is stored only when the record's lists are trusted: every name matched a country, each
+        # list holds as many as the result announced, and for a draft on the list of vetoes the permanent members
+        # against are the list's. Otherwise only the totals are kept and the page points to the meeting record:
+        # a list read wrongly would name a state as voting as it did not (22 November 2026).
+        counted = {k: len(f.codes.get(k, [])) for k in ("Y", "N", "A")}
+        trusted = (not f.unknown and bool(v.totals) and all(counted[k] == v.totals.get(k, 0) for k in ("Y", "N", "A"))
+                   and (listed_as is None or sorted(p5) == sorted(listed_as.members)))
+        # the permanent members whose negative vote defeated it: the list of vetoes is the authority; the record only
+        # where the list does not name the draft and the record's lists are trusted
+        if listed_as is not None:
+            vetoed_by = list(listed_as.members)
+        else:
+            vetoed_by = p5 if reason == "veto" and trusted else []
         agenda = f.agenda or (listed_as.agenda if listed_as else None)
         base = {"vote_id": key, "body": BODY, "outcome": "not adopted", "reason": reason, "what": v.what,
                 "date": f.on, "resolution": None, "draft": f.draft, "amends": f.amends, "meeting": f.meeting,
@@ -421,8 +500,8 @@ def draft_rows(found: list[Found], listed: list[Veto], countries: Countries, sin
                 "result": re.sub(r"\s+([,.;:])", r"\1", v.words) if v.adopted is False else None,
                 "total_yes": v.totals.get("Y"), "total_no": v.totals.get("N"), "total_abstentions": v.totals.get("A"),
                 "total_non_voting": v.totals.get("X"), "total_ms": None, "modality": "Vote", "vetoed_by": vetoed_by,
-                "source": f.source, "complete": v.complete and not f.unknown, "url": undocs + f.draft}
-        members = [(code, how) for how, codes in f.codes.items() for code in codes]
+                "source": f.source, "complete": trusted, "url": undocs + f.draft}
+        members = [(code, how) for how, codes in f.codes.items() for code in codes] if trusted else []
         if not members:
             rows.append({**base, "country_code": None, "country_name": None, "permanent_member": None, "vote": None})
         for code, how in members:

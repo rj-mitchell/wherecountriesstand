@@ -202,9 +202,10 @@ def test_the_votes_file_holds_the_resolutions_the_drafts_and_the_vetoes_from_the
     [old] = by["draft:S/17354/Rev.1"]
     assert old["country_code"] is None and old["vote"] is None and old["vetoed_by"] == ["GBR", "USA"]
     assert old["source"] == "veto list"
-    # the vote taken by letter keeps the member it names, and no other
+    # the vote taken by letter names only some members, so its lists are not trusted: no member's vote is stored,
+    # only the totals (and, for a veto, the permanent members the list of vetoes gives)
     letter = by["draft:S/2020/852"]
-    assert [(r["country_code"], r["vote"]) for r in letter] == [("USA", "N")] and not letter[0]["complete"]
+    assert [(r["country_code"], r["vote"]) for r in letter] == [(None, None)] and not letter[0]["complete"]
     # adopted resolutions, from the voting data
     adopted = by[next(k for k, rs in by.items() if rs[0]["resolution"] == "S/RES/2728(2024)")]
     assert len(adopted) == 15 and {r["vote"] for r in adopted if r["country_code"] == "USA"} == {"A"}
@@ -474,3 +475,29 @@ def test_the_topic_briefing_on_the_war_in_ukraine_can_cite_a_vetoed_draft(settin
     found = VoteFinder(settings, countries()).find(plan.search_text, plan.filters, 3, body="Security Council")
     assert any(v["reason"] == "veto" and v["agenda_title"].startswith("Maintenance of peace and security of Ukraine")
                for v in found)
+
+
+
+def test_names_with_and_are_read_whole_and_untrusted_lists_name_no_member():
+    """A name with "and" in it is one member, a page number is dropped, and a list that runs on into the President's
+    words, or holds a name that is no country's, names no member (the owner found three pages naming the wrong
+    permanent members, 22 November 2026)."""
+    c = countries()
+    codes, unknown = council.segment(["Bolivia (Plurinational State of)", "United Kingdom of Great Britain and",
+                                      "Northern Ireland and United States of America"], c)
+    assert codes == ["BOL", "GBR", "USA"] and unknown == []
+    codes, unknown = council.segment(["Saint Vincent and the Grenadines and Viet Nam", "2 Bulgaria"], c)
+    assert codes == ["VCT", "VNM", "BGR"] and unknown == []
+    codes, unknown = council.segment(["Senegal The President: The draft resolution has not been adopted"], c)
+    assert codes == ["SEN"] and unknown == []
+    codes, unknown = council.segment(["United States is begging for confrontation in the Security Council"], c)
+    assert unknown
+
+
+def test_a_veto_names_the_permanent_members_the_list_gives_whatever_the_record_seems_to_say(settings):
+    built = council_data(settings)
+    rows = pq.read_table(council_votes_path(settings.parquet_dir)).to_pylist()
+    for r in rows:
+        if r["reason"] == "veto" and r["source"] != "veto list" and not r["complete"]:
+            assert r["country_code"] is None and r["vote"] is None
+    assert built.problems == []
