@@ -127,7 +127,8 @@ test("the record's slip is a UN document, with the quoted words highlighted and 
   assert.match(slip, /<mark class="wts-now">supports all initiatives that seek to impose self-limitations on the use of veto<\/mark>/);
   assert.match(slip, /<mark>would inevitably generate additional vetoes<\/mark>/);
   assert.match(slip, /✓ Highlighted words found word for word/);
-  assert.match(slip, /<a href="https:\/\/undocs\.org\/en\/S\/PV\.10043\(Resumption1\)" rel="noopener">Read S\/PV\.10043 \(Resumption 1\)<\/a>/);
+  // the link to the record carries the family kit's mark for a source opened (inert unless measurement is on)
+  assert.match(slip, /<a href="https:\/\/undocs\.org\/en\/S\/PV\.10043\(Resumption1\)" rel="noopener" data-wts-conversion="source_opened">Read S\/PV\.10043 \(Resumption 1\)<\/a>/);
   // a quotation with an ellipsis is highlighted in its pieces
   const nz = B.toHTML(B.slip(byN[24], quoted[24], null, "p24"));
   assert.match(nz, /<mark>to prevent Council action<\/mark>/);
@@ -210,6 +211,22 @@ test("the server writes the strip, the text and the check details exactly as thi
     const byN = Object.fromEntries(c.sources.map((s) => [s.n, s]));
     assert.equal(B.toHTML(B.strip(c.answer)), c.strip, `${c.name}: the strip`);
     assert.equal(html(B.briefingBlocks(c.answer, byN)), c.blocks, `${c.name}: the text`);
-    assert.equal(B.toHTML(B.details(c.answer, c.found)), c.details, `${c.name}: the check details`);
+    assert.equal(B.toHTML(B.details(c.answer, c.found, c.briefing_id)), c.details, `${c.name}: the check details`);
   }
+});
+
+// The family kit's measure.js counts what these marks name, and only while the site's measurement switch is on and
+// the reader has accepted (decision 28); with it off they are inert attributes, on the page whatever the switch.
+test("the end of a finished briefing, its chips and its links to the record carry the family kit's marks", () => {
+  const ended = B.toHTML(B.details(shown.answer, 24, "kGfKBI3cRLw"));
+  assert.match(ended, /^<section class="check-details" id="check-details" aria-labelledby="check-details-head" data-wts-conversion="briefing_read" data-wts-briefing="kGfKBI3cRLw">/);
+  // a briefing without an id (none is known yet) is still marked, and counted once for the element
+  assert.match(B.toHTML(B.details(shown.answer, 24)), /^<section [^>]*data-wts-conversion="briefing_read">/);
+  const chips = [...html(B.briefingBlocks(shown.answer, byN)).matchAll(/<button type="button" class="wts-chip"[^>]*>/g)];
+  assert.ok(chips.length > 10 && chips.every((m) => m[0].endsWith(' data-wts-conversion="source_opened">')));
+  const quoted = B.quotedFrom(shown.answer);
+  for (const s of [byN[1], { n: 9, kind: "vote", url: "https://digitallibrary.un.org/record/1", totals: {} }]) {
+    assert.match(B.toHTML(B.slip(s, quoted[s.n] || [], null, "p")), /<a href="[^"]+" rel="noopener" data-wts-conversion="source_opened">Read /);
+  }
+  assert.match(B.toHTML(B.card(byN[1])), /^<li class="wts-card" data-source="1">/, "a card of the wait is not a source opened");
 });

@@ -1,5 +1,5 @@
 # Where Countries Stand settings. Paths are relative to the repository root unless absolute.
-# Environment overrides: WCS_DATA_DIR, WCS_CONFIG, WCS_ANTHROPIC_API_KEY.
+# Environment overrides: WCS_DATA_DIR, WCS_CONFIG, WCS_ANTHROPIC_API_KEY, WCS_ADS_MEASUREMENT and WCS_ADS_TAG.
 
 [paths]
 data_dir = "data"
@@ -146,6 +146,18 @@ dir = ""
 # The site's public address, for robots.txt, the sitemap and link previews (default: WCS_SITE_URL, or https://
 # and DOMAIN, or the address it was reached at).
 url = ""
+
+[ads]
+# Measurement for Google Ad Grants (docs/DECISIONS.md, 28; the charity's family/MEASUREMENT.md). Off, as it ships:
+# the pages are as they were, with no script, no banner and nothing from Google, and /family/measure.js is not
+# served. Turned on (with the Google tag's ID from the charity's Google Ads account) only once the charity is
+# registered and its Ad Grants account is set up: then every page loads the family kit's measure.js, which asks the
+# reader first and loads the Google tag only if they accept; the footer gains "Measurement choices"; and the privacy
+# page is the measurement version (web/partials/privacy-measurement.html). On the server, WCS_ADS_MEASUREMENT and
+# WCS_ADS_TAG in deploy/.env set these, and the shared front door's policy must be changed too (docs/DEPLOY.md,
+# "Measurement").
+measurement = false
+tag = ""
 
 [topics]
 # Topic briefings (decision 27): the standing questions in this file, each written afresh every week by

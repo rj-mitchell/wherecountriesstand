@@ -56,6 +56,8 @@ TITLE_SUBJECT_MAX = 70  # characters of a resolution's title in a page's <title>
 DESCRIPTION_MAX = 160
 VOTES_IN_ORDER = ("Y", "N", "A", "X")
 UNDOCS = "https://undocs.org/en/"
+# the family kit's mark for a source opened, on each link to the record (decision 28)
+OPENED = ' data-wts-conversion="source_opened"'
 
 _SUFFIX = re.compile(r"\s*:\s*(?:resolutions?|decisions?)\s*/?\s*adopted by the General Assembly\.?\s*$", re.I)
 _ES = re.compile(r"^A/(?:RES|DEC)/ES-(\d+)/", re.I)
@@ -438,7 +440,7 @@ class VotePages:
                     f'<li><a href="{s.path}">{e(s.of.label[0].upper() + s.of.label[1:])}</a>, '
                     f'<span class="session-index__meta">{_plural(len(s.votes), "recorded vote", "recorded votes")}, '
                     f"{e(self._span(s))}</span></li>" for s in listed) + "</ul>")
-        parts.append('<p class="vote-source">From the <a href="' + e(self.record) + '">General Assembly voting '
+        parts.append(f'<p class="vote-source">From the <a href="{e(self.record)}"{OPENED}>General Assembly voting '
                      "data</a> of the UN Dag Hammarskjöld Library, © United Nations, used for non-commercial purposes "
                      'with attribution. How the record is read in: <a href="/methodology.html#record">The record</a>, '
                      "on the methodology page.</p>")
@@ -504,27 +506,29 @@ class VotePages:
         counts = {k: len(members.get(k, [])) for k in VOTES_IN_ORDER}
         trail = [(SITE_NAME, "/"), (INDEX_NAME, INDEX_PATH), (v.heading, v.path)]
         kind = self._kind(v)
-        facts = [(kind.capitalize(), f'<a href="{e(undocs(v.symbol))}">{e(v.symbol)}</a>'),
+        # each link to the record carries the family kit's mark for a source opened, inert unless measurement is on
+        # (decision 28)
+        facts = [(kind.capitalize(), f'<a href="{e(undocs(v.symbol))}"{OPENED}>{e(v.symbol)}</a>'),
                  ("Title", e(v.title)),
                  ("Date", e(long_date(v.on))),
                  ("Session", f'<a href="/votes/session-{v.session.key}.html">{e(v.session.label)}</a>')]
         if v.meeting:
-            facts.append(("Meeting record", f'<a href="{e(undocs(v.meeting))}">{e(v.meeting)}</a>'))
+            facts.append(("Meeting record", f'<a href="{e(undocs(v.meeting))}"{OPENED}>{e(v.meeting)}</a>'))
         # the voting data joins two symbols or agenda items with "|" ("A/64/L.22|A/64/L.22/Add.1")
         drafts = [d.strip() for d in v.draft.split("|") if d.strip()]
         if drafts:
             facts.append(("Draft" if len(drafts) == 1 else "Drafts", ", ".join(
-                f'<a href="{e(undocs(d))}">{e(d)}</a>' for d in drafts)))
+                f'<a href="{e(undocs(d))}"{OPENED}>{e(d)}</a>' for d in drafts)))
         items = [a.strip().rstrip(".") for a in v.agenda.split("|") if a.strip()]
         if items:
             facts.append(("Agenda item" if len(items) == 1 else "Agenda items", "<br>".join(e(a) for a in items)))
         result = f"{result_words(counts)[0].upper()}{result_words(counts)[1:]}. {not_voting_words(counts)}"
         facts.append(("Result", e(result)))
-        links = [f'<li><a href="{e(undocs(v.symbol))}">The {kind}, {e(v.symbol)}, on undocs.org</a></li>']
+        links = [f'<li><a href="{e(undocs(v.symbol))}"{OPENED}>The {kind}, {e(v.symbol)}, on undocs.org</a></li>']
         if v.url:
-            links.append(f'<li><a href="{e(v.url)}">The voting record in the UN Digital Library</a></li>')
+            links.append(f'<li><a href="{e(v.url)}"{OPENED}>The voting record in the UN Digital Library</a></li>')
         if v.meeting:
-            links.append(f'<li><a href="{e(undocs(v.meeting))}">The record of the meeting, {e(v.meeting)}, on '
+            links.append(f'<li><a href="{e(undocs(v.meeting))}"{OPENED}>The record of the meeting, {e(v.meeting)}, on '
                          "undocs.org</a></li>")
         totals = "".join(f'<tr><th scope="row">{VOTE_LABEL[k]}</th><td>{counts[k]:,}</td></tr>'
                          for k in VOTES_IN_ORDER)
@@ -561,7 +565,7 @@ class VotePages:
         parts.append('<p class="vote-source">Each country is given the UN’s short name, as everywhere on this site; '
                      "China’s seat before 25 October 1971 is the Republic of China’s, and Germany before 3 October "
                      "1990 is the Federal Republic of Germany. The voting data itself gives each Member State’s "
-                     'official name at the time. From the <a href="' + e(self.record) + '">General Assembly voting '
+                     f'official name at the time. From the <a href="{e(self.record)}"{OPENED}>General Assembly voting '
                      "data</a> of the UN Dag Hammarskjöld Library, © United Nations.</p>")
         parts.append(STATEMENTS)
         parts.append("</div>" + _named_aside(v.path) + "</div>")

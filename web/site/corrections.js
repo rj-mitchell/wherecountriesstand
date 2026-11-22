@@ -119,6 +119,9 @@ document.addEventListener("DOMContentLoaded", () => {
         await send("/api/report", { kind: k, page: form.get("page") || "", message: form.get("message"),
                                     contact: form.get("contact") || "" });
       }
+      // the family kit's conversion for a report or statement sent: nothing unless measurement is on and the reader
+      // has accepted (decision 28)
+      window.wtsMeasure?.conversion("report_sent");
       e.target.reset();
       document.querySelector(`input[name=kind][value=${k}]`).checked = true;
       showKind();

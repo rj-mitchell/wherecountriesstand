@@ -48,6 +48,10 @@ CHANGED = {("usage", "per_visitor_daily_questions"): (40, 8), ("usage", "briefin
 # Sections added to config/settings.toml since the recording, for something new (each as the file has it): the
 # topic briefings (decision 27, 21 November 2026). Nothing read before reads them.
 LATER = {"topics": {"file": "topics.toml", "min_days": 6, "max_cost_usd": 3.0, "mode": "summary"}}
+# And the measurement switch, [ads] (decision 28, 22 November 2026): off with no tag in the real file. Its two
+# settings can come from the environment (WCS_ADS_MEASUREMENT, WCS_ADS_TAG), so a file without it reads as an empty
+# table, as it would with them unset.
+ADS = ({"measurement": False, "tag": ""}, {})
 
 BRIEFING_MODEL = "claude-sonnet-5-5"
 
@@ -64,6 +68,9 @@ def without_the_added(gives: dict) -> dict:
         for holder in (out["raw"], out):
             if section in holder:
                 assert holder.pop(section) == value, section
+    for holder in (out["raw"], out):
+        if "ads" in holder:
+            assert holder.pop("ads") in ADS
     for holder in (out["raw"], out):
         # strict prices (the review of the adoption): the briefing model has a table of its own, which holds the
         # base prices it was costed at before

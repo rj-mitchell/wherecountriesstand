@@ -238,7 +238,7 @@ class TopicPages:
             '<p class="status visually-hidden" id="status" role="status" aria-live="polite"></p>',
             '<div class="columns briefing-text" id="briefing">' + B.html_of(B.briefing_blocks(answer, by_n))
             + "</div>",
-            '<div id="details">' + B.to_html(B.details(answer, len(sources))) + "</div>",
+            '<div id="details">' + B.to_html(B.details(answer, len(sources), b.id)) + "</div>",
             '<div id="notes">' + "".join(notes) + "</div>",
             '<div class="statements" id="statements">' + statements + "</div>",
             "</div>",

@@ -418,3 +418,51 @@ without asking anything. The plan left the choice of topics to the session carry
 Each topic's versions are kept in the state database's key-value table (`topic:<slug>`), so they are backed up with
 the briefings. Where MPs Stand rewrites a topic only when its sources have changed; here each is written afresh
 every week, as the review plan asks, which the cost allows.
+
+## 28. Measurement for Google Ad Grants, built and switched off
+
+The charity will apply for Google Ad Grants once it is registered, which needs the Google tag on the sites to count
+conversions (the owner's answers 3 and 8 of the charity's review plan, Part D; its `family/MEASUREMENT.md` and
+[Ad Grants checklist](https://github.com/rj-mitchell/wheretheystand-charity/blob/main/plans/2026-11-21-ad-grants-checklist.md)).
+It is built now, with the family kit 2.2.0, and off, so the site is what it was until the owner turns it on
+(21 November 2026; built here 22 November 2026, following Where Landlords Stand's decision 20):
+
+- The switch is `[ads] measurement` and `tag` in `config/settings.toml`, false and empty; on the server
+  `WCS_ADS_MEASUREMENT` and `WCS_ADS_TAG` in `deploy/.env`. A tag that isn't a Google tag's ID (`AW-`, `G-` or
+  `GT-` and letters and digits) leaves it off. Off, the pages carry nothing of it but the kit's inert
+  `data-wts-conversion` marks, and `/family/measure.js` is not served (the sync copies it into `web/site/family/`
+  with the rest of the kit). The kit's `measure-csp.json` is never served: it is the list of hosts the front door's
+  policy adds.
+- On, every page (the site's own pages, the vote pages, the topic pages, a saved briefing's and the 404 page) loads
+  the kit's `measure.js` last in its head, with the content's hash in its address like the site's other scripts. It
+  shows the family's consent banner at the top of the page's main content and loads the Google tag only if the
+  reader accepts. The footer gains "Measurement choices" on a line of its own after the notices: it is a control,
+  not a page, so the footer keeps the family's six links. Nothing is added to `styles.css`, so that, off, no page's
+  stylesheet address changes.
+- The privacy page while measuring is `web/partials/privacy-measurement.html`, served at `/privacy.html` and never
+  at an address of its own: a draft beside the current notice, in the glossary's "Who runs it, once registered"
+  words. The site refuses to start with measurement on while it still says `NNNNNNN` for the charity number or
+  "(draft" in its date.
+- What is measured, and nothing else (no page views, never a question's words, nothing typed in a form):
+  - `briefing_read`: the end of a finished briefing comes into view. The end is "How this briefing was checked"
+    (`#check-details`), which a briefing has only once it is written and checked, never for "No records found" or
+    sources alone. It carries the briefing's id (`data-wts-briefing`), so a topic's briefing, which the server writes
+    and the page's script draws again, is counted once.
+  - `source_opened`: a source chip in a briefing, or a link to the record: "Read S/PV.…" in the record beside the
+    briefing, its sheet on a phone and the list of sources, the home page's proof, and a vote page's links to the
+    resolution, the meeting, the drafts, the Digital Library record and the voting data.
+  - `donate_click`: the Donate link in the kit's footer shelf.
+  - `report_sent`: the corrections page's form (a report, or a statement under the right of reply) calls
+    `window.wtsMeasure?.conversion("report_sent")` once the site has taken it. The form works only with its script,
+    so there is no thank-you page to mark.
+  - Not `download`: the site offers no downloads of its own (no Word, PDF or CSV; the UN's documents it links are
+    the record, counted as a source opened, and the press page's logo files are not counted). So the banner never
+    says it counts one (`data-measures="briefing_read source_opened donate_click report_sent"`).
+- The site sets no content security policy of its own: the shared front door (Where MPs Stand's Caddy) sets every
+  header, and would block the Google tag. So before the switch is turned on, this site's domain goes into the front
+  door's `MEASURED_SITES` (docs/DEPLOY.md, "Measurement").
+- Open before it is turned on: a page's address is sent to Google with each conversion, and the address of the
+  page a question was just asked on holds the question (`/?q=…`, until a written briefing takes its own address,
+  `/b/<id>`; a search for sources alone keeps it). The draft notice says so. The kit's `measure.js` could send the
+  address without its query instead, for every site; that is for the kit, and for the owner to decide with the
+  notice.

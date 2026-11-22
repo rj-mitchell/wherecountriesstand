@@ -3,7 +3,8 @@
 
 The loader reads config/settings.toml (or the file named by ``WCS_CONFIG``), then ``settings.local.toml`` in the
 data folder if there is one (laid over it two levels deep, so a table there such as
-``[usage.models."<a model>"]`` adds to the repository's and replaces none of them), then any overrides given by name
+``[usage.models."<a model>"]`` adds to the repository's and replaces none of them), then the measurement switch the
+server keeps in deploy/.env (``WCS_ADS_MEASUREMENT`` and ``WCS_ADS_TAG``), then any overrides given by name
 (``**{"usage.daily_spend_cap_usd": 1.0}``). The data folder is ``WCS_DATA_DIR``, else ``[paths] data_dir``.
 """
 
@@ -40,6 +41,12 @@ SITE = core.Site(
     state_file="state.db",
     version=_version(),
     instructions_version=str(INSTRUCTIONS_VERSION),
+    # The measurement switch (docs/DECISIONS.md, 28) can be set in deploy/.env, without changing the repository:
+    # WCS_ADS_MEASUREMENT ("1", "true" or "yes") sets [ads] measurement, and WCS_ADS_TAG [ads] tag.
+    env_settings=(
+        core.EnvSetting("ADS_MEASUREMENT", "ads", "measurement", "flag"),
+        core.EnvSetting("ADS_TAG", "ads", "tag"),
+    ),
 )
 
 

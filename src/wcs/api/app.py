@@ -32,6 +32,9 @@ Endpoints:
   ``/sitemap-pages.xml`` (those pages) and ``/sitemap-votes.xml``.
 * ``GET /votes.html``, ``/votes/session-<n>.html`` and ``/votes/<symbol>.html``: the General Assembly's recorded
   votes, a page for each, written on the server from the votes file (``wcs.api.votes``; decision 26).
+* Measurement for Google Ad Grants (``wcs.api.measurement``; decision 28): off as it ships, when no page changes
+  and ``/family/measure.js`` is not served. On (``[ads]``), every page loads the family kit's ``measure.js`` and has
+  "Measurement choices" in its footer, and ``/privacy.html`` is the measurement version of the notice.
 
 Spending is capped per day and per month (``[usage]``), each visitor has a daily limit and a per-minute rate limit,
 and identical questions are answered from a cache until the data changes. The flow of a question, from its
@@ -87,6 +90,7 @@ from wts_core.usage import (
 )
 
 from wcs import adapters
+from wcs.api.measurement import NEVER_SERVED, SCRIPT, measure_tag, privacy_draft, with_measurement
 from wcs.api.topic_pages import INDEX_PATH as TOPICS_INDEX
 from wcs.api.topic_pages import TopicPages
 from wcs.api.votes import INDEX_PATH as VOTES_INDEX
@@ -191,9 +195,11 @@ INCLUDE = re.compile(r"^([ \t]*)<!--#include ([a-z0-9-]+(?:/[a-z0-9-]+)?)-->", r
 NAV = re.compile(r"<nav\b.*?</nav>", re.S)
 
 
-def asset_versions(site: Path) -> dict[str, str]:
-    """A short hash of the content of each stylesheet and script in the site's folder and the family kit's."""
-    files = [*site.glob("*.css"), *site.glob("*.js"), *site.glob("family/*.css")]
+def asset_versions(site: Path, measure: bool = False) -> dict[str, str]:
+    """A short hash of the content of each stylesheet and script in the site's folder and the family kit's (and the
+    kit's measure.js, while measuring)."""
+    files = [*site.glob("*.css"), *site.glob("*.js"), *site.glob("family/*.css"),
+             *([site / SCRIPT] if measure and (site / SCRIPT).is_file() else [])]
     return {p.relative_to(site).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()[:12] for p in sorted(files)}
 
 
@@ -230,11 +236,16 @@ def mark_current(page: str, here: str | None) -> str:
     return NAV.sub(lambda m: m[0].replace(link, f'<a href="{here}" aria-current="page">'), page)
 
 
-def render_page(path: Path, site: Path, partials: Path, versions: dict[str, str]) -> str:
-    """A page as served (before the site's address is filled in): partials included, its own link in the
-    navigation marked, and its stylesheets' and scripts' addresses carrying their hash."""
-    here = None if path.stem == "404" else "/" if path.stem == "index" else f"/{path.name}"
-    return versioned(mark_current(expand_includes(path.read_text(encoding="utf-8"), site, partials), here), versions)
+def render_page(path: Path, site: Path, partials: Path, versions: dict[str, str], tag: str = "",
+                name: str | None = None) -> str:
+    """A page as served (before the site's address is filled in): partials included, the kit's measure.js and
+    "Measurement choices" while measuring (``tag``; docs/DECISIONS.md, 28), its own link in the navigation marked,
+    and its stylesheets' and scripts' addresses carrying their hash. ``name``: the page it is served as, when that
+    is not its file's (the measurement version of the privacy page)."""
+    name = name or path.stem
+    here = None if name == "404" else "/" if name == "index" else f"/{name}.html"
+    page = with_measurement(expand_includes(path.read_text(encoding="utf-8"), site, partials), tag)
+    return versioned(mark_current(page, here), versions)
 
 
 def page_dates(spec: str | None) -> dict[str, str]:
@@ -248,9 +259,10 @@ def page_dates(spec: str | None) -> dict[str, str]:
 class SiteFiles(StaticFiles):
     """The site's files, with how long each may be kept (see FOREVER)."""
 
-    def __init__(self, *, versions: dict[str, str], **kw: Any):
+    def __init__(self, *, versions: dict[str, str], hidden: Collection[str] = (), **kw: Any):
         super().__init__(**kw)
         self.versions = versions
+        self.hidden = frozenset(hidden)  # files of the site's folder that are not served (the kit's measure.js, off)
 
     def cache_control(self, path: str, scope: dict[str, Any]) -> str:
         query = dict(p.split("=", 1) for p in scope.get("query_string", b"").decode().split("&") if "=" in p)
@@ -265,7 +277,7 @@ class SiteFiles(StaticFiles):
         return ALWAYS_CHECK  # pages, and a script or stylesheet asked for without (or with an old) hash
 
     async def get_response(self, path: str, scope):
-        if FAMILY_PRIVATE.fullmatch(path):
+        if FAMILY_PRIVATE.fullmatch(path) or path in self.hidden:
             raise HTTPException(404, "Not found")
         if scope["path"].endswith("/"):
             # a file's address with a slash after it (/app.js/) is not an address of the site's; a page's is sent
@@ -793,15 +805,22 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
 
     site = Path(settings.section("site").get("dir") or SITE_DIR)
     partials = Path(settings.section("site").get("partials") or PARTIALS_DIR)
-    versions = asset_versions(site) if site.exists() else {}
-    # Every page is put together once, as the site starts: a missing partial stops it starting.
-    rendered = {p.stem: render_page(p, site, partials, versions)
-                for p in sorted(site.glob("*.html")) if PAGE_NAME.fullmatch(p.stem)} if site.exists() else {}
+    # The measurement switch (docs/DECISIONS.md, 28): the Google tag's ID while it is on, else "". Off, the pages are
+    # as they always were, and the kit's measure.js is not served.
+    tag = measure_tag(settings) if (site / SCRIPT).is_file() else ""
+    versions = asset_versions(site, measure=bool(tag)) if site.exists() else {}
+    # Every page is put together once, as the site starts: a missing partial stops it starting, and so does an
+    # unfinished privacy notice while measuring.
+    files = {p.stem: p for p in sorted(site.glob("*.html")) if PAGE_NAME.fullmatch(p.stem)} if site.exists() else {}
+    if tag and "privacy" in files:
+        files["privacy"] = privacy_draft(partials)
+    rendered = {name: render_page(p, site, partials, versions, tag, name) for name, p in files.items()}
     # the frame of the pages written from the record (the vote pages and their lists), with the same head, header
     # and footer as every other page
     frame = partials / "record-page.html"
     if site.exists() and frame.is_file():
-        votes.frame = versioned(expand_includes(frame.read_text(encoding="utf-8"), site, partials), versions)
+        votes.frame = versioned(with_measurement(expand_includes(frame.read_text(encoding="utf-8"), site, partials),
+                                                 tag), versions)
         topics.frame = mark_current(votes.frame, TOPICS_INDEX)
 
     def html_page(text: str, status_code: int = 200) -> HTMLResponse:
@@ -1028,5 +1047,6 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         return FileResponse(icon, media_type="image/x-icon", headers={"Cache-Control": A_DAY})
 
     if site.exists():
-        app.mount("/", SiteFiles(directory=site, html=True, versions=versions), name="site")
+        app.mount("/", SiteFiles(directory=site, html=True, versions=versions,
+                                 hidden={*NEVER_SERVED, *(() if tag else (SCRIPT,))}), name="site")
     return app
