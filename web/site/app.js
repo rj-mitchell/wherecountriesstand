@@ -88,10 +88,18 @@ function chips(plan) {
   $("chips").replaceChildren(...out);
 }
 
+// "24 statements from 19 countries and groups at 12 meetings", in the singular where a count is one (the server's
+// briefing_html.found_words says the same)
+function foundWords(records, countries, meetings) {
+  const one = (n, single, many) => `${n} ${n === 1 ? single : many}`;
+  return `${one(records, "statement", "statements")} from ${one(countries, "country or group", "countries and groups")}` +
+    ` at ${one(meetings, "meeting", "meetings")}`;
+}
+
 function summary(evidence) {
   const p = $("summary");
   if (!evidence || !evidence.records) { p.hidden = true; return; }
-  const parts = [`${evidence.records} statements from ${evidence.countries} countries and groups at ${evidence.meetings} meetings`];
+  const parts = [foundWords(evidence.records, evidence.countries, evidence.meetings)];
   if (evidence.date_from) parts.push(`, ${fmtDate(evidence.date_from)} to ${fmtDate(evidence.date_to)}`);
   if (evidence.votes) parts.push(`, and ${evidence.votes} recorded vote${evidence.votes > 1 ? "s" : ""}`);
   parts.push(".");
@@ -504,9 +512,11 @@ function waitSources(ev) {
 function waitWriting(count) {
   if (wait.dealing) wait.dealing();
   setStage(2);
-  $("only").textContent = `Writing from these ${count} records only. The AI may use these and nothing else.`;
+  $("only").textContent = count === 1 ? "Writing from this one record only. The AI may use it and nothing else."
+    : `Writing from these ${count} records only. The AI may use these and nothing else.`;
   $("only").hidden = false;
-  announce(`Writing the briefing from these ${count} records only.`);
+  announce(count === 1 ? "Writing the briefing from this one record only."
+    : `Writing the briefing from these ${count} records only.`);
 }
 
 function waitCited(n) {
