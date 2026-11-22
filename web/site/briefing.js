@@ -173,8 +173,8 @@
   function chip(n, source, seg) {
     const label = chipLabel(source) || `Source ${n}`;
     return h("button", { type: "button", class: "wts-chip", "data-source": n, "data-seg": seg, "data-wts-conversion": "source_opened" },
-      h("span", { class: "wts-vh" }, "Source "),
-      h("span", { class: "wts-chip__in" }, h("span", { class: "wts-chip__n" }, String(n)), " ", h("span", {}, label)),
+      h("span", { class: "wts-chip__in" }, h("span", { class: "wts-chip__n" }, h("span", { class: "wts-vh" }, "Source"), ` ${n}`),
+        " ", h("span", {}, label)),
       h("span", { class: "wts-vh" }, ". Show the passage"));
   }
 

@@ -214,8 +214,9 @@ def chip(n: Any, source: Mapping[str, Any] | None, seg: int) -> Node:
     label = chip_label(source) or f"Source {n}"
     return h("button", {"type": "button", "class": "wts-chip", "data-source": n, "data-seg": seg,
                         "data-wts-conversion": "source_opened"},
-             h("span", {"class": "wts-vh"}, "Source "),
-             h("span", {"class": "wts-chip__in"}, h("span", {"class": "wts-chip__n"}, str(n)), " ", h("span", {}, label)),
+             h("span", {"class": "wts-chip__in"},
+               h("span", {"class": "wts-chip__n"}, h("span", {"class": "wts-vh"}, "Source"), f" {n}"),
+               " ", h("span", {}, label)),
              h("span", {"class": "wts-vh"}, ". Show the passage"))
 
 
@@ -528,12 +529,21 @@ def plan_chips(plan: Mapping[str, Any], names: Mapping[str, str] | None = None,
     return out
 
 
+def found_words(records: object, countries: object, meetings: object) -> str:
+    """"24 statements from 19 countries and groups at 12 meetings", in the singular where a count is one; the page's
+    script says the same (app.js, foundWords)."""
+    def one(n: object, single: str, many: str) -> str:
+        return f"{n} {single if n == 1 else many}"
+    return (f"{one(records, 'statement', 'statements')} from {one(countries, 'country or group', 'countries and groups')}"
+            f" at {one(meetings, 'meeting', 'meetings')}")
+
+
 def evidence_words(evidence: Mapping[str, Any] | None) -> str:
     """What was found, as the page's script sums it up under the filters ("" when nothing is to be said)."""
     e = evidence or {}
     if not e.get("records"):
         return ""
-    parts = [f"{e['records']} statements from {e.get('countries')} countries and groups at {e.get('meetings')} meetings"]
+    parts = [found_words(e['records'], e.get('countries'), e.get('meetings'))]
     if e.get("date_from"):
         parts.append(f", {long_date(e['date_from'])} to {long_date(e.get('date_to'))}")
     if e.get("votes"):
