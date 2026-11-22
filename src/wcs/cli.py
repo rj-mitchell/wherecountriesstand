@@ -13,6 +13,7 @@
     wcs briefing-stats --since 7d          # how briefings went: speed, cost, what the checks found (weekly: scheduled)
     wcs tidy                               # the nightly housekeeping (scheduled)
     wcs evaluate && wcs eval run           # the test questions: how each is read (free); each briefing written (paid)
+    wcs topics list && wcs topics refresh  # the topic briefings: their state; each written afresh (weekly: scheduled)
     wcs search "climate finance" --group sids
     wcs ask "How have small island States spoken about climate change since 2015?"
 """
@@ -852,6 +853,71 @@ def ask(question: str, mode: str = "summary", as_json: bool = typer.Option(False
         typer.echo("\n" + final["note"])
     elif out.get("error"):
         typer.echo("\n" + out["error"]["message"])
+
+# Topic briefings (decision 27): `wcs topics list`, `wcs topics refresh`
+
+topics_app = typer.Typer(no_args_is_help=True, help="Topic briefings (config/topics.toml, decision 27).")
+app.add_typer(topics_app, name="topics")
+
+
+def _records_up_to(settings: Settings) -> Any:
+    """The latest date in the record, kept with each version of a topic's briefing."""
+    def latest() -> str | None:
+        from wcs.api.app import coverage
+
+        try:
+            cover = coverage(settings)
+        except Exception:  # noqa: BLE001 - a briefing is kept without it rather than lost
+            return None
+        dates = [str(x["to"])[:10] for x in cover.values() if isinstance(x, dict) and x.get("to")]
+        return max(dates) if dates else None
+    return latest
+
+
+@topics_app.command("list")
+def topics_list() -> None:
+    """Each topic, the version its page shows and when it was last refreshed."""
+    from wcs.topics import current, last_run, load_topics, topics_file
+
+    s = load_settings()
+    db = _state(s)
+    archive = _briefings(db)
+    hidden = _replies().all_hidden()
+    for t in load_topics(topics_file(s)):
+        cur = current(db, archive, t.slug, hidden)
+        run = last_run(db, t.slug)
+        shown = f"{cur.briefing.id}, prepared {cur.prepared_at[:10]}" if cur else "no briefing yet"
+        typer.echo(f"{t.slug:40} {shown}")
+        if run:
+            typer.echo(f"{'':40} last run {run.get('at', '')[:16]}: {run.get('outcome', '')}")
+
+
+@topics_app.command("refresh")
+def topics_refresh(only: list[str] = typer.Option(None, "--only", help="just this topic (its slug); may be repeated"),
+                   force: bool = typer.Option(False, help="write it again even if written in the last "
+                                                          "[topics] min_days")) -> None:
+    """Write each topic's briefing afresh, through the same pipeline and checks as a reader's question (about 17
+    cents each). The previous version stands if a run fails, finds no records or is stopped at a spending cap.
+    Exits 1 when a topic could not be written, or the run stopped at a cap or at its own limit."""
+    from wcs.api.app import site_parts
+    from wcs.rag.pipeline import Pipeline
+    from wcs.topics import refresh
+
+    s = load_settings()
+    db = _state(s)
+    parts = site_parts(s, db, _clock())
+    typer.echo("Topic briefings:")
+    try:
+        done = refresh(s, db, Pipeline(s), parts, only=only, force=force, records_up_to=_records_up_to(s),
+                       clock=_clock(), progress=typer.echo)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2) from None
+    written = sum(1 for o in done.outcomes if o.briefing_id)
+    typer.echo(f"{written} written, ${done.spent_usd:.2f} spent" + (f"; stopped: {done.stopped}" if done.stopped
+                                                                      else ""))
+    if not done.ok:
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":

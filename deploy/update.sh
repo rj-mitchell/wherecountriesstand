@@ -13,7 +13,7 @@
 set -euo pipefail
 DIR="${DIR:-/opt/wherecountriesstand}"
 UNITS_DIR="${UNITS_DIR:-/etc/systemd/system}"
-UNITS="wcs-update wcs-backup wcs-weekly-report"
+UNITS="wcs-update wcs-backup wcs-weekly-report wcs-topics"
 
 echo "==> Fetching the latest version"
 self_before=$(sha1sum "$DIR/deploy/update.sh" | cut -d' ' -f1)
@@ -90,7 +90,7 @@ if [[ -z "$answers" ]]; then
 fi
 
 # The new site is up: install this version's timer units
-echo "==> Installing or refreshing the update, backup and weekly report timers"
+echo "==> Installing or refreshing the update, backup, weekly report and topic briefing timers"
 for unit in $UNITS; do
   cp "$unit.service" "$unit.timer" "$UNITS_DIR/"
 done

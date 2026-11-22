@@ -198,3 +198,18 @@ test("a quotation no source is given for is left as the model's words, and every
   assert.ok(blocks.every(walk));
   assert.equal(html(blocks), "<p>As Italy said it \u201csupports all initiatives that seek to impose limits\u201d in 2025.</p>");
 });
+
+// A topic briefing's page is written by the server (src/wcs/api/briefing_html.py, decision 27), so that a reader
+// without scripts and a search engine see the whole briefing; the page's script then shows it again. The two must
+// make the same markup: tests/test_topics.py writes the server's for two briefings (kGfKBI3cRLw as shown, and a
+// made-up one with every kind of mark) into fixtures/server-briefings.json, and this script must give exactly it.
+test("the server writes the strip, the text and the check details exactly as this script does", () => {
+  const server = require("./fixtures/server-briefings.json");
+  assert.equal(server.cases.length, 2);
+  for (const c of server.cases) {
+    const byN = Object.fromEntries(c.sources.map((s) => [s.n, s]));
+    assert.equal(B.toHTML(B.strip(c.answer)), c.strip, `${c.name}: the strip`);
+    assert.equal(html(B.briefingBlocks(c.answer, byN)), c.blocks, `${c.name}: the text`);
+    assert.equal(B.toHTML(B.details(c.answer, c.found)), c.details, `${c.name}: the check details`);
+  }
+});

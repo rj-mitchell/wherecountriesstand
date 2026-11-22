@@ -131,6 +131,34 @@ into `web/partials/record-page.html`, which carries the same head, header and fo
 Screenshots of a vote's page, a session's list and the index at 390 and 1,280 pixels wide were looked at on
 21 November 2026.
 
+## Topic briefings
+
+The topics' index (`/topics.html`) and each topic's page (`/topics/<slug>.html`,
+[decision 27](DECISIONS.md#27-topic-briefings)) are written on the server into the same frame as the vote pages
+(`web/partials/record-page.html`), by [`src/wcs/api/topic_pages.py`](../src/wcs/api/topic_pages.py).
+
+- A topic's page is a briefing laid out as on the ask page: the link back to "Topic briefings", the topic's name as
+  the page's heading, the question asked every week, and "Briefing of [day], written by AI from the sources below,
+  from the UN's records up to [day]", with the filters used beside them; then the check strip across the column, the
+  briefing with its chips and marks, "How this briefing was checked", the address of this version with the link to
+  report a problem, any statements beside it, and the sources. Other topics with a briefing follow.
+- The briefing's markup is the family's ([Checked briefings](#checked-briefings)), written by
+  [`src/wcs/api/briefing_html.py`](../src/wcs/api/briefing_html.py), the page script's renderer written again in
+  Python, so the page reads whole with no script. `web/tests/briefing.test.js` checks that the script makes exactly
+  the server's HTML for two briefings (`web/tests/fixtures/server-briefings.json`, written by
+  `tests/test_topics.py`). Where scripts run, `app.js` opens the same briefing from `/api/briefings/<id>` and draws it
+  again, adding the record beside it on wide screens and the sheet a chip opens on a phone. If that fetch fails (a
+  search engine, which robots.txt keeps out of `/api/briefings/`), the server's page stays.
+- The index lists the topics under their areas, each with its one-line description, the day of its briefing (or
+  "Not written yet", with no link) and its question. The home page lists the topics with a briefing, with their
+  days, above the example questions, and links to the index. "Topics" is in the menu after Ask; on a phone the menu
+  takes two lines.
+- A topic's share card (`/topics/<slug>/card.png`) is drawn as a briefing's is ([Share cards](#share-cards)), with
+  the topic's question as its title.
+
+Screenshots of the index, a topic's page (with its script and without) and the home page at 390 and 1,280 pixels
+wide were looked at on 21 November 2026, with a made-up briefing that has each kind of mark.
+
 ## Links to sister sites
 
 After a briefing, with its address and the link to report a problem, links to sister sites each show that site's
@@ -229,4 +257,5 @@ wts-core's `briefing_card` ([`src/wcs/cards.py`](../src/wcs/cards.py)): the band
 on its white tile, "Briefing written by AI, checked against the UN record", the site's neutral title for the
 briefing ("Briefing from UN records, 18 November 2026", never the reader's question: decision 7), the strip's three
 counts in words, the day it was prepared and the site's address. It is set in Source Serif 4 Semibold and Source
-Sans 3, from `data_static/fonts/` (SIL Open Font License). Every other page keeps the family's card.
+Sans 3, from `data_static/fonts/` (SIL Open Font License). A topic's page has a card of its own, with the topic's
+question as its title ([Topic briefings](#topic-briefings)). Every other page keeps the family's card.

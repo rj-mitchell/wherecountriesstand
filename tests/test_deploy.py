@@ -29,7 +29,7 @@ from wcs.replies import open_replies
 from wcs.state import open_state
 
 DEPLOY = REPO_ROOT / "deploy"
-UNITS = ("wcs-update", "wcs-backup", "wcs-weekly-report")
+UNITS = ("wcs-update", "wcs-backup", "wcs-weekly-report", "wcs-topics")
 
 
 STAND_IN = r"""#!/usr/bin/env bash

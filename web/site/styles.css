@@ -514,6 +514,23 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .vote-source, .vote-named { color: var(--ink-muted); font-size: 1rem; }
 .record-page .statements { margin-block-start: 1.5rem; }
 
+/* Topic briefings (decision 27): the index by area, the list on the home page, and a topic's page, which is a
+   briefing laid out as on the ask page, written by the server, with the topic's title as the page's heading. */
+
+.topic-index { margin: 0 0 1rem; padding: 0; list-style: none; }
+.topic-index li { padding-block: 0.6rem; border-block-end: 1px solid var(--rule-faint); max-inline-size: var(--column); }
+.topic-index li:first-child { border-block-start: 1px solid var(--rule-faint); }
+.topic-index a { font-weight: 600; }
+.topic-index__meta, .topic-index__question { display: block; color: var(--ink-muted); font-size: 1rem; }
+.topic-list { margin: 0; padding-inline-start: 1.2em; }
+.topic-list li { margin-block-end: 0.5rem; }
+.topic-list__when { color: var(--ink-muted); font-size: 1rem; white-space: nowrap; }
+.home-grid__first > section + section { margin-block-start: 1.5rem; }
+.topic .result__head h1 { font-size: clamp(2rem, 1.5rem + 2vw, 2.75rem); margin: 0 0 0.5em; }
+.topic__question { margin: 0 0 0.5rem; max-inline-size: var(--column); }
+.topic-others { margin-block-start: 2rem; }
+.topic-others h2 { font-size: 1.375rem; }
+
 /* Text pages: running text held to the reading column */
 
 .prose > * { max-inline-size: var(--column); }
@@ -594,7 +611,7 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
   .page, .wrap { max-inline-size: none; padding-inline: 0; }
   .skip, .phase, .brand__mark, nav.sections, .ask, #home, .sisters, .note.share, .foot__links, .source__more,
   .band .wts-endorse .wts-spine, .wts-shelf__groups, .wts-shelf__links, .wait, .result__stages, .record-col, #sheet-root,
-  .home-top, .proof { display: none !important; }
+  .home-top, .proof, .topic-others, .crumbs { display: none !important; }
   .loaded { background: none; }
   .band { background: none; color: black; border-block-end: 2px solid black; }
   .band .wts-endorse { color: black; }

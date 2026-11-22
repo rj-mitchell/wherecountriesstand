@@ -102,8 +102,8 @@ def test_a_vote_page_carries_only_breadcrumbs_and_the_site_furniture(site):
         "/about.html", "/methodology.html", "/corrections.html", "/accessibility.html", "/privacy.html",
         "https://github.com/rj-mitchell/wherecountriesstand"]
     menu = page[page.index('<nav class="sections"'):]
-    assert re.findall(r'href="([^"]+)"', menu[:menu.index("</nav>")]) == ["/", "/about.html", "/methodology.html",
-                                                                         "/glossary.html"]
+    assert re.findall(r'href="([^"]+)"', menu[:menu.index("</nav>")]) == ["/", "/topics.html", "/about.html",
+                                                                         "/methodology.html", "/glossary.html"]
     assert '<link rel="stylesheet" href="/styles.css?v=' in page
     assert "Côte d’Ivoire" in page and "Democratic People’s Republic of Korea" in page and "Türkiye" in page
     assert " · " not in page and " — " not in page
@@ -215,7 +215,8 @@ def test_the_sitemap_is_an_index_of_the_pages_and_the_votes(site):
     index = site.get("/sitemap.xml")
     assert index.headers["content-type"] == "application/xml"
     assert re.findall(r"<loc>(.*?)</loc>", index.text) == ["https://countries.example/sitemap-pages.xml",
-                                                          "https://countries.example/sitemap-votes.xml"]
+                                                          "https://countries.example/sitemap-votes.xml",
+                                                          "https://countries.example/sitemap-topics.xml"]
     assert "<sitemap><loc>https://countries.example/sitemap-votes.xml</loc><lastmod>2024-12-03</lastmod>" in index.text
     votes = site.get("/sitemap-votes.xml").text
     assert votes.startswith('<?xml version="1.0" encoding="UTF-8"?>\n<urlset ')

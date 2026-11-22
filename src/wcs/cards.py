@@ -3,8 +3,10 @@
 Each card is drawn once, with no AI, by wts-core's ``adapters.cards.briefing_card`` in the site's cloth, with its
 mark, and kept on disk under the data folder; after that the file is served. Its title is the site's neutral title for
 the briefing ("Briefing from UN records, 18 November 2026"), never the reader's question (docs/DECISIONS.md, 7), and
-its counts are the check strip's, from ``check_counts`` on the answer as it is shown (``wcs.rag.checks.shown``). The
-family's account is ``family/BRIEFINGS.md`` in the charity's repository (the review plan of 21 November 2026, B5).
+its counts are the check strip's, from ``check_counts`` on the answer as it is shown (``wcs.rag.checks.shown``). A
+topic briefing's card (``og:image`` on ``/topics/<slug>.html``, decision 27) has the topic's own question as its
+title instead: words the site chose, never a reader's. The family's account is ``family/BRIEFINGS.md`` in the
+charity's repository (the review plan of 21 November 2026, B5).
 """
 
 from __future__ import annotations
@@ -53,13 +55,18 @@ def counts_in_words(counts: CheckCounts) -> str:
             f"{counts.no_source} {nosource} without a source")
 
 
-def card_path(folder: Path, bid: str) -> Path:
-    return folder / f"{bid}.v{CARD_VERSION}.r{RULES_VERSION}.png"
+def card_path(folder: Path, bid: str, topic: str | None = None) -> Path:
+    """A reader's briefing's card is named by the briefing; a topic's by the topic and the briefing it shows, as the
+    same briefing has the site's neutral title at ``/b/<id>`` and the topic's question on the topic's page."""
+    name = f"topic-{topic}-{bid}" if topic else bid
+    return folder / f"{name}.v{CARD_VERSION}.r{RULES_VERSION}.png"
 
 
-def card_png(folder: Path, bid: str, title: str, counts: CheckCounts, created_at: str) -> Path:
-    """The card's file, drawn the first time it is asked for and kept."""
-    path = card_path(folder, bid)
+def card_png(folder: Path, bid: str, title: str, counts: CheckCounts, created_at: str, *,
+             topic: str | None = None) -> Path:
+    """The card's file, drawn the first time it is asked for and kept. ``title`` is the site's neutral title for a
+    reader's briefing, and the topic's own question for a topic's (``topic``, its slug: decision 27)."""
+    path = card_path(folder, bid, topic)
     if not path.exists():
         from wts_core.adapters.cards import briefing_card
 

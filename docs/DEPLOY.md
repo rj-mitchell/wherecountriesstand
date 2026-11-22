@@ -39,8 +39,8 @@ Without a key, the site shows the sources only.
    ```bash
    bash /opt/wherecountriesstand/deploy/update.sh
    ```
-   It builds and starts the site, checks it answers, and installs the update, backup and weekly report timers. With
-   no data yet, searches find nothing.
+   It builds and starts the site, checks it answers, and installs the update, backup, weekly report and topic
+   briefing timers. With no data yet, searches find nothing.
 4. The front door: add `wherecountriesstand.com=wherecountriesstand` to `SITES`, and paste the origin certificate
    with `cloudflare.sh site wherecountriesstand.com` ("Adding a site", step 3, in Where MPs Stand's
    `docs/HOSTING.md`).
@@ -82,8 +82,9 @@ Commands below are run in `/opt/wherecountriesstand/deploy`. Any `wcs` command r
 | `wcs-backup.timer` | 4.20am daily | The nightly backup, then the housekeeping (`wcs tidy`) |
 | `wcs-update.timer` | 5.41am and 5.41pm, up to 15 minutes late | The scheduled update ([OPERATIONS.md](OPERATIONS.md#the-scheduled-update)); it can run for hours |
 | `wcs-weekly-report.timer` | 7.07am on Mondays | The weekly report on briefings ([OPERATIONS.md](OPERATIONS.md#how-briefings-went)) |
+| `wcs-topics.timer` | 11.23am on Sundays | The topic briefings, each written afresh ([OPERATIONS.md](OPERATIONS.md#topic-briefings)) |
 
-`update.sh` installs all three. The housekeeping has half an hour (`TimeoutStopSec` in `wcs-backup.service`).
+`update.sh` installs all four. The housekeeping has half an hour (`TimeoutStopSec` in `wcs-backup.service`).
 
 ### New code
 
