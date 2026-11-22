@@ -200,6 +200,8 @@
 @media (max-width: 30rem) {
   .wts-shelf__groups, .wts-shelf__group { inline-size: 100%; }
   .wts-shelf__books { flex-direction: column; }
+  /* every book's picture in a slot of one width (the game's cartridge is wider than a spine), so the names line up */
+  .wts-shelf__books .wts-book :is(.wts-spine, .wts-cart) { inline-size: 1.75rem; }
 }
 .wts-book {
   display: flex;

@@ -186,8 +186,9 @@
 
 /* The home page's proof: three steps, then a sentence from a briefing beside the passage of the record it cites */
 .wts-proof { display: grid; gap: 1.75rem; }
+/* one column, then all three side by side: never two and one left over (found at 768 pixels on Where Countries Stand) */
 .wts-proof__steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); counter-reset: wts-step; }
+  grid-template-columns: minmax(0, 1fr); counter-reset: wts-step; }
 .wts-proof__steps li { font-family: var(--wts-serif); font-size: clamp(1.125rem, 1rem + .6vw, 1.375rem); font-weight: 600; line-height: 1.3;
   counter-increment: wts-step; display: grid; gap: .3rem; align-content: start; padding-top: .6rem; border-top: 2px solid var(--wts-cloth-text); }
 .wts-proof__steps li::before { content: "Step " counter(wts-step); font-family: var(--wts-sans); font-size: .8125rem; font-weight: 600; color: var(--wts-cloth-text); }
@@ -200,6 +201,7 @@
 .wts-proof__said { font-size: 1.0625rem; line-height: 1.75; margin: 0; }
 .wts-proof__from { font-size: .8125rem; color: var(--wts-ink-muted); margin: 0; padding-top: .4rem; border-top: 1px solid var(--wts-rule-faint); }
 @media (min-width: 48rem) {
+  .wts-proof__steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem 1.5rem; }
   .wts-proof__pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5rem; position: relative; }
   /* the join: a rule across the gutter, level with the middle of the two cards (under their labels) */
   .wts-proof__pair::after { content: ""; position: absolute; left: calc(50% - 1.25rem); width: 2.5rem; top: calc(50% + .9rem);
