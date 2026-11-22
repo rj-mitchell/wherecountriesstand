@@ -87,9 +87,9 @@ _LIVES_SPINE = re.compile(r'<svg class="wts-spine wts-cloth--lives".*?</svg>', r
 # sentence each of their status, in the owner's words, and a search of the records about them, sources only.
 _SAR = "A Special Administrative Region of China. It does not speak or vote separately in the United Nations’ records."
 UNLISTED = (
-    ("taiwan", "Taiwan", "China’s seat at the United Nations was held by the Republic of China until 25 October 1971 "
-                         "(General Assembly resolution 2758 (XXVI)). Taiwan has not spoken or voted in the United "
-                         "Nations’ records since."),
+    ("taiwan", "Taiwan", "China’s seat at the United Nations was held by the Republic of China, whose government "
+                         "has been based in Taiwan since 1949, until 25 October 1971 (General Assembly resolution "
+                         "2758 (XXVI)). Taiwan has not spoken or voted in the United Nations’ records since."),
     ("hong-kong", "Hong Kong", _SAR),
     ("macao", "Macao", _SAR),
     ("western-sahara", "Western Sahara", "A Non-Self-Governing Territory on the United Nations’ list. It is discussed "
@@ -162,7 +162,8 @@ class Period:
 PERIODS = {"CHN": Period(
     until=ROC_UNTIL,
     heading="China’s seat, 1945 to 1971: the Republic of China",
-    note="China’s seat at the United Nations was held by the Republic of China until 25 October 1971 (General "
+    note="China’s seat at the United Nations was held by the Republic of China, whose government has been based "
+         "in Taiwan since 1949, until 25 October 1971 (General "
          "Assembly resolution 2758 (XXVI)). Its statements and recorded votes from those years are listed here, "
          "newest first, labelled “China (Republic of China)” as everywhere on this site.",
     main_note="Listed from 26 October 1971. The record to 25 October 1971, the Republic of China’s, is in its "
@@ -785,8 +786,9 @@ class CountryPages:
             status.append("<p>It has a page here because it speaks in the Security Council’s record, under the name "
                           "the record gives it.</p>")
         if x.code in PERIODS:
-            status.append(f'<p>Its record to {long_date(ROC_LAST_DAY)} is that of the Republic of China, '
-                          'in <a href="#period-head">a section of its own</a>.</p>')
+            status.append(f'<p>Its record to {long_date(ROC_LAST_DAY)} is that of the Republic of China, whose '
+                          'government has been based in Taiwan since 1949, in <a href="#period-head">a section of its '
+                          'own</a>.</p>')
         elif x.code == "DEU":
             status.append("<p>Its record before 3 October 1990 is that of the Federal Republic of Germany, and is "
                           "labelled so.</p>")

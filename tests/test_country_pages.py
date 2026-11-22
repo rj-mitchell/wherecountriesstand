@@ -331,9 +331,10 @@ def test_the_places_with_no_page_have_a_sentence_and_a_search(site):
     assert "This follows the UN’s own lists and records, and implies no view on any place’s status." in section
     for slug, name, sentence in UNLISTED:
         assert f'<h3 id="no-page-{slug}">{name}</h3><p>{sentence}</p>' in section
-    assert ("China’s seat at the United Nations was held by the Republic of China until 25 October 1971 (General "
-            "Assembly resolution 2758 (XXVI)). Taiwan has not spoken or voted in the United Nations’ records since."
-            ) in section
+    # the Republic of China is placed for a reader who does not know the name, without saying the two are the same
+    assert ("China’s seat at the United Nations was held by the Republic of China, whose government has been based in "
+            "Taiwan since 1949, until 25 October 1971 (General Assembly resolution 2758 (XXVI)). Taiwan has not "
+            "spoken or voted in the United Nations’ records since.") in section
     assert section.count("A Special Administrative Region of China. It does not speak or vote separately in the "
                          "United Nations’ records.") == 2
     assert ("A Non-Self-Governing Territory on the United Nations’ list. It is discussed in the records but does not "

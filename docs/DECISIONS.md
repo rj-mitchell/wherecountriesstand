@@ -491,6 +491,10 @@ no AI briefing for each country.
   not speak or vote separately in the United Nations' records."; for Western Sahara, "A Non-Self-Governing Territory
   on the United Nations' list. It is discussed in the records but does not speak or vote in them." The resolution is
   cited as the site already cites it (`wcs.reference.countries`), with its session, "2758 (XXVI)".
+- Where the site names the Republic of China for a reader (the Taiwan entry, China's 1945 to 1971 section and status
+  line, the glossary), it adds "whose government has been based in Taiwan since 1949", so that a reader who does not
+  know the name sees what it refers to. It is a fact of where the government sits, and does not say that the two are
+  the same thing or take a view on Taiwan's status (owner, 22 November 2026).
 - China: as decision 5 has it, China's record to 25 October 1971 is the Republic of China's, labelled
   "China (Republic of China)". On China's page it is a section of its own, "China's seat, 1945 to 1971: the Republic
   of China", with that period's statements and recorded votes, newest first, in the same form as the rest of the
