@@ -1,7 +1,7 @@
 """Find General Assembly recorded votes on a question's subject, and how countries voted.
 
 A vote is found by the words of its resolution's title, agenda item and subjects. Each vote found lists every
-country's vote under the country's UN name on the day (China's seat before 25 October 1971 as the Republic of
+country's vote under the country's UN name on the day (China's seat to 25 October 1971 as the Republic of
 China), so a briefing can set how countries voted beside what they said.
 """
 

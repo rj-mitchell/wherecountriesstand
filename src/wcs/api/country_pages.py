@@ -51,7 +51,7 @@ from wcs.api.votes import (
     statements_html,
 )
 from wcs.rag.sources import VOTE_LABEL
-from wcs.reference.countries import REGIONS, ROC_UNTIL, Countries, Country
+from wcs.reference.countries import REGIONS, ROC_LAST_DAY, ROC_UNTIL, Countries, Country
 
 INDEX_PATH = "/countries.html"
 INDEX_NAME = "Countries in the record"
@@ -165,8 +165,8 @@ PERIODS = {"CHN": Period(
     note="China’s seat at the United Nations was held by the Republic of China until 25 October 1971 (General "
          "Assembly resolution 2758 (XXVI)). Its statements and recorded votes from those years are listed here, "
          "newest first, labelled “China (Republic of China)” as everywhere on this site.",
-    main_note="Listed from 25 October 1971. The record before then, the Republic of China’s, is in its own "
-              "section below.")}
+    main_note="Listed from 26 October 1971. The record to 25 October 1971, the Republic of China’s, is in its "
+              "own section below.")}
 PERIOD_STATEMENTS = 30
 
 
@@ -640,16 +640,16 @@ class CountryPages:
 
     def _recorded_as(self, x: Entity, on: date) -> str | None:
         """How the record names it on a day, where that is not today's name: "Recorded as China (Republic of
-        China), before 25 October 1971" (decision 5)."""
+        China), to 25 October 1971" (decision 5)."""
         name = curl_quotes(self.countries.name_on(x.code, on))
         if name == x.name:
             return None
         period = PERIODS.get(x.code)
-        when = f", before {long_date(period.until)}" if period and on < period.until else ""
+        when = f", to {long_date(ROC_LAST_DAY)}" if period and on < period.until else ""
         return f"Recorded as {name}{when}"
 
     def _period(self, x: Entity) -> str:
-        """China's page: its seat before 25 October 1971, the Republic of China's, in a section of its own, with
+        """China's page: its seat to 25 October 1971, the Republic of China's, in a section of its own, with
         that period's statements and recorded votes, labelled as everywhere on the site (decision 5)."""
         period = PERIODS.get(x.code)
         if period is None:
@@ -663,14 +663,14 @@ class CountryPages:
                  '<h3 id="period-votes">Recorded votes in the General Assembly</h3>']
         if cast:
             latest = cast[:LATEST_VOTES]
-            parts.append(f"<p>{e(its_latest(len(latest), 'last'))} before {e(long_date(period.until))}, newest "
+            parts.append(f"<p>{e(its_latest(len(latest), 'last'))} to {e(long_date(ROC_LAST_DAY))}, newest "
                          f"first. It is listed in {_plural(len(cast), 'recorded vote', 'recorded votes')} from "
                          f"{e(long_date(cast[-1][0].on))} until then.</p>"
                          '<ul class="vote-index">'
                          + "".join(self._cast_line(v, how, self._recorded_as(x, v.on)) for v, how in latest) + "</ul>"
                          f'<p class="record-more"><a href="{x.votes_path}">Every recorded vote of '
-                         f"{e(in_a_sentence(x.name))}, by session</a>, with those before "
-                         f"{e(long_date(period.until))} marked.</p>")
+                         f"{e(in_a_sentence(x.name))}, by session</a>, with those to "
+                         f"{e(long_date(ROC_LAST_DAY))} marked.</p>")
         else:
             parts.append("<p>No recorded votes in the record.</p>")
         return "".join(parts) + "</section>"
@@ -785,7 +785,7 @@ class CountryPages:
             status.append("<p>It has a page here because it speaks in the Security Council’s record, under the name "
                           "the record gives it.</p>")
         if x.code in PERIODS:
-            status.append(f'<p>Its record before {long_date(PERIODS[x.code].until)} is that of the Republic of China, '
+            status.append(f'<p>Its record to {long_date(ROC_LAST_DAY)} is that of the Republic of China, '
                           'in <a href="#period-head">a section of its own</a>.</p>')
         elif x.code == "DEU":
             status.append("<p>Its record before 3 October 1990 is that of the Federal Republic of Germany, and is "
@@ -839,9 +839,9 @@ class CountryPages:
                  f"from the UN’s voting data: {_plural(len(cast), 'vote', 'votes')}, from {e(long_date(first))} to "
                  f"{e(long_date(last))}, by session, newest first.</p>",
                  "<p>Each vote’s page gives how every Member State voted on it.</p>",
-                 *([f"<p>Votes before {e(long_date(PERIODS[x.code].until))} are the Republic of China’s, which held "
-                    "China’s seat until then, and are marked “Recorded as China (Republic of China), before "
-                    f"{e(long_date(PERIODS[x.code].until))}”.</p>"] if x.code in PERIODS else []),
+                 *([f"<p>Votes to {e(long_date(ROC_LAST_DAY))} are the Republic of China’s, which held "
+                    "China’s seat until then, and are marked “Recorded as China (Republic of China), to "
+                    f"{e(long_date(ROC_LAST_DAY))}”.</p>"] if x.code in PERIODS else []),
                  '<nav class="country-jump" aria-label="Sessions"><ul class="session-index">'
                  + "".join(f'<li><a href="#session-{key}">{e(labels[key])}</a>, '
                            f'<span class="session-index__meta">{_plural(len(rows), "vote", "votes")}</span></li>'

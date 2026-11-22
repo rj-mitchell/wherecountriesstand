@@ -270,14 +270,14 @@ def test_chinas_seat_before_25_october_1971_has_a_section_of_its_own(site):
     assert "Republic of China statement in 1970." in period and "China statement in 1971." not in period
     assert "Recorded as China (Republic of China)." in period
     assert "A/RES/2500(XXIV)" in period and "A/RES/2800(XXVI)" not in period
-    assert "Recorded as China (Republic of China), before 25 October 1971." in period
+    assert "Recorded as China (Republic of China), to 25 October 1971." in period
     # the counts of the last 10 years are unaffected
     assert "<caption>Its recorded votes from 22 November 2016 to 22 November 2026</caption>" in main
     # the full list marks the votes before 25 October 1971
     full = site.get("/countries/chn/votes.html").text
     marked = re.findall(r'<li><a href="/votes/([a-z0-9-]+)\.html">[^<]*</a> ?<span class="vote-index__meta">([^<]*)'
                         r"</span>", full)
-    before = {slug for slug, meta in marked if "Recorded as China (Republic of China), before 25 October 1971" in meta}
+    before = {slug for slug, meta in marked if "Recorded as China (Republic of China), to 25 October 1971" in meta}
     assert before == {"a-res-2500-xxiv"}
     # no page for Taiwan or the Republic of China, and neither is called a former Member State
     for path in ("/countries/twn.html", "/countries/roc.html", "/countries/twn/votes.html"):
@@ -420,3 +420,15 @@ def test_with_nothing_read_in_the_pages_still_stand(indexed, monkeypatch):  # no
     page = api.get("/countries/ita.html").text
     assert "No recorded votes in the record." in page
     assert api.get("/countries/ita/votes.html").status_code == 404
+
+
+def test_the_republic_of_china_held_the_seat_to_the_end_of_25_october_1971():
+    """Its delegation was in the hall for the votes of 25 October 1971 and left before the vote on resolution 2758;
+    the People's Republic's first took the seat on 15 November 1971. So that day is the Republic of China's."""
+    from datetime import date
+
+    from wcs.reference.countries import Countries
+
+    countries = Countries()
+    assert countries.name_on("CHN", date(1971, 10, 25)) == "China (Republic of China)"
+    assert countries.name_on("CHN", date(1971, 10, 26)) == "China"

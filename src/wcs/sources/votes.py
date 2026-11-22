@@ -2,7 +2,7 @@
 
 UN Digital Library record 4060887: one row per Member State per resolution adopted by recorded vote, from 1946.
 Votes on separate paragraphs and on drafts that were not adopted are not included. The code GER (the Federal
-Republic of Germany before 1990) is stored as DEU; China's seat before 25 October 1971 keeps CHN, as in the data,
+Republic of Germany before 1990) is stored as DEU; China's seat to 25 October 1971 keeps CHN, as in the data,
 and is labelled the Republic of China where it is shown (``reference.countries``).
 """
 

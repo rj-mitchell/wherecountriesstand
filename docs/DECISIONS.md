@@ -32,8 +32,11 @@ rather than the record.
 ## 5. Groups
 
 Countries are grouped by their memberships on the date of each statement (blocs, regions, income groups, place on
-the Security Council), as Where MPs Stand uses an MP's party and role on the date. Before 25 October 1971, "China"
-is the Republic of China, which held the seat until then.
+the Security Council), as Where MPs Stand uses an MP's party and role on the date. To 25 October 1971, "China" is
+the Republic of China, which held the seat until then. That day is the Republic of China's: its delegation was in the
+hall for the day's earlier votes and left before the vote on resolution 2758 (XXVI), where "China" is recorded as not
+voting, and the People's Republic's delegation first took the seat on 15 November 1971 (corrected 22 November 2026:
+the site counted 25 October itself as the People's Republic's).
 
 ## 6. Country names
 
@@ -488,11 +491,11 @@ no AI briefing for each country.
   not speak or vote separately in the United Nations' records."; for Western Sahara, "A Non-Self-Governing Territory
   on the United Nations' list. It is discussed in the records but does not speak or vote in them." The resolution is
   cited as the site already cites it (`wcs.reference.countries`), with its session, "2758 (XXVI)".
-- China: as decision 5 has it, China's record before 25 October 1971 is the Republic of China's, labelled
+- China: as decision 5 has it, China's record to 25 October 1971 is the Republic of China's, labelled
   "China (Republic of China)". On China's page it is a section of its own, "China's seat, 1945 to 1971: the Republic
   of China", with that period's statements and recorded votes, newest first, in the same form as the rest of the
-  page; the page's other lists begin on 25 October 1971. The counts of the last 10 years are unaffected, and the full
-  list of China's votes marks each vote before that day. There is no page for Taiwan or the Republic of China, and
+  page; the page's other lists begin on 26 October 1971. The counts of the last 10 years are unaffected, and the full
+  list of China's votes marks each vote to that day. There is no page for Taiwan or the Republic of China, and
   nothing calls either a former Member State.
 - Names and status are the UN's throughout (decision 6), and the wording is neutral (decision 7).
 - No comparative voting statistics: no "voted with another country n% of the time", no agreement or alignment

@@ -12,7 +12,7 @@ Sources, all in data_static/:
 * ``memberships.csv``: dated membership of the permanent five, the European Union and NATO.
 
 Names follow the UN's own usage (docs/DECISIONS.md, 6). China's seat was held by the Republic of China until
-25 October 1971 (General Assembly resolution 2758 (XXVI)); records of "China" before that date are labelled so.
+25 October 1971 (General Assembly resolution 2758 (XXVI)); records of "China" to that date are labelled so.
 Germany before unification on 3 October 1990 is the Federal Republic of Germany (the GDR sat separately).
 """
 
@@ -28,7 +28,13 @@ from pathlib import Path
 
 from wcs.config import STATIC_DIR
 
-ROC_UNTIL = date(1971, 10, 25)
+# The Republic of China held China's seat to the end of 25 October 1971, the day resolution 2758 (XXVI) was adopted:
+# its delegation was in the hall for that day's earlier votes and left before the vote on 2758, where "China" is
+# recorded as not voting; the People's Republic's delegation first took the seat on 15 November 1971. ROC_UNTIL is
+# the first day that is not the Republic of China's (until 22 November 2026 it was 25 October itself, which
+# labelled that day's votes as the People's Republic's).
+ROC_LAST_DAY = date(1971, 10, 25)
+ROC_UNTIL = date(1971, 10, 26)
 GERMAN_UNIFICATION = date(1990, 10, 3)
 AU_MOROCCO_FROM = date(2017, 1, 30)
 REGIONS = {"Africa": "region:africa", "Americas": "region:americas", "Asia": "region:asia",
@@ -131,7 +137,7 @@ class Countries:
         return self.by_code.get(code or "")
 
     def name_on(self, code: str, on: date | None = None) -> str:
-        """The UN name for a country on a date: "China (Republic of China)" for China's seat before 25 October
+        """The UN name for a country on a date: "China (Republic of China)" for China's seat to 25 October
         1971, otherwise today's UN short name (or the former state's name)."""
         c = self.by_code.get(code)
         if c is None:

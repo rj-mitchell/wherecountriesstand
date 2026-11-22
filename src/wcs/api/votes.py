@@ -574,7 +574,7 @@ class VotePages:
                          f'<ul class="vote-list" aria-labelledby="{anchor}">'
                          + "".join(self._country(name, code) for name, code in names) + "</ul>")
         parts.append('<p class="vote-source">Each country is given the UN’s short name, as everywhere on this site; '
-                     "China’s seat before 25 October 1971 is the Republic of China’s, and Germany before 3 October "
+                     "China’s seat to 25 October 1971 is the Republic of China’s, and Germany before 3 October "
                      "1990 is the Federal Republic of Germany. The voting data itself gives each Member State’s "
                      f'official name at the time. From the <a href="{e(self.record)}"{OPENED}>General Assembly voting '
                      "data</a> of the UN Dag Hammarskjöld Library, © United Nations.</p>")
