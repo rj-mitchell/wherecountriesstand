@@ -515,7 +515,36 @@ def unstamped_rows(rows):
             "briefings": [[*row[:4], without_the_stamp(json.loads(row[4])), *row[5:]] for row in rows["briefings"]]}
 
 
-REAL = as_now(shared.read("ask-real.json"))  # with the changes made since (``as_now``)
+CHECKING = {"type": "progress", "step": "checking"}
+
+
+def with_checking(recorded):
+    """A recording of the real pipeline with the event it has sent since 22 November 2026 (the family's kit 2.3.0,
+    BRIEFINGS.md, "The wait"): once the model's text is complete, and before the checks run, ``progress`` with
+    ``step: "checking"``, just before the final event of a briefing the model is writing. It is sent to the reader
+    only: the desk keeps no more than the plan, the sources, the text and the final event, so a saved or cached
+    briefing, and a cached one sent again, have none. (The scripted pipeline does not send it.)"""
+    import json
+
+    if isinstance(recorded, list):
+        return [with_checking(v) for v in recorded]
+    if isinstance(recorded, dict):
+        return {k: with_checking(v) for k, v in recorded.items()}
+    if not (isinstance(recorded, str) and recorded.startswith("event: ") and "\ndata: " in recorded):
+        return recorded
+
+    def written(chunk):
+        if not chunk.startswith("event: final\n"):
+            return False
+        final = json.loads(chunk.split("\ndata: ", 1)[1])
+        return bool(final.get("answer")) and not final["answer"].get("no_records") and not final.get("cached")
+
+    sent = f"event: progress\ndata: {json.dumps(CHECKING)}"
+    return "\n\n".join(x for c in recorded.split("\n\n") for x in ([sent, c] if written(c) else [c]))
+
+
+# with the changes made since (``as_now``), and the event that says the checks have begun (``with_checking``)
+REAL = with_checking(as_now(shared.read("ask-real.json")))
 PLAN_SENT = {"no records", "an edited plan"}  # cases that sent a search plan with the question
 
 

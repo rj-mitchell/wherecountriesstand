@@ -95,6 +95,7 @@ def test_ask_streams_records_spend_and_caches(indexed):  # noqa: F811
     evs = events(api.post("/api/ask", json=QUESTION))
     assert [e["type"] for e in evs][:2] == ["plan", "sources"] and evs[-1]["type"] == "final"
     assert any(e["type"] == "text" for e in evs) and evs[-1]["answer"]["citations_total"] == 1
+    assert evs[-2] == {"type": "progress", "step": "checking"}  # the checks begun, after the writing, sent as it is
     with state.connect() as con:
         kind, spent = con.execute("SELECT kind, cost_usd FROM wts_spending").fetchone()
     assert kind == "answer" and spent == pytest.approx(cost(indexed, {"input_tokens": 1000, "output_tokens": 200},
@@ -601,6 +602,18 @@ def test_unknown_addresses_get_a_page_and_the_api_keeps_json(indexed):  # noqa: 
         assert r.status_code == 404 and r.headers["content-type"] == "application/json", path
     assert api.post("/api/nothing", json={}).status_code in (404, 405)
     assert "404" not in api.get("/sitemap-pages.xml").text
+
+
+def test_the_home_page_robots_sitemaps_and_icon_answer_head_as_they_answer_get(indexed):  # noqa: F811
+    """A HEAD for the home page, robots.txt, the sitemaps and the icon is answered as a GET is, headers and no body:
+    with GET alone each fell through to the files and was answered 404 (found on the live site, 22 November 2026)."""
+    api, _ = make(indexed, FakeClient())
+    for path in ("/", "/robots.txt", "/sitemap.xml", "/sitemap-pages.xml", "/sitemap-votes.xml",
+                 "/sitemap-topics.xml", "/favicon.ico"):
+        got, head = api.get(path), api.head(path)
+        assert (got.status_code, head.status_code) == (200, 200), path
+        assert head.headers["content-type"] == got.headers["content-type"] and head.content == b"", path
+    assert api.head("/?q=veto").status_code == 200
 
 
 def test_a_page_asked_for_at_another_form_of_its_address_is_sent_to_its_own_for_good(indexed):  # noqa: F811

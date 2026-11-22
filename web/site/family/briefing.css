@@ -75,11 +75,14 @@
 .wts-quote--missing .wts-quote__tick { color: var(--wts-warn); }
 
 /* Source chips: who said it, where and when, in place of a bare number */
-.wts-chip { display: inline; border: 0; background: none; padding: 0; margin: 0; color: inherit; font: inherit; cursor: pointer; }
-.wts-chip__in { display: inline-flex; align-items: baseline; gap: .35em; margin-left: .3em; vertical-align: .08em;
+/* A button is always laid out as one box, so a chip that folds onto two lines on a phone would fill the line and push
+   the full stop after it onto a line of its own: it stops short of the full width, and its name stays left-aligned */
+.wts-chip { display: inline; border: 0; background: none; padding: 0; margin: 0; color: inherit; font: inherit; cursor: pointer;
+  text-align: start; max-inline-size: calc(100% - .6em); }
+.wts-chip__in { display: inline-flex; align-items: baseline; gap: .35em; margin: .15em 0 .15em .3em; vertical-align: .08em;
   font-family: var(--wts-sans); font-size: .8125rem; line-height: 1.5; white-space: normal; color: var(--wts-cloth-text);
-  background: var(--wts-paper-light); border: 1px solid var(--wts-cloth-text); border-radius: 999px; padding: 0 .55em 0 0; }
-.wts-chip__n { background: var(--wts-cloth); color: var(--wts-on-cloth); border-radius: 999px; padding: 0 .45em; min-width: 1.6em;
+  background: var(--wts-paper-light); border: 1px solid var(--wts-cloth-text); border-radius: .8em; padding: 0 .55em 0 0; }
+.wts-chip__n { background: var(--wts-cloth); color: var(--wts-on-cloth); border-radius: .8em; padding: 0 .45em; min-width: 1.6em;
   text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; flex: none; white-space: nowrap; }
 .wts-chip:hover .wts-chip__in, .wts-chip[aria-current="true"] .wts-chip__in { text-decoration: underline; text-decoration-thickness: 2px; }
 .wts-chip[aria-current="true"] .wts-chip__in { background: var(--wts-mark); }
@@ -138,16 +141,20 @@
 .wts-stage__state { font-size: .8125rem; color: var(--wts-ink-muted); }
 .wts-stage[data-state="now"] { border: 2px solid var(--wts-cloth-text); padding: calc(.5rem - 1px) calc(.75rem - 1px); }
 .wts-stage[data-state="now"] .wts-stage__state { color: var(--wts-cloth-text); font-weight: 700; }
+.wts-stage[data-state="now"] .wts-stage__state::before { content: ""; display: inline-block; width: .55em; height: .55em; border-radius: 50%;
+  background: currentColor; margin-right: .4em; vertical-align: .05em; }
 .wts-stage[data-state="done"] .wts-stage__state { color: var(--wts-ink); }
 .wts-plan { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; padding: 0; margin: 0; }
 .wts-plan li { font-family: var(--wts-serif); font-size: clamp(1.125rem, 1rem + .8vw, 1.5rem); font-weight: 600; color: var(--wts-cloth-text);
   border: 2px solid var(--wts-cloth-text); border-radius: 999px; padding: .2rem .9rem; }
 .wts-found { margin: 0; }
 .wts-found strong { font-family: var(--wts-serif); font-size: 1.375rem; font-variant-numeric: tabular-nums; }
-.wts-spines { display: flex; gap: 6px; align-items: end; height: 72px; }
-.wts-spines span { width: 22px; height: var(--h, 60px); border-radius: 2px 2px 0 0; background: var(--c, var(--wts-cloth)); position: relative; }
-.wts-spines span::before, .wts-spines span::after { content: ""; position: absolute; left: 0; right: 0; height: 3px; background: var(--wts-gilt-spine); }
-.wts-spines span::before { top: 10px; } .wts-spines span::after { top: 16px; }
+/* Before the first event: the family's books on a shelf (one is taken down and put back in turn: see below) */
+.wts-spines { display: flex; gap: 3px; align-items: end; width: max-content; height: 84px; padding: 0 8px;
+  border-bottom: 4px solid var(--wts-ink); }
+.wts-spines span { width: 20px; height: var(--h, 60px); border-radius: 2px 2px 0 0; background: var(--c, var(--wts-cloth)); position: relative; }
+.wts-spines span::before, .wts-spines span::after { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: var(--wts-gilt-spine); }
+.wts-spines span::before { top: 9px; } .wts-spines span::after { bottom: 9px; }
 .wts-pile { max-height: min(62vh, 36rem); overflow: auto; padding: 4px; }
 .wts-pile ul { list-style: none; margin: 0; padding: 0; display: grid; }
 .wts-card { background: var(--wts-paper-light); color: var(--wts-ink); border: 1px solid var(--wts-rule); border-radius: 5px; padding: .3rem .7rem;
@@ -158,13 +165,16 @@
 .wts-card__top > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .wts-card__top > :last-child:not(:first-child) { flex: none; }
 .wts-card__sym { font-family: var(--wts-serif); font-weight: 700; color: var(--wts-ink); }
-.wts-card__who { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* the name gives way to "Cited": the name is in its own span and is cut short with an ellipsis, "Cited" never is */
+.wts-card__who { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: .35em; }
+.wts-card__who > :not(.wts-card__cited) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.wts-card__who > .wts-card__cited { flex: none; }
 .wts-card__line { font-family: var(--wts-serif); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .wts-card:not(.is-cited):not(:last-child) .wts-card__line { display: none; }
 .wts-card__cited { display: none; font-weight: 700; color: var(--wts-cloth-text); }
 .wts-card.is-cited { border: 2px solid var(--wts-cloth-text); padding: calc(.3rem - 1px) calc(.7rem - 1px); }
 .wts-card.is-cited, .wts-card.is-cited + .wts-card { margin-top: .35rem; border-radius: 5px; }
-.wts-card.is-cited .wts-card__cited { display: inline; }
+.wts-card.is-cited .wts-card__cited { display: block; }
 .wts-card.is-checked .wts-card__line { background: var(--wts-mark); }
 @media (max-width: 63.99rem) {
   .wts-pile { max-height: none; overflow-x: auto; overflow-y: hidden; padding: 10px 4px 6px; }
@@ -173,20 +183,39 @@
   .wts-card + .wts-card { margin-top: 0; margin-left: -10.5rem; border-radius: 5px; }
   .wts-card.is-cited, .wts-card.is-cited + .wts-card { margin-top: 0; margin-left: .35rem; }
 }
+/* While the checks run (after the text is written, before the results): words, and a bar that moves while they run */
+.wts-checking { display: grid; gap: .4rem; margin: 1rem 0; padding: .75rem 1rem; border: 2px solid var(--wts-cloth-text);
+  border-radius: 6px; font-weight: 600; color: var(--wts-cloth-text); }
+.wts-checking__bar { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--wts-cloth-text) 20%, transparent); overflow: hidden; }
+.wts-checking__bar::before { content: ""; display: block; height: 100%; width: 30%; background: var(--wts-cloth-text); border-radius: 2px; }
 .wts-cursor { display: inline-block; width: .5em; height: 1em; vertical-align: -.1em; background: var(--wts-ink-muted); margin-left: .1em; }
 
-/* The home page's proof: three steps, a sentence with its record quotation, and the passage it came from */
-.wts-proof { display: grid; gap: 1.25rem; }
-.wts-proof__steps { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); counter-reset: wts-step; }
-.wts-proof__steps li { font-family: var(--wts-serif); font-size: clamp(1.125rem, 1rem + .7vw, 1.4rem); font-weight: 600; line-height: 1.3;
-  counter-increment: wts-step; display: grid; gap: .25rem; align-content: start; }
+/* The home page's proof: three steps, then a sentence from a briefing beside the passage of the record it cites */
+.wts-proof { display: grid; gap: 1.75rem; }
+/* one column, then all three side by side: never two and one left over (found at 768 pixels on Where Countries Stand) */
+.wts-proof__steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem 2rem;
+  grid-template-columns: minmax(0, 1fr); counter-reset: wts-step; }
+.wts-proof__steps li { font-family: var(--wts-serif); font-size: clamp(1.125rem, 1rem + .6vw, 1.375rem); font-weight: 600; line-height: 1.3;
+  counter-increment: wts-step; display: grid; gap: .3rem; align-content: start; padding-top: .6rem; border-top: 2px solid var(--wts-cloth-text); }
 .wts-proof__steps li::before { content: "Step " counter(wts-step); font-family: var(--wts-sans); font-size: .8125rem; font-weight: 600; color: var(--wts-cloth-text); }
-.wts-proof__pair { display: grid; gap: 1.5rem; align-items: start; }
-.wts-proof__said { font-size: 1.125rem; margin: 0; }
+.wts-proof__pair { display: grid; gap: 1.25rem; }
+.wts-proof__side { display: flex; flex-direction: column; gap: .4rem; min-width: 0; margin: 0; }
+.wts-proof__label { font-size: .875rem; font-weight: 600; color: var(--wts-ink-muted); margin: 0; }
+/* the sentence sits in the middle of its card when the passage beside it is the taller (no hole under it) */
+.wts-proof__card { flex: 1; display: grid; align-content: center; gap: .75rem; background: var(--wts-paper-light); color: var(--wts-ink);
+  border: 1px solid var(--wts-rule); border-radius: 6px; padding: 1rem 1.1rem; }
+.wts-proof__side > .wts-slip { flex: 1; align-content: start; }
+.wts-proof__said { font-size: 1.0625rem; line-height: 1.75; margin: 0; }
+.wts-proof__from { font-size: .8125rem; color: var(--wts-ink-muted); margin: 0; padding-top: .4rem; border-top: 1px solid var(--wts-rule-faint); }
 @media (min-width: 48rem) {
-  .wts-proof__pair { grid-template-columns: 1fr 1fr; gap: 3rem; position: relative; }
-  /* the join: a rule across the gutter, level with the top of both highlights */
-  .wts-proof__pair::after { content: ""; position: absolute; left: calc(50% - 1.5rem); width: 3rem; top: var(--wts-join, 2.6rem);
+  .wts-proof__steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem 1.5rem; }
+  /* the two labels share a row, so the cards start level however long a label is (Where Councils Stand's runs to
+     two lines), and the join runs across the gutter from the middle of the first card */
+  .wts-proof__pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 2.5rem; row-gap: 0; }
+  .wts-proof__side { display: grid; grid-row: span 2; grid-template-rows: subgrid; row-gap: .4rem; }
+  .wts-proof__label { align-self: end; }
+  .wts-proof__side:first-child > .wts-proof__card { position: relative; }
+  .wts-proof__side:first-child > .wts-proof__card::after { content: ""; position: absolute; top: 50%; left: calc(100% + 1px); width: 2.5rem;
     border-top: 2px solid var(--wts-cloth-text); }
 }
 
@@ -194,8 +223,13 @@
   .wts-card { animation: wts-dealt .35s var(--wts-ease-out) both; }
   @keyframes wts-dealt { from { transform: translate(18px, -10px) rotate(var(--wts-r, 2deg)); opacity: 0; } to { transform: none; opacity: 1; } }
   .wts-quote--checked, .wts-passage mark { transition: background-color .3s var(--wts-ease-out); }
-  .wts-spines span { animation: wts-rise 1.2s ease-in-out infinite alternate; animation-delay: calc(var(--i, 0) * 120ms); transform-origin: bottom; }
-  @keyframes wts-rise { from { transform: scaleY(.82); } to { transform: scaleY(1); } }
+  /* each book in turn is lifted from the shelf and put back, as if looked through: one at a time, left to right */
+  .wts-spines span { animation: wts-look 3s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 600ms); }
+  @keyframes wts-look { 0%, 20%, 100% { transform: none; } 6%, 14% { transform: translateY(-14px) rotate(-3deg); } }
+  .wts-stage[data-state="now"] .wts-stage__state::before { animation: wts-pulse .9s ease-in-out infinite alternate; }
+  @keyframes wts-pulse { from { opacity: 1; transform: scale(1); } to { opacity: .35; transform: scale(.7); } }
+  .wts-checking__bar::before { animation: wts-sweep 1.4s ease-in-out infinite; }
+  @keyframes wts-sweep { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
   .wts-record.is-settling { animation: wts-settle .45s var(--wts-ease-out) both; }
   @keyframes wts-settle { from { transform: translateY(12px); opacity: .2; } to { transform: none; opacity: 1; } }
 }
@@ -205,6 +239,7 @@
   .wts-check { border: 2px solid CanvasText; }
   .wts-quote--checked, .wts-passage mark { background: Mark; color: MarkText; }
   .wts-chip__in { border-color: LinkText; }
+  .wts-checking__bar::before { background: CanvasText; }
   .wts-nosource { text-decoration-color: CanvasText; }
 }
 
@@ -217,5 +252,5 @@
   .wts-chip__n { background: none; color: #000; padding: 0; min-width: 0; }
   .wts-chip__n::before { content: "["; } .wts-chip__n::after { content: "]"; }
   .wts-quote--checked { background: none; }
-  .wts-record, .wts-sheet, .wts-sheet__back, .wts-connector, .wts-stages, .wts-pile { display: none !important; }
+  .wts-record, .wts-sheet, .wts-sheet__back, .wts-connector, .wts-stages, .wts-pile, .wts-checking { display: none !important; }
 }

@@ -217,10 +217,12 @@ cloth (`wts-cloth--countries` on the result). The parts are built by
 ## The wait
 
 While a briefing is written, the page shows its real events in order (the stream's `plan`, `sources`, `text` and
-`citation`, then `final`), in four stages listed across the column, one "Now":
+`citation`, `progress` when the checks begin, then `final`), in four stages listed across the column, one "Now",
+with a pulsing dot beside it so that something always moves while the site is working:
 
-1. Reading the question: the family's spines in the five cloths until the plan arrives, then the question as read
-   as large chips ("Security Council", "2022 to today", "all countries") with the plan's own reading.
+1. Reading the question: the family's five books on a shelf, each taken down and put back in turn, until the
+   plan arrives, then the question as read as large chips ("Security Council", "2022 to today", "all countries")
+   with the plan's own reading.
 2. Searching the record: each record found arrives as a card of its UN document (the symbol, the date, the country
    or group and the speaker, the first words), into a pile down the right-hand side on wide screens or along a
    shelf on narrower ones, with a running count and then the summary ("24 statements from 19 countries and groups
@@ -228,10 +230,15 @@ While a briefing is written, the page shows its real events in order (the stream
 3. Writing from these records only: "Writing from these 24 records only. The AI may use these and nothing else."
    The text appears as it is written, laid out as it will be; as each citation arrives its card is marked "Cited"
    and brought into view in the pile (the page itself does not move).
-4. Checking every citation and quotation: the finished briefing is shown at once, and the strip's counts run up
-   passage by passage through the real results, each quotation taking its highlight in turn and its card's words
-   highlighted, with sentences without a source "counted last". Then the stages go and the pile gives way to the
-   record beside the briefing, open on the first source.
+4. Checking every citation and quotation: once the model's text is complete, the server sends a `progress` event
+   with `step: "checking"` before it runs the checks (`wcs.rag.pipeline`). From then until the final event, the
+   checking line stands under the text, "Checking every citation and quotation against the UN record. The briefing
+   is finished when this is done.", with a bar that moves while the checks run; the stage list shows "Checking" as
+   Now, and "Writing from these records only" goes from above the text. On the final event the line goes, the
+   finished briefing is shown at once, and the strip's counts run up passage by passage through the real results,
+   each quotation taking its highlight in turn and its card's words highlighted, with sentences without a source
+   "counted last". Then the stages go and the pile gives way to the record beside the briefing, open on the first
+   source.
 
 "Sources only (no AI)" shows the first two stages, then the list of sources. One `role="status"` region announces
 each stage once, and the counts once, in words, at the end; the moving numbers are hidden from screen readers. With
@@ -245,10 +252,13 @@ Under the question box, the line and the disclosure, a static block in the page'
 without a script: "Every briefing, checked against the UN record", three steps ("Searches only the UN's records",
 "AI writes only from what was found", "Every citation and quotation is checked before you see it"), then a real
 sentence from saved briefing kGfKBI3cRLw (18 November 2026) with its record quotation and chip, beside the passage
-from S/PV.10043 (Resumption 1) it came from, the same words highlighted, joined by a rule across the gutter, and a
-link to the methodology page. The first step says "the UN's records" rather than the family's "the official
-record", as the site's other wording does (decision 17). The sentence is set level with the passage's highlight at
-the usual widths in `styles.css`; where the script runs it is set exactly at any width.
+from S/PV.10043 (Resumption 1) it came from, the same words highlighted, and a link to the methodology page. The
+first step says "the UN's records" rather than the family's "the official record", as the site's other wording does
+(decision 17). Since kit 2.3.0 (22 November 2026) the sentence and the passage are two cards of the same height,
+labelled "In a briefing written by AI" and "In the record it cites", side by side from 48rem and one above the other
+on phones, joined by a rule across the gutter at their middle; the sentence's card ends with the day the briefing
+was prepared. The earlier layout pushed the sentence down to the level of the passage's highlight, which left a tall
+empty space above it at computer widths; it needed a script to measure it, and has gone with it.
 
 ## Share cards
 

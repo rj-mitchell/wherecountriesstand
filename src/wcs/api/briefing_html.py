@@ -292,6 +292,7 @@ def _quote_node(q: dict[str, Any], seg: Mapping[str, Any], i: int, inner: list[A
 
 
 LEAD = re.compile(r"^\s*(?:[-*•]|#+)\s+")
+TRAIL = re.compile(r"\S(\s+)$")  # the space a passage with no source ends with
 
 
 def briefing_blocks(answer: Mapping[str, Any], sources_by_n: Mapping[Any, Mapping[str, Any]]) -> list[Node]:
@@ -321,10 +322,14 @@ def briefing_blocks(answer: Mapping[str, Any], sources_by_n: Mapping[Any, Mappin
                 lead = LEAD.match(seg["text"][p["start"]:p["end"]])
                 if lead:
                     start += len(lead[0])
-            nodes = _piece_nodes(seg, p["seg"], start, p["end"], quotes[p["seg"]], ctx)
             if not flagged(seg):
-                out += nodes
+                out += _piece_nodes(seg, p["seg"], start, p["end"], quotes[p["seg"]], ctx)
                 continue
+            # the space a passage ends with goes after its mark, so that the underline stops at its last word and
+            # the "No source" tag never touches the next word
+            trail = TRAIL.search(seg["text"][start:p["end"]])
+            end = p["end"] - len(trail[1]) if trail else p["end"]
+            nodes = _piece_nodes(seg, p["seg"], start, end, quotes[p["seg"]], ctx)
             first = p["seg"] not in seen
             seen.add(p["seg"])
             last = last_piece.get(p["seg"]) == f"{li}:{pi}"
@@ -336,6 +341,8 @@ def briefing_blocks(answer: Mapping[str, Any], sources_by_n: Mapping[Any, Mappin
                          last and p["seg"] == ctx["first_no_source"]
                          and h("span", {"class": "wts-nosource__tag", "aria-hidden": "true"}, "No source"),
                          last and h("span", {"class": "wts-vh"}, f" ({why})")))
+            if trail:
+                out.append(" ")
         return out
 
     blocks: list[Node] = []

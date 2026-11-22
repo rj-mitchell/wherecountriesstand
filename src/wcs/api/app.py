@@ -831,7 +831,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
 
     dates = page_dates(os.environ.get("WCS_PAGE_DATES"))
 
-    @app.get("/robots.txt", include_in_schema=False)
+    @app.api_route("/robots.txt", methods=["GET", "HEAD"], include_in_schema=False)
     def robots(request: Request):
         # /api/ is closed to crawlers, so that a crawler that runs the page's script never asks for a briefing; the
         # free, read-only answers the pages are drawn from are open (as Where MPs Stand's decision 40)
@@ -858,7 +858,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def topic_rows(base: str) -> list[tuple[str, str]]:
         return [(base + path, when) for path, when in topics.sitemap()]
 
-    @app.get("/sitemap.xml", include_in_schema=False)
+    @app.api_route("/sitemap.xml", methods=["GET", "HEAD"], include_in_schema=False)
     def sitemap(request: Request):
         """The sitemap index (robots.txt names it): the site's pages, the pages written from the record's votes
         (decision 26) and the topic briefings (decision 27), each with the newest date it has for a page in it, and
@@ -872,20 +872,20 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         return xml(f'<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{"".join(entries)}'
                    "</sitemapindex>\n")
 
-    @app.get("/sitemap-pages.xml", include_in_schema=False)
+    @app.api_route("/sitemap-pages.xml", methods=["GET", "HEAD"], include_in_schema=False)
     def sitemap_pages(request: Request):
         """The site's own pages, with the day each last changed (``page_dates``), and no day for one it has none
         for."""
         return urlset(page_rows(site_url(settings, request)))
 
-    @app.get("/sitemap-votes.xml", include_in_schema=False)
+    @app.api_route("/sitemap-votes.xml", methods=["GET", "HEAD"], include_in_schema=False)
     def sitemap_votes(request: Request):
         """The votes' index, each session's list and each vote's page that is not hidden, dated by the newest vote
         on it: a date from the record, never one made up (5,730 votes in the record of 15 October 2026, well
         within a sitemap's 50,000)."""
         return urlset(vote_rows(site_url(settings, request)))
 
-    @app.get("/sitemap-topics.xml", include_in_schema=False)
+    @app.api_route("/sitemap-topics.xml", methods=["GET", "HEAD"], include_in_schema=False)
     def sitemap_topics(request: Request):
         """The topics' index and each topic with a briefing, dated by when its briefing was prepared."""
         return urlset(topic_rows(site_url(settings, request)))
@@ -901,7 +901,8 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
             return html_page(question_page(text, base, request.url.query))
         return html_page(text.replace(SITE_MARK, base))
 
-    @app.get("/", include_in_schema=False)
+    # GET and HEAD: with GET alone, a HEAD for the home page fell through to the files and was answered 404
+    @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
     def home(request: Request):
         return page(request, "index")
 
@@ -1038,7 +1039,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
             return html_page(rendered["404"].replace(SITE_MARK, site_url(settings, request)), status_code=404)
         return await http_exception_handler(request, exc)
 
-    @app.get("/favicon.ico", include_in_schema=False)
+    @app.api_route("/favicon.ico", methods=["GET", "HEAD"], include_in_schema=False)
     def favicon():
         """Browsers ask for /favicon.ico whatever the page says: the family kit's, the site's spine in its cloth."""
         icon = site / "family" / "favicon.ico"

@@ -97,6 +97,19 @@ def test_pipeline_end_to_end_is_grounded(indexed):
     assert "on behalf of" in call["system"][0]["text"]
 
 
+def test_the_pipeline_says_when_the_checks_begin(indexed):
+    """Once the model's text is complete and before the checks run, a ``progress`` event says the checks have
+    begun, so the page shows them running until the final event (the family's BRIEFINGS.md, "The wait"): without
+    it, the few seconds of checking looked finished. It comes after the last text and before the final event."""
+    eng = Engine(indexed, embedder=HashingEmbedder(64), today=TODAY)
+    events = list(Pipeline(indexed, eng, client=model_of(FakeClient()), today=TODAY)
+                  .run(AskRequest("What has been said about climate finance since 2020?")))
+    kinds = [e["type"] for e in events]
+    assert kinds.count("progress") == 1 and events[kinds.index("progress")] == {"type": "progress", "step": "checking"}
+    last_text = max(i for i, k in enumerate(kinds) if k in ("text", "citation"))
+    assert last_text < kinds.index("progress") == len(kinds) - 2 and kinds[-1] == "final"
+
+
 class QuotingClient(FakeClient):
     """Quotes its source in straight quotes, as the model does."""
 
@@ -135,6 +148,9 @@ def test_pipeline_reports_refusals_instead_of_answering(indexed):
     out = answer_once(Pipeline(indexed, eng, client=model_of(RefusingClient()), today=TODAY),
                       AskRequest("What has been said about climate finance since 2020?"))
     assert "final" not in out and len(out["sources"]["sources"]) == 2
+    events = list(Pipeline(indexed, eng, client=model_of(RefusingClient()), today=TODAY)
+                  .run(AskRequest("What has been said about climate finance since 2020?")))
+    assert "progress" not in [e["type"] for e in events]  # nothing is checked: no checks are said to begin
     assert out["error"]["message"] == "The model declined to answer this question."
     assert out["error"]["usage"]["input_tokens"] == 1000  # the call was still paid for
 

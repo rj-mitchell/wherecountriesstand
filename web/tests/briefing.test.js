@@ -45,7 +45,9 @@ test("a quotation found word for word is never marked as having no source", () =
     q.includes("(quotation, found word for word in source 1)")));
   assert.ok(!nosource.map(plain).some((n) => n.includes("supports all initiatives")));
   // the words before Italy's quotation keep their mark, with "No source" on the first passage with none
-  assert.match(plain(nosource[0]), /^Several European States.*as when Italy said it No source \(no source\)$/s);
+  assert.match(plain(nosource[0]), /^Several European States.*as when Italy said itNo source \(no source\)$/s);
+  // the space the passage ends with comes after its mark, so that the tag never touches the next word
+  assert.ok(markup.includes('said it<span class="wts-nosource__tag" aria-hidden="true">No source</span><span class="wts-vh"> (no source)</span></span> <span class="wts-quote'));
 });
 
 test("as it was saved, before the display rule, the same quotation sat inside a passage with no source", () => {
@@ -147,7 +149,7 @@ test("every source cited has its quotations found in its own text", () => {
 test("the wait's cards and the question as read are the record's own", () => {
   const card = B.toHTML(B.card(byN[7]));
   assert.match(card, /<span class="wts-card__sym">S\/PV\.10043<\/span><span>14 November 2025<\/span>/);
-  assert.match(card, /<div class="wts-card__who">Benelux countries, Mr\. Maes<span class="wts-card__cited"> Cited<\/span><\/div>/);
+  assert.match(card, /<div class="wts-card__who"><span>Benelux countries, Mr\. Maes<\/span><span class="wts-card__cited"> Cited<\/span><\/div>/);
   assert.ok(B.textOf(B.card(byN[7])).includes(byN[7].text.slice(0, 40)));
   const plan = saved.events.find((e) => e.type === "plan").plan;
   assert.deepEqual(B.planChips(plan), ["Security Council", "2022 to today", "all countries"]);
