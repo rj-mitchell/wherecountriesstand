@@ -35,6 +35,8 @@ from wts_core.checks import curl_quotes
 from wts_core.dates import long_date
 
 from wcs.api.briefing_html import TEXT_NOTES
+from wcs.api.council_votes import LABEL as COUNCIL_LABEL
+from wcs.api.council_votes import CouncilVote, CouncilVotePages
 from wcs.api.topic_pages import TopicPages, final_and_sources
 from wcs.api.votes import (
     COUNTRY_PAGE_KINDS,
@@ -46,8 +48,10 @@ from wcs.api.votes import (
     _plural,
     _sort_name,
     e,
+    in_a_sentence,
     result_words,
     shorten,
+    slug_of,
     statements_html,
 )
 from wcs.rag.sources import VOTE_LABEL
@@ -73,12 +77,6 @@ CODE = re.compile(r"[a-z]{3}")
 OTHER_GROUPS = ("eu", "nato", "au", "au_suspended", "g77", "nam", "oic", "ldc", "lldc", "sids")
 INCOME = ("income:low", "income:lower_middle", "income:upper_middle", "income:high")
 REGION_NAMES = {key: name for name, key in REGIONS.items()}
-# Names the UN writes with "the" in a sentence ("What has the Russian Federation said about …")
-THE = {"Bahamas", "Comoros", "Congo", "Gambia", "Holy See", "Maldives", "Marshall Islands",
-       "Netherlands (Kingdom of the)", "Niger", "Philippines", "Solomon Islands", "Sudan"}
-THE_STARTS = ("Central African Republic", "Democratic People", "Democratic Republic", "Dominican Republic",
-              "German Democratic", "Lao People", "Republic of", "Russian Federation", "State of", "Syrian",
-              "Union of", "United ")
 _SINCE = re.compile(r"\bsince (\d{1,2} [A-Z][a-z]+ \d{4})\b")
 _LIVES_SPINE = re.compile(r'<svg class="wts-spine wts-cloth--lives".*?</svg>', re.S)
 
@@ -111,9 +109,8 @@ def votes_path_of(code: str) -> str:
     return f"/countries/{code.lower()}/votes.html"
 
 
-def in_a_sentence(name: str) -> str:
-    """The name as the UN writes it inside a sentence: "the Russian Federation", "Italy"."""
-    return f"the {name}" if name in THE or name.startswith(THE_STARTS) else name
+def council_path_of(code: str) -> str:
+    return f"/countries/{code.lower()}/security-council-votes.html"
 
 
 def terms(years: list[int]) -> list[str]:
@@ -198,6 +195,10 @@ class Entity:
         return votes_path_of(self.code)
 
     @property
+    def council_path(self) -> str:
+        return council_path_of(self.code)
+
+    @property
     def page_title(self) -> str:
         return f"{self.name} | {SITE_NAME}"
 
@@ -251,8 +252,10 @@ class CountryPages:
                  hidden_records: Callable[[], Any] = dict,
                  statements: Callable[[str], list[dict[str, Any]]] = lambda _code: [],
                  not_endorsed: str = "",
-                 briefings: Callable[[], bool] = lambda: True):
+                 briefings: Callable[[], bool] = lambda: True,
+                 council: CouncilVotePages | None = None):
         self.votes = votes
+        self.council = council or CouncilVotePages(votes)
         self.topics = topics
         self.records_dir = Path(parquet_dir) / "records"
         self.today = today
@@ -543,10 +546,13 @@ class CountryPages:
         if "p5" in groups:
             rows.append(("Security Council", "Permanent member"))
         else:
-            years = [y for y in self.council_years(x.code) if date(y, 1, 1) <= on]
+            # its years on the Council from the Council's voting data, from 1946 (decision 30); the meeting records
+            # since 1992 where that is not loaded
+            seat = [y for y in self.council.seat_years(x.code) if date(y, 1, 1) <= on]
+            years = seat or [y for y in self.council_years(x.code) if date(y, 1, 1) <= on]
             if years:
-                rows.append(("Security Council", e(f"Elected member in {and_list(terms(years))}, as the Council’s "
-                                                   "meeting records since 1992 show it")))
+                shown = "the Council’s voting data shows" if seat else "the Council’s meeting records since 1992 show"
+                rows.append(("Security Council", e(f"Elected member in {and_list(terms(years))}, as {shown} it")))
         others = [labels.get(g, g) for g in OTHER_GROUPS if g in groups]
         if others:
             rows.append(("Other groups", "<br>".join(e(g) for g in others)))
@@ -581,9 +587,10 @@ class CountryPages:
                 "statements of the countries a question names, where they have spoken on the subject.</p>"
                 "</form>")
 
-    INTRO = ("<p>Its most recent statements in the Security Council and the General Assembly’s General Debate, "
-             "newest first, with rights of reply as records of their own. A statement made on behalf of a group is "
-             "the group’s, and is not listed here.</p>")
+    INTRO = ("<p>Its most recent statements in the Security Council and the General Assembly (the General Debate, "
+             "and the Assembly’s other plenary meetings), newest first, with rights of reply as records of their own. "
+             "A statement made on behalf of a group is the group’s, and is not listed here.</p>")
+    EXPLANATIONS = 10
 
     def _statement_list(self, x: Entity, found: list[Statement]) -> str:
         items = []
@@ -705,6 +712,172 @@ class CountryPages:
                 + f'<p class="record-more"><a href="{x.votes_path}">Every recorded vote of {e(in_a_sentence(x.name))}, '
                 f"by session</a>: {_plural(len(cast), 'vote', 'votes')}, from {e(long_date(cast[-1][0].on))}.</p>")
 
+    # The Security Council's votes (decision 30)
+
+    def council_cast(self, x: Entity) -> list[tuple[CouncilVote, str]]:
+        end = x.last_day or self.today()
+        return [(v, how) for v, how in self.council.cast(x.code) if v.on <= end]
+
+    def sat(self, x: Entity) -> bool:
+        """Whether it has sat on the Council (by the voting data), or defeated a draft as a permanent member."""
+        return bool(self.council.seat_years(x.code) or self.council_cast(x) or self.council.vetoed(x.code))
+
+    @staticmethod
+    def _council_line(v: CouncilVote, how: str, result: str, recorded_as: str | None = None) -> str:
+        as_name = f" {e(recorded_as)}." if recorded_as else ""
+        return (f'<li><a href="{v.path}">{e(shorten(v.heading, VOTE_TITLE_MAX + 12))}</a>'
+                f'<span class="vote-index__meta">{e(long_date(v.on))}. Its vote: {COUNCIL_LABEL[how]}.{as_name} '
+                f"Result: {e(result)}.</span></li>")
+
+    def _council(self, x: Entity) -> str:
+        if not x.votes or not self.sat(x):
+            return ""
+        head = '<h2 id="council-votes">Votes in the Security Council</h2>'
+        period = PERIODS.get(x.code)
+        cast = self.council_cast(x)
+        if period:
+            cast = [(v, how) for v, how in cast if v.on >= period.until]
+        years = self.council.seat_years(x.code)
+        permanent = "p5" in self.countries.groups_on(x.code, x.last_day or self.today())
+        if permanent:
+            first = x.country.valid_from or (date(1991, 12, 24) if x.code == "RUS" else None)
+            terms_words = "A permanent member of the Council" + (
+                f", {first.year} to {x.last_day.year}" if x.last_day and first else
+                (" since 24 December 1991, when it continued the USSR’s seat" if x.code == "RUS" else ""))
+        elif years:
+            terms_words = f"Its terms on the Council, as its voting data shows them: {and_list(terms(years))}"
+        else:
+            terms_words = ""
+        parts = [head, "<p>How it voted in the Security Council’s votes: the resolutions adopted, from the UN’s voting "
+                       "data, and the drafts not adopted, from the Council’s meeting records. Counts and the list of "
+                       "votes only.</p>"]
+        if terms_words:
+            parts.append(f"<p>{e(terms_words)}.</p>")
+        if period:
+            parts.append(f"<p>{e(period.main_note)}</p>")
+        if cast:
+            last_years = sorted({v.on.year for v, _ in cast})[-YEARS_COUNTED:]
+            counts = {k: 0 for k in VOTES_IN_ORDER}
+            for v, how in cast:
+                if v.on.year in last_years:
+                    counts[how] += 1
+            rows = "".join(f'<tr><th scope="row">{COUNCIL_LABEL[k]}</th><td>{counts[k]:,}</td></tr>'
+                           for k in VOTES_IN_ORDER if counts[k] or k != "X")
+            span = and_list(terms(last_years))
+            parts.append('<table class="vote-totals country-totals"><caption>Its votes in its last '
+                         f"{_plural(len(last_years), 'year', 'years')} on the Council ({e(span)})</caption>"
+                         '<thead><tr><th scope="col">Vote</th><th scope="col">Votes</th></tr></thead>'
+                         f"<tbody>{rows}</tbody></table>")
+            latest = cast[:LATEST_VOTES]
+            which = "last" if x.last_day else "most recent"
+            parts.append(f'<h3 id="latest-council-votes">{e(its_latest(len(latest), which).replace("recorded vote", "Council vote"))}</h3>'
+                         '<ul class="vote-index">' + "".join(
+                             self._council_line(v, how, self.council.result_line(v), self._recorded_as(x, v.on))
+                             for v, how in latest) + "</ul>")
+        else:
+            parts.append("<p>The site holds no vote of its on the Council since the voting data begins.</p>")
+        if permanent:
+            vetoed = [v for v in self.council.vetoed(x.code) if not period or v.on >= period.until]
+            title = "Drafts not adopted owing to its negative vote"
+            intro = ("<p>Drafts that were not adopted, owing to the negative vote of a permanent member of the Council "
+                     "(commonly called a veto), where it voted against, newest first. Those from before the site’s "
+                     "Council records begin are as the UN Dag Hammarskjöld Library’s list of vetoes gives them.</p>")
+        else:
+            vetoed = [v for v, how in cast if not v.adopted and how == "N"]
+            title = "Drafts not adopted that it voted against"
+            intro = "<p>Drafts the Council did not adopt where it voted against, newest first.</p>"
+        if vetoed:
+            parts.append(f'<h3 id="council-not-adopted">{title}</h3>{intro}<ul class="vote-index">' + "".join(
+                f'<li><a href="{v.path}">{e(v.heading)}</a><span class="vote-index__meta">{e(long_date(v.on))}. '
+                f"{e(v.agenda)}{'.' if v.agenda else ''} {e(self.council.result_line(v))}.</span></li>"
+                for v in vetoed) + "</ul>")
+        if cast:
+            parts.append(f'<p class="record-more"><a href="{x.council_path}">Every Security Council vote of '
+                         f"{e(in_a_sentence(x.name))}, by year</a>: {_plural(len(self.council_cast(x)), 'vote', 'votes')}"
+                         f", from {e(long_date(self.council_cast(x)[-1][0].on))}.</p>")
+        parts.append('<p class="vote-source">All the Council’s votes: <a href="/security-council-votes.html">Votes in '
+                     "the Security Council</a>.</p>")
+        return "".join(parts)
+
+    def council_page(self, slug: str) -> str | None:
+        """Every Security Council vote it is listed in, by year, newest first."""
+        x = self.entity(slug)
+        if x is None or not x.votes:
+            return None
+        cast = self.council_cast(x)
+        if not cast:
+            return None
+        name = f"{x.name}: votes in the Security Council"
+        trail = [(SITE_NAME, "/"), (INDEX_NAME, INDEX_PATH), (x.name, x.path), (name, x.council_path)]
+        by_year: dict[int, list[tuple[CouncilVote, str]]] = {}
+        for v, how in cast:
+            by_year.setdefault(v.on.year, []).append((v, how))
+        first, last = cast[-1][0].on, cast[0][0].on
+        parts = [f'<p class="crumbs"><a href="{INDEX_PATH}">{INDEX_NAME}</a>: <a href="{x.path}">{e(x.name)}</a></p>',
+                 f"<h1>{e(name)}</h1>",
+                 f'<p class="lede">Every Security Council vote that lists {e(in_a_sentence(x.name))}: '
+                 f"{_plural(len(cast), 'vote', 'votes')}, from {e(long_date(first))} to {e(long_date(last))}, by "
+                 "year, newest first. The resolutions adopted are from the UN’s voting data, and the drafts not "
+                 "adopted from the Council’s meeting records.</p>",
+                 "<p>Each vote’s page gives how every member voted on it.</p>",
+                 *([f"<p>Votes to {e(long_date(ROC_LAST_DAY))} are the Republic of China’s, which held China’s seat "
+                    f"until then, and are marked “Recorded as China (Republic of China), to "
+                    f"{e(long_date(ROC_LAST_DAY))}”.</p>"] if x.code in PERIODS else []),
+                 '<nav class="country-jump" aria-label="Years"><ul class="session-index">'
+                 + "".join(f'<li><a href="#year-{y}">{y}</a>, <span class="session-index__meta">'
+                           f"{_plural(len(rows), 'vote', 'votes')}</span></li>" for y, rows in by_year.items())
+                 + "</ul></nav>"]
+        for y, rows in by_year.items():
+            parts.append(f'<h2 id="year-{y}">{y}</h2><ul class="vote-index">' + "".join(
+                f'<li><a href="{v.path}">{e(shorten(v.heading, LIST_TITLE_MAX + 12))}</a> <span class="vote-index__meta">'
+                f"{e(long_date(v.on))}: {COUNCIL_LABEL[how]}."
+                + (f" {e(r)}." if (r := self._recorded_as(x, v.on)) else "") + "</span></li>" for v, how in rows)
+                + "</ul>")
+        parts.append(self.council._source())
+        description = shorten(f"How {in_a_sentence(x.name)} voted in each of the Security Council’s {len(cast):,} "
+                              "votes that list it, by year, from the UN’s voting data and meeting records.",
+                              DESCRIPTION_MAX)
+        return self.page(title=f"{name} | {SITE_NAME}", description=description, path=x.council_path, trail=trail,
+                         main="".join(parts))
+
+    def _explanations(self, x: Entity) -> str:
+        """Its 10 most recent explanations of vote in the General Assembly that the record ties to a recorded vote
+        with a page (decision 31), each linked to the vote's page."""
+        files = sorted((self.records_dir / "ga").glob("*.parquet")) if (self.records_dir / "ga").is_dir() else []
+        if not files or not x.votes:
+            return ""
+        hidden = set(self.hidden_records() or ())
+        rows = self.votes._con.execute(f"""
+            SELECT record_id, date, symbol, eov, explains, text, url FROM {self._source(files)}
+            WHERE country_code = ? AND coalesce(on_behalf_of, '') = '' AND eov IN ('before', 'after')
+                  AND explains IS NOT NULL
+            ORDER BY date DESC, symbol DESC, speech_number DESC LIMIT 60""", [x.code]).fetchall()
+        cat = self.votes.catalog()
+        items = []
+        for record_id, on, symbol, eov, explains, text, url in rows:
+            if record_id in hidden:
+                continue
+            linked = [cat.votes[slug] for k in explains.split("|") if (slug := slug_of(k)) in cat.votes]
+            if not linked:
+                continue
+            words = (text or "").split()
+            first = curl_quotes(" ".join(words[:FIRST_WORDS])) + (" …" if len(words) > FIRST_WORDS else "")
+            votes = and_list([f'<a href="{v.path}">{e(v.name)}</a>' for v in linked])
+            items.append('<li class="country-statement">'
+                         f'<p class="country-statement__meta">{e(long_date(on))}, '
+                         f"{'before' if eov == 'before' else 'after'} the vote on {votes}, "
+                         f'<a href="{e(url)}"{OPENED}>{e(symbol)}</a></p>'
+                         f'<p class="country-statement__agenda">{e(linked[0].title)}</p>'
+                         f"<blockquote><p>{e(first)}</p></blockquote></li>")
+            if len(items) >= self.EXPLANATIONS:
+                break
+        if not items:
+            return ""
+        return ('<h2 id="explanations">Its explanations of vote</h2>'
+                "<p>Its most recent statements in explanation of a recorded vote in the General Assembly, newest "
+                "first, each with the vote it explains. Only those the record ties to the vote are listed.</p>"
+                f'<ol class="country-statements">{"".join(items)}</ol>')
+
     def _topics(self, x: Entity) -> str:
         if self.topics is None:
             return ""
@@ -808,6 +981,8 @@ class CountryPages:
             self._form(x),
             self._statements(x),
             self._votes(x),
+            self._explanations(x),
+            self._council(x),
             self._period(x),
             self._topics(x),
             self._published(x),
@@ -867,13 +1042,15 @@ class CountryPages:
         asked = re.sub(r"(?:\.html)?/*$", "", rest.strip().strip("/"), flags=re.I).lower()
         if not asked:
             return INDEX_PATH
-        m = re.fullmatch(r"([a-z]{3})(?:/votes(?:\.html)?)?", asked)
+        m = re.fullmatch(r"([a-z]{3})(?:/(votes|security-council-votes)(?:\.html)?)?", asked)
         if m is None:
             return None
         x = self.entity(m[1])
         if x is None:
             return None
-        if asked.endswith("votes"):
+        if m[2] == "security-council-votes":
+            return x.council_path if x.votes and self.council_cast(x) else None
+        if m[2] == "votes":
             return x.votes_path if x.votes and self.vote_count(x.code)[0] else None
         return x.path
 
@@ -887,8 +1064,13 @@ class CountryPages:
             n, newest_vote = self.vote_count(x.code) if x.votes else (0, "")
             newest = summary.get(x.code, {}).get("newest")
             when = max(newest_vote, newest.isoformat() if newest else "")
+            council = self.council_cast(x) if x.votes else []
+            if council:
+                when = max(when, council[0][0].on.isoformat())
             rows.append((x.path, when))
             if n:
                 rows.append((x.votes_path, newest_vote))
+            if council:
+                rows.append((x.council_path, council[0][0].on.isoformat()))
         out.append((INDEX_PATH, max((when for _, when in rows if when), default="")))
         return out + rows

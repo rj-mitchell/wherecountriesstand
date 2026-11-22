@@ -94,6 +94,8 @@ from wts_core.usage import (
 )
 
 from wcs import adapters
+from wcs.api.council_votes import INDEX_PATH as COUNCIL_INDEX
+from wcs.api.council_votes import CouncilVotePages
 from wcs.api.country_pages import INDEX_PATH as COUNTRIES_INDEX
 from wcs.api.country_pages import CountryPages
 from wcs.api.measurement import NEVER_SERVED, SCRIPT, measure_tag, privacy_draft, with_measurement
@@ -303,15 +305,25 @@ def data_stamp(settings: Settings) -> str:
     return str(int(path.stat().st_mtime)) if path.exists() else "none"
 
 
+def council_first_record(settings: Settings) -> Any:
+    """The first day of the site's Security Council records (where drafts not adopted are read from)."""
+    from wcs.sources.council import records_begin
+
+    try:
+        return records_begin(settings)
+    except Exception:  # noqa: BLE001 - a page is served whatever the record's state
+        return None
+
+
 def coverage(settings: Settings) -> dict[str, Any]:
     """First and last date, and number of speeches, for each source; the votes' range."""
     import duckdb
 
-    from wcs.store.parquet import record_path, votes_path, years
+    from wcs.store.parquet import council_votes_path, record_path, votes_path, years
 
     out: dict[str, Any] = {}
     con = duckdb.connect()
-    for source in ("sc", "gd"):
+    for source in ("sc", "gd", "ga"):
         files = [str(record_path(settings.parquet_dir, source, y)) for y in years(settings.parquet_dir, source)]
         if files:
             first, last, n = con.execute(f"SELECT min(date), max(date), count(*) FROM read_parquet({files!r}, "
@@ -321,10 +333,15 @@ def coverage(settings: Settings) -> dict[str, Any]:
         first, last, n = con.execute(f"SELECT min(date), max(date), count(DISTINCT undl_id) FROM "
                                      f"read_parquet('{votes_path(settings.parquet_dir)}')").fetchone()
         out["votes"] = {"from": first, "to": last, "resolutions": n}
+    if council_votes_path(settings.parquet_dir).exists():
+        first, last, n = con.execute(f"SELECT min(date), max(date), count(DISTINCT vote_id) FROM "
+                                     f"read_parquet('{council_votes_path(settings.parquet_dir)}')").fetchone()
+        out["council_votes"] = {"from": first, "to": last, "votes": n}
     return out
 
 
-COVERAGE_LABELS = (("gd", "General Debate"), ("sc", "Security Council debates"), ("votes", "General Assembly votes"))
+COVERAGE_LABELS = (("gd", "General Debate"), ("ga", "General Assembly debates"), ("sc", "Security Council debates"),
+                   ("votes", "General Assembly votes"), ("council_votes", "Security Council votes"))
 COVERAGE_LIST = re.compile(r'(<dl class="facts" id="coverage">).*?(</dl>)', re.S)
 
 
@@ -543,9 +560,11 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     parts = site_parts(settings, db, clock, random)
     record = SqliteBriefingLog(db, clock=clock)  # one record for each question asked (wts-core docs/adr/0012)
     votes = VotePages(settings)  # a page for each General Assembly recorded vote (decision 26)
+    council = CouncilVotePages(votes)  # and for each Security Council vote (decision 30), under /votes/ too
+    council.first_record = lambda: remembered("council-first", lambda: council_first_record(settings), ttl=3600)
     replies = open_replies(db, parts.archive, clock,
                            record_exists=lambda record_id: has_record(open_index(settings.index_dir), record_id),
-                           vote_exists=votes.exists)
+                           vote_exists=lambda slug: votes.exists(slug) or council.exists(slug))
     desk = parts.desk(configuration(settings, record), log=record,
                       hooks=SiteHooks(replies.all_hidden, parts.archive),
                       group_of=lambda card: card.get("group"))  # the record counts each briefing's sources by group
@@ -554,6 +573,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     app = FastAPI(title="Where Countries Stand", docs_url=None, redoc_url=None, openapi_url=None)
     app.state.parts, app.state.replies, app.state.record, app.state.db = parts, replies, record, db
     app.state.votes = votes
+    app.state.council = council
     # a page for each topic briefing, written on the server (decision 27)
     topics = TopicPages(settings, db, parts.archive, replies.all_hidden)
     app.state.topics = topics
@@ -814,7 +834,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         votes, topics, settings.parquet_dir, today=lambda: clock.now().date(),
         hidden_records=lambda: hidden_records(replies.all_hidden()),
         statements=lambda code: [as_shown(s) for s in replies.published(items=[], about=code)],
-        not_endorsed=NOT_ENDORSED, briefings=model_available)
+        not_endorsed=NOT_ENDORSED, briefings=model_available, council=council)
     app.state.countries = country_pages
 
     site = Path(settings.section("site").get("dir") or SITE_DIR)
@@ -870,6 +890,10 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         hidden = {h["item"] for h in replies.all_hidden()}
         return [(base + path, when) for path, when in votes.sitemap(lambda path: path in hidden)]
 
+    def council_rows(base: str) -> list[tuple[str, str]]:
+        hidden = {h["item"] for h in replies.all_hidden()}
+        return [(base + path, when) for path, when in council.sitemap(lambda path: path in hidden)]
+
     def topic_rows(base: str) -> list[tuple[str, str]]:
         return [(base + path, when) for path, when in topics.sitemap()]
 
@@ -883,7 +907,8 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         date it has for a page in it, and none if it has none."""
         base = site_url(settings, request)
         entries = []
-        for name, rows in (("pages", page_rows(base)), ("votes", vote_rows(base)), ("topics", topic_rows(base)),
+        for name, rows in (("pages", page_rows(base)), ("votes", vote_rows(base)),
+                           ("council-votes", council_rows(base)), ("topics", topic_rows(base)),
                            ("countries", country_rows(base))):
             newest = max((when for _, when in rows if when), default="")
             entries.append(f"  <sitemap><loc>{base}/sitemap-{name}.xml</loc>"
@@ -903,6 +928,12 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         on it: a date from the record, never one made up (5,730 votes in the record of 15 October 2026, well
         within a sitemap's 50,000)."""
         return urlset(vote_rows(site_url(settings, request)))
+
+    @app.api_route("/sitemap-council-votes.xml", methods=["GET", "HEAD"], include_in_schema=False)
+    def sitemap_council_votes(request: Request):
+        """The Security Council votes' index, each year's list and each vote's page that is not hidden, dated by the
+        newest vote on it (decision 30)."""
+        return urlset(council_rows(site_url(settings, request)))
 
     @app.api_route("/sitemap-topics.xml", methods=["GET", "HEAD"], include_in_schema=False)
     def sitemap_topics(request: Request):
@@ -976,7 +1007,40 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
             found = [as_shown(s) for s in replies.published(items=[Item(address=path)])]
             return html_page(text.replace(STATEMENTS_HERE, statements_html(found, NOT_ENDORSED), 1)
                              .replace(SITE_MARK, base))
-        to = votes.moved(rest)
+        elif name and SLUG.fullmatch(name) and council.exists(name):  # a Security Council vote (decision 30)
+            path = f"/votes/{name}.html"
+            hidden = replies.hidden(path)
+            if hidden is not None:
+                return html_page((council.hidden_page(name, str(hidden["note"])) or "").replace(SITE_MARK, base))
+            text = council.vote_page(name) or ""
+            found = [as_shown(s) for s in replies.published(items=[Item(address=path)])]
+            return html_page(text.replace(STATEMENTS_HERE, statements_html(found, NOT_ENDORSED), 1)
+                             .replace(SITE_MARK, base))
+        to = votes.moved(rest) or council.moved(rest)
+        if to is not None and to != request.url.path:
+            return votes_moved(request, to)
+        raise HTTPException(404, "Not found")
+
+    # The Security Council's votes (decision 30): the index and each year's list; each vote is under /votes/ above.
+
+    @app.api_route(COUNCIL_INDEX, methods=["GET", "HEAD"], include_in_schema=False)
+    def council_index(request: Request):
+        return html_page(council.index().replace(SITE_MARK, site_url(settings, request)))
+
+    def council_index_moved(request: Request) -> RedirectResponse:
+        return votes_moved(request, COUNCIL_INDEX)
+
+    for other in ("/security-council-votes", "/security-council-votes/", "/security-council-votes.html/"):
+        app.add_api_route(other, council_index_moved, methods=["GET", "HEAD"], include_in_schema=False)
+
+    @app.api_route("/security-council-votes/{rest:path}", methods=["GET", "HEAD"], include_in_schema=False)
+    def council_years(request: Request, rest: str):
+        m = re.fullmatch(r"(\d{4})\.html", rest)
+        if m:
+            text = council.year_page(int(m[1]))
+            if text is not None:
+                return html_page(text.replace(SITE_MARK, site_url(settings, request)))
+        to = council.year_moved(rest)
         if to is not None and to != request.url.path:
             return votes_moved(request, to)
         raise HTTPException(404, "Not found")
@@ -1038,9 +1102,10 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     @app.api_route("/countries/{rest:path}", methods=["GET", "HEAD"], include_in_schema=False)
     def country_page(request: Request, rest: str):
         base = site_url(settings, request)
-        m = re.fullmatch(r"([a-z]{3})(/votes)?\.html", rest)
+        m = re.fullmatch(r"([a-z]{3})(/votes|/security-council-votes)?\.html", rest)
         if m:
-            text = country_pages.votes_page(m[1]) if m[2] else country_pages.country_page(m[1])
+            text = country_pages.votes_page(m[1]) if m[2] == "/votes" else \
+                country_pages.council_page(m[1]) if m[2] else country_pages.country_page(m[1])
             if text is not None:
                 return html_page(text.replace(SITE_MARK, base))
         to = country_pages.moved(rest)

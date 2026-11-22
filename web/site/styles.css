@@ -495,6 +495,8 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .vote-totals td, .vote-totals thead th:last-child { text-align: end; padding-inline-end: 0; }
 .vote-list { margin: 0 0 1rem; padding: 0; list-style: none; columns: 10rem; column-gap: 1.25rem; }
 .vote-list li { break-inside: avoid; padding-block: 0.15rem; border-block-end: 1px solid var(--rule-faint); }
+/* a permanent member of the Security Council, and the source of a fact, in words (decision 30) */
+.vote-list__p5, .vote-facts__note { color: var(--ink-muted); font-size: 0.875em; }
 .vote-index, .session-index { margin: 0 0 1rem; padding: 0; list-style: none; }
 .vote-index li, .session-index li { padding-block: 0.6rem; border-block-end: 1px solid var(--rule-faint); }
 .vote-index li:first-child, .session-index li:first-child { border-block-start: 1px solid var(--rule-faint); }

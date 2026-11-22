@@ -15,6 +15,27 @@ A run never starts without a limit: `[eval] max_cost_usd` in `config/settings.to
 its spending reaches the limit it stops cleanly between questions: the rest are marked as not asked, the run is
 saved, and it does not pass. It says what it spent as it ends, and the run file keeps it (`cost_usd`).
 
+## Search with the plenary record (22 November 2026)
+
+Before the plenary record ([decision 31](DECISIONS.md#31-the-rest-of-the-general-assemblys-plenary-record-with-explanations-of-vote))
+joins an index far larger than the samples here, six fixed questions were searched over a development index (the
+Security Council's records of seven meetings of 2022 to 2025, by words and with the offline embedder), first alone
+(295 passages) and then with ten plenary meetings of 1995 to 2025 (1,008). With the plenary record the questions
+that match its debates draw on it, and the others are as they were:
+
+| Question | Before | After |
+|---|---|---|
+| The war in Ukraine and sovereignty | 8 from the Council (2022, 2025) | 5 from the Council, 3 from the 11th emergency special session (2022) |
+| Ceasefire in Gaza and humanitarian access | 8 from the Council (2024) | 4 from the Council, 4 from the Assembly's debate on Palestine (2024) |
+| Peaceful settlement of the question of Palestine | 8 from the Council, mostly off the subject | 7 from the Assembly's debate on the question of Palestine (2024), 1 from the Council |
+| Nuclear weapons in outer space | 8 from the Council's vote of May 2024 | The same |
+| Human rights situation in Myanmar | 8 from the Council on Gaza, all off the subject | China's statement on Myanmar (2015) and Myanmar's own (2022) first |
+| Veto of a draft resolution | 8 from the Council's two vetoes of 2024 | 6 of the same, then 2 from the 10th emergency special session |
+
+Each of the ten topic briefings' questions (decision 27) still finds its 12 to 24 records and its votes over the
+same index, with plenary statements among them. Run `uv run wcs evaluate` on the server after the backfill, and
+`wcs eval run` before the next change to how evidence is found.
+
 ## The first baseline on the real archive (19 November 2026)
 
 The owner ran the whole test set on the server on 19 November 2026, in two runs with the same configuration,

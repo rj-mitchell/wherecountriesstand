@@ -27,6 +27,10 @@ sc_after_meeting = 9524
 # and until then the General Debate website fills in. From the 79th session (2024): the corpus's texts for 2024 are the
 # delegations' own, as prepared, and for 2025 an AI transcript of the interpretation, not the record.
 gd_from_session = 79
+# The rest of the General Assembly's plenary record (decision 31): `wcs backfill-plenary` reads every plenary meeting
+# from this session on (the 49th, 1994: earlier records print speakers' names and headings in capitals, or are scans,
+# which the parser cannot read reliably), and each update the two latest sessions and the emergency special sessions.
+plenary_from_session = 49
 # Until a session's official records are out, take its statements from the UN's General Debate website
 # (gadebate.un.org; wcs.sources.gadebate), labelled as not yet the official record (docs/DECISIONS.md, 12).
 gd_website = true
@@ -45,6 +49,10 @@ sc_speeches = "https://dataverse.harvard.edu/api/access/datafile/10809805"
 ungd_guestbook = { institution = "Where They Stand", position = "Project lead", purpose = "Research" }
 # UN Digital Library: General Assembly voting data (non-commercial use, with attribution).
 votes_record = "https://digitallibrary.un.org/record/4060887"
+# UN Digital Library: Security Council voting data, adopted resolutions (non-commercial use, with attribution;
+# decision 30), and the Dag Hammarskjöld Library's list of vetoes, read from its research guide.
+council_votes_record = "https://digitallibrary.un.org/record/4055387"
+veto_list = "https://research.un.org/en/docs/sc/quick/veto"
 # Where a document symbol resolves to the document itself.
 undocs = "https://undocs.org/en/"
 

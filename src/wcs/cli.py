@@ -105,6 +105,12 @@ def bootstrap(embed_hours: float = typer.Option(0, help="embed for up to this lo
     if not votes_path(s.parquet_dir).exists():
         typer.echo("General Assembly votes: downloading and converting")
         votes.ingest(s, votes.fetch(s))
+    from wcs.sources import council
+
+    if council.latest_csv(s) is None:
+        typer.echo("Security Council votes: downloading the voting data and the list of vetoes")
+        council.fetch(s)
+        council.fetch_veto_list(s)
     start = live_from(s)
     if not [y for y in years(s.parquet_dir, "sc") if y < start.year]:
         typer.echo("Security Council corpus: downloading (about 510 MB) and loading")
@@ -134,6 +140,10 @@ def bootstrap(embed_hours: float = typer.Option(0, help="embed for up to this lo
     update_general_debate(s, ref, undocs.UNDocs(s), Report(started="bootstrap"),
                           sessions=range(replies_since, gd_from_session(s)))
     typer.echo(f"  languages of {ungd.add_languages(s, gd_from_session(s))} corpus statements, from the UN's records")
+    typer.echo("Security Council votes: the drafts not adopted, from the records")
+    built = council.build(s, ref, undocs.UNDocs(s))
+    council.mark_built(s)
+    typer.echo(f"  {built.resolutions} resolutions and {built.drafts} drafts not adopted; {len(built.problems)} problems")
     typer.echo("Keyword index")
     n = Indexer(s, ref).index_all(SOURCES)
     typer.echo(f"  {n} passages")
@@ -192,6 +202,8 @@ def ingest_sc(years: str = typer.Option(None, help="e.g. 2015 or 2010-2015")) ->
 def update(votes: bool = typer.Option(True, help="check the voting data"),
            sc: bool = typer.Option(True, help="check for new Security Council records"),
            gd: bool = typer.Option(True, help="check for new General Debate records"),
+           plenary: bool = typer.Option(True, help="check for new General Assembly plenary records (the current and "
+                                                   "last sessions)"),
            index: bool = typer.Option(True, help="re-index the years that changed"),
            embed_seconds: float = typer.Option(600, help="embed new passages for up to this long (0: none)"),
            max_new: int = typer.Option(None, help="process at most this many records (for a first, partial run)"),
@@ -202,7 +214,7 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
     from wcs.update import run
 
     report = run(load_settings(), do_votes=votes, do_sc=sc, do_gd=gd, do_index=index, embed_seconds=embed_seconds or None,
-                 max_new=max_new)
+                 max_new=max_new, do_plenary=plenary)
     if as_json:
         typer.echo(json.dumps(report.to_dict(), default=str, indent=1))
     else:
@@ -213,6 +225,10 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
                    f"passages indexed: {report.indexed}; embedded: {report.embedded}")
         if report.votes:
             typer.echo(f"votes: {report.votes}")
+        if report.council_votes:
+            typer.echo(f"Security Council votes: {report.council_votes}")
+        for key, info in report.plenary.get("sessions", {}).items():
+            typer.echo(f"General Assembly plenary, {key}: {info['parsed']} meetings, {info['statements']} statements")
         for session, info in report.gd.items():
             typer.echo(f"General Debate, session {session}: {info['statements']} statements and {info['replies']} "
                        f"rights of reply from {info['meetings']} meetings{' (complete)' if info['concluded'] else ''}; "
@@ -305,6 +321,15 @@ def usage(days: int = typer.Option(7, help="list each day's spend for today and 
 # names does its work and prints what it always printed, and first says on standard error what it is called now
 # (wts-core 0.3.0; ``OLD_NAME`` below). Nothing of the site's own reads that: its timers run none of them.
 
+def _vote_exists(votes: Any) -> Any:
+    """Whether a vote has a page at /votes/<slug>.html: the General Assembly's (decision 26) or the Security
+    Council's (decision 30)."""
+    from wcs.api.council_votes import CouncilVotePages
+
+    council = CouncilVotePages(votes)
+    return lambda slug: votes.exists(slug) or council.exists(slug)
+
+
 def _clock() -> Clock:
     return CLOCK
 
@@ -327,7 +352,7 @@ def _replies() -> Replies:
     db = _state()
     return open_replies(db, _briefings(db), _clock(),
                         record_exists=lambda record_id: has_record(open_index(load_settings().index_dir), record_id),
-                        vote_exists=VotePages(load_settings()).exists)
+                        vote_exists=_vote_exists(VotePages(load_settings())))
 
 
 def _report_lines(r: Mapping[str, Any]) -> list[str]:
@@ -686,6 +711,44 @@ def backfill_replies(since: int = typer.Option(..., help="first session, e.g. 48
         typer.echo(f"could not parse: {', '.join(report.failed)}")
 
 
+@app.command("backfill-plenary")
+def backfill_plenary(since: int = typer.Option(None, help="first regular session (default: [live] "
+                                                          "plenary_from_session, 49: 1994)"),
+                     until: int = typer.Option(None, help="last regular session (default: two before the one open "
+                                                          "now; the update keeps those two)"),
+                     hours: float = typer.Option(None, help="stop starting new records after this long "
+                                                            "(resumable)"),
+                     max_new: int = typer.Option(None, help="download at most this many records"),
+                     gaps: int = typer.Option(400, help="numbers the catalogue skipped, tried on ODS, per session"),
+                     sessions: list[str] = typer.Option(None, help="only these sessions: 80, es-11, s-27")) -> None:
+    """The rest of the General Assembly's plenary record (decision 31): every plenary meeting of past sessions, the
+    emergency special sessions and the special sessions, newest first, through the same client, cache and manifest
+    as the update. Resumable: stop it at any time and run it again. It takes no update lock and leaves the index to
+    the update, which indexes and embeds the years it writes on its next runs; it shares one manifest with the update
+    safely. Run it beside the live site, at low priority (docs/OPERATIONS.md)."""
+    import time
+
+    from wcs.reference.countries import countries
+    from wcs.sources import undocs, unga
+    from wcs.update import Report, backfill_plenary_sessions, plenary_from_session, update_plenary
+
+    s = load_settings()
+    first = since or plenary_from_session(s)
+    last = until or unga.current_session() - 2
+    keys = list(sessions) if sessions else backfill_plenary_sessions(first, last)
+    report = Report(started="backfill-plenary")
+    deadline = time.monotonic() + hours * 3600 if hours else None
+    written = update_plenary(s, countries(), undocs.UNDocs(s), report, keys, max_new=max_new, probe_misses=12,
+                             gaps=gaps, deadline=deadline)
+    for key, info in report.plenary.get("sessions", {}).items():
+        typer.echo(f"{key}: {info['parsed']} meetings ({info['fetched']} fetched now, {info['reparsed']} read again "
+                   f"from the cache, {info['missing']} not published), {info['statements']} statements; "
+                   f"explanations of vote: {info['explanations']}")
+    typer.echo(f"years written: {sorted(written)}; the next `wcs update` indexes them")
+    if report.failed:
+        typer.echo(f"could not parse: {', '.join(report.failed[:20])}")
+
+
 @app.command("ingest-gd")
 def ingest_gd(years: str = typer.Option(None)) -> None:
     """Load General Debate statements (from data/raw/ungd/) into the Parquet store (the sessions before [live]
@@ -721,6 +784,31 @@ def fetch_votes(force: bool = False) -> None:
     from wcs.sources import votes
 
     typer.echo(votes.fetch(load_settings(), force=force))
+
+
+@app.command("council-votes")
+def council_votes(fetch: bool = typer.Option(True, help="download a new voting data file and the list of vetoes "
+                                                       "first"),
+                  max_fetch: int = typer.Option(40, help="records of listed vetoes read again from the UN's PDFs, "
+                                                          "at most")) -> None:
+    """The Security Council's votes (decision 30): its voting data, the UN Library's list of vetoes, and the drafts
+    not adopted read from the stored Council records, checked against the list. The update does this itself; this
+    is for a first load or after changing how the drafts are read."""
+    from wcs.reference.countries import countries
+    from wcs.sources import council, undocs
+
+    s = load_settings()
+    if fetch:
+        typer.echo(f"voting data: {council.fetch(s)}")
+        typer.echo(f"list of vetoes: {council.fetch_veto_list(s)}")
+    built = council.build(s, countries(), undocs.UNDocs(s), max_fetch=max_fetch)
+    council.mark_built(s)
+    typer.echo(f"{built.resolutions} resolutions; {built.drafts} drafts not adopted ({built.vetoes_found} vetoes and "
+               f"{built.failed_for_votes} without the votes needed, read from the records since "
+               f"{built.first_record}; {built.vetoes_from_list} vetoes from the list alone); {built.vetoes_listed} "
+               f"vetoes listed since the records begin; {len(built.from_pdfs)} records read from the UN's PDFs")
+    for p in built.problems:
+        typer.echo(f"problem: {p}")
 
 
 @app.command("ingest-votes")
@@ -802,7 +890,7 @@ def stats() -> None:
     from wcs.store.parquet import votes_path, years
 
     s = load_settings()
-    for src in ("sc", "gd"):
+    for src in ("sc", "gd", "ga"):
         ys = years(s.parquet_dir, src)
         typer.echo(f"{src}: {len(ys)} years" + (f" ({ys[0]}-{ys[-1]})" if ys else ""))
     typer.echo(f"votes: {'loaded' if votes_path(s.parquet_dir).exists() else 'not loaded'}")

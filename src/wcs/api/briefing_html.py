@@ -95,11 +95,17 @@ def source_date(s: Mapping[str, Any]) -> str:
     return str(s.get("date") or "")[:4] if s.get("date_precision") == "session" else long_date(s.get("date"))
 
 
+def vote_words(s: Mapping[str, Any]) -> list[str]:
+    """A vote's kind and body: "Recorded vote", "General Assembly"; a Security Council vote (decision 30) is "Vote",
+    "Security Council", as its records do not call it a recorded vote."""
+    return ["Vote", "Security Council"] if s.get("body") == "Security Council" else ["Recorded vote", "General Assembly"]
+
+
 def chip_label(s: Mapping[str, Any] | None) -> str:
     if not s:
         return ""
     if s.get("kind") == "vote":
-        return ", ".join(["Recorded vote", "General Assembly", long_date(s.get("date"))])
+        return ", ".join([*vote_words(s), long_date(s.get("date"))])
     who = s.get("on_behalf_of") or s.get("country_name") or s.get("speaker_name") or "Speaker"
     return ", ".join(x for x in (who, s.get("body"), source_date(s)) if x)
 
@@ -473,9 +479,10 @@ def source_card(s: Mapping[str, Any]) -> Node:
     if s.get("kind") == "vote":
         t = s.get("totals") or {}
         return h("li", {"class": "source source--vote", "id": f"s{n}"},
-                 h("p", {"class": "source__meta"}, f"General Assembly, recorded vote, {long_date(s.get('date'))}"),
-                 h("p", {"class": "source__speaker"}, h("b", {}, f"Resolution {s.get('resolution')}"),
-                   f" {s.get('title') or ''}"),
+                 h("p", {"class": "source__meta"},
+                   f"{vote_words(s)[1]}, {vote_words(s)[0].lower()}, {long_date(s.get('date'))}"),
+                 h("p", {"class": "source__speaker"},
+                   h("b", {}, s.get("vote_name") or f"Resolution {s.get('resolution')}"), f" {s.get('title') or ''}"),
                  h("p", {"class": "procedural"},
                    f"{t.get('yes')} in favour, {t.get('no')} against, {t.get('abstain')} abstaining"),
                  h("p", {"class": "source__links"},
@@ -515,7 +522,7 @@ def source_card(s: Mapping[str, Any]) -> Node:
 
 # ---------- the question as read (app.js's ``chips`` and ``summary``) ----------
 
-BODY = {"sc": "Security Council", "gd": "General Assembly"}
+BODY = {"sc": "Security Council", "gd": "General Assembly", "ga": "General Assembly plenary meetings"}
 
 
 def plan_chips(plan: Mapping[str, Any], names: Mapping[str, str] | None = None,

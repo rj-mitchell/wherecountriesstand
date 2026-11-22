@@ -22,13 +22,14 @@ from wcs.store.parquet import votes_path
 log = logging.getLogger(__name__)
 
 
-def raw_dir(settings: Settings) -> Path:
-    return settings.raw_dir / "votes"
+def raw_dir(settings: Settings, folder: str = "votes") -> Path:
+    return settings.raw_dir / folder
 
 
-def file_url(settings: Settings) -> str:
-    """The current CSV's address, read from the record's MARC export (the file name carries its date)."""
-    record = settings.sources["votes_record"].rstrip("/")
+def file_url(settings: Settings, record_key: str = "votes_record") -> str:
+    """The current CSV's address, read from the record's MARC export (the file name carries its date). The
+    Security Council's voting data (``wcs.sources.council``) is found the same way, by its own record."""
+    record = settings.sources[record_key].rstrip("/")
     xml = httpx.get(f"{record}/export/xm", timeout=60, follow_redirects=True).text
     for url in re.findall(r"<subfield code=\"u\">([^<]+\.csv)</subfield>", xml):
         return url
@@ -48,10 +49,11 @@ def file_date(name: str) -> date | None:
         return None
 
 
-def fetch(settings: Settings, force: bool = False) -> Path:
-    """Download the current CSV (about 370 MB), then delete the ones it supersedes."""
-    url = file_url(settings)
-    out = raw_dir(settings) / url.rsplit("/", 1)[-1]
+def fetch(settings: Settings, force: bool = False, record_key: str = "votes_record", folder: str = "votes") -> Path:
+    """Download the current CSV (about 370 MB for the General Assembly, 16 MB for the Security Council), then delete
+    the ones it supersedes."""
+    url = file_url(settings) if record_key == "votes_record" else file_url(settings, record_key)
+    out = raw_dir(settings, folder) / url.rsplit("/", 1)[-1]
     if out.exists() and not force:
         return out
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -63,24 +65,24 @@ def fetch(settings: Settings, force: bool = False) -> Path:
             for chunk in r.iter_bytes(1 << 20):
                 fh.write(chunk)
     tmp.replace(out)
-    for old in superseded(settings, out):
+    for old in superseded(settings, out, folder):
         log.info("deleting %s, superseded by %s", old.name, out.name)
         old.unlink()
     return out
 
 
-def superseded(settings: Settings, current: Path) -> list[Path]:
+def superseded(settings: Settings, current: Path, folder: str = "votes") -> list[Path]:
     """The other CSVs with an earlier date in their name than ``current``'s (one with no date is left alone)."""
     new = file_date(current.name)
     if new is None:
         return []
-    return [p for p in raw_dir(settings).glob("*.csv")
+    return [p for p in raw_dir(settings, folder).glob("*.csv")
             if p != current and (d := file_date(p.name)) is not None and d < new]
 
 
-def latest_csv(settings: Settings) -> Path | None:
+def latest_csv(settings: Settings, folder: str = "votes") -> Path | None:
     """The CSV with the latest date in its name (by date, not by name)."""
-    found = list(raw_dir(settings).glob("*.csv"))
+    found = list(raw_dir(settings, folder).glob("*.csv"))
     return max(found, key=lambda p: (file_date(p.name) or date.min, p.name)) if found else None
 
 

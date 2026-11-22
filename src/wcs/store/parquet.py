@@ -1,8 +1,9 @@
 """Zstd-compressed Parquet storage: one file per source and year.
 
 Speeches are stored at ``parquet/records/<source>/<year>.parquet`` and replaced whole when a source is reloaded
-(the corpora are published as complete releases, not daily corrections). Votes are one file,
-``parquet/votes.parquet``.
+(the corpora are published as complete releases, not daily corrections). The General Assembly's votes are one file,
+``parquet/votes.parquet``, and the Security Council's another beside it, ``parquet/council_votes.parquet``
+(decision 30).
 """
 
 from __future__ import annotations
@@ -20,7 +21,8 @@ import pyarrow.parquet as pq
 # names the group in ``on_behalf_of``: it is the group's statement, not the country's own (docs/DECISIONS.md, 7).
 RECORD_SCHEMA = pa.schema([
     ("record_id", pa.string()),         # "sc:S/PV.7565:0004", "gd:78:GBR"
-    ("source", pa.string()),            # "sc" (Security Council debates), "gd" (General Debate)
+    ("source", pa.string()),            # "sc" (Security Council debates), "gd" (General Debate), "ga" (the General
+                                        # Assembly's other plenary statements, decision 31)
     ("body", pa.string()),              # "Security Council", "General Assembly"
     ("date", pa.date32()),
     ("date_precision", pa.string()),    # "day"; "session" for the General Debate, whose day is not recorded
@@ -47,6 +49,11 @@ RECORD_SCHEMA = pa.schema([
     # before the record is published), "transcript" (an AI transcript of the English interpretation). Null or
     # "record" otherwise. Added in 2026: files written before have no such column.
     ("text_source", pa.string()),
+    # a General Assembly plenary statement made in explanation of vote (decision 31): "before" or "after" the vote,
+    # or "position" (a decision taken without a vote); and the recorded votes it explains, where that is certain
+    # ("A/RES/79/81", joined with "|"). Null for every other record, and absent from files written before.
+    ("eov", pa.string()),
+    ("explains", pa.string()),
 ])
 
 VOTE_SCHEMA = pa.schema([
@@ -68,6 +75,43 @@ VOTE_SCHEMA = pa.schema([
     ("total_abstentions", pa.int32()),
     ("total_non_voting", pa.int32()),
     ("total_ms", pa.int32()),
+    ("url", pa.string()),
+])
+
+
+# One row per member per Security Council vote (decision 30): the resolutions in the UN Dag Hammarskjöld Library's
+# voting data, and the drafts not adopted, read from the meeting records (``wcs.sources.council``). A draft the
+# records cannot give, from before they begin, has one row with no member, from the Library's list of vetoes: its
+# permanent members voting against are in ``vetoed_by``, and no member's vote is made up.
+COUNCIL_VOTE_SCHEMA = pa.schema([
+    ("vote_id", pa.string()),           # the voting record's UN Digital Library number, or "draft:S/2024/239"
+    ("body", pa.string()),              # "Security Council"
+    ("outcome", pa.string()),           # "adopted", "not adopted"
+    ("reason", pa.string()),            # a draft not adopted: "veto" (a permanent member's negative vote), "votes"
+    ("what", pa.string()),              # "resolution", "draft resolution", "proposed amendment", "draft decision"
+    ("country_code", pa.string()),      # null on a draft's row from the list of vetoes alone
+    ("country_name", pa.string()),      # as recorded
+    ("permanent_member", pa.bool_()),
+    ("vote", pa.string()),              # Y, N, A, X (did not participate), as the record gives it
+    ("date", pa.date32()),
+    ("resolution", pa.string()),        # "S/RES/2728(2024)"
+    ("draft", pa.string()),             # "S/2024/254"; for an amendment, the amendment's own document
+    ("amends", pa.string()),            # an amendment: the draft resolution it would have amended
+    ("meeting", pa.string()),           # "S/PV.9586"; "S/2020/870" for a vote taken by letter
+    ("title", pa.string()),             # the Library's description of a resolution
+    ("agenda", pa.string()),
+    ("subjects", pa.string()),
+    ("vote_note", pa.string()),
+    ("result", pa.string()),            # the announcement of the result, in the record's words
+    ("total_yes", pa.int32()),
+    ("total_no", pa.int32()),
+    ("total_abstentions", pa.int32()),
+    ("total_non_voting", pa.int32()),
+    ("total_ms", pa.int32()),
+    ("modality", pa.string()),          # "Vote", "Without Vote"
+    ("vetoed_by", pa.list_(pa.string())),  # the permanent members whose negative votes defeated a draft
+    ("source", pa.string()),            # "voting data", "meeting record", "veto list"
+    ("complete", pa.bool_()),           # every member's vote is listed
     ("url", pa.string()),
 ])
 
@@ -137,8 +181,19 @@ def write_votes(root: Path, rows: list[dict[str, Any]]) -> Path:
     return path
 
 
+def council_votes_path(root: Path) -> Path:
+    return Path(root) / "council_votes.parquet"
+
+
+def write_council_votes(root: Path, rows: list[dict[str, Any]]) -> Path:
+    path = council_votes_path(root)
+    _atomic_write(pa.Table.from_pylist(rows, schema=COUNCIL_VOTE_SCHEMA), path)
+    return path
+
+
 def attach_store(con: duckdb.DuckDBPyConnection, root: Path) -> list[str]:
-    """Views over the stored Parquet: ``records`` (all speeches) and ``votes``. Returns the views created."""
+    """Views over the stored Parquet: ``records`` (all speeches), ``votes`` and ``council_votes``. Returns the views
+    created."""
     made = []
     files = sorted(str(p) for p in (Path(root) / "records").glob("*/*.parquet"))
     if files:
@@ -147,4 +202,7 @@ def attach_store(con: duckdb.DuckDBPyConnection, root: Path) -> list[str]:
     if votes_path(root).exists():
         con.execute(f"CREATE OR REPLACE VIEW votes AS SELECT * FROM read_parquet('{votes_path(root)}')")
         made.append("votes")
+    if council_votes_path(root).exists():
+        con.execute(f"CREATE OR REPLACE VIEW council_votes AS SELECT * FROM read_parquet('{council_votes_path(root)}')")
+        made.append("council_votes")
     return made

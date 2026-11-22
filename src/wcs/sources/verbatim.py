@@ -63,6 +63,10 @@ class Speech:
     text: str
     agenda: str | None = None
     heading: str | None = None  # "Address by Mr. Petr Pavel, President of the Czech Republic"
+    # a General Assembly record's agenda item: its number as printed ("69", "34 and 35") and its title, kept apart
+    # from ``agenda`` (the last heading, which may be a report's or a draft's under the item)
+    item: str | None = None
+    item_title: str | None = None
 
 
 @dataclass
@@ -275,7 +279,7 @@ def split_attr(attr: str) -> tuple[str, str | None, str | None]:
 
 
 SUBHEADING = re.compile(r"^(?:Address|Statement) by\b")
-AGENDA_ITEM = re.compile(r"^Agenda items?\s+\d+(?:\s*(?:,|and)\s*\d+)*(?:\s*\(continued\))?\s*", re.I)
+AGENDA_ITEM = re.compile(r"^Agenda items?\s+\d+(?:\s*(?:,|and|to)\s*\d+)*(?:\s*\(continued\))?\s*", re.I)
 HEADING_OPENER = re.compile(r"^(?:Agenda items?\s+\d|Address by\b|Statement by\b)")
 CONNECTOR = re.compile(r"(?:\b(?:of|the|and|for|to|on|in|by|at)|[,\-\u2013\u2014])$")
 CHAIR_SPEAKER = re.compile(r"^The (?:Acting |Temporary )?President\b")
@@ -313,17 +317,25 @@ def speeches(lines: list[Line], m: Meeting) -> None:
     pending: list[str] = []      # heading paragraphs not yet read
     pending_boxes: list[int] = []  # the text box each starts in: a heading's lines indented on their own share one
     subheading: str | None = None  # an "Address by ..." heading, for the next speech that is not the chair's
+    item: str | None = None        # "Agenda item 69": its number, and the title printed under it
+    item_title: str | None = None
+    wants_title = False
 
     def read_headings() -> None:
-        nonlocal agenda, subheading
+        nonlocal agenda, subheading, item, item_title, wants_title
         for h in join_headings(pending, pending_boxes):
             if SUBHEADING.match(h):
                 subheading = h
             elif AGENDA_ITEM.match(h):
+                number = re.match(r"Agenda items?\s+(\d+(?:\s*(?:,|and|to)\s*\d+)*)", h, re.I)
+                item = " ".join(number.group(1).split()) if number else None
                 title = AGENDA_ITEM.sub("", h).strip()
+                item_title, wants_title = (title or None), not title
                 if title:  # "Agenda item 8 (continued)" alone: the title is the next heading
                     agenda = _match_agenda(title, m.agenda) or agenda
             else:
+                if wants_title:
+                    item_title, wants_title = " ".join(h.split()), False
                 agenda = _match_agenda(h, m.agenda) or agenda
         pending.clear()
         pending_boxes.clear()
@@ -346,7 +358,7 @@ def speeches(lines: list[Line], m: Meeting) -> None:
         if found is not None:
             attr, rest = found
             name, label, note = split_attr(attr)
-            current = Speech(attr, name, label, note, rest, agenda)
+            current = Speech(attr, name, label, note, rest, agenda, item=item, item_title=item_title)
             if subheading and not CHAIR_SPEAKER.match(name):
                 current.heading, subheading = subheading, None
             m.speeches.append(current)

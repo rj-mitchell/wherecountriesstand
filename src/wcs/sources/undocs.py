@@ -122,24 +122,45 @@ def safe_name(symbol: str) -> str:
 
 @dataclass
 class Manifest:
+    """What was fetched and parsed, record by record. Two jobs can use one manifest at once (the update and the
+    plenary record's backfill, decision 31): each saves only the entries it changed, merged into the file as it then
+    stands, under a lock on the file."""
     path: Path
     entries: dict[str, dict[str, Any]] = field(default_factory=dict)
+    _seen: dict[str, str] = field(default_factory=dict, repr=False)
 
     @classmethod
     def load(cls, settings: Settings, body: str = "sc") -> Manifest:
         """The Security Council's manifest (manifest.json) or the General Assembly's (manifest-ga.json)."""
         path = cache_dir(settings) / ("manifest.json" if body == "sc" else f"manifest-{body}.json")
-        return cls(path, json.loads(path.read_text()) if path.exists() else {})
+        entries = json.loads(path.read_text()) if path.exists() else {}
+        return cls(path, entries, {k: _key(v) for k, v in entries.items()})
 
     def save(self) -> None:
+        import fcntl
+
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = self.path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(self.entries, indent=1, sort_keys=True, default=str))
-        tmp.replace(self.path)
+        with open(self.path.with_suffix(".lock"), "w") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            on_disk = json.loads(self.path.read_text()) if self.path.exists() else {}
+            changed = {k: v for k, v in self.entries.items() if self._seen.get(k) != _key(v)}
+            merged = {**on_disk, **changed}
+            tmp = self.path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(merged, indent=1, sort_keys=True, default=str))
+            tmp.replace(self.path)
+        # what another job wrote meanwhile is taken up here too
+        for k, v in on_disk.items():
+            if k not in changed:
+                self.entries[k] = v
+        self._seen = {k: _key(v) for k, v in self.entries.items()}
 
     def last_number(self) -> int:
         nums = [n for s in self.entries if (n := meeting_number(s))]
         return max(nums, default=0)
+
+
+def _key(entry: dict[str, Any]) -> str:
+    return json.dumps(entry, sort_keys=True, default=str)
 
 
 def _now() -> str:
@@ -181,8 +202,11 @@ class UNDocs:
                 time.sleep(2 ** (attempt + 1))
         raise RuntimeError("unreachable")
 
-    def search(self, query: str, rows: int = 200) -> list[dict[str, Any]]:
-        r = self._get(f"{LIBRARY}/search", ln="en", p=query, of="xm", rg=rows)
+    def search(self, query: str, rows: int = 200, start: int = 1) -> list[dict[str, Any]]:
+        params: dict[str, Any] = {"ln": "en", "p": query, "of": "xm", "rg": rows}
+        if start > 1:
+            params["jrec"] = start  # the next page of a long list
+        r = self._get(f"{LIBRARY}/search", **params)
         r.raise_for_status()
         return parse_marc(r.text)
 
@@ -387,13 +411,22 @@ def parse_cached(settings: Settings, countries: Countries, manifest: Manifest, s
                       "attempts": entry.get("attempts", 0) + 1})
         return []
     if body == "ga":
-        records = unga.records_for(meeting, meta or entry, countries, settings)
-        problems = unga.check(meeting, records, meta or entry)
+        gd = unga.records_for(meeting, meta or entry, countries, settings)
+        problems = unga.check(meeting, gd, meta or entry)
         debate = unga.debate_meeting(meeting, meta or entry)
+        # the rest of the meeting (decision 31): every other statement, as source "ga"
+        plenary = unga.plenary_records_for(meeting, meta or entry, countries, settings)
+        records = gd + plenary
         status = "parsed" if records else ("failed" if debate or not meeting.speeches else "other")
         entry["concludes_debate"] = unga.concludes_debate(meeting)
-        entry["replies"] = sum(unga.is_reply(r) for r in records)
-        entry["statements"] = len(records) - entry["replies"]
+        entry["replies"] = sum(unga.is_reply(r) for r in gd)
+        entry["statements"] = len(gd) - entry["replies"]
+        entry["plenary"] = len(plenary)
+        entry["plenary_version"] = unga.PLENARY_VERSION
+        entry["eov"] = unga.eov_counts(plenary)
+        entry["stored_ga"] = False
+        if meeting.detection != "bold" and plenary:
+            problems.append("plenary statements found by wording, not typography")
     else:
         records = records_for(meeting, meta or entry, countries, settings)
         problems = check(meeting, records)
@@ -415,14 +448,15 @@ def is_communique(lines) -> bool:
     return bool(re.search(r"Official communiqu[eé]|in place of a verbatim record", first, re.I))
 
 
-def load_parsed(settings: Settings, symbol: str) -> list[dict[str, Any]]:
+def load_parsed(settings: Settings, symbol: str, source: str | None = None) -> list[dict[str, Any]]:
+    """The records parsed from one cached record; ``source``: only those of one source ("gd", "ga")."""
     path = cache_dir(settings) / "parsed" / f"{safe_name(symbol)}.json"
     if not path.exists():
         return []
     rows = json.loads(path.read_text())
     for r in rows:
         r["date"] = date.fromisoformat(r["date"])
-    return rows
+    return [r for r in rows if source is None or r.get("source") == source]
 
 
 # What to do on a run

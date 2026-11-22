@@ -28,7 +28,7 @@ GROUP_KEYS = ("p5", "council_elected", "council_guest", "eu", "nato", "au", "g77
 GroupKey = Literal["p5", "council_elected", "council_guest", "eu", "nato", "au", "g77", "nam", "oic", "ldc", "lldc",
                    "sids", "ungroup:african", "ungroup:asia_pacific", "ungroup:eastern_european", "ungroup:latin_american_caribbean", "ungroup:western_european_other", "income:low", "income:lower_middle", "income:upper_middle", "income:middle", "income:high",
                    "region:africa", "region:americas", "region:asia", "region:europe", "region:oceania"]
-SourceKey = Literal["sc", "gd"]
+SourceKey = Literal["sc", "gd", "ga"]
 GroupBy = Literal["region", "council", "bloc"]
 
 # Phrases that name a group, longest first when matching.
@@ -93,7 +93,7 @@ class QueryPlan:
         f = d.get("filters") or {}
         filters = Filters(
             date_from=_iso(f.get("date_from")), date_to=_iso(f.get("date_to")),
-            sources=[s for s in f.get("sources") or [] if s in ("sc", "gd")],
+            sources=[s for s in f.get("sources") or [] if s in ("sc", "gd", "ga")],
             countries=list(f.get("countries") or []),
             groups=[g for g in f.get("groups") or [] if g in GROUP_KEYS],
             kinds=list(f.get("kinds") or []),
@@ -269,6 +269,9 @@ def parse_offline(question: str, countries: Countries, today: date | None = None
         sources.append("sc")
     if "general debate" in ql or "general assembly" in ql:
         sources.append("gd")
+    # the Assembly's other plenary meetings (decision 31): "the General Assembly", but not "the General Debate" alone
+    if "general assembly" in ql and "general debate" not in ql:
+        sources.append("ga")
     named = countries_in(question, countries)
     groups = groups_in(question)
     if date_from is None and date_to is None:
@@ -294,7 +297,8 @@ def parse_offline(question: str, countries: Countries, today: date | None = None
     if groups:
         bits.append("groups: " + ", ".join(countries.label(g) for g, _ in groups))
     if sources:
-        bits.append("bodies: " + ", ".join({"sc": "Security Council", "gd": "General Debate"}[s] for s in sources))
+        bits.append("bodies: " + ", ".join({"sc": "Security Council", "gd": "General Debate",
+                                            "ga": "General Assembly plenary meetings"}[s] for s in sources))
     bits.append(f"from {date_from.year}" + (f" to {date_to.year}" if date_to else ""))
     filters = Filters(date_from=date_from, date_to=date_to, sources=sources, countries=[c for c, _ in named],
                       groups=[g for g, _ in groups])
@@ -337,7 +341,9 @@ Rules:
 - date_from/date_to: ISO dates for explicit or clearly implied periods ("between 2015 and 2020" -> 2015-01-01 to
   2020-12-31; "since 2022" -> 2022-01-01). When the question gives no period, set date_from to
   {today.year - default_years}-01-01 (the last {default_years} years) and date_to to null.
-- sources: "sc" for the Security Council, "gd" for the General Assembly's General Debate. Leave empty for both.
+- sources: "sc" for the Security Council, "gd" for the General Assembly's General Debate, "ga" for the General
+  Assembly's other plenary meetings (its debates on agenda items, and explanations of vote). "The General Assembly"
+  means both "gd" and "ga". Leave empty for all three.
 - countries: the countries the question restricts speakers to, by name as written ("France", "Brazil").
   A topic about a country ("the situation in Syria") is not a country filter unless the question asks what that
   country itself said.

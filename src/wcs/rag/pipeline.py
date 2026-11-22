@@ -49,7 +49,8 @@ def plan_note(plan: QueryPlan, engine: Engine, evidence: dict[str, Any] | None =
     c = engine.countries
     bits = []
     if f.sources:
-        bits.append("bodies: " + ", ".join({"sc": "Security Council", "gd": "General Assembly General Debate"}[s]
+        bits.append("bodies: " + ", ".join({"sc": "Security Council", "gd": "General Assembly General Debate",
+                                            "ga": "General Assembly plenary meetings"}[s]
                                            for s in f.sources))
     if f.countries:
         bits.append("countries: " + ", ".join(c.name_on(x) for x in f.countries))
@@ -129,15 +130,23 @@ class Pipeline:
         result = self.engine.search(plan.search_text, plan.filters, req.recency, req.role_weight, limit,
                                     diversify=True, group_by=plan.group_by, named=plan.named_countries)
         votes = []
-        if not plan.filters.sources or "gd" in plan.filters.sources:
-            # resolution titles are matched on the question's own subject words first: the model's search words add
-            # debate vocabulary ("territorial integrity, sovereignty") that titles such as "Aggression against
-            # Ukraine" lack
-            n = VOTES_ASKED if plan.wants_votes else 1
-            own = parse_offline(req.question, self.engine.countries, self.today or date.today()).search_text
-            strict = not plan.wants_votes
+        sources = plan.filters.sources
+        # resolution titles are matched on the question's own subject words first: the model's search words add
+        # debate vocabulary ("territorial integrity, sovereignty") that titles such as "Aggression against Ukraine"
+        # lack
+        n = VOTES_ASKED if plan.wants_votes else 1
+        own = parse_offline(req.question, self.engine.countries, self.today or date.today()).search_text
+        strict = not plan.wants_votes
+        if not sources or "gd" in sources or "ga" in sources:
             votes = self.votes.find(own, plan.filters, n, strict) or \
                 self.votes.find(plan.search_text, plan.filters, n, strict)
+        if not sources or "sc" in sources:
+            # the Security Council's votes, with its drafts not adopted (decision 30): half as many when the
+            # Assembly's are searched too
+            m = n if sources == ["sc"] else max(1, n // 2)
+            council = "Security Council"
+            votes += self.votes.find(own, plan.filters, m, strict, body=council) or \
+                self.votes.find(plan.search_text, plan.filters, m, strict, body=council)
         return result, votes, build_sources(result.records, votes, plan.group_by)
 
     def run(self, req: AskRequest, keep: Callable[..., None] | None = None) -> Iterator[dict[str, Any]]:

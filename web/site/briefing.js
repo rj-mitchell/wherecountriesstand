@@ -65,9 +65,12 @@
   }
 
   // The words in a chip: who spoke (a statement on behalf of a group is the group's, decision 7), the body, the date.
+  // A vote's kind and body: a Security Council vote (decision 30) is not a "recorded vote" in its records.
+  const voteWords = (s) => (s.body === "Security Council" ? ["Vote", "Security Council"] : ["Recorded vote", "General Assembly"]);
+
   function chipLabel(s) {
     if (!s) return "";
-    if (s.kind === "vote") return ["Recorded vote", "General Assembly", longDate(s.date)].join(", ");
+    if (s.kind === "vote") return [...voteWords(s), longDate(s.date)].join(", ");
     const who = s.on_behalf_of || s.country_name || s.speaker_name || "Speaker";
     return [who, s.body, sourceDate(s)].filter(Boolean).join(", ");
   }
@@ -491,10 +494,12 @@
       const t = s.totals || {};
       return h("div", { class: "wts-slip" },
         h("div", { class: "wts-slip__top" }, h("span", { class: "wts-slip__sym" }, s.resolution || "Recorded vote"), h("span", {}, longDate(s.date))),
-        h("div", { class: "wts-slip__who" }, h("strong", {}, "General Assembly"), ", recorded vote"),
+        h("div", { class: "wts-slip__who" }, h("strong", {}, voteWords(s)[1]), `, ${voteWords(s)[0].toLowerCase()}`),
         s.title && h("div", { class: "wts-slip__heading" }, s.title),
         h("p", { class: "wts-passage", tabindex: "0", id: passageId, "aria-label": `The record of source ${s.n}` },
-          `Adopted by a recorded vote: ${t.yes} in favour, ${t.no} against, ${t.abstain} abstaining.`),
+          s.body === "Security Council"
+            ? `${s.vote_name || s.resolution}: ${t.yes ?? "–"} in favour, ${t.no ?? "–"} against, ${t.abstain ?? "–"} abstaining.`
+            : `Adopted by a recorded vote: ${t.yes} in favour, ${t.no} against, ${t.abstain} abstaining.`),
         h("div", { class: "wts-slip__foot" }, h("span", {}), h("a", { href: s.url, rel: "noopener", "data-wts-conversion": "source_opened" }, "Read the UN Digital Library record")));
     }
     const text = s.text || "";
@@ -522,7 +527,7 @@
   function card(s) {
     const first = (s.kind === "vote" ? s.title || "" : (s.text || "")).replace(/\s+/g, " ").trim();
     const line = first.length > 150 ? first.slice(0, 150).replace(/\s+\S*$/, "") + "…" : first;
-    const who = s.kind === "vote" ? "General Assembly, recorded vote"
+    const who = s.kind === "vote" ? `${voteWords(s)[1]}, ${voteWords(s)[0].toLowerCase()}`
       : [s.on_behalf_of || s.country_name, s.speaker_name].filter(Boolean).join(", ");
     return h("li", { class: "wts-card", "data-source": s.n },
       h("div", { class: "wts-card__top" },
@@ -534,7 +539,7 @@
 
   // ---------- the wait ----------
 
-  const BODY = { sc: "Security Council", gd: "General Assembly" };
+  const BODY = { sc: "Security Council", gd: "General Assembly", ga: "General Assembly plenary meetings" };
 
   // The question as read, as large chips: the bodies, the dates, the countries and groups.
   function planChips(plan, names) {

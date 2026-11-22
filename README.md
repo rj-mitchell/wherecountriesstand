@@ -15,7 +15,9 @@ use the UN's name or emblem.
 ## What it does
 
 - Searches Security Council debates from 1992, the General Assembly's General Debate from 1946 (with rights of reply
-  from 1993) and General Assembly recorded votes from 1946.
+  from 1993), its other plenary meetings from 1994 (with explanations of vote linked to the votes they explain),
+  General Assembly recorded votes from 1946, and the Security Council's votes from 1946, with the drafts it did not
+  adopt.
 - Reads a question into filters (body, dates, countries, groups) and shows them, so the reader can see how the
   question was understood.
 - Draws evidence from across groups of countries (by region, by bloc or by place at the Security Council), using
@@ -25,7 +27,7 @@ use the UN's name or emblem.
 - Marks speeches given in another language as the UN's translations, records recognised from scans, and General
   Debate statements that are not yet in the official record.
 - Gives each country in the UN's record a page of its own, written from the record with no AI: its groups, its
-  latest statements and its recorded votes.
+  latest statements, its recorded votes and its votes in the Security Council; and each vote a page of its own.
 - Lets countries' delegations and people named in the record report an error or add a statement in their own words,
   under the charity's right-of-reply policy.
 
