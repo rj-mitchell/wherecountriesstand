@@ -461,8 +461,7 @@ It is built now, with the family kit 2.2.0, and off, so the site is what it was 
 - The site sets no content security policy of its own: the shared front door (Where MPs Stand's Caddy) sets every
   header, and would block the Google tag. So before the switch is turned on, this site's domain goes into the front
   door's `MEASURED_SITES` (docs/DEPLOY.md, "Measurement").
-- Open before it is turned on: a page's address is sent to Google with each conversion, and the address of the
-  page a question was just asked on holds the question (`/?q=…`, until a written briefing takes its own address,
-  `/b/<id>`; a search for sources alone keeps it). The draft notice says so. The kit's `measure.js` could send the
-  address without its query instead, for every site; that is for the kit, and for the owner to decide with the
-  notice.
+- A question never reaches Google: the address of the page a question was just asked on holds the question
+  (`/?q=…`, until a written briefing takes its own address, `/b/<id>`; a search for sources alone keeps it), so the
+  kit's `measure.js` (2.2.0) sends Google each page's address and the referrer cut to their path, without the query
+  or fragment (the charity's `family/MEASUREMENT.md`, "What Google is sent"). The draft notice says so.

@@ -120,8 +120,19 @@
     tagScript.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(tag);
     (doc.head || doc.body).appendChild(tagScript);
     gtag("js", new Date());
-    gtag("config", tag, { send_page_view: false, allow_ad_personalization_signals: false });
+    // The page's address and the referrer go to Google without their query or fragment: a reader's question can be
+    // in an address (/?q=…), and it must never leave the site (the sites' privacy notices).
+    gtag("config", tag, {
+      send_page_view: false,
+      allow_ad_personalization_signals: false,
+      page_location: bare(win.location.origin + win.location.pathname),
+      page_referrer: bare(doc.referrer || ""),
+    });
     watch();
+  }
+
+  function bare(address) {
+    return String(address).split(/[?#]/)[0];
   }
 
   function conversion(name) {
