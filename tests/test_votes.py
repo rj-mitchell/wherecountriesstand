@@ -76,10 +76,13 @@ def test_a_vote_has_a_page_of_its_own(site):
     assert '<tr><th scope="row">Not voting</th><td>1</td></tr>' in page
     assert "Totals, of 8 Member States listed" in page
     lists = dict(re.findall(r'<h3 id="[a-z-]+">(.*?)</h3><ul class="vote-list"[^>]*>(.*?)</ul>', page))
+    # each linked to the country's page (decision 29)
+    lists = {k: re.sub(r'<a href="/countries/[a-z]{3}\.html">(.*?)</a>', r"\1", v) for k, v in lists.items()}
     assert lists == {"In favour (3)": "<li>France</li><li>Kenya</li><li>United Kingdom of Great Britain and Northern Ireland</li>",
                      "Against (2)": "<li>Belarus</li><li>Russian Federation</li>",
                      "Abstaining (2)": "<li>China</li><li>India</li>",
                      "Not voting (1)": "<li>Venezuela (Bolivarian Republic of)</li>"}
+    assert '<li><a href="/countries/gbr.html">United Kingdom of Great Britain and Northern Ireland</a></li>' in page
     # votes are counts in words, never coloured (docs/DESIGN.md)
     assert "green" not in page and "red;" not in page
 
@@ -102,8 +105,9 @@ def test_a_vote_page_carries_only_breadcrumbs_and_the_site_furniture(site):
         "/about.html", "/methodology.html", "/corrections.html", "/accessibility.html", "/privacy.html",
         "https://github.com/rj-mitchell/wherecountriesstand"]
     menu = page[page.index('<nav class="sections"'):]
-    assert re.findall(r'href="([^"]+)"', menu[:menu.index("</nav>")]) == ["/", "/topics.html", "/about.html",
-                                                                         "/methodology.html", "/glossary.html"]
+    assert re.findall(r'href="([^"]+)"', menu[:menu.index("</nav>")]) == ["/", "/topics.html", "/countries.html",
+                                                                         "/about.html", "/methodology.html",
+                                                                         "/glossary.html"]
     assert '<link rel="stylesheet" href="/styles.css?v=' in page
     assert "Côte d’Ivoire" in page and "Democratic People’s Republic of Korea" in page and "Türkiye" in page
     assert " · " not in page and " — " not in page
@@ -216,7 +220,8 @@ def test_the_sitemap_is_an_index_of_the_pages_and_the_votes(site):
     assert index.headers["content-type"] == "application/xml"
     assert re.findall(r"<loc>(.*?)</loc>", index.text) == ["https://countries.example/sitemap-pages.xml",
                                                           "https://countries.example/sitemap-votes.xml",
-                                                          "https://countries.example/sitemap-topics.xml"]
+                                                          "https://countries.example/sitemap-topics.xml",
+                                                          "https://countries.example/sitemap-countries.xml"]
     assert "<sitemap><loc>https://countries.example/sitemap-votes.xml</loc><lastmod>2024-12-03</lastmod>" in index.text
     votes = site.get("/sitemap-votes.xml").text
     assert votes.startswith('<?xml version="1.0" encoding="UTF-8"?>\n<urlset ')

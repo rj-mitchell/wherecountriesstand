@@ -32,8 +32,11 @@ rather than the record.
 ## 5. Groups
 
 Countries are grouped by their memberships on the date of each statement (blocs, regions, income groups, place on
-the Security Council), as Where MPs Stand uses an MP's party and role on the date. Before 25 October 1971, "China"
-is the Republic of China, which held the seat until then.
+the Security Council), as Where MPs Stand uses an MP's party and role on the date. To 25 October 1971, "China" is
+the Republic of China, which held the seat until then. That day is the Republic of China's: its delegation was in the
+hall for the day's earlier votes and left before the vote on resolution 2758 (XXVI), where "China" is recorded as not
+voting, and the People's Republic's delegation first took the seat on 15 November 1971 (corrected 22 November 2026:
+the site counted 25 October itself as the People's Republic's).
 
 ## 6. Country names
 
@@ -465,3 +468,72 @@ It is built now, with the family kit 2.2.0, and off, so the site is what it was 
   (`/?q=…`, until a written briefing takes its own address, `/b/<id>`; a search for sources alone keeps it), so the
   kit's `measure.js` (2.2.0) sends Google each page's address and the referrer cut to their path, without the query
   or fragment (the charity's `family/MEASUREMENT.md`, "What Google is sent"). The draft notice says so.
+
+## 29. A page for each country in the record
+
+On 22 November 2026 the owner decided that the site gives a page to each country in the UN's record, so that a
+reader, or a search engine, can start from a country as well as from a question, a vote or a topic. The pages are
+written on the server from the site's data, with no AI, no model call and no script needed to read them, and there is
+no AI briefing for each country.
+
+- Which places have a page: every current Member State (193); the two non-member observer States (the State of
+  Palestine and the Holy See); the eight former Member States in `data_static/states.csv`, as an archive; and Kosovo,
+  under a heading of its own, "Others named in the records", because it speaks in the Security Council's record.
+  Kosovo's status line is "Not a member of the United Nations", as `states.csv` words it. Places the UN's record does
+  not treat as speakers have no page: Taiwan, Hong Kong, Macao and Western Sahara. This follows the UN's own lists and
+  record, as everything else on the site does (decisions 5 and 6), and implies no view on any place's status. It
+  differs on purpose from Where Lives Stand, which gives pages to places the statistics publishers report separately.
+- The index lists those four under "Places with no page of their own", each with one sentence of its UN status and a
+  search of the records about it, sources only (no AI), and says the same as above (the owner's addition of
+  22 November 2026). The sentences are the owner's: for Taiwan, "China's seat at the United Nations was held by the
+  Republic of China until 25 October 1971 (General Assembly resolution 2758 (XXVI)). Taiwan has not spoken or voted
+  in the United Nations' records since."; for Hong Kong and Macao, "A Special Administrative Region of China. It does
+  not speak or vote separately in the United Nations' records."; for Western Sahara, "A Non-Self-Governing Territory
+  on the United Nations' list. It is discussed in the records but does not speak or vote in them." The resolution is
+  cited as the site already cites it (`wcs.reference.countries`), with its session, "2758 (XXVI)".
+- Where the site names the Republic of China for a reader (the Taiwan entry, China's 1945 to 1971 section and status
+  line, the glossary), it adds "whose government has been based in Taiwan since 1949", so that a reader who does not
+  know the name sees what it refers to. It is a fact of where the government sits, and does not say that the two are
+  the same thing or take a view on Taiwan's status (owner, 22 November 2026).
+- China: as decision 5 has it, China's record to 25 October 1971 is the Republic of China's, labelled
+  "China (Republic of China)". On China's page it is a section of its own, "China's seat, 1945 to 1971: the Republic
+  of China", with that period's statements and recorded votes, newest first, in the same form as the rest of the
+  page; the page's other lists begin on 26 October 1971. The counts of the last 10 years are unaffected, and the full
+  list of China's votes marks each vote to that day. There is no page for Taiwan or the Republic of China, and
+  nothing calls either a former Member State.
+- Names and status are the UN's throughout (decision 6), and the wording is neutral (decision 7).
+- No comparative voting statistics: no "voted with another country n% of the time", no agreement or alignment
+  scores. A country's votes are counted and listed, and nothing more.
+- Addresses: the index is `/countries.html` ("Countries in the record"), and each page is `/countries/<code>.html`,
+  the ISO 3166 alpha-3 code in lower case (`/countries/ita.html`); a former Member State's page uses its code from
+  `states.csv` (`/countries/sun.html`). As for the vote pages (decision 26), the canonical link gives that one
+  address and the other forms are sent there for good (301): any case, no `.html`, a trailing slash. An unknown code
+  is a 404.
+- Each page holds, in this order: the UN's name as its title and heading ("Italy | Where Countries Stand"); its status
+  in the UN's words (a Member State's date of admission only where the data holds one, which for today's members it
+  does not yet, so none is given; "Non-member observer State of the United Nations since 29 November 2012";
+  "Former Member State, 1945 to 1991." with the note and the successor from `states.csv`, linked; "Not a member of
+  the United Nations."); its groups on today's date (a former State's on its last day), from `Countries.groups_on`
+  and its labels, with the Security Council's elected terms as its meeting records since 1992 show them; a question
+  about it, a plain form to the home page with the country named in the question, so that its statements are heard
+  (decision 21), with "Sources only (no AI)" beside it; its 10 latest statements of its own in the Security Council
+  and the General Debate (never one made on behalf of a group, decision 7); its recorded votes in the General
+  Assembly (the counts over the last 10 years, its 20 latest votes, and a link to the full list), or the sentence
+  that says it has no vote; the topic briefings whose current version cites a statement of its own; the statements
+  published under the right of reply that speak for it; and "This country on Where Lives Stand", linked to
+  `https://wherelivesstand.com/country/<ISO3>`, for the Member States, the State of Palestine and Kosovo only (not
+  the Holy See, for which Where Lives Stand has no figures, nor the former States).
+- The full list of a country's votes is a page of its own, `/countries/<code>/votes.html`, by session, rather than a
+  filter on `/votes.html`: the votes index has no filters, a filter's query string would give one page many
+  addresses for crawlers, and a page has one canonical address and a place in the sitemap. A State listed in every
+  vote since 1946 has over 5,000 lines, about 1 MB, so each line is short: the vote, its date and how it voted.
+- The names in a vote page's lists link to the country pages.
+- Where linked: "Countries" joins the menu after Topics (Ask, Topics, Countries, About, Methodology, Glossary). The
+  footer keeps the family glossary's six links, which leave no room; the home page's "The record" and the
+  methodology page's "The record" link the index instead.
+- Sitemap: `/sitemap-countries.xml`, in the sitemap index: the index, each country's page and each list of votes,
+  dated by the newest statement or vote in it, and undated when there is none. The pages read the same files as the
+  vote pages and follow them when the update writes new ones (their times and sizes), so there is nothing to build
+  on the server.
+- The charity's nightly check should add `/countries.html` and `/countries/ita.html` to this site's `crawlerPages`.
+

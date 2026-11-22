@@ -24,6 +24,8 @@ use the UN's name or emblem.
   flags unsupported sentences and loaded words. If nothing relevant is found it says "No records found".
 - Marks speeches given in another language as the UN's translations, records recognised from scans, and General
   Debate statements that are not yet in the official record.
+- Gives each country in the UN's record a page of its own, written from the record with no AI: its groups, its
+  latest statements and its recorded votes.
 - Lets countries' delegations and people named in the record report an error or add a statement in their own words,
   under the charity's right-of-reply policy.
 
@@ -110,7 +112,6 @@ Group memberships (EU, NATO, African Union, Group of 77, Non-Aligned Movement, O
   briefer is occasionally classed as an organisation rather than a UN official, or the reverse.
 - The UN publishes no joining dates for the Group of 77 or the regional groups, so some membership dates are
   approximate.
-- There is no page for each country yet.
 
 ## Contributing
 

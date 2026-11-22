@@ -58,6 +58,8 @@ VOTES_IN_ORDER = ("Y", "N", "A", "X")
 UNDOCS = "https://undocs.org/en/"
 # the family kit's mark for a source opened, on each link to the record (decision 28)
 OPENED = ' data-wts-conversion="source_opened"'
+# the kinds of place with a page of their own at /countries/<code>.html (decision 29; wcs.api.country_pages)
+COUNTRY_PAGE_KINDS = ("member_state", "observer_state", "former_member_state", "other_state")
 
 _SUFFIX = re.compile(r"\s*:\s*(?:resolutions?|decisions?)\s*/?\s*adopted by the General Assembly\.?\s*$", re.I)
 _ES = re.compile(r"^A/(?:RES|DEC)/ES-(\d+)/", re.I)
@@ -389,19 +391,28 @@ class VotePages:
         """Whether a vote has a page at /votes/<slug>.html (for the right of reply, ``wcs.replies``)."""
         return slug in self.catalog().votes
 
-    def _members(self, v: Vote) -> dict[str, list[str]]:
+    def _members(self, v: Vote) -> dict[str, list[tuple[str, str]]]:
+        """Each way of voting, with the countries that voted so: each country's name on the day and its code."""
         path = str(self.path).replace("'", "''")
         rows = self._con.execute(f"SELECT country_code, vote FROM read_parquet('{path}') WHERE date = ? AND "
                                  "undl_id = ?", [v.on, v.undl_id]).fetchall()
-        out: dict[str, list[str]] = {}
+        out: dict[str, list[tuple[str, str]]] = {}
         for code, how in rows:
-            out.setdefault(how, []).append(curl_quotes(self.countries.name_on(code, v.on)))
-        return {k: sorted(names, key=_sort_name) for k, names in out.items()}
+            out.setdefault(how, []).append((curl_quotes(self.countries.name_on(code, v.on)), code or ""))
+        return {k: sorted(names, key=lambda x: _sort_name(x[0])) for k, names in out.items()}
+
+    def _country(self, name: str, code: str) -> str:
+        """A country in a vote's lists, linked to its page (decision 29) where it has one."""
+        if self.countries.kind(code) in COUNTRY_PAGE_KINDS:
+            return f'<li><a href="/countries/{code.lower()}.html">{e(name)}</a></li>'
+        return f"<li>{e(name)}</li>"
 
     # The pages
 
     def page(self, *, title: str, description: str, path: str, trail: list[tuple[str, str]], main: str,
-             noindex: bool = False) -> str:
+             noindex: bool = False, frame: str | None = None) -> str:
+        """A page in the frame (``frame``, or the vote pages' own): its head (title, description, canonical link,
+        link preview and breadcrumbs) and its main content."""
         data = json.dumps(breadcrumbs(trail), ensure_ascii=False, indent=2).replace("</", "<\\/")
         data = "\n".join("    " + line for line in data.split("\n"))
         head = (f"  <title>{e(title)}</title>\n"
@@ -412,7 +423,7 @@ class VotePages:
                 f'  <meta property="og:url" content="{SITE_MARK}{path}">\n'
                 + ('  <meta name="robots" content="noindex">\n' if noindex else "")
                 + f'  <script type="application/ld+json">\n{data}\n  </script>\n')
-        return self.frame.replace("<!--#head-->", head.rstrip("\n"), 1).replace("<!--#main-->", main, 1)
+        return (frame or self.frame).replace("<!--#head-->", head.rstrip("\n"), 1).replace("<!--#main-->", main, 1)
 
     def index(self) -> str:
         cat = self.catalog()
@@ -561,9 +572,9 @@ class VotePages:
             anchor = slug_of(VOTE_LABEL[k])
             parts.append(f'<h3 id="{anchor}">{VOTE_LABEL[k]} ({len(names):,})</h3>'
                          f'<ul class="vote-list" aria-labelledby="{anchor}">'
-                         + "".join(f"<li>{e(name)}</li>" for name in names) + "</ul>")
+                         + "".join(self._country(name, code) for name, code in names) + "</ul>")
         parts.append('<p class="vote-source">Each country is given the UN’s short name, as everywhere on this site; '
-                     "China’s seat before 25 October 1971 is the Republic of China’s, and Germany before 3 October "
+                     "China’s seat to 25 October 1971 is the Republic of China’s, and Germany before 3 October "
                      "1990 is the Federal Republic of Germany. The voting data itself gives each Member State’s "
                      f'official name at the time. From the <a href="{e(self.record)}"{OPENED}>General Assembly voting '
                      "data</a> of the UN Dag Hammarskjöld Library, © United Nations.</p>")
