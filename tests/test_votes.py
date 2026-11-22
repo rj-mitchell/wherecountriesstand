@@ -220,6 +220,7 @@ def test_the_sitemap_is_an_index_of_the_pages_and_the_votes(site):
     assert index.headers["content-type"] == "application/xml"
     assert re.findall(r"<loc>(.*?)</loc>", index.text) == ["https://countries.example/sitemap-pages.xml",
                                                           "https://countries.example/sitemap-votes.xml",
+                                                          "https://countries.example/sitemap-council-votes.xml",
                                                           "https://countries.example/sitemap-topics.xml",
                                                           "https://countries.example/sitemap-countries.xml"]
     assert "<sitemap><loc>https://countries.example/sitemap-votes.xml</loc><lastmod>2024-12-03</lastmod>" in index.text

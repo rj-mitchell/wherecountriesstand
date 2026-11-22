@@ -68,6 +68,17 @@ _OLD_SPECIAL = re.compile(r"\((ES|S)-([IVXLC]+|\d+)\)\s*$", re.I)
 _REGULAR = re.compile(r"^A/(?:RES|DEC)/(\d+)/", re.I)
 _ROMAN = re.compile(r"\(([IVXLC]+)\)\s*$", re.I)
 SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
+# Names the UN writes with "the" in a sentence ("What has the Russian Federation said about …")
+THE = {"Bahamas", "Comoros", "Congo", "Gambia", "Holy See", "Maldives", "Marshall Islands",
+       "Netherlands (Kingdom of the)", "Niger", "Philippines", "Solomon Islands", "Sudan"}
+THE_STARTS = ("Central African Republic", "Democratic People", "Democratic Republic", "Dominican Republic",
+              "German Democratic", "Lao People", "Republic of", "Russian Federation", "State of", "Syrian",
+              "Union of", "United ")
+
+
+def in_a_sentence(name: str) -> str:
+    """The name as the UN writes it inside a sentence: "the Russian Federation", "Italy"."""
+    return f"the {name}" if name in THE or name.startswith(THE_STARTS) else name
 SESSION_KEY = re.compile(r"(?:\d{1,3}|es-\d{1,2}|s-\d{1,2}|other)")
 
 
@@ -440,6 +451,8 @@ class VotePages:
             parts.append("<p>Votes on separate paragraphs of a draft, and drafts that were not adopted, are not in the "
                          "UN’s voting data, so they are not listed here. Each vote’s page links to the UN’s own "
                          "record of it.</p>")
+            parts.append('<p>The Security Council’s votes, with the drafts it did not adopt, are in <a '
+                         'href="/security-council-votes.html">Votes in the Security Council</a>.</p>')
             parts.append('<h2 id="latest">Latest votes</h2><ul class="vote-index">'
                          + "".join(_vote_line(v) for v in votes[:LATEST]) + "</ul>")
             for kind, heading in (("regular", "Regular sessions"), ("emergency", "Emergency special sessions"),

@@ -34,6 +34,9 @@ ADDED = {
     # what an evaluation run with each briefing written may spend, and what it is held to
     ("eval", "max_cost_usd"): 3.0,
     ("eval", "thresholds"): {"max_invalid_citations": 0, "max_unverified_quotations": 0, "max_errors": 0},
+    # the Security Council's voting data and the UN Library's list of vetoes (decision 30)
+    ("sources", "council_votes_record"): "https://digitallibrary.un.org/record/4055387",
+    ("sources", "veto_list"): "https://research.un.org/en/docs/sc/quick/veto",
 }
 
 # Values in config/settings.toml changed on purpose since the recording, each (as it was, as it is): fewer new

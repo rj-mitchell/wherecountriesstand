@@ -3,7 +3,9 @@
 Each run:
 
 1. **Votes.** Reads the voting data record's file list; when the UN has published a new file, downloads and converts
-   it.
+   it. The same for the Security Council's voting data, then (once a day) the UN Library's list of vetoes, and the
+   drafts the Council did not adopt are read again from its records whenever any of them changed, and checked
+   against the list (``wcs.sources.council``, decision 30).
 2. **Security Council.** Finds meeting records newer than the last one held (the Digital Library's catalogue, then
    probing ODS for the following numbers), downloads and parses them, looks again for numbers still missing, fetches
    provisional records again when corrected versions may be out, and parses cached records again if the parser has
@@ -37,7 +39,7 @@ from wts_core.ports import SYSTEM_CLOCK, Clock
 
 from wcs.config import Settings
 from wcs.reference.countries import Countries, countries
-from wcs.sources import gadebate, undocs, unga, ungd
+from wcs.sources import council, gadebate, undocs, unga, ungd
 from wcs.sources import votes as vote_source
 from wcs.sources.verbatim import PARSER_VERSION
 from wcs.store.parquet import read_year, record_path, write_year, years
@@ -53,6 +55,7 @@ class Report:
     started: str
     finished: str | None = None
     votes: dict[str, Any] = field(default_factory=dict)
+    council_votes: dict[str, Any] = field(default_factory=dict)
     discovered: int = 0
     fetched: list[str] = field(default_factory=list)
     refetched: list[str] = field(default_factory=list)
@@ -120,6 +123,45 @@ def update_votes(settings: Settings, report: Report) -> bool:
         return False
     path = vote_source.fetch(settings)
     report.votes["votes"] = vote_source.ingest(settings, path)
+    return True
+
+
+VETO_LIST_EVERY_HOURS = 20  # the list of vetoes is read at most this often (it changes a few times a year)
+
+
+def update_council_votes(settings: Settings, ref: Countries, docs: undocs.UNDocs | None, report: Report) -> bool:
+    """The Security Council's votes (decision 30): a new file of its voting data, the list of vetoes, and the drafts
+    not adopted read again from the records when any of these, or the records, changed. The check of the vetoes
+    found against the list goes into the report's problems, as the parser's checks do. Returns whether the votes
+    file was written."""
+    info: dict[str, Any] = {}
+    report.council_votes = info
+    try:
+        url = council.file_url(settings)
+        name = url.rsplit("/", 1)[-1]
+        current = council.latest_csv(settings)
+        info.update({"file": name, "had": current.name if current else None})
+        if not current or current.name != name:
+            council.fetch(settings)
+    except Exception as exc:
+        report.warnings.append(f"Security Council voting data: could not read the record ({exc})")
+    listed = council.raw_dir(settings) / "veto-list.html"
+    age = (datetime.now(UTC).timestamp() - listed.stat().st_mtime) / 3600 if listed.exists() else 1e9
+    if age > VETO_LIST_EVERY_HOURS:
+        try:
+            council.fetch_veto_list(settings)
+        except Exception as exc:
+            report.warnings.append(f"the UN Library's list of vetoes could not be read ({type(exc).__name__}: {exc})")
+    if council.latest_csv(settings) is None:
+        return False
+    # the stored records are written before this runs on the next update, so a new meeting's drafts follow it there
+    if council.built_stamp(settings) == council.stamp(settings):
+        return False
+    built = council.build(settings, ref, docs)
+    council.mark_built(settings)
+    info.update({k: v for k, v in built.to_dict().items() if k != "problems"})
+    if built.problems:
+        report.problems["Security Council votes"] = built.problems
     return True
 
 
@@ -601,6 +643,13 @@ def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd:
         except Exception as exc:
             log.exception("General Debate update failed")
             report.errors.append(f"General Debate: {type(exc).__name__}: {exc}")
+    if do_votes:
+        # after the Council's records, so that a draft voted on at a meeting just read in is found
+        try:
+            update_council_votes(settings, ref, docs if do_sc else None, report)
+        except Exception as exc:
+            log.exception("Security Council votes update failed")
+            report.errors.append(f"Security Council votes: {type(exc).__name__}: {exc}")
     if do_index and (any(changed.values()) or embed_seconds):
         update_index(settings, ref, changed, report, embed_seconds)
     health(report)

@@ -537,3 +537,60 @@ no AI briefing for each country.
   on the server.
 - The charity's nightly check should add `/countries.html` and `/countries/ita.html` to this site's `crawlerPages`.
 
+
+## 30. Votes in the Security Council, including vetoes
+
+On 22 November 2026 the owner approved a new source: the Security Council's votes, with the drafts it did not adopt,
+so that a reader can see how each member voted on a resolution, and which drafts were not adopted and why.
+
+- The data: every resolution adopted, with each member's vote, from the UN Dag Hammarskjöld Library's Security
+  Council voting data (UN Digital Library record 4055387; © United Nations, non-commercial use with attribution, as
+  for the Assembly's). Its file is found from the record's MARC export, as the Assembly's is, and read again when the
+  Library publishes a new version (version 7, 16 October 2026: resolution 1 to resolution 2829, 41,559 rows).
+- Drafts not adopted are not in that data, so they are read from the Council's meeting records the site already holds
+  (from 1992: the corpus to 2023, the UN's records since; `wcs.sources.vote_result`): what was put to the vote, each
+  member's vote ("In favour: … Against: … Abstaining: …") and the President's announcement of the result, in the
+  record's words. A draft that failed because a permanent member voted against and one that did not get nine votes
+  are told apart by those words alone ("owing to the negative vote of a permanent member of the Council"; "having
+  failed to obtain the required number of votes"). Amendments with a document of their own count as drafts.
+  Procedural votes (to adjourn) and oral amendments have no document, so no page; an oral amendment the list of
+  vetoes names is still checked.
+- The check: each veto on the Library's list of vetoes (https://research.un.org/en/docs/sc/quick/veto) since the
+  site's Council records begin must be found in them with the same permanent members against. The update job reports
+  any that is not, beside the parser's checks. A listed veto whose vote a stored record does not give in full (a line
+  lost from a PDF, a record recognised from a scan, a vote taken by letter in 2020) is read from the UN's PDF of the
+  record, a few a run, each kept. Vetoes from before 1992 are given as the list gives them (the date, the draft, the
+  meeting record, the agenda item and the permanent members voting against), and no member's vote is made up. A
+  private meeting's veto, which the list attributes from no record, is shown with the list's own note.
+- Storage: `data/parquet/council_votes.parquet`, beside the Assembly's votes, with a `body` field and one row per
+  member per vote; a veto known only from the list has one row with no member.
+- Addresses: each vote is `/votes/<symbol>.html` by decision 26's rule: a resolution by its symbol
+  (`S/RES/2728(2024)` is `/votes/s-res-2728-2024.html`), a draft not adopted by its draft symbol (`S/2024/239` is
+  `/votes/s-2024-239.html`). Every Assembly symbol begins "A/" and every Council one "S/", so no address can be both
+  (a test checks it). Where the list of vetoes gives a meeting rather than a draft (proposals made orally in 1946),
+  the meeting's symbol is used, and where it lists one draft more than once (votes on its parts), the second and
+  later add "-2", "-3" to the address and "vote 2 of 3" to the name. The index is `/security-council-votes.html`
+  ("Votes in the Security Council"), and each year's votes `/security-council-votes/2024.html`. Other forms of an
+  address are sent to it for good (301), and unknown ones are 404s, as for the Assembly's votes. The pages are in the
+  sitemap index as `/sitemap-council-votes.xml`.
+- Each vote's page, written on the server with no AI: the date, the meeting record, the draft, the agenda item and the
+  subjects; the result in the record's words where the site reads it from the record (for a resolution, from the
+  voting data: "Adopted as resolution 2728 (2024): 14 votes in favour, none against and 1 abstention"), and the
+  totals; each member under "In favour", "Against", "Abstaining" or "Did not participate in the voting" (the
+  records' own words, and the voting data's notes, such as "USSR was not represented", shown as written), the
+  permanent members marked "(permanent member)" in words, each linked to its country page. For a vetoed draft, the
+  permanent members voting against, and one plain paragraph on Article 27 of the Charter, which ends "This is
+  commonly called a veto." The site's own voice never says a draft was blocked or killed.
+- Where linked: the menu already takes two lines on a phone, so it is unchanged. The home page's and the methodology
+  page's "The record", the Assembly's votes index (whose title and heading stay its own) and the country pages link
+  the index.
+- Country pages (decision 29): for each country that has sat on the Council, a section "Votes in the Security
+  Council": its terms (from the voting data, which replaces the terms worked out from the meeting records since 1992
+  wherever it is loaded), the counts over its last 10 years on the Council, its 20 most recent Council votes, the
+  drafts not adopted that it voted against (for a permanent member, "Drafts not adopted owing to its negative vote",
+  from 1946), and a full list, `/countries/<code>/security-council-votes.html`, by year. Counts and lists only, as
+  decision 29 has it.
+- Briefings: a Council vote is a source as an Assembly vote is (`wcs.votes`, `wcs.rag.sources`), found by its
+  description, agenda item and subjects (a veto also by "veto" and "vetoed"), when a question's bodies include the
+  Security Council (half as many as the Assembly's when both are searched). Its chip says "Vote, Security Council"
+  and the date: the Council's records do not call its votes recorded votes.

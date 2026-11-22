@@ -14,7 +14,12 @@ On the server, run each `wcs` command in `/opt/wherecountriesstand/deploy` as
 ### What a run does
 
 1. General Assembly votes. It reads the voting data record in the UN Digital Library. If the UN has published a new
-   file, it downloads and converts it (about 370 MB, 5 seconds) and deletes the files it replaces.
+   file, it downloads and converts it (about 370 MB, 5 seconds) and deletes the files it replaces. After the
+   records below, the Security Council's votes: a new file of its voting data (16 MB), the UN Library's list of
+   vetoes (once a day), and, when either or the Council's records changed, the drafts not adopted read again from the
+   records and checked against the list (a minute or two;
+   [decision 30](DECISIONS.md#30-votes-in-the-security-council-including-vetoes)). `wcs council-votes` does the
+   same by hand.
 2. Security Council records, from `[live] sc_from` (1 January 2024; the corpus covers the years before). It:
    * finds meeting records newer than the last one held, in the Digital Library's catalogue, then by probing the
      UN's document system (ODS) for the next meeting numbers;
@@ -74,6 +79,23 @@ If a run or the nightly backup fails (exits 1, or stops with an error), the serv
 with the result and the last log lines, at most once every six hours. This is set up once for every site on the
 server: see "Email from the server" in Where MPs Stand's
 [`docs/HOSTING.md`](https://github.com/rj-mitchell/wherempsstand/blob/main/docs/HOSTING.md).
+
+## Security Council votes
+
+The update keeps the Council's votes current by itself ([decision 30](DECISIONS.md#30-votes-in-the-security-council-including-vetoes)).
+The first time, after deploying, load them by hand (about 5 minutes: 16 MB of voting data, the list of vetoes, a
+scan of every stored Council record since 1992, and the UN's PDFs of any listed veto the stored records do not give
+in full, at most 40, one request at a time):
+
+```bash
+docker compose run --rm -T app wcs council-votes
+```
+
+It prints the resolutions, the drafts not adopted (vetoes, and drafts without the votes needed), the vetoes listed
+since the records begin, and each problem the check against the list finds. Everything it reads is kept in
+`data/raw/council_votes/` (the CSV, `veto-list.html`, what each PDF gave in `from-pdfs.json`, and the last build's
+counts in `built.json`), and the votes in `data/parquet/council_votes.parquet`. Run it again with `--no-fetch` after
+changing how votes are read, having raised `wcs.sources.council.VERSION`.
 
 ## Topic briefings
 
@@ -197,6 +219,9 @@ alert email, even when the backup timer itself has stopped.
 | `Digital Library search failed; probing ODS only` | The Library is down or its search changed | Nothing while it works. If it persists, check the search URL in `wcs.sources.undocs.UNDocs.search`. |
 | `records parsed by wording, not typography` | The PDF template changed | Look at one of the records named; adjust `wcs.sources.verbatim`, raise `PARSER_VERSION`, and run `scripts/validate_undocs.py`. |
 | `records could not be parsed` | An unusual record | The manifest entry has the error. Usually one record; the rest are unaffected. |
+| `Security Council votes: ... on the list of vetoes, not found in the records` | A listed veto whose vote the parser did not read (a new wording, or a record read from a scan) | Look at the meeting record named; if its wording is new, adjust `wcs.sources.vote_result` and raise `wcs.sources.council.VERSION`. The draft's page meanwhile shows what the list gives. |
+| `Security Council votes: ... the record has X against; the list of vetoes has Y` | The lists in the record were read wrongly, or the list of vetoes is wrong | Read the vote in the record. If the list is wrong, tell the Library (library-ny@un.org). |
+| `Security Council votes: ... the lists printed do not add up to the totals announced` | Lines of a list lost from the PDF (S/PV.9786 is one) | Nothing: the page lists the members named and says the record has the full vote. |
 | `labels that look like countries but matched none` | A country written in a new way | Add it to `data_static/aliases.csv`. |
 | `no Security Council record newer than ...` | Records not appearing, or discovery broken | Check https://digitallibrary.un.org for recent `S/PV` records. If they are there, discovery needs fixing. |
 | `no General Debate records yet for the Nth session` | Over 15 months since the debate with no records found | Check the Digital Library for `A/<session>/PV` records. If they are there, look at the entries in `manifest-ga.json`. |

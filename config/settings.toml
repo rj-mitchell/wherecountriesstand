@@ -45,6 +45,10 @@ sc_speeches = "https://dataverse.harvard.edu/api/access/datafile/10809805"
 ungd_guestbook = { institution = "Where They Stand", position = "Project lead", purpose = "Research" }
 # UN Digital Library: General Assembly voting data (non-commercial use, with attribution).
 votes_record = "https://digitallibrary.un.org/record/4060887"
+# UN Digital Library: Security Council voting data, adopted resolutions (non-commercial use, with attribution;
+# decision 30), and the Dag Hammarskjöld Library's list of vetoes, read from its research guide.
+council_votes_record = "https://digitallibrary.un.org/record/4055387"
+veto_list = "https://research.un.org/en/docs/sc/quick/veto"
 # Where a document symbol resolves to the document itself.
 undocs = "https://undocs.org/en/"
 

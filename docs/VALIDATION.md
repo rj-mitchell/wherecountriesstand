@@ -121,6 +121,19 @@ records, so these are checks of coverage and of samples:
   2020, one in 2021, none since). The corpus supplies the statements for 2020 and 2021; this matters if a future
   session is held virtually.
 
+## Security Council votes and the list of vetoes
+
+The reading of votes from the Council's records (`wcs.sources.vote_result`,
+[decision 30](DECISIONS.md#30-votes-in-the-security-council-including-vetoes)) is checked against the UN Dag
+Hammarskjöld Library's list of vetoes on every update: each veto on the list since the site's Council records begin
+must be found in them, with the same permanent members against, and the report says which are not. On 22 November
+2026 it was run here on the UN's PDFs of every meeting the list names from 25 February 2022 to 30 October 2026 (23
+lines, 24 vetoes including an oral amendment): all found, with the same members against. The tests read real record
+text of 2001, 2011, 2020 (a vote by letter), 2023, 2024, 2025 and 2026 (`tests/fixtures/council/`), including a draft
+two permanent members voted against (S/2024/239) and one that failed for want of nine votes although three permanent
+members voted against it (S/2024/383). The records of 1992 to 2023 on the server are the corpus's text, not read
+here; the first build on the server reports how many of the 69 vetoes the list gives since 1992 it finds.
+
 ## Real briefings (October 2026)
 
 Twenty-six briefings written by the model on the real record (eight in a first round, eighteen in a second), across

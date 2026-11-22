@@ -105,6 +105,12 @@ def bootstrap(embed_hours: float = typer.Option(0, help="embed for up to this lo
     if not votes_path(s.parquet_dir).exists():
         typer.echo("General Assembly votes: downloading and converting")
         votes.ingest(s, votes.fetch(s))
+    from wcs.sources import council
+
+    if council.latest_csv(s) is None:
+        typer.echo("Security Council votes: downloading the voting data and the list of vetoes")
+        council.fetch(s)
+        council.fetch_veto_list(s)
     start = live_from(s)
     if not [y for y in years(s.parquet_dir, "sc") if y < start.year]:
         typer.echo("Security Council corpus: downloading (about 510 MB) and loading")
@@ -134,6 +140,10 @@ def bootstrap(embed_hours: float = typer.Option(0, help="embed for up to this lo
     update_general_debate(s, ref, undocs.UNDocs(s), Report(started="bootstrap"),
                           sessions=range(replies_since, gd_from_session(s)))
     typer.echo(f"  languages of {ungd.add_languages(s, gd_from_session(s))} corpus statements, from the UN's records")
+    typer.echo("Security Council votes: the drafts not adopted, from the records")
+    built = council.build(s, ref, undocs.UNDocs(s))
+    council.mark_built(s)
+    typer.echo(f"  {built.resolutions} resolutions and {built.drafts} drafts not adopted; {len(built.problems)} problems")
     typer.echo("Keyword index")
     n = Indexer(s, ref).index_all(SOURCES)
     typer.echo(f"  {n} passages")
@@ -213,6 +223,8 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
                    f"passages indexed: {report.indexed}; embedded: {report.embedded}")
         if report.votes:
             typer.echo(f"votes: {report.votes}")
+        if report.council_votes:
+            typer.echo(f"Security Council votes: {report.council_votes}")
         for session, info in report.gd.items():
             typer.echo(f"General Debate, session {session}: {info['statements']} statements and {info['replies']} "
                        f"rights of reply from {info['meetings']} meetings{' (complete)' if info['concluded'] else ''}; "
@@ -305,6 +317,15 @@ def usage(days: int = typer.Option(7, help="list each day's spend for today and 
 # names does its work and prints what it always printed, and first says on standard error what it is called now
 # (wts-core 0.3.0; ``OLD_NAME`` below). Nothing of the site's own reads that: its timers run none of them.
 
+def _vote_exists(votes: Any) -> Any:
+    """Whether a vote has a page at /votes/<slug>.html: the General Assembly's (decision 26) or the Security
+    Council's (decision 30)."""
+    from wcs.api.council_votes import CouncilVotePages
+
+    council = CouncilVotePages(votes)
+    return lambda slug: votes.exists(slug) or council.exists(slug)
+
+
 def _clock() -> Clock:
     return CLOCK
 
@@ -327,7 +348,7 @@ def _replies() -> Replies:
     db = _state()
     return open_replies(db, _briefings(db), _clock(),
                         record_exists=lambda record_id: has_record(open_index(load_settings().index_dir), record_id),
-                        vote_exists=VotePages(load_settings()).exists)
+                        vote_exists=_vote_exists(VotePages(load_settings())))
 
 
 def _report_lines(r: Mapping[str, Any]) -> list[str]:
@@ -721,6 +742,31 @@ def fetch_votes(force: bool = False) -> None:
     from wcs.sources import votes
 
     typer.echo(votes.fetch(load_settings(), force=force))
+
+
+@app.command("council-votes")
+def council_votes(fetch: bool = typer.Option(True, help="download a new voting data file and the list of vetoes "
+                                                       "first"),
+                  max_fetch: int = typer.Option(40, help="records of listed vetoes read again from the UN's PDFs, "
+                                                          "at most")) -> None:
+    """The Security Council's votes (decision 30): its voting data, the UN Library's list of vetoes, and the drafts
+    not adopted read from the stored Council records, checked against the list. The update does this itself; this
+    is for a first load or after changing how the drafts are read."""
+    from wcs.reference.countries import countries
+    from wcs.sources import council, undocs
+
+    s = load_settings()
+    if fetch:
+        typer.echo(f"voting data: {council.fetch(s)}")
+        typer.echo(f"list of vetoes: {council.fetch_veto_list(s)}")
+    built = council.build(s, countries(), undocs.UNDocs(s), max_fetch=max_fetch)
+    council.mark_built(s)
+    typer.echo(f"{built.resolutions} resolutions; {built.drafts} drafts not adopted ({built.vetoes_found} vetoes and "
+               f"{built.failed_for_votes} without the votes needed, read from the records since "
+               f"{built.first_record}; {built.vetoes_from_list} vetoes from the list alone); {built.vetoes_listed} "
+               f"vetoes listed since the records begin; {len(built.from_pdfs)} records read from the UN's PDFs")
+    for p in built.problems:
+        typer.echo(f"problem: {p}")
 
 
 @app.command("ingest-votes")

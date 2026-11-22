@@ -24,6 +24,8 @@ TITLE_GROUPS = ("p5", "council_elected", "council_guest", "eu", "nato", "au", "a
 STATUS_LABEL = {"observer_state": "a non-member observer State of the United Nations (it does not vote in the "
                                   "General Assembly)"}
 VOTE_LABEL = {"Y": "In favour", "N": "Against", "A": "Abstaining", "X": "Not voting"}
+# the Security Council's records say a member that took no part "did not participate in the voting" (decision 30)
+COUNCIL_VOTE_LABEL = {**VOTE_LABEL, "X": "Did not participate in the voting"}
 
 
 @dataclass
@@ -163,10 +165,58 @@ def record_source(n: int, r: dict[str, Any], group_by: str = "region") -> Source
 VOTE_WORDS = {"Y": "in favour", "N": "against", "A": "abstained", "X": "did not vote"}
 
 
+def council_vote_source(n: int, v: dict[str, Any], speakers: list[str] | None = None) -> Source:
+    """A Security Council vote (decision 30): a resolution adopted, or a draft not adopted, with the record's own
+    words for the result, the permanent members whose negative vote defeated a vetoed draft, and each member's vote
+    where the record gives it."""
+    adopted = v.get("outcome") == "adopted"
+    what = "resolution" if adopted else (v.get("what") or "draft resolution")
+    symbol = v["resolution"]
+    status = "adopted" if adopted else "not adopted"
+    title = f"Security Council vote on {what} {symbol} ({status}) — {fmt_date(v['date'])} — {v.get('title') or ''}"
+    totals = (f"{v.get('total_yes') or 0} in favour, {v.get('total_no') or 0} against, "
+              f"{v.get('total_abstentions') or 0} abstaining")
+    if adopted and v.get("modality") == "Without Vote":
+        blocks = [f"Resolution {symbol} was adopted by the Security Council without a vote on {fmt_date(v['date'])}."]
+    elif adopted:
+        blocks = [f"Resolution {symbol} was adopted by the Security Council on {fmt_date(v['date'])} by a vote of "
+                  f"{totals}."]
+    elif v.get("result"):
+        blocks = [f"The {what} {symbol} was put to the vote in the Security Council on {fmt_date(v['date'])}. The "
+                  f"record of the meeting: “{v['result']}”"]
+    else:
+        blocks = [f"The {what} {symbol} was not adopted by the Security Council on {fmt_date(v['date'])}, owing to "
+                  "the negative vote of a permanent member of the Council (the UN Library's list of vetoes)."]
+    if v.get("vetoed_by"):
+        blocks.append(f"Permanent members voting against: {', '.join(v['vetoed_by'])}.")
+    if v.get("agenda_title"):
+        blocks.append(f"Agenda item: {v['agenda_title']}")
+    for code in ("Y", "N", "A", "X"):
+        names = (v.get("votes") or {}).get(code) or []
+        if names:
+            blocks.append(f"{COUNCIL_VOTE_LABEL[code]} ({len(names)}): {', '.join(names)}.")
+    if speakers and v.get("votes"):
+        how = {name: VOTE_WORDS[code] if code != "X" else "did not participate in the voting"
+               for code, names in v["votes"].items() for name in names if code in VOTE_WORDS}
+        listed = [f"{name}: {how[name]}" for name in speakers if name in how]
+        if listed:
+            blocks.append("How the members whose statements are among the sources voted: " + "; ".join(listed) + ".")
+    name = f"Resolution {symbol}" if adopted else f"{what[0].upper()}{what[1:]} {symbol}, not adopted"
+    meta = {"resolution": symbol, "date": v["date"], "title": v.get("title"), "meeting": v.get("meeting"),
+            "body": "Security Council", "vote_name": name,
+            "totals": {"yes": v.get("total_yes"), "no": v.get("total_no"), "abstain": v.get("total_abstentions"),
+                       "non_voting": v.get("total_non_voting")},
+            "group": "Votes"}
+    return Source(n, "vote", title, v.get("url") or "", blocks, meta)
+
+
 def vote_source(n: int, v: dict[str, Any], speakers: list[str] | None = None) -> Source:
     """A General Assembly recorded vote: what was voted on, the totals, and how each country voted. ``speakers``:
     the countries whose statements are among the sources, whose votes are also listed on their own (found in
-    real briefings: picking one country out of a list of 140 names goes wrong)."""
+    real briefings: picking one country out of a list of 140 names goes wrong). A Security Council vote is made by
+    ``council_vote_source``."""
+    if v.get("body") == "Security Council":
+        return council_vote_source(n, v, speakers)
     totals = f"{v['total_yes']} in favour, {v['total_no']} against, {v['total_abstentions']} abstaining"
     title = (f"General Assembly recorded vote on resolution {v['resolution']} — {fmt_date(v['date'])} — "
              f"{v['title']}")

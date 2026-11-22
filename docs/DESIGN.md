@@ -131,6 +131,27 @@ into `web/partials/record-page.html`, which carries the same head, header and fo
 Screenshots of a vote's page, a session's list and the index at 390 and 1,280 pixels wide were looked at on
 21 November 2026.
 
+## Votes in the Security Council
+
+The Council's votes ([decision 30](DECISIONS.md#30-votes-in-the-security-council-including-vetoes)) are written on
+the server into the vote pages' frame, by [`src/wcs/api/council_votes.py`](../src/wcs/api/council_votes.py), in the
+same layout as the Assembly's: the link back to "Votes in the Security Council" and the vote's year above the
+heading, the result as the lede, the facts with a label beside each value, the "If you're named" panel beside them on
+wide screens, the totals as a small table, and every member under how it voted in columns. A permanent member is
+marked "(permanent member)" after its name, in muted text, so that nothing depends on colour or position. The
+record's announcement of the result is quoted in the facts, with "(the meeting record)" after it; a fact taken from
+the voting data's description or the list of vetoes says so in the same way. A vetoed draft's page adds one plain
+paragraph on Article 27 of the Charter. A draft known only from the list of vetoes has no table, and says why.
+
+The index lists the 20 latest votes, then every draft not adopted, newest first, then the years in columns; each
+year's page lists its votes. On a country's page, the section "Votes in the Security Council" follows the Assembly's
+votes, in the same form: a line on its terms, the counts table, its latest Council votes and the drafts not adopted
+that it voted against.
+
+Screenshots of the index, a year, a resolution, a vetoed draft, a veto known only from the list, the United States,
+China and Algeria's full list at 360, 390, 768, 1,024, 1,280 and 1,536 pixels (and 390 and 1,280 dark) were looked at
+on 22 November 2026, with the real voting data and records of 2022 to 2026.
+
 ## Topic briefings
 
 The topics' index (`/topics.html`) and each topic's page (`/topics/<slug>.html`,
