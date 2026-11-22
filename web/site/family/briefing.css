@@ -75,7 +75,10 @@
 .wts-quote--missing .wts-quote__tick { color: var(--wts-warn); }
 
 /* Source chips: who said it, where and when, in place of a bare number */
-.wts-chip { display: inline; border: 0; background: none; padding: 0; margin: 0; color: inherit; font: inherit; cursor: pointer; }
+/* A button is always laid out as one box, so a chip that folds onto two lines on a phone would fill the line and push
+   the full stop after it onto a line of its own: it stops short of the full width, and its name stays left-aligned */
+.wts-chip { display: inline; border: 0; background: none; padding: 0; margin: 0; color: inherit; font: inherit; cursor: pointer;
+  text-align: start; max-inline-size: calc(100% - .6em); }
 .wts-chip__in { display: inline-flex; align-items: baseline; gap: .35em; margin: .15em 0 .15em .3em; vertical-align: .08em;
   font-family: var(--wts-sans); font-size: .8125rem; line-height: 1.5; white-space: normal; color: var(--wts-cloth-text);
   background: var(--wts-paper-light); border: 1px solid var(--wts-cloth-text); border-radius: .8em; padding: 0 .55em 0 0; }
