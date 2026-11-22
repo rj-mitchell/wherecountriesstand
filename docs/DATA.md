@@ -10,6 +10,7 @@ checked on 24 October 2026 unless another date is given.
 | [UN General Debate Corpus](https://doi.org/10.7910/DVN/0TJX8Y) (Jankin, Baturo, Dasandi) | 1946 to 2025; used to the 78th session (2023) | 11,141 statements in version 14 (March 2026); 71 MB compressed | CC0 | Harvard Dataverse: `wcs fetch-gd`, then `wcs ingest-gd` (below) |
 | [UN Security Council Debates](https://doi.org/10.7910/DVN/KGVSYH) (Schoenfeld, Eckhard, Patz, van Meegdenburg and others) | 6 January 1992 to 30 December 2023 | 106,088 speeches at 6,595 meetings; 474 MB | CC0 | Harvard Dataverse: `wcs fetch-sc`, then `wcs ingest-sc` |
 | UN verbatim records (`S/PV.<n>`, `A/<session>/PV.<n>`) | Security Council from 2024; General Debate from the 79th session (2024); rights of reply from 1993 | About 300 Security Council meetings a year | © United Nations: non-commercial use, with attribution | UN Digital Library and Official Document System, read by `wcs update` |
+| General Assembly plenary records (`A/<session>/PV.<n>`, `A/ES-<n>/PV.<n>`, `A/S-<n>/PV.<n>`) beyond the General Debate | From the 49th session (1994), with the emergency special and special sessions ([decision 31](DECISIONS.md#31-the-rest-of-the-general-assemblys-plenary-record-with-explanations-of-vote)) | About 110 meetings a session, 3,700 in all; 12,500 words and 23 statements a meeting | © United Nations: non-commercial use, with attribution | The same services: `wcs backfill-plenary` once, then `wcs update` |
 | [General Assembly voting data](https://digitallibrary.un.org/record/4060887) (UN Dag Hammarskjöld Library) | 1946 to 17 September 2026 (resolution 81/1) | 954,382 rows (one country's vote on one resolution), 5,730 resolutions | © United Nations: non-commercial use, with attribution | CSV in the UN Digital Library, updated regularly: `wcs fetch-votes`, then `wcs ingest-votes` |
 | [Security Council voting data](https://digitallibrary.un.org/record/4055387) (UN Dag Hammarskjöld Library) | Resolution 1 (24 January 1946) to resolution 2829 (29 September 2026), version 7 | 41,559 rows (one member's vote on one resolution), 2,829 resolutions; 16 MB | © United Nations: non-commercial use, with attribution | CSV in the UN Digital Library: `wcs council-votes`, and each `wcs update` ([decision 30](DECISIONS.md#30-votes-in-the-security-council-including-vetoes)) |
 | [List of vetoes](https://research.un.org/en/docs/sc/quick/veto) (UN Dag Hammarskjöld Library) | 1946 to 30 October 2026 | 251 lines (date, draft, meeting record, agenda item, permanent members voting against) | © United Nations | Read from the Library's research guide once a day by `wcs update` |
@@ -63,6 +64,28 @@ code in the real download is recognised.
   "resolution / adopted by the General Assembly"; 76 are worded otherwise or in capitals. The votes run from
   26 January 1946 to 17 September 2026, in 99 sessions: 80 regular sessions (every one from the 1st to the 81st
   but the 19th, which has no recorded vote in the data), 10 emergency special and 9 special.
+
+### The General Assembly's plenary record
+
+Looked at on 22 November 2026, on samples from the 47th session (1992) to the 80th (2025):
+
+* The Digital Library's catalogue lists each session's plenary records (`191__a:A/50/PV.*`: 128 in the 50th session,
+  101 in the 60th, 118 in the 70th, 96 so far in the 79th and 11 in the 80th; 57 in the 10th emergency special
+  session and 19 in the 11th). Records appear about a year late and out of order: in November 2026 the 80th session's
+  December meetings and A/ES-10/PV.59 (December 2024) were not yet on the document system.
+* A record prints each item as "Agenda item 69 (continued)" and the item's title, then the reports and drafts under
+  it as headings of their own ("Report of the Fifth Committee (A/70/647)"); the parser keeps the item's number and
+  title apart. A vote is "A recorded vote was taken.", the lists, and "Draft resolution A/ES-11/L.1 was adopted by
+  141 votes to 5, with 35 abstentions (resolution ES-11/1)."; drafts recommended by a committee are known by their
+  number in its report ("Draft resolution IV", "as a whole"). In 2005 a page number and a list's heading can run
+  together ("13 Abstaining:"), which the parser read as a speaker: such a fragment is taken as the President's words.
+* The voting data's meeting for a vote is sometimes the one before (A/RES/79/81 to 79/83: "A/79/PV.45", where the
+  debate was; the votes were at A/79/PV.46), so explanations are linked to votes by the resolution's symbol.
+* Explanations of vote placed with certainty on the samples: all 24 of the 11th emergency special session's first
+  vote (A/ES-11/PV.5), all 5 at A/79/PV.46, 29 of 38 at A/ES-10/PV.41 (2 more only to an amendment, which the voting
+  data leaves out), 2 of 10 at A/70/PV.82, none of the 4 at A/50/PV.82 and of the 2 at A/60/PV.69, where delegations
+  explained their votes on several drafts at once without naming them. Explanations of position (decisions taken
+  without a vote) are kept but linked to nothing: 15 at A/60/PV.69.
 
 ### The Security Council's votes
 
@@ -169,7 +192,6 @@ the records are credited to the UN, with the document symbol and page.
 
 | Source | Why | Notes |
 |---|---|---|
-| General Assembly plenary verbatim records (`A/…/PV.…`) beyond the General Debate | The rest of the Assembly's debates, including explanations of vote | The same loader as for the Security Council. From 1992. |
 | UNFCCC COP high-level segment statements | The climate equivalent of the General Debate | PDFs on unfccc.int |
 | ICJ written and oral statements | Countries' formal legal positions. The climate change advisory opinion drew 91 written statements. | PDFs on icj-cij.org |
 | UPR recommendations and responses ([UPR Info](https://upr-info-database.uwazi.io/)) | 79,000 to 90,000 or more recommendations since 2008, with whether each was accepted or only "noted" | Bulk export to be confirmed |

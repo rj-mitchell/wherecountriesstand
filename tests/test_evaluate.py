@@ -52,6 +52,11 @@ def test_the_free_scores_over_the_whole_test_set_are_what_they_were(indexed, mon
     pipeline = Pipeline(indexed, Engine(indexed, embedder=HashingEmbedder(64), today=today), today=today)
     results = ev.run(indexed, pipeline=pipeline)
     before = shared.read("evaluation.json")
+    # changed on purpose (decision 31): "the General Assembly" now reads as its General Debate and its other plenary
+    # meetings, which both questions' expectations accept
+    for r in before["results"]:
+        if r["id"] in ("votes-ukraine-2022", "vatican-vote"):
+            r["got"]["sources"] = ["ga", "gd"]
     assert json.loads(json.dumps([asdict(r) for r in results], default=str)) == before["results"]
     assert ev.summary(results) == before["summary"]
 

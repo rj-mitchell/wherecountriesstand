@@ -323,7 +323,7 @@ def coverage(settings: Settings) -> dict[str, Any]:
 
     out: dict[str, Any] = {}
     con = duckdb.connect()
-    for source in ("sc", "gd"):
+    for source in ("sc", "gd", "ga"):
         files = [str(record_path(settings.parquet_dir, source, y)) for y in years(settings.parquet_dir, source)]
         if files:
             first, last, n = con.execute(f"SELECT min(date), max(date), count(*) FROM read_parquet({files!r}, "
@@ -340,8 +340,8 @@ def coverage(settings: Settings) -> dict[str, Any]:
     return out
 
 
-COVERAGE_LABELS = (("gd", "General Debate"), ("sc", "Security Council debates"), ("votes", "General Assembly votes"),
-                   ("council_votes", "Security Council votes"))
+COVERAGE_LABELS = (("gd", "General Debate"), ("ga", "General Assembly debates"), ("sc", "Security Council debates"),
+                   ("votes", "General Assembly votes"), ("council_votes", "Security Council votes"))
 COVERAGE_LIST = re.compile(r'(<dl class="facts" id="coverage">).*?(</dl>)', re.S)
 
 

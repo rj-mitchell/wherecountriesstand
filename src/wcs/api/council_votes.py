@@ -455,8 +455,9 @@ class CouncilVotePages:
                      "China’s seat to 25 October 1971 is the Republic of China’s. "
                      + ("From the " + f'<a href="{e(self.record)}"{OPENED}>Security Council voting data</a> of the UN '
                         "Dag Hammarskjöld Library, © United Nations." if v.adopted else
-                        "Read from the Council’s meeting record, and checked against the UN Dag Hammarskjöld "
-                        "Library’s list of vetoes, © United Nations.") + "</p>")
+                        "From the UN Dag Hammarskjöld Library’s list of vetoes, © United Nations." if v.source ==
+                        "veto list" else "Read from the Council’s meeting record, and checked against the UN Dag "
+                        "Hammarskjöld Library’s list of vetoes, © United Nations.") + "</p>")
         parts.append(STATEMENTS)
         parts.append("</div>" + _named_aside(v.path) + "</div>")
         return self.votes.page(title=v.page_title, description=self.description(v), path=v.path, trail=trail,

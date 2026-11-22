@@ -51,6 +51,7 @@ from wcs.api.votes import (
     in_a_sentence,
     result_words,
     shorten,
+    slug_of,
     statements_html,
 )
 from wcs.rag.sources import VOTE_LABEL
@@ -586,9 +587,10 @@ class CountryPages:
                 "statements of the countries a question names, where they have spoken on the subject.</p>"
                 "</form>")
 
-    INTRO = ("<p>Its most recent statements in the Security Council and the General Assembly’s General Debate, "
-             "newest first, with rights of reply as records of their own. A statement made on behalf of a group is "
-             "the group’s, and is not listed here.</p>")
+    INTRO = ("<p>Its most recent statements in the Security Council and the General Assembly (the General Debate, "
+             "and the Assembly’s other plenary meetings), newest first, with rights of reply as records of their own. "
+             "A statement made on behalf of a group is the group’s, and is not listed here.</p>")
+    EXPLANATIONS = 10
 
     def _statement_list(self, x: Entity, found: list[Statement]) -> str:
         items = []
@@ -838,6 +840,44 @@ class CountryPages:
         return self.page(title=f"{name} | {SITE_NAME}", description=description, path=x.council_path, trail=trail,
                          main="".join(parts))
 
+    def _explanations(self, x: Entity) -> str:
+        """Its 10 most recent explanations of vote in the General Assembly that the record ties to a recorded vote
+        with a page (decision 31), each linked to the vote's page."""
+        files = sorted((self.records_dir / "ga").glob("*.parquet")) if (self.records_dir / "ga").is_dir() else []
+        if not files or not x.votes:
+            return ""
+        hidden = set(self.hidden_records() or ())
+        rows = self.votes._con.execute(f"""
+            SELECT record_id, date, symbol, eov, explains, text, url FROM {self._source(files)}
+            WHERE country_code = ? AND coalesce(on_behalf_of, '') = '' AND eov IN ('before', 'after')
+                  AND explains IS NOT NULL
+            ORDER BY date DESC, symbol DESC, speech_number DESC LIMIT 60""", [x.code]).fetchall()
+        cat = self.votes.catalog()
+        items = []
+        for record_id, on, symbol, eov, explains, text, url in rows:
+            if record_id in hidden:
+                continue
+            linked = [cat.votes[slug] for k in explains.split("|") if (slug := slug_of(k)) in cat.votes]
+            if not linked:
+                continue
+            words = (text or "").split()
+            first = curl_quotes(" ".join(words[:FIRST_WORDS])) + (" …" if len(words) > FIRST_WORDS else "")
+            votes = and_list([f'<a href="{v.path}">{e(v.name)}</a>' for v in linked])
+            items.append('<li class="country-statement">'
+                         f'<p class="country-statement__meta">{e(long_date(on))}, '
+                         f"{'before' if eov == 'before' else 'after'} the vote on {votes}, "
+                         f'<a href="{e(url)}"{OPENED}>{e(symbol)}</a></p>'
+                         f'<p class="country-statement__agenda">{e(linked[0].title)}</p>'
+                         f"<blockquote><p>{e(first)}</p></blockquote></li>")
+            if len(items) >= self.EXPLANATIONS:
+                break
+        if not items:
+            return ""
+        return ('<h2 id="explanations">Its explanations of vote</h2>'
+                "<p>Its most recent statements in explanation of a recorded vote in the General Assembly, newest "
+                "first, each with the vote it explains. Only those the record ties to the vote are listed.</p>"
+                f'<ol class="country-statements">{"".join(items)}</ol>')
+
     def _topics(self, x: Entity) -> str:
         if self.topics is None:
             return ""
@@ -941,6 +981,7 @@ class CountryPages:
             self._form(x),
             self._statements(x),
             self._votes(x),
+            self._explanations(x),
             self._council(x),
             self._period(x),
             self._topics(x),

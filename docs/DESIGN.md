@@ -131,6 +131,21 @@ into `web/partials/record-page.html`, which carries the same head, header and fo
 Screenshots of a vote's page, a session's list and the index at 390 and 1,280 pixels wide were looked at on
 21 November 2026.
 
+## Explanations of vote
+
+A General Assembly vote's page lists the explanations of vote the record ties to it
+([decision 31](DECISIONS.md#31-the-rest-of-the-general-assemblys-plenary-record-with-explanations-of-vote)) after
+the lists of how each Member State voted, under "Explanations of vote", in the record's order, as the country pages
+list statements: a row between hairlines with the speaking country (linked to its page) or "On behalf of" the group,
+"Before the vote" or "After the vote" and the record's symbol; the first 40 words in the serif, as a quotation from
+the record; "The whole explanation", a disclosure with the rest; and "Read it in A/ES-11/PV.5". A country's page has
+"Its explanations of vote" after its recorded votes in the same form, each row naming the vote it explains, linked.
+Plenary statements are labelled with the session and meeting ("General Assembly, 79th session, 46th plenary
+meeting") and their agenda item.
+
+Screenshots of a vote's page with 23 explanations and of the country pages of China and the United States, at 360,
+390, 768, 1,024, 1,280 and 1,536 pixels (and 390 and 1,280 dark), were looked at on 22 November 2026.
+
 ## Votes in the Security Council
 
 The Council's votes ([decision 30](DECISIONS.md#30-votes-in-the-security-council-including-vetoes)) are written on

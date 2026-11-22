@@ -4,7 +4,9 @@ check (CI's accessibility check, decisions 26 and 30). Usage: python scripts/sam
 Two General Assembly votes, each with every Member State of 2025 voting one way or another, in the voting data's own
 form (``wcs.store.parquet.VOTE_SCHEMA``); and three Security Council votes by the Council's members of 2025 (a
 resolution, a draft not adopted owing to a permanent member's negative vote and one that did not get the votes it
-needed), in ``COUNCIL_VOTE_SCHEMA``. They are labelled as samples, and never go near the live site's data.
+needed), in ``COUNCIL_VOTE_SCHEMA``; and two made-up statements of the General Assembly's plenary record in explanation
+of the first Assembly vote (decision 31), so that the vote's page lists them and Kenya's page has its explanations of
+vote. They are labelled as samples, and never go near the live site's data.
 """
 
 from __future__ import annotations
@@ -14,7 +16,7 @@ from datetime import date
 from pathlib import Path
 
 from wcs.reference.countries import countries
-from wcs.store.parquet import write_council_votes, write_votes
+from wcs.store.parquet import write_by_year, write_council_votes, write_votes
 
 ON = (date(2025, 12, 3), date(2025, 12, 10))
 
@@ -73,9 +75,28 @@ def council_rows() -> list[dict]:
     return out
 
 
+def plenary_rows() -> list[dict]:
+    on = ON[0]
+    out = []
+    for n, (code, eov, text) in enumerate((
+            ("KEN", "before", "Kenya will vote in favour of draft resolution A/80/L.91, a sample for the accessibility "
+                              "check, because it speaks to the concerns of developing countries."),
+            ("FRA", "after", "France voted in favour of resolution 80/901, a sample for the accessibility check. " * 8)), 1):
+        out.append({"record_id": f"ga:A/80/PV.91:{n:04d}", "source": "ga", "body": "General Assembly", "date": on,
+                    "date_precision": "day", "year": on.year, "session": 80,
+                    "meeting": "80th session, 91st plenary meeting", "symbol": "A/80/PV.91", "speech_number": n,
+                    "agenda": "Agenda item 999: A sample agenda item", "agenda_area": None, "speaker_name": "Sample",
+                    "speaker_post": None, "speaker_role": "", "participant": "", "country_code": code,
+                    "country_label": code, "entity_kind": "member_state", "on_behalf_of": None, "language": None,
+                    "ocr": False, "text": text.strip(), "url": "https://undocs.org/en/A/80/PV.91",
+                    "text_source": "record", "eov": eov, "explains": "A/RES/80/901"})
+    return out
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         sys.exit("Usage: python scripts/sample_votes.py <data folder>")
     path = write_votes(Path(sys.argv[1]) / "parquet", rows())
     print(f"wrote {path}")
     print(f"wrote {write_council_votes(Path(sys.argv[1]) / 'parquet', council_rows())}")
+    print(f"wrote plenary records {write_by_year(Path(sys.argv[1]) / 'parquet', 'ga', plenary_rows())}")

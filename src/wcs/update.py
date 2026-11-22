@@ -70,6 +70,7 @@ class Report:
     index: str | None = None  # "merged" (new rows merged into the search indices) or "built" (built afresh)
     latest_meeting: str | None = None
     gd: dict[int, dict[str, Any]] = field(default_factory=dict)  # session -> meetings, statements, concluded
+    plenary: dict[str, Any] = field(default_factory=dict)  # the rest of the Assembly's plenary record (decision 31)
     warnings: list[str] = field(default_factory=list)
     gd_website: dict[str, Any] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
@@ -377,7 +378,7 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
     # until a session's official records are complete, statements from the UN's General Debate website fill in
     def official(session: int) -> list[dict[str, Any]]:
         return [r for sym, e in manifest.entries.items() if e.get("status") == "parsed" and
-                unga.session_of(sym) == session for r in undocs.load_parsed(settings, sym)]
+                unga.session_of(sym) == session for r in undocs.load_parsed(settings, sym, "gd")]
 
     live = {s for s in sessions if s >= first and not any(
         e.get("concludes_debate") for sym, e in manifest.entries.items() if unga.session_of(sym) == s)}
@@ -423,7 +424,7 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
         rows, symbols, seen, from_website = [], [], set(), 0
         for symbol, entry in sorted(manifest.entries.items(), key=lambda kv: unga.meeting_number(kv[0]) or 0):
             if entry.get("status") == "parsed" and unga.session_of(symbol) == session:
-                for r in undocs.load_parsed(settings, symbol):
+                for r in undocs.load_parsed(settings, symbol, "gd"):
                     if session < first and not unga.is_reply(r):
                         continue
                     rid, k = r["record_id"], 2
@@ -460,6 +461,199 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
                               "concluded": any(e.get("concludes_debate") for e in es),
                               "awaiting": sum(e.get("status") == "missing" for e in es)}
     return changed
+
+
+# The rest of the General Assembly's plenary record (decision 31)
+
+PLENARY_PROBE_MISSES = 3      # numbers past the last one known tried on ODS by the update (the backfill tries more)
+PLENARY_GAPS = 40             # numbers the catalogue skipped, tried on ODS in one update run
+SPECIAL_SESSIONS = tuple(range(19, 33))    # the special sessions since 1997 (S-19 to S-32)
+EMERGENCY_SESSIONS = (10, 11)              # the emergency special sessions held since 1997 (ES-10 and ES-11)
+
+
+def plenary_from_session(settings: Settings) -> int:
+    return int(settings.section("live").get("plenary_from_session", 49))
+
+
+def plenary_prefix(key: str) -> str:
+    """"80" -> "A/80/PV.", "es-11" -> "A/ES-11/PV.", "s-27" -> "A/S-27/PV."."""
+    if key.startswith("es-"):
+        return f"A/ES-{key[3:]}/PV."
+    if key.startswith("s-"):
+        return f"A/S-{key[2:]}/PV."
+    return f"A/{key}/PV."
+
+
+def plenary_number(symbol: str, prefix: str) -> int | None:
+    m = re.fullmatch(re.escape(prefix) + r"(\d+)", symbol)
+    return int(m[1]) if m else None
+
+
+def live_plenary_sessions(today: date | None = None) -> list[str]:
+    """What the update looks at: the session open now and the one before (records appear about a year late), and
+    the emergency special sessions, which the Assembly resumes."""
+    current = unga.current_session(today)
+    return [str(current), str(current - 1), *(f"es-{n}" for n in EMERGENCY_SESSIONS)]
+
+
+def backfill_plenary_sessions(since: int, until: int) -> list[str]:
+    """Every session from ``since`` to ``until``, newest first, then the emergency special and special sessions."""
+    return [str(n) for n in range(until, since - 1, -1)] + [f"es-{n}" for n in EMERGENCY_SESSIONS] + \
+        [f"s-{n}" for n in SPECIAL_SESSIONS]
+
+
+def update_plenary(settings: Settings, ref: Countries, docs: undocs.UNDocs, report: Report, sessions: list[str],
+                   max_new: int | None = None, probe_misses: int = PLENARY_PROBE_MISSES, gaps: int = PLENARY_GAPS,
+                   deadline: float | None = None) -> set[int]:
+    """Find, fetch, parse and store the plenary records of the given sessions (decision 31), through the same client,
+    cache and manifest as the General Debate's (``manifest-ga.json``): the Digital Library's catalogue, then ODS for
+    the numbers after the last one known and those the catalogue skipped; records already in the cache are parsed
+    again, not fetched, when how they are read changes; provisional records are fetched again when corrected; a
+    number not found is tried again on later runs. Returns the years of "ga" records written. ``deadline`` (a
+    ``time.monotonic()``): stop starting new records after it (the backfill's ``--hours``); what is done is kept."""
+    import time
+
+    manifest = undocs.Manifest.load(settings, "ga")
+    info = report.plenary.setdefault("sessions", {})
+    done = 0
+    for key in sessions:
+        if deadline is not None and time.monotonic() > deadline:
+            break
+        prefix = plenary_prefix(key)
+        catalogue: dict[str, dict[str, Any]] = {}
+        try:
+            start = 1
+            while True:
+                found = docs.search(f"191__a:{prefix}*", rows=200, start=start)
+                for meta in found:
+                    if plenary_number(meta["symbol"], prefix):
+                        catalogue[meta["symbol"]] = meta
+                if len(found) < 200:
+                    break
+                start += 200
+        except Exception as exc:
+            report.warnings.append(f"Digital Library search failed for {prefix}* ({exc}); trying ODS")
+        known = {s for s in manifest.entries if plenary_number(s, prefix)} | set(catalogue)
+        top = max((plenary_number(s, prefix) or 0 for s in known), default=0)
+        # numbers past the last one known, and the gaps the catalogue left, tried on ODS
+        todo_numbers = [n for n in range(1, top) if f"{prefix}{n}" not in known][:gaps]
+        n, misses = top, 0
+        while misses < probe_misses and (deadline is None or time.monotonic() < deadline):
+            n += 1
+            if f"{prefix}{n}" in known:
+                continue
+            got = docs.pdf(f"{prefix}{n}")
+            if got is None:
+                misses += 1
+                continue
+            misses = 0
+            path = undocs.cache_dir(settings) / "pdf" / f"{undocs.safe_name(prefix + str(n))}.pdf"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(got[0])
+            manifest.entries.setdefault(f"{prefix}{n}", {"first_seen": undocs._now()}).update(
+                {"url": got[1], "fetched_at": undocs._now(), "provisional": "/pro/" in got[1]})
+            catalogue[f"{prefix}{n}"] = {"symbol": f"{prefix}{n}", "verbatim": True}
+        for gap in todo_numbers:
+            catalogue.setdefault(f"{prefix}{gap}", {"symbol": f"{prefix}{gap}", "verbatim": True})
+        counts = {"catalogued": len(catalogue), "fetched": 0, "reparsed": 0, "missing": 0, "failed": 0}
+        for symbol in sorted(catalogue, key=lambda s: plenary_number(s, prefix) or 0):
+            if deadline is not None and time.monotonic() > deadline:
+                break
+            meta, entry = catalogue[symbol], manifest.entries.get(symbol) or {}
+            status = entry.get("status")
+            cached = (undocs.cache_dir(settings) / "pdf" / f"{undocs.safe_name(symbol)}.pdf").exists()
+            if max_new is not None and done >= max_new and not cached:
+                continue  # enough downloads for this run; what is cached is still read
+            if status == "no_text" or (status == "missing" and
+                                       undocs._days_since(entry.get("checked_at")) < unga.CHECK_EVERY_DAYS):
+                continue
+            if status == "failed" and entry.get("attempts", 0) >= undocs.MAX_ATTEMPTS:
+                continue
+            refetch = status == "parsed" and undocs.due_for_refetch(entry, meta)
+            current = status == "parsed" and entry.get("plenary_version", 0) >= unga.PLENARY_VERSION and \
+                entry.get("parser_version", 0) >= PARSER_VERSION
+            if current and not refetch:
+                continue
+            try:
+                if cached and not refetch:
+                    manifest.entries.setdefault(symbol, {"first_seen": undocs._now()}).update(
+                        {k: meta[k] for k in ("record", "modified", "title", "agenda") if meta.get(k) is not None})
+                    undocs.parse_cached(settings, ref, manifest, symbol, meta, body="ga")
+                    counts["reparsed"] += 1
+                else:
+                    undocs.process(settings, ref, manifest, docs, meta, force=refetch, body="ga")
+                    counts["fetched"] += 1
+                    done += 1
+            except Exception as exc:
+                log.exception("failed on %s", symbol)
+                manifest.entries.setdefault(symbol, {})["status"] = "failed"
+                manifest.entries[symbol]["error"] = f"{type(exc).__name__}: {exc}"
+            entry = manifest.entries[symbol]
+            entry["checked_at"] = undocs._now()
+            if entry.get("status") == "missing":
+                counts["missing"] += 1
+            elif entry.get("status") == "failed":
+                counts["failed"] += 1
+                report.failed.append(symbol)
+            if entry.get("problems"):
+                report.problems[symbol] = entry["problems"]
+            manifest.save()
+        es = [e for s, e in manifest.entries.items() if plenary_number(s, prefix) and e.get("status") == "parsed"]
+        counts["parsed"] = len(es)
+        counts["statements"] = sum(e.get("plenary", 0) for e in es)
+        counts["explanations"] = {k: sum((e.get("eov") or {}).get(k, 0) for e in es)
+                                  for k in ("placed", "drafts_only", "unplaced", "positions")}
+        info[key] = counts
+    manifest.save()
+    written = store_plenary(settings, manifest)
+    report.years_written.update({y: report.years_written.get(y, 0) + n for y, n in written.items()})
+    return set(written)
+
+
+def store_plenary(settings: Settings, manifest: undocs.Manifest | None = None) -> dict[int, int]:
+    """Write each year of "ga" records that has a meeting parsed but not stored, from every meeting parsed for it,
+    under a lock so that the update and the backfill never write one year at once. Returns rows written by year."""
+    import fcntl
+
+    manifest = manifest or undocs.Manifest.load(settings, "ga")
+    out: dict[int, int] = {}
+    lock_path = settings.parquet_dir / "records" / "ga.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(lock_path, "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        manifest.save()  # take up what another job parsed meanwhile
+        parsed = {s: e for s, e in manifest.entries.items() if e.get("status") == "parsed" and
+                  e.get("plenary_version") and e.get("date")}
+        years_due = sorted({int(e["date"][:4]) for e in parsed.values() if e.get("stored_ga") is False})
+        for year in years_due:
+            rows, seen, symbols = [], set(), []
+            for symbol, e in sorted(parsed.items()):
+                if int(e["date"][:4]) != year:
+                    continue
+                symbols.append(symbol)
+                for r in undocs.load_parsed(settings, symbol, "ga"):
+                    if r["year"] == year and r["record_id"] not in seen:
+                        seen.add(r["record_id"])
+                        rows.append(r)
+            write_year(settings.parquet_dir, "ga", year, rows)
+            for symbol in symbols:
+                manifest.entries[symbol]["stored_ga"] = True
+            out[year] = len(rows)
+        manifest.save()
+    return out
+
+
+def stale_years(settings: Settings, source: str) -> set[int]:
+    """Years of a source whose records were written after the index last read them (by the backfill, which leaves
+    the index to the update)."""
+    state_path = settings.index_dir / "state.json"
+    state = json.loads(state_path.read_text()) if state_path.exists() else {}
+    out = set()
+    for year in years(settings.parquet_dir, source):
+        indexed = state.get(f"{source}:{year}", {}).get("indexed_at", 0)
+        if record_path(settings.parquet_dir, source, year).stat().st_mtime > indexed:
+            out.add(year)
+    return out
 
 
 def corpus_fallback(settings: Settings, ref: Countries,
@@ -619,10 +813,11 @@ def update_index(settings: Settings, ref: Countries, changed: dict[str, set[int]
 
 def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd: bool = True, do_index: bool = True,
         embed_seconds: float | None = None, max_new: int | None = None, docs: undocs.UNDocs | None = None,
-        reference: Countries | None = None) -> Report:
+        reference: Countries | None = None, do_plenary: bool | None = None) -> Report:
     report = Report(started=datetime.now(UTC).isoformat(timespec="seconds"))
     ref = reference or countries()
-    changed: dict[str, set[int]] = {"sc": set(), "gd": set()}
+    changed: dict[str, set[int]] = {"sc": set(), "gd": set(), "ga": set()}
+    do_plenary = do_gd if do_plenary is None else do_plenary
     if do_votes:
         try:
             update_votes(settings, report)
@@ -643,6 +838,19 @@ def run(settings: Settings, *, do_votes: bool = True, do_sc: bool = True, do_gd:
         except Exception as exc:
             log.exception("General Debate update failed")
             report.errors.append(f"General Debate: {type(exc).__name__}: {exc}")
+    if do_plenary:
+        try:
+            docs = docs or undocs.UNDocs(settings)
+            changed["ga"] = update_plenary(settings, ref, docs, report, live_plenary_sessions(), max_new)
+        except Exception as exc:
+            log.exception("General Assembly plenary update failed")
+            report.errors.append(f"General Assembly plenary: {type(exc).__name__}: {exc}")
+    if do_index:
+        # years the plenary record's backfill wrote since the index last read them (it leaves the index to this job)
+        try:
+            changed["ga"] |= stale_years(settings, "ga")
+        except Exception as exc:
+            report.warnings.append(f"plenary record: could not compare it with the index ({exc})")
     if do_votes:
         # after the Council's records, so that a draft voted on at a meeting just read in is found
         try:

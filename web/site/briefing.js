@@ -539,7 +539,7 @@
 
   // ---------- the wait ----------
 
-  const BODY = { sc: "Security Council", gd: "General Assembly" };
+  const BODY = { sc: "Security Council", gd: "General Assembly", ga: "General Assembly plenary meetings" };
 
   // The question as read, as large chips: the bodies, the dates, the countries and groups.
   function planChips(plan, names) {

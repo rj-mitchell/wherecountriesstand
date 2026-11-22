@@ -353,7 +353,7 @@ class VotePages:
         self._lock = threading.Lock()
         self._stamp: str | None = None
         self._catalog = Catalog({}, {}, {})
-        self._pages: OrderedDict[str, str] = OrderedDict()
+        self._pages: OrderedDict[str, tuple[str, str]] = OrderedDict()
 
     # The record
 
@@ -499,23 +499,32 @@ class VotePages:
                          main=main)
 
     def vote_page(self, slug: str) -> str | None:
-        """A vote's page, with ``STATEMENTS`` where its statements go (they are filled in as it is served)."""
+        """A vote's page, with ``STATEMENTS`` where its statements go (they are filled in as it is served). A page kept
+        is written again when its year of plenary records changes (its explanations of vote, decision 31)."""
         cat = self.catalog()
         v = cat.votes.get(slug)
         if v is None:
             return None
+        ga = self._plenary_stamp(v.on.year)
         with self._lock:
             kept = self._pages.get(slug)
-            if kept is not None:
+            if kept is not None and kept[0] == ga:
                 self._pages.move_to_end(slug)
-                return kept
+                return kept[1]
         text = self._vote_page(v)
         with self._lock:
             if self._stamp == self.stamp():
-                self._pages[slug] = text
+                self._pages[slug] = (ga, text)
                 while len(self._pages) > self.keep:
                     self._pages.popitem(last=False)
         return text
+
+    def _plenary_stamp(self, year: int) -> str:
+        try:
+            st = (self.path.parent / "records" / "ga" / f"{year}.parquet").stat()
+        except OSError:
+            return ""
+        return f"{st.st_mtime_ns}:{st.st_size}"
 
     def description(self, v: Vote) -> str:
         return shorten(f"How each Member State voted on General Assembly {self._kind(v)} {v.name}, on "
@@ -586,6 +595,7 @@ class VotePages:
             parts.append(f'<h3 id="{anchor}">{VOTE_LABEL[k]} ({len(names):,})</h3>'
                          f'<ul class="vote-list" aria-labelledby="{anchor}">'
                          + "".join(self._country(name, code) for name, code in names) + "</ul>")
+        parts.append(self._explanations_html(v))
         parts.append('<p class="vote-source">Each country is given the UN’s short name, as everywhere on this site; '
                      "China’s seat to 25 October 1971 is the Republic of China’s, and Germany before 3 October "
                      "1990 is the Federal Republic of Germany. The voting data itself gives each Member State’s "
@@ -595,6 +605,61 @@ class VotePages:
         parts.append("</div>" + _named_aside(v.path) + "</div>")
         return self.page(title=v.page_title, description=self.description(v), path=v.path, trail=trail,
                          main="".join(parts))
+
+    # Explanations of vote (decision 31)
+
+    def explanations(self, v: Vote) -> list[dict[str, Any]]:
+        """The statements made in explanation of this vote at the plenary meeting, in the record's order, where the
+        link is certain: the statement or the President's announcement names this resolution or its draft
+        (``wcs.sources.unga.explanations``)."""
+        path = self.path.parent / "records" / "ga" / f"{v.on.year}.parquet"
+        if not path.exists():
+            return []
+        rows = self._con.execute(
+            f"SELECT record_id, symbol, speech_number, country_code, country_label, entity_kind, on_behalf_of, eov, "
+            f"explains, text, url FROM read_parquet('{str(path).replace(chr(39), chr(39) * 2)}', union_by_name=true) "
+            "WHERE date = ? AND eov IN ('before', 'after') AND explains IS NOT NULL ORDER BY symbol, speech_number",
+            [v.on]).fetchall()
+        drafts = {d.strip() for d in v.draft.split("|") if d.strip()}
+        out = []
+        for record_id, symbol, n, code, label, kind, behalf, eov, explains, text, url in rows:
+            linked = set(explains.split("|"))
+            if v.symbol in linked or (symbol == v.meeting and drafts & linked):
+                out.append({"record_id": record_id, "symbol": symbol, "n": n, "code": code, "label": label,
+                            "kind": kind, "behalf": behalf, "eov": eov, "text": text or "", "url": url or ""})
+        return out
+
+    def _explanations_html(self, v: Vote) -> str:
+        found = self.explanations(v)
+        if not found:
+            return ""
+        items = []
+        for i, x in enumerate(found, 1):
+            if x["behalf"]:
+                who = e(curl_quotes(f"On behalf of the {x['behalf']}" if not x["behalf"].startswith("the ")
+                                    else f"On behalf of {x['behalf']}"))
+            elif x["code"] and self.countries.kind(x["code"]) in COUNTRY_PAGE_KINDS:
+                who = (f'<a href="/countries/{x["code"].lower()}.html">'
+                       f"{e(curl_quotes(self.countries.name_on(x['code'], v.on)))}</a>")
+            else:
+                who = e(curl_quotes(x["label"] or "A speaker"))
+            words = x["text"].split()
+            first = curl_quotes(" ".join(words[:40])) + (" …" if len(words) > 40 else "")
+            when = "Before the vote" if x["eov"] == "before" else "After the vote"
+            items.append(f'<li class="country-statement" id="explanation-{i}">'
+                         f'<p class="country-statement__meta">{who}. {when}, {e(x["symbol"])}</p>'
+                         f"<blockquote><p>{e(first)}</p></blockquote>"
+                         + ('<details class="explanation"><summary>The whole explanation</summary>'
+                            + "".join(f"<p>{e(curl_quotes(p.strip()))}</p>" for p in re.split(r"\n\s*\n", x["text"])
+                                      if p.strip()) + "</details>" if len(words) > 40 else "")
+                         + f'<p class="country-statement__link"><a href="{e(x["url"])}"{OPENED}>Read it in '
+                         f"{e(x['symbol'])}</a></p></li>")
+        return ('<h2 id="explanations">Explanations of vote</h2>'
+                f"<p>What delegations said in explanation of this vote at the meeting, before or after it, in the "
+                f"record’s order: {_plural(len(found), 'statement', 'statements')}. A statement made on behalf of a "
+                "group is the group’s. Only explanations the record ties to this vote are listed: those that name it "
+                "or its draft, or were given in a round of voting on it alone.</p>"
+                f'<ol class="country-statements">{"".join(items)}</ol>')
 
     def hidden_page(self, slug: str, note: str) -> str | None:
         """What stands in place of a vote's page while a concern about it is decided (the impartiality policy,

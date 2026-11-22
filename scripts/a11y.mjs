@@ -37,6 +37,9 @@ if (!sessionPage || !votePage) {
   process.exit(1);
 }
 pages.push(sessionPage, votePage);
+// An Assembly vote with explanations of vote (decision 31): CI's sample gives the first of its two votes two.
+const explainedVote = votesIndex.includes('href="/votes/a-res-80-901.html"') ? "/votes/a-res-80-901.html" : null;
+if (explainedVote && explainedVote !== votePage) pages.push(explainedVote);
 // The Security Council's votes (decision 30): the index, its first year, a resolution's page and a vetoed draft's.
 // CI writes three made-up Council votes with the Assembly's (scripts/sample_votes.py).
 const councilIndex = await fetch(`${base}/security-council-votes.html`).then((r) => r.text());
@@ -259,11 +262,12 @@ for (const scheme of ["light", "dark"]) {
           console.log(`${scheme} ${width}px ${path}: ${m}`);
         }
       }
-      if (path === votePage || path === councilVote || path === councilDraft) {
+      if (path === votePage || path === councilVote || path === councilDraft || path === explainedVote) {
         // the vote's page is written on the server: its table, its totals and the family's words for anyone named
         const vote = await page.evaluate(() => ({
           h1: document.querySelectorAll("h1").length,
           lists: document.querySelectorAll("ul.vote-list li").length,
+          explanations: document.querySelectorAll("#explanations + p + ol li").length,
           totals: document.querySelectorAll("table.vote-totals tbody tr").length,
           named: !!document.querySelector('.vote-side a[href="/named.html"]')
             && document.querySelector('.vote-side a[href="/named.html"]').textContent === "If you’re named on this site",
@@ -272,7 +276,9 @@ for (const scheme of ["light", "dark"]) {
         const problems = [
           vote.h1 !== 1 && "the vote's page does not have one heading of the first rank",
           !vote.lists && "the vote's page lists no countries",
-          (path === votePage ? vote.totals !== 4 : !vote.totals) && "the vote's page has no table of totals",
+          (path === votePage || path === explainedVote ? vote.totals !== 4 : !vote.totals) && "the vote's page has no table of totals",
+          // the sample's two explanations of vote (decision 31), on the Assembly vote CI writes them for
+          path === explainedVote && vote.explanations !== 2 && "the vote's page does not list its explanations of vote",
           !vote.named && "the vote's page does not link to If you're named on this site",
           (vote.data.length !== 1 || vote.data[0] !== "BreadcrumbList") && "the vote's page carries structured data other than its breadcrumbs",
         ].filter(Boolean);

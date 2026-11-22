@@ -10,7 +10,7 @@
 
 const $ = (id) => document.getElementById(id);
 const B = window.WCSBriefing;
-const BODY = { sc: "Security Council", gd: "General Assembly" };
+const BODY = { sc: "Security Council", gd: "General Assembly", ga: "General Assembly plenary meetings" };
 let names = { countries: {}, kinds: {}, groups: {} };
 // Sister sites a briefing links to (docs/DESIGN.md, "Links to sister sites"): Where MPs Stand takes the same
 // question as ?q=, and Where Lives Stand has a page for each country at /country/<ISO 3166 alpha-3 code>.
@@ -61,7 +61,7 @@ async function loadCoverage() {
     const c = meta.coverage || {};
     const span = (x) => (x ? `${x.from.slice(0, 4)} to ${fmtDate(x.to)}` : "not loaded yet");
     list.replaceChildren(
-      ...[["General Debate", c.gd], ["Security Council debates", c.sc], ["General Assembly votes", c.votes], ["Security Council votes", c.council_votes]].map(
+      ...[["General Debate", c.gd], ["General Assembly debates", c.ga], ["Security Council debates", c.sc], ["General Assembly votes", c.votes], ["Security Council votes", c.council_votes]].map(
         ([label, x]) => el("div", {}, el("dt", {}, label), el("dd", {}, span(x)))));
     if (!meta.briefings) {
       // no model: the main button finds the sources, so the second would only repeat it

@@ -104,6 +104,11 @@ class VoteFinder:
         if not words or not self.council_available():
             return []
         need = len(words) if every_word or len(words) <= 2 else max(2, (len(words) + 1) // 2)
+        # a place the question names ("the war in Ukraine") is enough with it: the Council's agenda items name the
+        # place ("Maintenance of peace and security of Ukraine"), not the question's other words
+        places = [w for w in words if self.countries.resolve(w)]
+        if places and not every_word:
+            need = min(need, max(1, need - 1))
         clauses, params = [], []
         if filters.date_from:
             clauses.append("date >= ?")
@@ -114,6 +119,7 @@ class VoteFinder:
         where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
         path = str(self.council_path).replace("'", "''")
         hits = self._hits(words)
+        place_clause = f" AND ({self._hits(places)}) >= 1" if places and not every_word else ""
         rows = self.con.execute(f"""
             WITH res AS (
               SELECT vote_id, any_value(outcome) outcome, any_value(reason) reason, any_value(what) what,
@@ -126,7 +132,7 @@ class VoteFinder:
                                      CASE WHEN any_value(reason) = 'veto' THEN 'veto vetoed draft not adopted'
                                           WHEN any_value(outcome) = 'not adopted' THEN 'draft not adopted' END)) haystack
               FROM read_parquet('{path}') {where} GROUP BY vote_id)
-            SELECT *, {hits} AS hits FROM res WHERE {hits} >= {need}
+            SELECT *, {hits} AS hits FROM res WHERE {hits} >= {need}{place_clause}
             ORDER BY hits DESC, date DESC LIMIT {int(limit)}""", params).fetchall()
         cols = [d[0] for d in self.con.description]
         out = []

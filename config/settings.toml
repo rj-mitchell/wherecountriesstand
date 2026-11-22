@@ -27,6 +27,10 @@ sc_after_meeting = 9524
 # and until then the General Debate website fills in. From the 79th session (2024): the corpus's texts for 2024 are the
 # delegations' own, as prepared, and for 2025 an AI transcript of the interpretation, not the record.
 gd_from_session = 79
+# The rest of the General Assembly's plenary record (decision 31): `wcs backfill-plenary` reads every plenary meeting
+# from this session on (the 49th, 1994: earlier records print speakers' names and headings in capitals, or are scans,
+# which the parser cannot read reliably), and each update the two latest sessions and the emergency special sessions.
+plenary_from_session = 49
 # Until a session's official records are out, take its statements from the UN's General Debate website
 # (gadebate.un.org; wcs.sources.gadebate), labelled as not yet the official record (docs/DECISIONS.md, 12).
 gd_website = true

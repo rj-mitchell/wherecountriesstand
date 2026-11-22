@@ -8,8 +8,8 @@
 # Filters not listed under `expect` are expected to be empty. Dates: `date_from` and `date_to` are compared by year;
 # "default" means the site's default range (the last 10 years) because the question gives no dates; `date_from` alone
 # leaves the end open. `<field>_any` lists acceptable alternatives ("General Assembly resolutions" may or may not limit
-# the statements to the General Assembly). `sources`: "sc" Security Council, "gd" General Debate (none = both). `groups` use the
-# reference keys (p5, council_elected, eu, nato, au, g77, nam, oic, ldc, lldc, sids, region:africa ...).
+# the statements to the General Assembly). `sources`: "sc" Security Council, "gd" General Debate, "ga" the Assembly's
+# other plenary meetings (decision 31; none = all). `groups` use the reference keys (p5, council_elected, eu, nato, au, g77, nam, oic, ldc, lldc, sids, region:africa ...).
 # The questions are read as if today were 25 October 2026.
 
 today = "2026-10-25"
@@ -328,7 +328,7 @@ expect = { wants_votes = true, date_from = "default" }
 id = "votes-ukraine-2022"
 question = "How did countries vote on the General Assembly resolutions on Ukraine in 2022?"
 category = "votes"
-expect = { wants_votes = true, date_from = "2022-01-01", date_to = "2022-12-31", sources_any = [[], ["gd"]] }
+expect = { wants_votes = true, date_from = "2022-01-01", date_to = "2022-12-31", sources_any = [[], ["gd"], ["ga", "gd"]] }
 
 # Sparse: "No records found" is the right answer
 
@@ -378,5 +378,5 @@ no_records = true
 id = "vatican-vote"
 question = "How has the Holy See voted on General Assembly resolutions?"
 category = "votes"
-expect = { countries = ["VAT"], wants_votes = true, date_from = "default", sources_any = [[], ["gd"]] }
+expect = { countries = ["VAT"], wants_votes = true, date_from = "default", sources_any = [[], ["gd"], ["ga", "gd"]] }
 note = "An observer State does not vote; any sources should be statements, and no votes by the Holy See."

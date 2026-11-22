@@ -594,3 +594,46 @@ so that a reader can see how each member voted on a resolution, and which drafts
   description, agenda item and subjects (a veto also by "veto" and "vetoed"), when a question's bodies include the
   Security Council (half as many as the Assembly's when both are searched). Its chip says "Vote, Security Council"
   and the date: the Council's records do not call its votes recorded votes.
+
+## 31. The rest of the General Assembly's plenary record, with explanations of vote
+
+On 22 November 2026 the owner approved a second new source: every plenary meeting record of the General Assembly
+(`A/<session>/PV.<n>`), not only the General Debate's, including the emergency special sessions (`A/ES-10/PV.<n>`,
+`A/ES-11/PV.<n>`) and the special sessions (`A/S-<n>/PV.<n>`), so that the Assembly's debates on its agenda items, and
+what delegations say in explanation of their votes, can be read and cited.
+
+- From the 49th session (September 1994). The parser reads that era's records well: on samples from 1994, 1995,
+  1997, 2005, 2015 and 2024, an emergency special session of each kind and the first meeting of the 80th session (2025),
+  it found the speakers in order with all the text (between 0.96 and 1.02 of the words). The 48th session's records
+  (1993) print speakers' names and headings in capitals ("The PRESIDENT"), which the parser reads as speeches, and the
+  47th's (1992) are scans from which it finds no speeches at all; earlier sessions are scans too
+  ([VALIDATION.md](VALIDATION.md#the-general-assemblys-plenary-record)). Going earlier would need the parser taught
+  those layouts, and would be the owner's choice (`[live] plenary_from_session`).
+- Discovery and download through the same client as the Security Council's and the General Debate's records
+  (`wcs.sources.undocs`): the Digital Library's catalogue, then the UN's document system for numbers the catalogue
+  skipped and those after the last one known; the same cache, manifest (`manifest-ga.json`, shared with the General
+  Debate), provisional records fetched again, missing numbers looked for again, and parser checks. The update looks at
+  the session open now, the one before (records appear about a year late) and the emergency special sessions on
+  every run; `wcs backfill-plenary` reads the rest, newest first, and can be stopped and started. It takes no update
+  lock and leaves the index to the update; the two jobs can share one manifest, each saving only what it changed,
+  under a lock.
+- Storage: a source of its own, "ga", beside "gd", so that briefings, filters and labels tell a plenary statement
+  from a General Debate one. Every speaker but the President is kept (the President's words are procedure, read for
+  the votes and the calls for explanations); a statement on behalf of a group is the group's (decision 7). Each is
+  labelled "General Assembly, 80th session, 45th plenary meeting", with its agenda item as the record prints it
+  ("Agenda item 69: Promotion and protection of human rights"). The question box reads "the General Assembly" as both
+  its General Debate and its other plenary meetings, and "the General Debate" as that alone; the filters call the new
+  body "General Assembly plenary meetings".
+- Explanations of vote: a statement is one when the President has called for explanations of vote before or after
+  the voting. It is linked to the recorded votes it explains only where that is certain: at the same meeting and
+  agenda item, the resolution or draft it names, or, if it names none, the one vote taken in its round of voting
+  (the President's announcement of the result names the resolution, "(resolution 79/81)"). Otherwise it is not
+  linked, and the update and backfill count how many were placed and how many were not. An explanation of position,
+  on a decision taken without a vote, is kept as such and linked to nothing. A vote's page (decision 26) lists the
+  explanations linked to it, "Explanations of vote": each speaking country or group, before or after the vote, its
+  first words, the whole explanation behind a "The whole explanation" disclosure, and a link to the record. The link
+  is by the resolution's symbol, because the voting data sometimes gives the meeting before the one where the vote
+  was taken (A/RES/79/81: "A/79/PV.45", voted at A/79/PV.46).
+- Country pages (decision 29): plenary statements join the latest statements with their label, and a section "Its
+  explanations of vote" lists the 10 most recent linked to a vote with a page, each linked to it; a statement made on
+  behalf of a group is not listed as its speaker's country's.

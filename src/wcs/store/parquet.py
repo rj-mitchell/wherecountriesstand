@@ -21,7 +21,8 @@ import pyarrow.parquet as pq
 # names the group in ``on_behalf_of``: it is the group's statement, not the country's own (docs/DECISIONS.md, 7).
 RECORD_SCHEMA = pa.schema([
     ("record_id", pa.string()),         # "sc:S/PV.7565:0004", "gd:78:GBR"
-    ("source", pa.string()),            # "sc" (Security Council debates), "gd" (General Debate)
+    ("source", pa.string()),            # "sc" (Security Council debates), "gd" (General Debate), "ga" (the General
+                                        # Assembly's other plenary statements, decision 31)
     ("body", pa.string()),              # "Security Council", "General Assembly"
     ("date", pa.date32()),
     ("date_precision", pa.string()),    # "day"; "session" for the General Debate, whose day is not recorded
@@ -48,6 +49,11 @@ RECORD_SCHEMA = pa.schema([
     # before the record is published), "transcript" (an AI transcript of the English interpretation). Null or
     # "record" otherwise. Added in 2026: files written before have no such column.
     ("text_source", pa.string()),
+    # a General Assembly plenary statement made in explanation of vote (decision 31): "before" or "after" the vote,
+    # or "position" (a decision taken without a vote); and the recorded votes it explains, where that is certain
+    # ("A/RES/79/81", joined with "|"). Null for every other record, and absent from files written before.
+    ("eov", pa.string()),
+    ("explains", pa.string()),
 ])
 
 VOTE_SCHEMA = pa.schema([

@@ -137,7 +137,7 @@ def add_languages(settings: Settings, first_session: int) -> int:
         session = unga.session_of(symbol)
         if entry.get("status") != "parsed" or not session or session >= first_session:
             continue
-        for r in undocs.load_parsed(settings, symbol):
+        for r in undocs.load_parsed(settings, symbol, "gd"):
             if r.get("language") and r.get("country_code") and not unga.is_reply(r):
                 spoken[(session, r["country_code"])] = r["language"]
     added = 0

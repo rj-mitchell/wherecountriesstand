@@ -121,6 +121,30 @@ records, so these are checks of coverage and of samples:
   2020, one in 2021, none since). The corpus supplies the statements for 2020 and 2021; this matters if a future
   session is held virtually.
 
+## The General Assembly's plenary record
+
+The same parser reads the Assembly's other plenary meetings ([decision 31](DECISIONS.md#31-the-rest-of-the-general-assemblys-plenary-record-with-explanations-of-vote)).
+There is no corpus of them to compare against, so on 22 November 2026 the records below were parsed and the share of
+each record's words that went into speeches measured, the speakers checked against the record by eye, and the
+explanations of vote counted:
+
+| Record | Year | Speeches | Speakers matched to a country | Share of words | Notes |
+|---|---|---|---|---|---|
+| A/47/PV.72 | 1992 | 0 | 0 | 0 | A scan: no speeches found |
+| A/48/PV.85 | 1993 | 240 | 53 | | Speakers' names and headings in capitals ("The PRESIDENT"), read as speeches: not usable |
+| A/49/PV.85 | 1994 | 14 | 13 of 13 | 1.00 | Two columns, put back in order |
+| A/50/PV.60 | 1995 | 28 | 21 of 21 | 1.02 | |
+| A/52/PV.60 | 1997 | 21 | 19 of 19 | 1.00 | |
+| A/60/PV.69 | 2005 | 112 | 20 of 24 | 0.97 | Three list headings read as speakers; taken as the President's words |
+| A/70/PV.82 | 2015 | 104 | 23 of 26 | 0.96 | The others the European Union and the Secretariat |
+| A/79/PV.46 | 2024 | 37 | 20 of 22 | 1.00 | |
+| A/ES-10/PV.41 | 2023 | 48 | 39 of 40 | | |
+| A/ES-11/PV.5 | 2022 | 53 | 38 of 42 | | The others the European Union, the Sovereign Order of Malta and the Secretariat |
+| A/80/PV.1 | 2025 | 10 | | | The opening meeting: the President, the Secretary-General and one other |
+
+The explanations of vote placed on these records are in [DATA.md](DATA.md#the-general-assemblys-plenary-record). The
+tests read real record text of A/79/PV.46 and A/ES-11/PV.5 (`tests/fixtures/plenary/`).
+
 ## Security Council votes and the list of vetoes
 
 The reading of votes from the Council's records (`wcs.sources.vote_result`,

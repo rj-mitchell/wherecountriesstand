@@ -65,11 +65,11 @@ _COUNTS = (rf"(?P<y>{NUM})(?: votes?)? in favour(?:\s*\((?P<yn>[^()]*)\))?,?\s*(
 RECEIVED = re.compile(rf"(?:\b{WHAT}[^.]{{0,160}}?\breceived|result of the\s+vot(?:e|ing)\s+(?:is|was)\s+as\s+"
                       rf"follows\s*:?|the vote was as follows\s*:?|\bThere were)\s*{_COUNTS}", re.I | re.S)
 NOT_PARTICIPATING = re.compile(rf"\b(?P<x>{NUM}) (?:Council )?members? did not participate in the vot", re.I)
-ADOPTED_BY = re.compile(rf"\b(?P<what>draft resolution|draft decision|amendment|proposed amendment|draft amendment|"
-                        rf"motion|proposal)(?P<label>(?:\s+(?:{SYMBOL}|[IVXLC]+|[A-Z]))?(?:,\s*as orally "
-                        rf"(?:revised|corrected|amended),)?)\s+was (?P<outcome>adopted|rejected) by (?P<y>{NUM}) votes? "
-                        rf"to (?P<n>{NUM}),? with (?P<a>{NUM}) abstentions?(?:\s*\((?:resolution|decision) "
-                        rf"(?P<res>[^)]+)\))?", re.I | re.S)
+ADOPTED_BY = re.compile(rf"\b(?P<what>draft\s+resolution|draft\s+decision|amendment|proposed\s+amendment|draft\s+"
+                        rf"amendment|motion|proposal)(?P<label>(?:\s+(?:{SYMBOL}|[IVXLC]+|[A-Z]))?(?:,?\s*as\s+a\s+"
+                        rf"whole,?)?(?:,\s*as\s+orally\s+(?:revised|corrected|amended),)?)\s+was\s+(?P<outcome>adopted|"
+                        rf"rejected)\s+by\s+(?P<y>{NUM})\s+votes?\s+to\s+(?P<n>{NUM})(?:,?\s+with\s+(?P<a>{NUM})\s+"
+                        rf"abstentions?)?(?:\s*\((?:resolution|decision)\s+(?P<res>[^)]+)\))?", re.I | re.S)
 VETO = re.compile(r"owing\s+to\s+the\s+negative\s+votes?\s+of\s+(?:a\s+|one\s+|two\s+|three\s+)?permanent members? of the (?:Security )?Council",
                   re.I)
 NOT_ENOUGH = re.compile(r"(?:having )?failed to obtain the (?:required )?(?:number of|majority of the) votes|"
@@ -246,10 +246,12 @@ def votes_in(chunks: list[Chunk]) -> list[Vote]:
             own = SYMBOL_RE.findall(m.group("label") or "")
             if own:
                 drafts = own
-            elif (lab := (m.group("label") or "").strip(" ,")) and re.fullmatch(r"[IVXLC]+|[A-Z]", lab):
+            elif (lab := re.sub(r",?\s*as\s+a\s+whole,?", "", m.group("label") or "").strip(" ,")) and \
+                    re.fullmatch(r"[IVXLC]+|[A-Z]", lab):
                 label = lab
+                drafts = []  # a draft in a committee's report, known by its number there, not a document
             adopted = m.group("outcome").lower() == "adopted"
-            resolution = (m.group("res") or "").strip() or None
+            resolution = " ".join((m.group("res") or "").split()) or None
             reason = None if adopted else "votes"
             words = " ".join(m.group(0).split()).rstrip(".") + "."
         else:
@@ -282,7 +284,7 @@ def votes_in(chunks: list[Chunk]) -> list[Vote]:
                 drafts = []  # an oral amendment has no document: the one named is the draft it would amend
         v = Vote(what=_what(what or kind), drafts=drafts, lists=lists, totals=totals, adopted=adopted, reason=reason,
                  resolution=resolution, words=words, chunk=ci, lists_chunk=lists_chunk, agenda=c.agenda, label=label)
-        if not drafts and v.what not in ("proposal", "motion") and "oral" not in what:
+        if not drafts and not v.label and v.what not in ("proposal", "motion") and "oral" not in what:
             # nothing named since the vote before (an oral amendment to it came between): the last draft named
             # earlier in the meeting that has not been voted on yet
             earlier, _ = _drafts_before(chunks, (chunks[0].index, 0), (ci, s), every=True)

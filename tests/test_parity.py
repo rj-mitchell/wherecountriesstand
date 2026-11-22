@@ -37,6 +37,8 @@ ADDED = {
     # the Security Council's voting data and the UN Library's list of vetoes (decision 30)
     ("sources", "council_votes_record"): "https://digitallibrary.un.org/record/4055387",
     ("sources", "veto_list"): "https://research.un.org/en/docs/sc/quick/veto",
+    # the rest of the General Assembly's plenary record, from the 49th session (decision 31)
+    ("live", "plenary_from_session"): 49,
 }
 
 # Values in config/settings.toml changed on purpose since the recording, each (as it was, as it is): fewer new
@@ -546,6 +548,24 @@ def with_checking(recorded):
     return "\n\n".join(x for c in recorded.split("\n\n") for x in ([sent, c] if written(c) else [c]))
 
 
+OLD_SOURCES_RULE = ("- sources: \"sc\" for the Security Council, \"gd\" for the General Assembly's General Debate. "
+                    "Leave empty for both.")
+NEW_SOURCES_RULE = ("- sources: \"sc\" for the Security Council, \"gd\" for the General Assembly's General Debate, "
+                    "\"ga\" for the General\n  Assembly's other plenary meetings (its debates on agenda items, and "
+                    "explanations of vote). \"The General Assembly\"\n  means both \"gd\" and \"ga\". Leave empty for "
+                    "all three.")
+
+
+def with_plenary(recorded):
+    """The question-reading instructions as they have been since 22 November 2026 (decision 31): a third body, the
+    General Assembly's other plenary meetings ("ga")."""
+    if isinstance(recorded, list):
+        return [with_plenary(v) for v in recorded]
+    if isinstance(recorded, dict):
+        return {k: with_plenary(v) for k, v in recorded.items()}
+    return recorded.replace(OLD_SOURCES_RULE, NEW_SOURCES_RULE) if isinstance(recorded, str) else recorded
+
+
 # with the changes made since (``as_now``), and the event that says the checks have begun (``with_checking``)
 REAL = with_checking(as_now(shared.read("ask-real.json")))
 PLAN_SENT = {"no records", "an edited plan"}  # cases that sent a search plan with the question
@@ -605,7 +625,7 @@ def test_the_real_pipeline_sends_and_writes_what_it_did(name, small_index, tmp_p
             assert plan["question"] == requests[0]["question"] and plan["parser"] == "model"
         return
     before = REAL[name]
-    assert now["calls"] == before["calls"]  # what the model was asked, whole
+    assert now["calls"] == with_plenary(before["calls"])  # what the model was asked, whole
     assert len(now["sent"]) == len(before["sent"])
     stamped = 0
     for (status, body), (was_status, was_body) in zip(now["sent"], before["sent"], strict=True):

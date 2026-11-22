@@ -202,6 +202,8 @@ def ingest_sc(years: str = typer.Option(None, help="e.g. 2015 or 2010-2015")) ->
 def update(votes: bool = typer.Option(True, help="check the voting data"),
            sc: bool = typer.Option(True, help="check for new Security Council records"),
            gd: bool = typer.Option(True, help="check for new General Debate records"),
+           plenary: bool = typer.Option(True, help="check for new General Assembly plenary records (the current and "
+                                                   "last sessions)"),
            index: bool = typer.Option(True, help="re-index the years that changed"),
            embed_seconds: float = typer.Option(600, help="embed new passages for up to this long (0: none)"),
            max_new: int = typer.Option(None, help="process at most this many records (for a first, partial run)"),
@@ -212,7 +214,7 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
     from wcs.update import run
 
     report = run(load_settings(), do_votes=votes, do_sc=sc, do_gd=gd, do_index=index, embed_seconds=embed_seconds or None,
-                 max_new=max_new)
+                 max_new=max_new, do_plenary=plenary)
     if as_json:
         typer.echo(json.dumps(report.to_dict(), default=str, indent=1))
     else:
@@ -225,6 +227,8 @@ def update(votes: bool = typer.Option(True, help="check the voting data"),
             typer.echo(f"votes: {report.votes}")
         if report.council_votes:
             typer.echo(f"Security Council votes: {report.council_votes}")
+        for key, info in report.plenary.get("sessions", {}).items():
+            typer.echo(f"General Assembly plenary, {key}: {info['parsed']} meetings, {info['statements']} statements")
         for session, info in report.gd.items():
             typer.echo(f"General Debate, session {session}: {info['statements']} statements and {info['replies']} "
                        f"rights of reply from {info['meetings']} meetings{' (complete)' if info['concluded'] else ''}; "
@@ -707,6 +711,44 @@ def backfill_replies(since: int = typer.Option(..., help="first session, e.g. 48
         typer.echo(f"could not parse: {', '.join(report.failed)}")
 
 
+@app.command("backfill-plenary")
+def backfill_plenary(since: int = typer.Option(None, help="first regular session (default: [live] "
+                                                          "plenary_from_session, 49: 1994)"),
+                     until: int = typer.Option(None, help="last regular session (default: two before the one open "
+                                                          "now; the update keeps those two)"),
+                     hours: float = typer.Option(None, help="stop starting new records after this long "
+                                                            "(resumable)"),
+                     max_new: int = typer.Option(None, help="download at most this many records"),
+                     gaps: int = typer.Option(400, help="numbers the catalogue skipped, tried on ODS, per session"),
+                     sessions: list[str] = typer.Option(None, help="only these sessions: 80, es-11, s-27")) -> None:
+    """The rest of the General Assembly's plenary record (decision 31): every plenary meeting of past sessions, the
+    emergency special sessions and the special sessions, newest first, through the same client, cache and manifest
+    as the update. Resumable: stop it at any time and run it again. It takes no update lock and leaves the index to
+    the update, which indexes and embeds the years it writes on its next runs; it shares one manifest with the update
+    safely. Run it beside the live site, at low priority (docs/OPERATIONS.md)."""
+    import time
+
+    from wcs.reference.countries import countries
+    from wcs.sources import undocs, unga
+    from wcs.update import Report, backfill_plenary_sessions, plenary_from_session, update_plenary
+
+    s = load_settings()
+    first = since or plenary_from_session(s)
+    last = until or unga.current_session() - 2
+    keys = list(sessions) if sessions else backfill_plenary_sessions(first, last)
+    report = Report(started="backfill-plenary")
+    deadline = time.monotonic() + hours * 3600 if hours else None
+    written = update_plenary(s, countries(), undocs.UNDocs(s), report, keys, max_new=max_new, probe_misses=12,
+                             gaps=gaps, deadline=deadline)
+    for key, info in report.plenary.get("sessions", {}).items():
+        typer.echo(f"{key}: {info['parsed']} meetings ({info['fetched']} fetched now, {info['reparsed']} read again "
+                   f"from the cache, {info['missing']} not published), {info['statements']} statements; "
+                   f"explanations of vote: {info['explanations']}")
+    typer.echo(f"years written: {sorted(written)}; the next `wcs update` indexes them")
+    if report.failed:
+        typer.echo(f"could not parse: {', '.join(report.failed[:20])}")
+
+
 @app.command("ingest-gd")
 def ingest_gd(years: str = typer.Option(None)) -> None:
     """Load General Debate statements (from data/raw/ungd/) into the Parquet store (the sessions before [live]
@@ -848,7 +890,7 @@ def stats() -> None:
     from wcs.store.parquet import votes_path, years
 
     s = load_settings()
-    for src in ("sc", "gd"):
+    for src in ("sc", "gd", "ga"):
         ys = years(s.parquet_dir, src)
         typer.echo(f"{src}: {len(ys)} years" + (f" ({ys[0]}-{ys[-1]})" if ys else ""))
     typer.echo(f"votes: {'loaded' if votes_path(s.parquet_dir).exists() else 'not loaded'}")

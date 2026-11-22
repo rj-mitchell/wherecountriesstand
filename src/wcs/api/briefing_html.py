@@ -522,7 +522,7 @@ def source_card(s: Mapping[str, Any]) -> Node:
 
 # ---------- the question as read (app.js's ``chips`` and ``summary``) ----------
 
-BODY = {"sc": "Security Council", "gd": "General Assembly"}
+BODY = {"sc": "Security Council", "gd": "General Assembly", "ga": "General Assembly plenary meetings"}
 
 
 def plan_chips(plan: Mapping[str, Any], names: Mapping[str, str] | None = None,

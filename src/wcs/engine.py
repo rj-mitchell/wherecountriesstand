@@ -33,14 +33,14 @@ log = logging.getLogger(__name__)
 MAX_NAMED = 6  # States named in a question that are searched for on their own (docs/DECISIONS.md, 21)
 STATE_KINDS = ("member_state", "observer_state", "former_member_state", "other_state")
 SPEAKER_KINDS = (*STATE_KINDS, "organisation", "un", "chair")
-BODIES = {"sc": "Security Council", "gd": "General Assembly"}
+BODIES = {"sc": "Security Council", "gd": "General Assembly", "ga": "General Assembly"}
 
 
 @dataclass
 class Filters:
     date_from: date | None = None
     date_to: date | None = None
-    sources: list[str] = field(default_factory=list)        # "sc", "gd"
+    sources: list[str] = field(default_factory=list)        # "sc", "gd", "ga" (plenary, decision 31)
     countries: list[str] = field(default_factory=list)      # codes
     groups: list[str] = field(default_factory=list)         # group keys, e.g. "au", "p5", "region:asia"
     kinds: list[str] = field(default_factory=list)          # speaker kinds; empty: States (and the Council itself)

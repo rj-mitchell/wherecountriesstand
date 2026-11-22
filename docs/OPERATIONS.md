@@ -97,6 +97,38 @@ since the records begin, and each problem the check against the list finds. Ever
 counts in `built.json`), and the votes in `data/parquet/council_votes.parquet`. Run it again with `--no-fetch` after
 changing how votes are read, having raised `wcs.sources.council.VERSION`.
 
+## The General Assembly's plenary record
+
+The update keeps the two latest sessions and the emergency special sessions current
+([decision 31](DECISIONS.md#31-the-rest-of-the-general-assemblys-plenary-record-with-explanations-of-vote)). The
+sessions before, from the 49th (1994), and the special sessions are read once by the backfill, which runs beside the
+live site and the update for several hours:
+
+```bash
+cd /opt/wherecountriesstand/deploy
+sudo systemd-run --unit=wcs-backfill-plenary --nice=15 --property=WorkingDirectory=$PWD \
+  /usr/bin/docker compose run --rm -T app wcs backfill-plenary
+journalctl -u wcs-backfill-plenary -f      # its progress; `systemctl stop wcs-backfill-plenary` stops it
+```
+
+- It reads about 3,700 records: about 3,200 to download (the General Debate's are in the cache already), one at a
+  time with a pause between requests, about 4 seconds each with the parsing, so about 4 to 5 hours, and up to an hour
+  more for the numbers the catalogue skipped. `--hours 2` stops it starting new records after two hours; run it
+  again to carry on. `--sessions 80 es-11` reads only those.
+- It takes no update lock, so other sites' updates do not wait for it, and it does not write to the search index.
+  It shares `manifest-ga.json` with the update safely (each saves only what it changed, under a lock), and each year
+  of `data/parquet/records/ga/` is written under a lock of its own.
+- The update indexes the years it wrote on its next run, and embeds them for meaning search an hour a run: about
+  220,000 passages, about 70 minutes at 55 a second, so within a day.
+- Disk: about 1.2 GB of PDFs, 370 MB of parsed records and 150 MB of Parquet in the data volume, and about 700 MB
+  more in the search index.
+- When it has finished, `wcs topics refresh --force` writes the topic briefings again with the plenary record
+  (about $1.70), and `wcs evaluate` scores the test set over the new index ([EVALUATION.md](EVALUATION.md)).
+
+Its summary gives each session's meetings, statements and explanations of vote (placed with certainty, linked only to
+a draft or amendment the voting data leaves out, not placed, and explanations of position). A record it cannot
+parse is reported, tried up to 5 times, then left alone, as for the other records.
+
 ## Topic briefings
 
 The ten topic briefings ([decision 27](DECISIONS.md#27-topic-briefings), `config/topics.toml`) are written afresh

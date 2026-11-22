@@ -49,7 +49,8 @@ def plan_note(plan: QueryPlan, engine: Engine, evidence: dict[str, Any] | None =
     c = engine.countries
     bits = []
     if f.sources:
-        bits.append("bodies: " + ", ".join({"sc": "Security Council", "gd": "General Assembly General Debate"}[s]
+        bits.append("bodies: " + ", ".join({"sc": "Security Council", "gd": "General Assembly General Debate",
+                                            "ga": "General Assembly plenary meetings"}[s]
                                            for s in f.sources))
     if f.countries:
         bits.append("countries: " + ", ".join(c.name_on(x) for x in f.countries))
@@ -136,7 +137,7 @@ class Pipeline:
         n = VOTES_ASKED if plan.wants_votes else 1
         own = parse_offline(req.question, self.engine.countries, self.today or date.today()).search_text
         strict = not plan.wants_votes
-        if not sources or "gd" in sources:
+        if not sources or "gd" in sources or "ga" in sources:
             votes = self.votes.find(own, plan.filters, n, strict) or \
                 self.votes.find(plan.search_text, plan.filters, n, strict)
         if not sources or "sc" in sources:

@@ -34,7 +34,7 @@ from wcs.store import parquet
 log = logging.getLogger(__name__)
 
 _SENTENCE = re.compile(r"(?<=[.!?])\s+")
-SOURCES = ("sc", "gd")
+SOURCES = ("sc", "gd", "ga")
 
 
 def chunk_text(text: str, max_words: int = 250) -> list[str]:

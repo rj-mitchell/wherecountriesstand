@@ -460,3 +460,17 @@ def test_the_pipeline_finds_council_votes_beside_the_assemblys(indexed):  # noqa
     _, votes, _ = p.find(plan, req)
     assert all(v.get("body", "General Assembly") == "General Assembly" for v in votes)
     assert votes_path(indexed.parquet_dir).exists()
+
+
+def test_the_topic_briefing_on_the_war_in_ukraine_can_cite_a_vetoed_draft(settings):
+    """The topic's own question (decision 27): the place it names is enough to find the Council's votes on it, as
+    the Council's agenda items name the place, not the war."""
+    from wcs.rag.query_parse import parse_offline
+
+    council_data(settings)
+    question = ("What have countries and groups said about the war in Ukraine at the United Nations since 2022, and "
+                "how have they voted?")
+    plan = parse_offline(question, countries(), date(2026, 11, 22))
+    found = VoteFinder(settings, countries()).find(plan.search_text, plan.filters, 3, body="Security Council")
+    assert any(v["reason"] == "veto" and v["agenda_title"].startswith("Maintenance of peace and security of Ukraine")
+               for v in found)

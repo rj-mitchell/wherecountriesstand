@@ -27,6 +27,7 @@ are not used.
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
@@ -348,3 +349,224 @@ def check(meeting: Meeting, records: list[dict[str, Any]], meta: dict[str, Any] 
     if unplaced:
         problems.append("statements not matched to a country: " + "; ".join(unplaced[:5]))
     return problems
+
+
+# The rest of the plenary record (decision 31): every statement at a plenary meeting that is not the General Debate's,
+# stored as source "ga", with explanations of vote linked to the recorded votes they explain.
+
+PLENARY_VERSION = 1   # of how plenary statements and explanations of vote are read: a higher one reads them again
+PLENARY = re.compile(r"^A/(?:(?P<session>\d+)|ES-(?P<es>\d+)|S-(?P<special>\d+))/PV\.(?P<n>\d+)$")
+
+# The President's words before explanations of vote (and of position, given on a decision taken without a vote)
+EOV_CALL = re.compile(r"explanations? of (?P<what>vote or position|vote|position)(?P<rest>[^.]{0,120})", re.I)
+EOV_BEFORE = re.compile(r"before (?:the )?(?:vot(?:e|ing)|action|the Assembly takes|a decision|we take)", re.I)
+EOV_AFTER = re.compile(r"after (?:the )?(?:vot(?:e|ing)|adoption|action)|just adopted|on the (?:resolutions?|decisions?)"
+                       r" (?:just )?adopted", re.I)
+EOV_END = re.compile(r"heard the (?:last|only) speakers? in explanation of (?:vote|position)", re.I)
+# a resolution as a speech names it ("resolution 79/81", "A/RES/ES-11/1") and a draft ("A/79/L.23")
+NAMED_RESOLUTION = re.compile(r"\b(?:A/RES/)?((?:ES-\d+|S-\d+|\d{2,3})/\d+(?:\s?[A-Z]\b)?)")
+# a vote's list that the parser took for a speech (2005: "13 Abstaining:", where a page number and the list's heading
+# ran together): the presiding officer's words, never a statement
+LIST_FRAGMENT = re.compile(r"(?:^\d|\b(?:In favour|Against|Abstaining)\s*$)")
+NAMED_DRAFT = re.compile(r"\bA/(?:ES-\d+/|S-\d+/)?(?:C\.\d/)?\d{0,3}/?L\.\d+(?:/Rev\.\d)?")
+
+
+def plenary_session(symbol: str) -> tuple[str, int | None] | None:
+    """("80th session", 80), ("11th emergency special session", None) or ("27th special session", None) for a
+    plenary record's symbol; None for another."""
+    m = PLENARY.match(symbol or "")
+    if not m:
+        return None
+    if m["session"]:
+        return f"{_ordinal(int(m['session']))} session", int(m["session"])
+    if m["es"]:
+        return f"{_ordinal(int(m['es']))} emergency special session", None
+    return f"{_ordinal(int(m['special']))} special session", None
+
+
+def plenary_label(symbol: str) -> str:
+    """"80th session, 45th plenary meeting": what the site calls a plenary meeting."""
+    found = plenary_session(symbol)
+    m = PLENARY.match(symbol or "")
+    if not found or not m:
+        return symbol
+    return f"{found[0]}, {_ordinal(int(m['n']))} plenary meeting"
+
+
+def resolution_symbol(named: str) -> str:
+    """"79/81" or "ES-11/1" as a resolution's symbol: "A/RES/79/81"."""
+    return "A/RES/" + re.sub(r"\s+", "", named)
+
+
+@dataclass
+class Explained:
+    """What one explanation of vote is linked to, and how sure the link is."""
+    when: str                      # "before", "after" (a vote), "position" (a decision taken without a vote)
+    votes: list[str]               # the resolutions (or drafts) it explains: "A/RES/79/81"
+    certain: bool
+
+
+def presiding(sp: Any) -> bool:
+    """The presiding officer's words: the President's, or a vote's list the parser took for a speech."""
+    return bool(CHAIR_SPEAKER.match(sp.speaker)) or (not sp.label and bool(LIST_FRAGMENT.search(sp.attribution)))
+
+
+def explanations(meeting: Meeting, votes: list[Any] | None = None) -> dict[int, Explained]:
+    """For each speech made in explanation of vote (or of position): the recorded votes of the same meeting and
+    agenda item it explains, where that is certain: the drafts or resolutions it names, or else the one vote taken in
+    its round of voting (the President's announcement names it). Otherwise no vote, and ``certain`` is False."""
+    from wcs.sources.vote_result import Chunk, votes_in
+
+    chunks = [Chunk(i, presiding(sp), sp.text, sp.item or sp.agenda) for i, sp in enumerate(meeting.speeches)]
+    if votes is None:
+        votes = [v for v in votes_in(chunks) if v.adopted is not None]
+    # each speech's round: a new round starts with a statement that is not an explanation, a new agenda item, or a
+    # call for explanations before the vote once a vote has been taken in the round
+    mode: str | None = None
+    round_no, voted_in_round = 0, False
+    rounds: dict[int, int] = {}
+    modes: dict[int, str] = {}
+    vote_round: list[int] = []
+    by_chunk: dict[int, list[Any]] = {}
+    for v in votes:
+        by_chunk.setdefault(v.chunk, []).append(v)
+    last_item = None
+    for c in chunks:
+        if c.agenda != last_item:
+            round_no, voted_in_round, mode, last_item = round_no + 1, False, None, c.agenda
+        if c.chair:
+            events: list[tuple[int, str]] = []
+            text = " ".join(c.text.split())
+            for m in EOV_CALL.finditer(text):
+                what, rest = m["what"].lower(), m["rest"]
+                if EOV_END.search(text[max(0, m.start() - 60):m.end()]):
+                    events.append((m.start(), "end"))
+                elif what == "position" and not EOV_AFTER.search(rest) and not EOV_BEFORE.search(rest):
+                    events.append((m.start(), "position"))
+                elif EOV_BEFORE.search(rest):
+                    events.append((m.start(), "before"))
+                elif EOV_AFTER.search(rest) or what == "position":
+                    events.append((m.start(), "after" if what != "position" else "position"))
+                elif re.search(r"\b(?:give|call|calling)\b[^.]{0,80}$", text[max(0, m.start() - 120):m.start()]):
+                    events.append((m.start(), "unqualified"))
+            # where in the chunk each vote was announced
+            for v in by_chunk.get(c.index, []):
+                words = " ".join(v.words.split())[:60]
+                at = text.find(words) if words else -1
+                events.append((at if at >= 0 else len(text), "vote"))
+            for _, kind in sorted(events):
+                if kind == "vote":
+                    voted_in_round = True
+                    vote_round.append(round_no)
+                    if mode == "before":
+                        mode = None
+                elif kind == "end":
+                    mode = None
+                elif kind == "before":
+                    if voted_in_round:
+                        round_no, voted_in_round = round_no + 1, False
+                    mode = "before"
+                elif kind == "unqualified":
+                    mode = "after" if voted_in_round else "before"
+                else:
+                    mode = kind
+            continue
+        if mode is None:
+            round_no, voted_in_round = round_no + 1, False
+            continue
+        opening = " ".join(c.text.split()[:60])
+        if POINT_OF_ORDER.search(opening) or re.search(r"\brule \d+\b", opening):
+            continue  # a point of order in the middle of the explanations, not one of them
+        modes[c.index] = mode
+        rounds[c.index] = round_no
+    ordered = sorted(votes, key=lambda v: v.chunk)
+    keyed = list(zip(ordered, vote_round if len(vote_round) == len(ordered) else [None] * len(ordered), strict=True))
+    out: dict[int, Explained] = {}
+    for i, when in modes.items():
+        sp = meeting.speeches[i]
+        item = sp.item or sp.agenda
+        same_item = [v for v in ordered if (chunks[v.chunk].agenda == item)]
+        if when == "before":
+            candidates = [v for v, r in keyed if r == rounds[i] and v.chunk >= i]
+        elif when == "after":
+            candidates = [v for v, r in keyed if r == rounds[i] and v.chunk < i]
+        else:
+            candidates = []
+        text = " ".join(sp.text.split())
+        named_res = {resolution_symbol(x) for x in NAMED_RESOLUTION.findall(text) if "/" in x}
+        named_drafts = set(NAMED_DRAFT.findall(text))
+        named = [v for v in same_item if (v.resolution and resolution_symbol(v.resolution) in named_res) or
+                 any(d in named_drafts for d in v.drafts)]
+        chosen = named or (candidates if len(candidates) == 1 else [])
+        keys = [resolution_symbol(v.resolution) if v.resolution else v.drafts[0] for v in chosen
+                if v.resolution or v.drafts]
+        if when == "position" and chosen:
+            # "in explanation of position" on a draft that was then put to a recorded vote: an explanation of vote,
+            # before or after it as the record has it
+            when = "before" if i < min(v.chunk for v in chosen) else "after"
+        out[i] = Explained(when, keys, bool(keys))
+    return out
+
+
+def plenary_records_for(meeting: Meeting, meta: dict[str, Any], countries: Countries,
+                        settings: Settings) -> list[dict[str, Any]]:
+    """Stored records (``RECORD_SCHEMA``, source "ga") for the statements at one plenary meeting that are not the
+    General Debate's: everyone who speaks but the President (whose words are procedure, and are read here for the
+    votes and the calls for explanations), with the agenda item as the record prints it. A statement made on behalf
+    of a group is the group's (decision 7). An explanation of vote says when it was given and which recorded votes
+    it explains, where that is certain (``explanations``)."""
+    from wcs.sources.speech import on_behalf_of
+    from wcs.sources.undocs import UN_SPEAKERS, briefer
+
+    symbol = meeting.symbol
+    session = plenary_session(symbol)
+    d = meeting.meeting_date or (date.fromisoformat(meta["date"]) if re.fullmatch(r"\d{4}-\d{2}-\d{2}",
+                                                                                   meta.get("date") or "") else None)
+    if d is None or session is None:
+        return []
+    debate = debate_meeting(meeting, meta)
+    undocs = settings.sources.get("undocs", "https://undocs.org/en/")
+    explained = explanations(meeting)
+    out: list[dict[str, Any]] = []
+    for i, sp in enumerate(meeting.speeches):
+        if presiding(sp) or in_debate(sp.agenda, debate):
+            continue
+        text = normalise_text(STAGE.sub("", sp.text))
+        if not text.strip():
+            continue
+        code = countries.resolve(sp.label)
+        if code:
+            kind, label = countries.kind(code), countries.name_on(code, d)
+        else:
+            post = None
+            kind, label = briefer(sp.speaker, sp.label, post)
+            if UN_SPEAKERS.match(sp.speaker):
+                kind = "un"
+        behalf = on_behalf_of(text)
+        if behalf and countries.resolve(behalf):
+            behalf = None
+        title = sp.item_title or sp.agenda
+        agenda = f"Agenda item {sp.item}: {title}" if sp.item and title else (title or None)
+        e = explained.get(i)
+        out.append({
+            "record_id": f"ga:{symbol}:{i + 1:04d}", "source": "ga", "body": "General Assembly", "date": d,
+            "date_precision": "day", "year": d.year, "session": session[1], "meeting": plenary_label(symbol),
+            "symbol": symbol, "speech_number": i + 1, "agenda": agenda, "agenda_area": None,
+            "speaker_name": sp.speaker, "speaker_post": None, "speaker_role": "", "participant": "",
+            "country_code": code, "country_label": label, "entity_kind": kind, "on_behalf_of": behalf,
+            "language": language(sp.attribution), "ocr": False, "text": text, "url": symbol_url(undocs, symbol),
+            "text_source": "record", "eov": e.when if e else None,
+            "explains": "|".join(e.votes) if e and e.votes else None,
+        })
+    return out
+
+
+def eov_counts(records: list[dict[str, Any]]) -> dict[str, int]:
+    """How many explanations of vote were linked to a resolution adopted by recorded vote (whose page shows them), how
+    many only to a draft or amendment voted on (not in the voting data, so on no page), how many could not be placed
+    with certainty, and how many explanations of position (on decisions taken without a vote) there were."""
+    eov = [r for r in records if r.get("eov") in ("before", "after")]
+    return {"placed": sum(1 for r in eov if "A/RES/" in (r.get("explains") or "")),
+            "drafts_only": sum(1 for r in eov if r.get("explains") and "A/RES/" not in r["explains"]),
+            "unplaced": sum(1 for r in eov if not r.get("explains")),
+            "positions": sum(1 for r in records if r.get("eov") == "position")}

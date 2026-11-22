@@ -39,7 +39,7 @@ SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 KEY = "topic:{}"
 KIND = "topic"  # the spending record's kind for a topic's calls: counted against the caps as every other
 KEPT = 52  # versions kept in a topic's list (a year of weeks); the briefings themselves are never deleted
-BODIES = ("sc", "gd")
+BODIES = ("sc", "gd", "ga")
 
 
 @dataclass(frozen=True)
