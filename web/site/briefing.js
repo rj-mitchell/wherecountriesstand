@@ -528,7 +528,7 @@
       h("div", { class: "wts-card__top" },
         h("span", { class: "wts-card__sym" }, s.kind === "vote" ? s.resolution || "Recorded vote" : s.symbol || s.body || ""),
         h("span", {}, sourceDate(s))),
-      h("div", { class: "wts-card__who" }, who, h("span", { class: "wts-card__cited" }, " Cited")),
+      h("div", { class: "wts-card__who" }, h("span", {}, who), h("span", { class: "wts-card__cited" }, " Cited")),
       h("div", { class: "wts-card__line" }, line));
   }
 

@@ -165,13 +165,16 @@
 .wts-card__top > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .wts-card__top > :last-child:not(:first-child) { flex: none; }
 .wts-card__sym { font-family: var(--wts-serif); font-weight: 700; color: var(--wts-ink); }
-.wts-card__who { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* the name gives way to "Cited": the name is in its own span and is cut short with an ellipsis, "Cited" never is */
+.wts-card__who { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: .35em; }
+.wts-card__who > :not(.wts-card__cited) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.wts-card__who > .wts-card__cited { flex: none; }
 .wts-card__line { font-family: var(--wts-serif); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .wts-card:not(.is-cited):not(:last-child) .wts-card__line { display: none; }
 .wts-card__cited { display: none; font-weight: 700; color: var(--wts-cloth-text); }
 .wts-card.is-cited { border: 2px solid var(--wts-cloth-text); padding: calc(.3rem - 1px) calc(.7rem - 1px); }
 .wts-card.is-cited, .wts-card.is-cited + .wts-card { margin-top: .35rem; border-radius: 5px; }
-.wts-card.is-cited .wts-card__cited { display: inline; }
+.wts-card.is-cited .wts-card__cited { display: block; }
 .wts-card.is-checked .wts-card__line { background: var(--wts-mark); }
 @media (max-width: 63.99rem) {
   .wts-pile { max-height: none; overflow-x: auto; overflow-y: hidden; padding: 10px 4px 6px; }
@@ -206,9 +209,13 @@
 .wts-proof__from { font-size: .8125rem; color: var(--wts-ink-muted); margin: 0; padding-top: .4rem; border-top: 1px solid var(--wts-rule-faint); }
 @media (min-width: 48rem) {
   .wts-proof__steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem 1.5rem; }
-  .wts-proof__pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.5rem; position: relative; }
-  /* the join: a rule across the gutter, level with the middle of the two cards (under their labels) */
-  .wts-proof__pair::after { content: ""; position: absolute; left: calc(50% - 1.25rem); width: 2.5rem; top: calc(50% + .9rem);
+  /* the two labels share a row, so the cards start level however long a label is (Where Councils Stand's runs to
+     two lines), and the join runs across the gutter from the middle of the first card */
+  .wts-proof__pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 2.5rem; row-gap: 0; }
+  .wts-proof__side { display: grid; grid-row: span 2; grid-template-rows: subgrid; row-gap: .4rem; }
+  .wts-proof__label { align-self: end; }
+  .wts-proof__side:first-child > .wts-proof__card { position: relative; }
+  .wts-proof__side:first-child > .wts-proof__card::after { content: ""; position: absolute; top: 50%; left: calc(100% + 1px); width: 2.5rem;
     border-top: 2px solid var(--wts-cloth-text); }
 }
 

@@ -149,7 +149,7 @@ test("every source cited has its quotations found in its own text", () => {
 test("the wait's cards and the question as read are the record's own", () => {
   const card = B.toHTML(B.card(byN[7]));
   assert.match(card, /<span class="wts-card__sym">S\/PV\.10043<\/span><span>14 November 2025<\/span>/);
-  assert.match(card, /<div class="wts-card__who">Benelux countries, Mr\. Maes<span class="wts-card__cited"> Cited<\/span><\/div>/);
+  assert.match(card, /<div class="wts-card__who"><span>Benelux countries, Mr\. Maes<\/span><span class="wts-card__cited"> Cited<\/span><\/div>/);
   assert.ok(B.textOf(B.card(byN[7])).includes(byN[7].text.slice(0, 40)));
   const plan = saved.events.find((e) => e.type === "plan").plan;
   assert.deepEqual(B.planChips(plan), ["Security Council", "2022 to today", "all countries"]);
