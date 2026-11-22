@@ -901,7 +901,8 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
             return html_page(question_page(text, base, request.url.query))
         return html_page(text.replace(SITE_MARK, base))
 
-    @app.get("/", include_in_schema=False)
+    # GET and HEAD: with GET alone, a HEAD for the home page fell through to the files and was answered 404
+    @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
     def home(request: Request):
         return page(request, "index")
 

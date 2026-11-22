@@ -603,6 +603,16 @@ def test_unknown_addresses_get_a_page_and_the_api_keeps_json(indexed):  # noqa: 
     assert "404" not in api.get("/sitemap-pages.xml").text
 
 
+def test_the_home_page_answers_head_as_it_answers_get(indexed):  # noqa: F811
+    """A HEAD for the home page is answered as a GET is, headers and no body: with GET alone it fell through to the
+    files and was answered 404 (found on the live site, 22 November 2026)."""
+    api, _ = make(indexed, FakeClient())
+    got, head = api.get("/"), api.head("/")
+    assert (got.status_code, head.status_code) == (200, 200)
+    assert head.headers["content-type"] == got.headers["content-type"] and head.content == b""
+    assert api.head("/?q=veto").status_code == 200
+
+
 def test_a_page_asked_for_at_another_form_of_its_address_is_sent_to_its_own_for_good(indexed):  # noqa: F811
     """A page's address is the one its canonical link gives (/about.html, and / for the home page). The others a
     reader or a crawler might try are sent there with a 301, keeping the query, as a path so that the browser keeps
