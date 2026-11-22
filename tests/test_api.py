@@ -604,13 +604,15 @@ def test_unknown_addresses_get_a_page_and_the_api_keeps_json(indexed):  # noqa: 
     assert "404" not in api.get("/sitemap-pages.xml").text
 
 
-def test_the_home_page_answers_head_as_it_answers_get(indexed):  # noqa: F811
-    """A HEAD for the home page is answered as a GET is, headers and no body: with GET alone it fell through to the
-    files and was answered 404 (found on the live site, 22 November 2026)."""
+def test_the_home_page_robots_sitemaps_and_icon_answer_head_as_they_answer_get(indexed):  # noqa: F811
+    """A HEAD for the home page, robots.txt, the sitemaps and the icon is answered as a GET is, headers and no body:
+    with GET alone each fell through to the files and was answered 404 (found on the live site, 22 November 2026)."""
     api, _ = make(indexed, FakeClient())
-    got, head = api.get("/"), api.head("/")
-    assert (got.status_code, head.status_code) == (200, 200)
-    assert head.headers["content-type"] == got.headers["content-type"] and head.content == b""
+    for path in ("/", "/robots.txt", "/sitemap.xml", "/sitemap-pages.xml", "/sitemap-votes.xml",
+                 "/sitemap-topics.xml", "/favicon.ico"):
+        got, head = api.get(path), api.head(path)
+        assert (got.status_code, head.status_code) == (200, 200), path
+        assert head.headers["content-type"] == got.headers["content-type"] and head.content == b"", path
     assert api.head("/?q=veto").status_code == 200
 
 
