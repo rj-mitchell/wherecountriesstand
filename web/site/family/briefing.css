@@ -195,7 +195,8 @@
 .wts-proof__pair { display: grid; gap: 1.25rem; }
 .wts-proof__side { display: flex; flex-direction: column; gap: .4rem; min-width: 0; margin: 0; }
 .wts-proof__label { font-size: .875rem; font-weight: 600; color: var(--wts-ink-muted); margin: 0; }
-.wts-proof__card { flex: 1; display: grid; align-content: start; gap: .75rem; background: var(--wts-paper-light); color: var(--wts-ink);
+/* the sentence sits in the middle of its card when the passage beside it is the taller (no hole under it) */
+.wts-proof__card { flex: 1; display: grid; align-content: center; gap: .75rem; background: var(--wts-paper-light); color: var(--wts-ink);
   border: 1px solid var(--wts-rule); border-radius: 6px; padding: 1rem 1.1rem; }
 .wts-proof__side > .wts-slip { flex: 1; align-content: start; }
 .wts-proof__said { font-size: 1.0625rem; line-height: 1.75; margin: 0; }
