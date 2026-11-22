@@ -74,8 +74,8 @@ Every block lines up to the same 72rem column as the header and footer, with the
 to a reading width of about 46rem (`--column`); panels, grids and tables use the full column.
 
 - The header is a band in the site's cloth. It holds the horseshoe mark on a white tile, the site's name, the
-  family endorsement ("A Where They Stand project", with the site's spine) and the navigation (Ask, About,
-  Methodology, Glossary).
+  family endorsement ("A Where They Stand project", with the site's spine) and the navigation (Ask, Topics,
+  Countries, About, Methodology, Glossary).
 - Under the band, the alpha notice is one line with an "Alpha" tag and a link to the report form.
 - On the home page, the question box comes first, with its two equal choices ("Prepare briefing" and "Sources only
   (no AI)"), then the family's line and the "How the briefings are checked" disclosure under it, then the proof of
@@ -159,13 +159,49 @@ The topics' index (`/topics.html`) and each topic's page (`/topics/<slug>.html`,
 Screenshots of the index, a topic's page (with its script and without) and the home page at 390 and 1,280 pixels
 wide were looked at on 21 November 2026, with a made-up briefing that has each kind of mark.
 
+## Country pages
+
+The index of countries (`/countries.html`), each country's page (`/countries/<code>.html`) and each country's list of
+votes (`/countries/<code>/votes.html`) ([decision 29](DECISIONS.md#29-a-page-for-each-country-in-the-record)) are
+written on the server into the vote pages' frame (`web/partials/record-page.html`), by
+[`src/wcs/api/country_pages.py`](../src/wcs/api/country_pages.py), with "Countries" marked in the menu. They need no
+script.
+
+- A country's page has the vote pages' layout: the link back to "Countries in the record" above the heading, the
+  status line as the lede, then the main column with the "If you're named" panel beside it on screens 64rem wide and
+  over (after it on narrower ones). The groups are facts, a label beside each value. The question about the country
+  is the home page's question box in a grey panel, prefilled with the start of a question that names it ("What has
+  Italy said about "), with the same two buttons; it is a plain GET form to `/`, the second button sending
+  `sources=1`, which the home page's script reads as it reads a shared address.
+- Each statement is a row between hairlines: the date (the year for a General Debate statement whose record gives
+  only the session), the body, the meeting and the document symbol, linked to the document, in bold; the agenda item
+  in muted text; the first 40 words in the serif, as a quotation from the record; the notes the source cards give
+  (translation, not yet the official record, scanned); and "Read S/PV.…". A record whose name for the country differs
+  from today's says "Recorded as …".
+- The counts over the last 10 years are the vote pages' small table; the latest votes are the vote pages' list, each
+  with the date, how the country voted and the result in the UN's words. Nothing is coloured by how a country voted.
+- China's page has a section of its own for the Republic of China's seat, 1945 to 1971, after the votes, under a
+  rule, in the same form.
+- The sister link is the briefing's (`.sisters`), with Where Lives Stand's spine copied from the shelf in the footer.
+- The index has a line of links to its sections, then the Member States and observer States from A to Z in columns
+  about 15rem wide (two narrower columns on a phone), an observer State marked "non-member observer State" in words;
+  the same countries by M49 region; the former Member States with their years; Kosovo; and the places with no page,
+  each with its sentence and a link to a search of the records, sources only.
+- A country's full list of votes starts with links to each session, then each session's votes, newest first.
+
+Screenshots of the index, Italy, China, the State of Palestine, the Holy See, the USSR, Kosovo and two lists of votes
+at 360, 390, 768, 1,024, 1,280 and 1,536 pixels wide (and 390 and 1,280 dark) were looked at on 22 November 2026, with
+made-up records and votes.
+
 ## Links to sister sites
 
 After a briefing, with its address and the link to report a problem, links to sister sites each show that site's
 spine, copied from the family shelf in the footer: "Ask the same question on Where MPs Stand"
 (`https://wherempsstand.com/?q=…`) and, for each country the question is about, "Quality of life in … on Where Lives
 Stand" (`https://wherelivesstand.com/country/<ISO alpha-3>`). They are offered only once a briefing has been written:
-not for "No records found", a briefing that failed, or sources shown without a briefing (decision 24).
+not for "No records found", a briefing that failed, or sources shown without a briefing (decision 24). A country's
+page ends with "This country on Where Lives Stand", with the same spine, for the Member States, the State of Palestine
+and Kosovo (decision 29).
 
 ## Accessibility and behaviour
 

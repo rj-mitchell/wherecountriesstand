@@ -29,9 +29,13 @@ Endpoints:
   ``WCS_PAGE_DATES`` (``page_dates``), and no day for a page it has none for. The pages share one header and footer:
   ``<!--#include header-->`` is replaced by ``web/partials/header.html``, and ``<!--#include family/shelf-->`` by the
   Where They Stand family kit's ``web/site/family/shelf.html`` (see ``render_page``). ``/sitemap.xml`` is an index of
-  ``/sitemap-pages.xml`` (those pages) and ``/sitemap-votes.xml``.
+  ``/sitemap-pages.xml`` (those pages), ``/sitemap-votes.xml``, ``/sitemap-topics.xml`` and
+  ``/sitemap-countries.xml``.
 * ``GET /votes.html``, ``/votes/session-<n>.html`` and ``/votes/<symbol>.html``: the General Assembly's recorded
   votes, a page for each, written on the server from the votes file (``wcs.api.votes``; decision 26).
+* ``GET /countries.html``, ``/countries/<code>.html`` and ``/countries/<code>/votes.html``: a page for each country
+  in the record, written on the server from the site's data (``wcs.api.country_pages``; decision 29), in
+  ``/sitemap-countries.xml``.
 * Measurement for Google Ad Grants (``wcs.api.measurement``; decision 28): off as it ships, when no page changes
   and ``/family/measure.js`` is not served. On (``[ads]``), every page loads the family kit's ``measure.js`` and has
   "Measurement choices" in its footer, and ``/privacy.html`` is the measurement version of the notice.
@@ -90,6 +94,8 @@ from wts_core.usage import (
 )
 
 from wcs import adapters
+from wcs.api.country_pages import INDEX_PATH as COUNTRIES_INDEX
+from wcs.api.country_pages import CountryPages
 from wcs.api.measurement import NEVER_SERVED, SCRIPT, measure_tag, privacy_draft, with_measurement
 from wcs.api.topic_pages import INDEX_PATH as TOPICS_INDEX
 from wcs.api.topic_pages import TopicPages
@@ -803,6 +809,14 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         ))
         return StreamingResponse(sse(events), media_type="text/event-stream", headers=STREAM_HEADERS)
 
+    # a page for each country in the record, written on the server from the site's data (decision 29)
+    country_pages = CountryPages(
+        votes, topics, settings.parquet_dir, today=lambda: clock.now().date(),
+        hidden_records=lambda: hidden_records(replies.all_hidden()),
+        statements=lambda code: [as_shown(s) for s in replies.published(items=[], about=code)],
+        not_endorsed=NOT_ENDORSED, briefings=model_available)
+    app.state.countries = country_pages
+
     site = Path(settings.section("site").get("dir") or SITE_DIR)
     partials = Path(settings.section("site").get("partials") or PARTIALS_DIR)
     # The measurement switch (docs/DECISIONS.md, 28): the Google tag's ID while it is on, else "". Off, the pages are
@@ -822,6 +836,7 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
         votes.frame = versioned(with_measurement(expand_includes(frame.read_text(encoding="utf-8"), site, partials),
                                                  tag), versions)
         topics.frame = mark_current(votes.frame, TOPICS_INDEX)
+        country_pages.frame = mark_current(votes.frame, COUNTRIES_INDEX)
 
     def html_page(text: str, status_code: int = 200) -> HTMLResponse:
         return HTMLResponse(text, status_code=status_code, headers={"Cache-Control": ALWAYS_CHECK})
@@ -858,14 +873,18 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def topic_rows(base: str) -> list[tuple[str, str]]:
         return [(base + path, when) for path, when in topics.sitemap()]
 
+    def country_rows(base: str) -> list[tuple[str, str]]:
+        return [(base + path, when) for path, when in country_pages.sitemap()]
+
     @app.api_route("/sitemap.xml", methods=["GET", "HEAD"], include_in_schema=False)
     def sitemap(request: Request):
         """The sitemap index (robots.txt names it): the site's pages, the pages written from the record's votes
-        (decision 26) and the topic briefings (decision 27), each with the newest date it has for a page in it, and
-        none if it has none."""
+        (decision 26), the topic briefings (decision 27) and the country pages (decision 29), each with the newest
+        date it has for a page in it, and none if it has none."""
         base = site_url(settings, request)
         entries = []
-        for name, rows in (("pages", page_rows(base)), ("votes", vote_rows(base)), ("topics", topic_rows(base))):
+        for name, rows in (("pages", page_rows(base)), ("votes", vote_rows(base)), ("topics", topic_rows(base)),
+                           ("countries", country_rows(base))):
             newest = max((when for _, when in rows if when), default="")
             entries.append(f"  <sitemap><loc>{base}/sitemap-{name}.xml</loc>"
                            f"{f'<lastmod>{newest}</lastmod>' if newest else ''}</sitemap>\n")
@@ -889,6 +908,12 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
     def sitemap_topics(request: Request):
         """The topics' index and each topic with a briefing, dated by when its briefing was prepared."""
         return urlset(topic_rows(site_url(settings, request)))
+
+    @app.api_route("/sitemap-countries.xml", methods=["GET", "HEAD"], include_in_schema=False)
+    def sitemap_countries(request: Request):
+        """The countries' index, each country's page and each country's list of votes, dated by the newest
+        statement or vote in it: a date from the record, never one made up."""
+        return urlset(country_rows(site_url(settings, request)))
 
     def page(request: Request, name: str) -> HTMLResponse:
         if name not in rendered or name == "404":
@@ -994,6 +1019,31 @@ def create_app(settings: Settings | None = None, pipeline: Pipeline | None = Non
                             topic=t.slug)
             return FileResponse(path, media_type="image/png", headers={"Cache-Control": A_DAY})
         to = topics.moved(rest)
+        if to is not None and to != request.url.path:
+            return votes_moved(request, to)
+        raise HTTPException(404, "Not found")
+
+    # The country pages (decision 29): at one address each, the other forms sent there for good.
+
+    @app.api_route(COUNTRIES_INDEX, methods=["GET", "HEAD"], include_in_schema=False)
+    def countries_index(request: Request):
+        return html_page(country_pages.index().replace(SITE_MARK, site_url(settings, request)))
+
+    def countries_index_moved(request: Request) -> RedirectResponse:
+        return votes_moved(request, COUNTRIES_INDEX)
+
+    for other in ("/countries", "/countries/", "/countries.html/"):
+        app.add_api_route(other, countries_index_moved, methods=["GET", "HEAD"], include_in_schema=False)
+
+    @app.api_route("/countries/{rest:path}", methods=["GET", "HEAD"], include_in_schema=False)
+    def country_page(request: Request, rest: str):
+        base = site_url(settings, request)
+        m = re.fullmatch(r"([a-z]{3})(/votes)?\.html", rest)
+        if m:
+            text = country_pages.votes_page(m[1]) if m[2] else country_pages.country_page(m[1])
+            if text is not None:
+                return html_page(text.replace(SITE_MARK, base))
+        to = country_pages.moved(rest)
         if to is not None and to != request.url.path:
             return votes_moved(request, to)
         raise HTTPException(404, "Not found")

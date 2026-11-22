@@ -60,8 +60,10 @@ def finished(tmp_path):
 
 
 def every_page(api: TestClient) -> dict[str, str]:
-    """Every page the site serves: its own pages, the 404 page, a saved briefing's, the vote pages and the topics'."""
-    paths = ["/", "/?q=climate+finance", "/no-such-page", f"/b/{sample_topic.ID}", "/votes.html", "/topics.html"]
+    """Every page the site serves: its own pages, the 404 page, a saved briefing's, the vote pages, the topics' and
+    the country pages."""
+    paths = ["/", "/?q=climate+finance", "/no-such-page", f"/b/{sample_topic.ID}", "/votes.html", "/topics.html",
+             "/countries.html", "/countries/ken.html", "/countries/ken/votes.html", "/countries/sun.html"]
     paths += [f"/{p.stem}.html" for p in sorted(SITE_DIR.glob("*.html")) if p.stem not in ("index", "404")]
     paths += sorted(set(re.findall(r'href="(/votes/[a-z0-9-]+\.html)"', api.get("/votes.html").text)))
     paths += sorted(set(re.findall(r'href="(/topics/[a-z0-9-]+\.html)"', api.get("/topics.html").text)))

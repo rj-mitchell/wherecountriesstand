@@ -48,6 +48,13 @@ if (!topicPage) {
   process.exit(1);
 }
 pages.push("/topics.html", topicPage);
+// The country pages (decision 29): the index, a Member State with votes (and a topic that cites it), its list of
+// votes, China (with its section for the Republic of China's seat), an observer State of each kind, a former Member
+// State and Kosovo. Each is written on the server; the country's page is checked for one heading of the first rank,
+// its form to the home page and only breadcrumbs as structured data.
+const countryPage = "/countries/ken.html";
+pages.push("/countries.html", countryPage, "/countries/ken/votes.html", "/countries/chn.html", "/countries/pse.html",
+  "/countries/vat.html", "/countries/sun.html", "/countries/xkx.html");
 const CHECKED = "adaptation finance must reach the most vulnerable";
 const BESIDE = "climate finance is far too slow";
 const UNSUPPORTED = "Most delegations agreed.";
@@ -260,6 +267,24 @@ for (const scheme of ["light", "dark"]) {
           console.log(`${scheme} ${width}px ${path}: ${m}`);
         }
       }
+      if (path === countryPage) {
+        const country = await page.evaluate(() => ({
+          h1: document.querySelectorAll("h1").length,
+          form: document.querySelector("form.country-ask")?.getAttribute("action"),
+          question: document.querySelector("form.country-ask textarea[name=q]")?.value,
+          data: [...document.querySelectorAll('script[type="application/ld+json"]')].map((s) => JSON.parse(s.textContent)["@type"]),
+        }));
+        const problems = [
+          country.h1 !== 1 && "the country's page does not have one heading of the first rank",
+          country.form !== "/" && "the country's question is not a form to the home page",
+          !(country.question || "").includes("Kenya") && "the country's question does not name it",
+          (country.data.length !== 1 || country.data[0] !== "BreadcrumbList") && "the country's page carries structured data other than its breadcrumbs",
+        ].filter(Boolean);
+        for (const m of problems) {
+          failures++;
+          console.log(`${scheme} ${width}px ${path}: ${m}`);
+        }
+      }
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       if (overflow > 1) {
         failures++;
@@ -273,5 +298,5 @@ await browser.close();
 console.log(failures ? `${failures} accessibility problem(s) found`
   : `No serious accessibility problems on ${pages.length} pages, the sample briefing's marks are all there in words ` +
     "(on its saved page and as a topic's, in the server's HTML too), only a written briefing offers the same " +
-    "question on Where MPs Stand, and the vote pages carry their table");
+    "question on Where MPs Stand, the vote pages carry their table, and the country pages their form");
 process.exit(failures ? 1 : 0);

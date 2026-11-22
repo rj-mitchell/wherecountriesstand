@@ -3,9 +3,9 @@ site's own addresses, limits and words.
 
 A country's delegation or permanent mission, its government, a person named in the UN's records, or someone acting
 for them, can add a short statement in their own words beside a saved briefing (``/b/<id>``) or a General Assembly
-vote's page (``/votes/<symbol>.html``, ``wcs.api.votes``; decision 26). The site has no country pages yet. A statement can be given the country it speaks for (``wcs statements publish 3 --checked "…"
---country KEN``), so a country's page can gather its statements once there is one
-(``GET /api/statements?country=KEN``).
+vote's page (``/votes/<symbol>.html``, ``wcs.api.votes``; decision 26). A statement can be given the country it
+speaks for (``wcs statements publish 3 --checked "…" --country KEN``), and the country's page then shows it
+(``/countries/ken.html``, ``wcs.api.country_pages``; decision 29), as ``GET /api/statements?country=KEN`` lists it.
 
 The rules and the data are the Where They Stand sites' shared ones (wts-core, ``wts_core.replies``; its
 docs/adr/0008): what a statement may be, its life (received, then published or declined; a published one withdrawn

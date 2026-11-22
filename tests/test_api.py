@@ -696,11 +696,11 @@ def test_every_page_carries_the_family_binding_and_the_standard_furniture(indexe
         links = re.findall(r'href="([^"]+)"', links[:links.index("</nav>")])
         assert links == ["/about.html", "/methodology.html", "/corrections.html", "/accessibility.html", "/privacy.html",
                          "https://github.com/rj-mitchell/wherecountriesstand"], page
-        # the menu: Methodology beside About, as on the sister sites (decision 23), and Topics after Ask, as on Where
-        # MPs Stand (decision 27)
+        # the menu: Methodology beside About, as on the sister sites (decision 23), Topics after Ask, as on Where
+        # MPs Stand (decision 27), and Countries after Topics (decision 29)
         sections = text[text.index('<nav class="sections"'):]
         assert re.findall(r'href="([^"]+)"', sections[:sections.index("</nav>")]) == \
-            ["/", "/topics.html", "/about.html", "/methodology.html", "/glossary.html"], page
+            ["/", "/topics.html", "/countries.html", "/about.html", "/methodology.html", "/glossary.html"], page
         assert footer.index('<nav class="wts-shelf"') < footer.index('<nav class="foot__links"'), page
         assert " · " not in text and " — " not in text, page
 

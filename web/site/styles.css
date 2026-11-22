@@ -505,6 +505,39 @@ button:not(:disabled):active { background: var(--ink); color: var(--page); }
 .vote-source, .vote-named { color: var(--ink-muted); font-size: 1rem; }
 .record-page .statements { margin-block-start: 1.5rem; }
 
+/* Country pages (decision 29): the index, A to Z and by region, in columns; a country's page in the vote pages'
+   layout, its statements as quotations from the record, and a question about it as the home page's form. */
+
+.country-jump ul { display: flex; flex-wrap: wrap; gap: 0 1.25rem; margin: 0 0 1rem; padding: 0; list-style: none; font-size: 1rem; }
+.country-jump a { display: inline-block; padding-block: max(2px, calc((var(--target) - 1.55em) / 2)); }
+.country-jump .session-index { display: block; columns: 14rem; column-gap: 2rem; }
+.country-list { margin: 0 0 1.5rem; padding: 0; list-style: none; columns: 15rem; column-gap: 2rem; }
+.country-list li { break-inside: avoid; padding-block: 0.2rem; border-block-end: 1px solid var(--rule-faint); }
+.country-list__status { color: var(--ink-muted); font-size: 1rem; }
+@media (max-width: 30rem) {
+  .country-list { columns: 9rem; column-gap: 1.25rem; font-size: 1rem; }
+}
+.country-unlisted { margin: 0 0 1.5rem; padding: 0; list-style: none; max-inline-size: var(--column); }
+.country-unlisted li { padding-block: 0.6rem; border-block-end: 1px solid var(--rule-faint); }
+.country-unlisted li:first-child { border-block-start: 1px solid var(--rule-faint); }
+.country-unlisted h3 { margin: 0 0 0.25rem; font-size: 1.25rem; }
+.country-unlisted p { margin: 0 0 0.25rem; }
+.country-ask { margin-block: 1.75rem; max-inline-size: 52rem; }
+.country-ask h2 { margin: 0 0 0.5rem; font-size: 1.375rem; }
+.country-ask label[for="q"] { font-weight: 400; color: var(--ink-muted); font-size: 1rem; }
+.country-ask__note { margin: 0.5rem 0 0; color: var(--ink-muted); font-size: 1rem; }
+.country-statements { margin: 0 0 1rem; padding: 0; list-style: none; max-inline-size: var(--column); }
+.country-statement { padding-block: 0.75rem; border-block-end: 1px solid var(--rule-faint); }
+.country-statement:first-child { border-block-start: 1px solid var(--rule-faint); }
+.country-statement p { margin: 0; }
+.country-statement__meta { font-weight: 600; overflow-wrap: anywhere; }
+.country-statement__agenda, .country-statement__as, .country-statement__notes { color: var(--ink-muted); font-size: 1rem; }
+.country-statement blockquote { margin: 0.4rem 0; font-family: var(--serif); }
+.country-statement__link { font-size: 1rem; }
+.country-period { margin-block-start: 2.5rem; padding-block-start: 0.5rem; border-block-start: 1px solid var(--rule); }
+.country-totals { min-inline-size: min(100%, 26rem); }
+.record-page .vote-main > h2 { margin-block-start: 1.5em; }
+
 /* Topic briefings (decision 27): the index by area, the list on the home page, and a topic's page, which is a
    briefing laid out as on the ask page, written by the server, with the topic's title as the page's heading. */
 
