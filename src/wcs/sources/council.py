@@ -52,7 +52,7 @@ DEFAULT_VETO_LIST = "https://research.un.org/en/docs/sc/quick/veto"
 VETO_FRAME = "https://ydsftksff8.execute-api.us-east-1.amazonaws.com/dev/render_meeting_veto/sc_veto_list/EN"
 USER_AGENT = "WhereCountriesStand/0.1 (independent research; https://github.com/rj-mitchell/wherecountriesstand)"
 MAX_FETCH = 40          # records read again from the UN's PDFs in one run
-VERSION = 1             # of how the drafts are read: a higher one reads every meeting again
+VERSION = 2             # of how the drafts are read: a higher one reads every meeting again (2: whole names)
 BODY = "Security Council"
 # the permanent members as the list of vetoes names them
 P5_LABELS = {"ussr": "SUN", "usa": "USA", "united states": "USA", "united states of america": "USA", "uk": "GBR",
@@ -590,9 +590,14 @@ def build(settings: Settings, countries: Countries, docs: Any = None, max_fetch:
     out.problems = check_vetoes(found, listed, countries, since)
     out.problems += [f"{f.meeting}, {f.draft}: the result of the vote could not be read" for f in unread]
     for f in found:
-        # a vote taken by letter (2020 and 2021) names only some members: each member's vote is in its annexes
-        if f.meeting.startswith("S/PV."):
-            out.problems += [f"{f.meeting}, {f.draft or 'a vote'}: {p}" for p in f.vote.problems if "lists printed" in p]
+        # a vote taken by letter (2020 and 2021) names only some members: each member's vote is in its annexes.
+        # Counted from the lists as read by whole names (``read_lists``), which decide whether a page names members.
+        if f.meeting.startswith("S/PV.") and f.vote.totals:
+            counted = {k: len(f.codes.get(k, [])) for k in ("Y", "N", "A")}
+            if any(counted[k] != f.vote.totals.get(k, 0) for k in ("Y", "N", "A")):
+                out.problems.append(f"{f.meeting}, {f.draft or 'a vote'}: the lists as read do not add up to the "
+                                    "totals announced: " + ", ".join(f"{k} {counted[k]}/{f.vote.totals.get(k, 0)}"
+                                                                     for k in ("Y", "N", "A")))
         if f.unknown:
             out.problems.append(f"{f.meeting}, {f.draft}: names in the lists that match no country: "
                                 + ", ".join(f.unknown[:5]))
