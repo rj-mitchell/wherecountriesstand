@@ -343,6 +343,14 @@ def _group(behalf: str | None, countries: Countries) -> str | None:
     return None if behalf and countries.resolve(behalf) else behalf
 
 
+def glyphs_only(lines: list[Any]) -> bool:
+    """Whether a PDF's text layer is glyph numbers rather than letters ("(cid:12)"), as in a record whose fonts carry
+    no character map: more than half its lines."""
+    if not lines:
+        return False
+    return sum("(cid:" in (getattr(line, "text", "") or "") for line in lines) > len(lines) / 2
+
+
 def check(meeting: Meeting, records: list[dict[str, Any]]) -> list[str]:
     """Problems worth reporting for one parsed meeting."""
     problems = list(meeting.warnings)
@@ -398,7 +406,9 @@ def parse_cached(settings: Settings, countries: Countries, manifest: Manifest, s
     pdf_path = cache_dir(settings) / "pdf" / f"{safe_name(symbol)}.pdf"
     try:
         lines = read_lines(pdf_path)
-        if body == "ga" and len(lines) < 20:  # a scanned record without a text layer (before the late 1990s)
+        # a scanned record without a text layer (before the late 1990s), or one whose fonts carry no letters, so
+        # that every line reads "(cid:1)(cid:2)…" (A/ES-10/PV.15): there is nothing to read without OCR
+        if (body == "ga" and len(lines) < 20) or glyphs_only(lines):
             entry.update({"status": "no_text", "parser_version": PARSER_VERSION})
             return []
         if body == "sc" and is_communique(lines):
