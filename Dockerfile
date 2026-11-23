@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Where Countries Stand: the site, its API and the data tools in one image. The data lives in the /data volume.
-FROM python:3.12.15-slim
+FROM python:3.12.16-slim
 # security fixes published since the base image was built
 RUN apt-get update && apt-get upgrade -y \
  && apt-get install -y --no-install-recommends ca-certificates \
