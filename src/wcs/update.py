@@ -454,7 +454,11 @@ def update_general_debate(settings: Settings, ref: Countries, docs: undocs.UNDoc
     manifest.save()
     for session in sessions:
         es = [e for s, e in manifest.entries.items() if unga.session_of(s) == session]
-        report.gd[session] = {**report.gd.get(session, {}), "meetings": sum(e.get("status") == "parsed" for e in es),
+        # the meetings of the debate itself: since the rest of the plenary record is read too (decision 31), a parsed
+        # meeting of the session need not be one
+        debate = [e for e in es if e.get("status") == "parsed" and (e.get("statements") or e.get("replies")
+                                                                       or "statements" not in e)]
+        report.gd[session] = {**report.gd.get(session, {}), "meetings": len(debate),
                               "statements": sum(e.get("statements", e.get("speeches", 0)) for e in es
                                                 if e.get("status") == "parsed"),
                               "replies": sum(e.get("replies", 0) for e in es if e.get("status") == "parsed"),

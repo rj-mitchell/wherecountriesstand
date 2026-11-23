@@ -223,3 +223,16 @@ def test_no_two_pages_share_a_title_with_the_plenary_record_loaded(site):
         title = title_of(page.text)
         assert title not in seen, (path, seen.get(title))
         seen[title] = path
+
+
+def test_a_record_whose_text_layer_is_glyph_numbers_is_no_text_not_a_failure():
+    """A/ES-10/PV.15's fonts carry no letters: every line reads "(cid:1)(cid:2)…". It is set aside as having no text,
+    like a scan, rather than failing the update every run."""
+    from wcs.sources.pdftext import Line
+    from wcs.sources.undocs import glyphs_only
+
+    def line(t):
+        return Line(**{**{f: None for f in Line.__dataclass_fields__}, "text": t})
+
+    assert glyphs_only([line("(cid:1)(cid:2)(cid:3)")] * 30 + [line("A/ES-10/PV.15")])
+    assert not glyphs_only([line("The President: I give the floor to the representative of Egypt.")] * 30)
