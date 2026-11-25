@@ -5,14 +5,20 @@ Dear colleagues at the Dag Hammarskjöld Library,
 
 I am writing from Where Countries Stand (https://wherecountriesstand.com), an independent, free and non-commercial website that helps people find out what countries have said, and how they have voted, at the United Nations. Every point it makes cites the UN's own record, with its document symbol and a link. It is a project of Where They Stand, which is applying to register as a charity in England and Wales.
 
-The site relies on the Library's work. It uses the General Assembly voting data (UN Digital Library record 4060887) and the Security Council voting data (record 4055387), credited on every page that uses them as your data dictionaries ask, and it reads the official verbatim records of the Security Council and the General Assembly from the Digital Library and the Official Document System.
+The site relies on the Library's work. It has a page for every recorded vote of the General Assembly and the Security Council, and for every country, built from:
+
+- the General Assembly voting data (UN Digital Library record 4060887) and the Security Council voting data (record 4055387), credited on each page as "From the General Assembly [or Security Council] voting data of the UN Dag Hammarskjöld Library, © United Nations";
+- the Library's list of Security Council vetoes, on its research guide, against which it checks the vetoes it reads from the meeting records, credited on each such page;
+- the official verbatim records of the Security Council and the General Assembly, from the Digital Library and the Official Document System, which it quotes word for word with their document symbols.
+
+It offers no bulk download of the Library's data.
 
 We understand that automated downloads from the UN Digital Library need the Library's approval, so I am writing to ask for it, and to describe exactly what our program does:
 
 - It identifies itself in every request as "WhereCountriesStand/0.1", with a link to its source code.
 - It makes one request at a time, with at least a second between requests.
-- It checks for new records twice a day, and downloads each record once; it keeps every file it fetches, so nothing is downloaded twice. It fetches a record again only while the record is marked provisional, at most once a month, to pick up the corrected version.
-- For the voting data, it reads each record's metadata to find the latest version of the file, and downloads a new version only when one is published.
+- It checks for new records twice a day, by searching the Digital Library's catalogue for new meeting records and asking ODS for the next meeting numbers. It downloads each record once and keeps every file it fetches, so nothing is downloaded twice. It fetches a record again only while the record is marked provisional, at most once a month for a year, to pick up the corrected version.
+- For the voting data, it reads each record's metadata to find the latest version of the file, and downloads a new version only when one is published. It reads the list of vetoes when it checks the Security Council's votes.
 - In November 2026 it read, once, the General Assembly's plenary records from 1994 onwards (about 3,700 records); it will not need to do that again.
 
 Could you confirm whether this is acceptable, and whether there is a rate, a time of day or another method, such as a bulk download or an API, that you would prefer us to use? We will gladly change how the program works to suit you, and if you would rather we stopped, we will.
